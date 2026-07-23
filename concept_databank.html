@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painting Concept Databank</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	   <link rel="preload" href="fonts/financier-display-vt.woff2" as="font" type="font/woff2" crossorigin>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f0eb 0%, #faf7f4 100%);
+            font-family: financier-display-vt;
+            color: #1e1e1e;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .header .concept-title {
+            background: #faf7f4;
+            border: 1px solid #d9d0c7;
+            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            color: #6b5f55;
+            font-weight: 400;
+        }
+
+        .header .status-bar {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.85rem;
+            color: #5a4d41;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .status-bar .stat {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .status-bar .stat strong {
+            color: #2d241e;
+        }
+
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Pillars Section */
+        .pillars-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .pillar-card {
+            background: white;
+            border: 1px solid #e5ddd6;
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .pillar-card:hover {
+            border-color: #d0c0b0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .pillar-card.locked {
+            background: #fffcf9;
+            border-color: #d2c2b4;
+        }
+
+        .pillar-card.locked::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(45, 36, 30, 0.02) 0%, transparent 100%);
+            pointer-events: none;
+            border-radius: 16px;
+        }
+
+        .pillar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .pillar-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #7a6b5d;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .lock-toggle {
+            background: none;
+            border: 1px solid #cdbdb0;
+            border-radius: 6px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #8f7e6e;
+            font-size: 0.9rem;
+            transition: all 0.15s;
+        }
+
+        .lock-toggle:hover {
+            background: #faf7f4;
+            border-color: #b8a392;
+        }
+
+        .lock-toggle.locked {
+            background: #2d241e;
+            color: white;
+            border-color: #2d241e;
+        }
+
+        .pillar-question {
+            font-size: 0.85rem;
+            font-weight: 450;
+            color: #3d332b;
+            margin-bottom: 0.8rem;
+            line-height: 1.4;
+            border-left: 2px solid #d2c2b4;
+            padding-left: 0.8rem;
+        }
+
+        .pillar-select {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid #e2d7cd;
+            border-radius: 10px;
+            background: #fcf9f7;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: #1f1b18;
+            cursor: pointer;
+            transition: 0.15s;
+            margin-bottom: 0.8rem;
+        }
+
+        .pillar-select:focus {
+            outline: none;
+            border-color: #b8a392;
+            box-shadow: 0 0 0 3px rgba(180, 160, 145, 0.1);
+        }
+
+        .pillar-select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .pillar-note {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid #e2d7cd;
+            border-radius: 10px;
+            background: #fcf9f7;
+            font-family: inherit;
+            font-size: 0.85rem;
+            color: #3d332b;
+            resize: vertical;
+            min-height: 50px;
+            transition: 0.15s;
+        }
+
+        .pillar-note:focus {
+            outline: none;
+            border-color: #b8a392;
+            box-shadow: 0 0 0 3px rgba(180, 160, 145, 0.1);
+        }
+
+        .note-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #8f7e6e;
+            margin-top: 0.8rem;
+            margin-bottom: 0.3rem;
+            display: block;
+            font-weight: 600;
+        }
+
+        /* Reference Panel */
+        .reference-panel {
+            background: #faf7f4;
+            border: 1px solid #e5ddd6;
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .reference-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #3d332b;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .reference-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .reference-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #7a6b5d;
+            font-weight: 600;
+        }
+
+        .color-input {
+            width: 100%;
+            height: 44px;
+            border: 1px solid #d6c9bd;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .color-swatch {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .swatch {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid #d6c9bd;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .swatch:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-upload {
+            border: 1px dashed #d6c9bd;
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .image-upload:hover {
+            background: #fcf9f7;
+            border-color: #b8a392;
+        }
+
+        .image-upload input[type="file"] {
+            display: none;
+        }
+
+        .uploaded-images {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.6rem;
+        }
+
+        .image-thumb {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+            border: 1px solid #e2d7cd;
+        }
+
+        .image-thumb img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(45, 36, 30, 0.8);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: 0.1s;
+        }
+
+        .remove-image:hover {
+            background: rgba(45, 36, 30, 0.95);
+        }
+
+        /* Coherence Check */
+        .coherence-check {
+            background: #fffaf5;
+            border: 1px solid #f0e5d8;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .coherence-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #7a6b5d;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+        }
+
+        .coherence-item {
+            font-size: 0.8rem;
+            color: #5a4d41;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid #f0e5d8;
+        }
+
+        .coherence-item:last-child {
+            border-bottom: none;
+        }
+
+        .coherence-icon {
+            display: inline-block;
+            margin-right: 0.4rem;
+            font-weight: 600;
+        }
+
+        .coherence-item.tension .coherence-icon {
+            color: #d97706;
+        }
+
+        .coherence-item.aligned .coherence-icon {
+            color: #059669;
+        }
+
+        /* Footer / Export */
+        .export-section {
+            background: white;
+            border: 1px solid #e5ddd6;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .export-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #3d332b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.5rem 1.4rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 450;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .btn-primary {
+            background: #2d241e;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4d3f34;
+        }
+
+        .btn-secondary {
+            background: #d2c2b4;
+            color: #1e1e1e;
+        }
+
+        .btn-secondary:hover {
+            background: #c0ad9c;
+        }
+
+        .btn-outline {
+            background: none;
+            border: 1px solid #cdbdb0;
+            color: #4d3f34;
+        }
+
+        .btn-outline:hover {
+            background: #e5dad1;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #2d241e;
+            color: white;
+            padding: 0.8rem 1.6rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .brief-preview {
+            background: #fcf9f7;
+            border: 1px solid #e2d7cd;
+            border-radius: 10px;
+            padding: 1rem;
+            font-family: inherit;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            color: #3d332b;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        @media (max-width: 700px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .reference-panel {
+                position: static;
+            }
+
+            body {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                🎨 Concept Art Databank
+                <span class="concept-title" id="conceptTitle">Untitled</span>
+            </h1>
+            <div class="status-bar">
+                <div class="stat">
+                    <strong id="lockedCount">0</strong> pillars locked
+                </div>
+                <div class="stat">
+                    <strong id="filledCount">0</strong> / 12 developed
+                </div>
+                <div class="stat">
+                    Updated: <strong id="lastSaved">just now</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="pillars-section">
+                <!-- Pillars injected by JS -->
+                <div id="pillarsContainer"></div>
+            </div>
+
+            <div class="reference-panel">
+                <div class="reference-title">
+                    📌 Reference & Context
+                </div>
+
+                <div class="reference-section">
+                    <label class="reference-label">Concept name</label>
+                    <input type="text" id="conceptName" placeholder="Give this concept a working title" style="padding: 0.6rem 0.8rem; border: 1px solid #d6c9bd; border-radius: 10px; font-family: inherit; font-size: 0.9rem;">
+                </div>
+
+                <div class="reference-section">
+                    <label class="reference-label">Primary colors</label>
+                    <div class="color-swatch" id="colorSwatches"></div>
+                    <input type="color" id="colorInput" class="color-input">
+                </div>
+
+                <div class="reference-section">
+                    <label class="reference-label">Mood / atmosphere</label>
+                    <textarea id="moodNotes" class="pillar-note" placeholder="Describe the feeling, time of day, season, lighting temperature..."></textarea>
+                </div>
+
+                <div class="reference-section">
+                    <label class="reference-label">Visual references</label>
+                    <div class="image-upload" onclick="document.getElementById('imageInput').click()">
+                        <div style="font-size: 1.2rem; margin-bottom: 0.4rem;">📸</div>
+                        <div style="font-size: 0.8rem; color: #7a6b5d;">Click to upload reference images</div>
+                        <input type="file" id="imageInput" multiple accept="image/*">
+                    </div>
+                    <div class="uploaded-images" id="uploadedImages"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="export-section">
+            <div class="export-title">
+                📤 Export & Release
+            </div>
+
+            <div class="brief-preview" id="briefPreview"></div>
+
+            <div class="export-buttons">
+                <button class="btn btn-primary" onclick="generateBrief()">↗ Generate brief</button>
+                <button class="btn btn-secondary" onclick="downloadBrief()">⬇ Download brief</button>
+                <button class="btn btn-outline" onclick="copyBrief()">📋 Copy</button>
+                <button class="btn btn-outline" onclick="resetConcept()">↺ Reset concept</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const PILLARS = [
+            {
+                id: 'core',
+                label: 'Core Idea',
+                question: 'What truth is this painting exploring?',
+                options: [
+    // === DISTANCE & SEPARATION (10) ===
+    'Longing beyond reach',
+    'Distance writes fate',
+    'Worlds between us',
+    'Separation by purpose',
+    'Fate\'s cruel distance',
+    'Distance of worlds',
+    'Parallel lives apart',
+    'The space between souls',
+    'Divided by destiny',
+    'Separated by time',
+
+    // === OBSERVATION & WATCHING (10) ===
+    'The observer eternal',
+    'Eternal watcher',
+    'Silent admiration',
+    'Guardian of distance',
+    'Admiration in silence',
+    'Watching from shadows',
+    'The unseen witness',
+    'Eternal vigilance',
+    'Silent guardian',
+    'The distant observer',
+
+    // === LIGHT & DARKNESS (10) ===
+    'Beauty behind light',
+    'Unreachable light',
+    'Her light, his shadow',
+    'His pain, her light',
+    'Light conceals truth',
+    'Shadows hold secrets',
+    'Between light and dark',
+    'The glow of memory',
+    'Darkness reveals',
+    'Light through darkness',
+
+    // === LOVE & LOSS (10) ===
+    'Her beauty, his ache',
+    'Love without arrival',
+    'Unspoken dream',
+    'Two souls, one sky',
+    'Beauty in distance',
+    'Lost in admiration',
+    'Love across dimensions',
+    'The ache of beauty',
+    'Love that cannot touch',
+    'Beauty in longing',
+
+    // === WORLDS & REALITIES (10) ===
+    'Her world, his prison',
+    'Beyond the veil',
+    'Parallel memories',
+    'Worship in silence',
+    'The unreachable',
+    'Distance is our fate',
+    'Her remembrance, her forgotten',
+    'Beyond the stars',
+    'Parallel lives',
+    'Forbidden vision'
+                ]
+            },
+            {
+                id: 'emotion',
+                label: 'Emotion',
+                question: 'What should the viewer feel?',
+                options: [
+    // === LONGING & YEARNING (10) ===
+    'Longing beyond reach',
+    'Yearning across distance',
+    'Deep aching desire',
+    'Silent desperation',
+    'Heartfelt yearning',
+    'Unspoken longing',
+    'Endless desire',
+    'Fading hope',
+    'Distant love',
+    'Forever reaching',
+
+    // === MELANCHOLY & SORROW (10) ===
+    'Melancholy acceptance',
+    'Quiet sorrow',
+    'Resigned sadness',
+    'Bittersweet ache',
+    'Tender grief',
+    'Fading memory',
+    'Gentle mourning',
+    'Eternal sadness',
+    'Peaceful melancholy',
+    'Soft sorrow',
+
+    // === WONDER & AWE (10) ===
+    'Wonder & curiosity',
+    'Awe & mystery',
+    'Wondrous intrigue',
+    'Cosmic wonder',
+    'Gentle awe',
+    'Reverent curiosity',
+    'Endless fascination',
+    'Sacred wonder',
+    'Infinite curiosity',
+    'Starlit awe',
+
+    // === PAIN & CONFLICT (10) ===
+    'Pain & beauty',
+    'Suffering in silence',
+    'Wounded hope',
+    'Bitter truth',
+    'Heavy heart',
+    'Stoic pain',
+    'Fractured peace',
+    'Deep struggle',
+    'Quiet anguish',
+    'Enduring pain',
+
+    // === TENDERNESS & INTIMACY (10) ===
+    'Tender connection',
+    'Gentle intimacy',
+    'Silent understanding',
+    'Warm devotion',
+    'Soft vulnerability',
+    'Sacred tenderness',
+    'Quiet love',
+    'Innocent hope',
+    'Peaceful devotion',
+    'Loving acceptance'
+]
+            },
+            {
+                id: 'world',
+                label: 'World',
+                question: 'Where does this exist?',
+                options: [
+    // === ANCIENT RUINS & RUINED WORLDS (10) ===
+    'Ancient-futuristic ruins above clouds',
+    'Futuristic temples in ruins',
+    'World of collapsing civilizations',
+    'Ruinous palace in the stars',
+    'Floating ruins in cosmic ocean',
+    'Ruins and floating tech',
+    'Whispering ruins',
+    'Cosmic ruins of empires',
+    'Ruins of knowledge',
+    'Crystal realm kingdom',
+
+    // === SKY & FLOATING WORLDS (10) ===
+    'Floating islands in cosmic sea',
+    'Sky cities of stone and metal',
+    'Floating temples in clouds',
+    'Floating citadel',
+    'Sky full of planets',
+    'Diminutive cosmic palace',
+    'Constellation port',
+    'World of eternal watch',
+    'Dream realm of stars',
+    'Endless causeways',
+
+    // === TECHNOLOGY & METROPOLIS (10) ===
+    'City of pillars and stars',
+    'Timeless metropolis between stars',
+    'Cosmic city of ancient tech',
+    'Futuristic city of motion',
+    'Ancient tech academy',
+    'Galactic temple',
+    'World clock between eras',
+    'World of knowledge',
+    'Garden of stars & stone',
+    'Constellation kingdom',
+
+    // === HYBRID & BLENDED WORLDS (10) ===
+    'Hybrid world of stone & light',
+    'Mix of ancient ruins & tech',
+    'Two realms overlapping',
+    'Ancient columns with holograms',
+    'World divided by light',
+    'World of dusty and dreams',
+    'Hidden city behind wall',
+    'World of oracles and machines',
+    'Futuristic cathedral',
+    'World of lost memories',
+
+    // === ELEMENTAL & DREAM WORLDS (10) ===
+    'Ocean of ancient sea',
+    'World collecting fragments',
+    'Parallel realities',
+    'Garden of floating stones',
+    'Crystal caves of memory',
+    'Desert of forgotten time',
+    'Forest of light pillars',
+    'City of whispering winds',
+    'Palace of frozen moments',
+    'Temple of eternal dawn'
+                ]
+            },
+            {
+                id: 'figure',
+                label: 'Main Figure (Man)',
+                question: 'Who carries the truth?',
+                options: [
+    // === OBSERVERS & WATCHERS (10) ===
+    'Lone observer on broken terrace',
+    'Silent watcher in the shadows',
+    'Witness from a distant perch',
+    'Woman watching from above',
+    'Man observing from the darkness',
+    'Figure standing at the edge',
+    'Woman gazing from the ruins',
+    'Man with ancient viewing device',
+    'Girl peering through the mist',
+    'Watcher on a crumbling balcony',
+
+    // === LONELY & ISOLATED (10) ===
+    'Woman in torn cloak',
+    'Man confined behind railing',
+    'Girl kneeling in the distance',
+    'Man on a ruined balcony',
+    'Woman holding broken artifact',
+    'Man across a vast chasm',
+    'Figure in lower levels alone',
+    'Woman behind veil or wall',
+    'Man with broken rings (symbolic)',
+    'Girl lost in memory',
+
+    // === GUARDIANS & PROTECTORS (10) ===
+    'Man as eternal guardian',
+    'Woman guiding the stars',
+    'Figure with cloak and staff',
+    'Woman protecting the gate',
+    'Man with oracle eye',
+    'Girl tending flowers in ruins',
+    'Woman on fallen throne',
+    'Man guarding the citadel',
+    'Figure as silent protector',
+    'Woman with ancient relic',
+
+    // === SEEKERS & EXPLORERS (10) ===
+    'Man reaching but cannot',
+    'Woman peeking through crack',
+    'Man on distant glacier',
+    'Woman writing in ruins',
+    'Man holding a letter',
+    'Woman in crystal cave',
+    'Man in futuristic ocean',
+    'Girl in dream fog',
+    'Man on broken causeways',
+    'Woman in fading sky',
+
+    // === MYSTICAL & SYMBOLIC (10) ===
+    'Man near giant clock',
+    'Woman in memory ruins',
+    'Figure as eternal guardian',
+    'Woman with broken crown',
+    'Man storyteller in shadows',
+    'Girl with oracle visions',
+    'Woman guiding constellations',
+    'Man in torn royal robes',
+    'Figure with celestial compass',
+    'Woman with fading reflection'
+                ]
+            },
+            {
+                id: 'conflict',
+                label: 'Conflict (Structural)',
+                question: 'What opposes them? (abstract barrier)',
+                options: [
+    // === ABSTRACT BARRIERS & DIVIDES (10) ===
+    'Distance of worlds',
+    'Invisible wall between',
+    'Different realms collide',
+    'Separated by purpose',
+    'Different temporal planes',
+    'Social divide',
+    'Knowledge gulf',
+    'Power imbalance',
+    'Physical chasm',
+    'Emotional distance',
+
+    // === DUTY & OBLIGATION (10) ===
+    'Bound by sacred duty',
+    'Tied to tradition',
+    'Chained by responsibility',
+    'Obligation over desire',
+    'Duty to the people',
+    'Ceremonial burden',
+    'Role of leadership',
+    'Honor bound',
+    'Service to the realm',
+    'Oath of protection',
+
+    // === PERSONAL JOURNEY & SELF (10) ===
+    'Focus on inner path',
+    'Personal transformation',
+    'Quest for knowledge',
+    'Healing from trauma',
+    'Artistic pursuit',
+    'Self-discovery journey',
+    'Creative expression',
+    'Spiritual awakening',
+    'Finding purpose',
+    'Reclaiming identity',
+
+    // === POWER & LEADERSHIP (10) ===
+    'Struggle for control',
+    'Authority challenged',
+    'Usurper in the shadows',
+    'Leadership tested',
+    'Power corrupts',
+    'Rebellion rising',
+    'Empire crumbling',
+    'Legacy of power',
+    'Throne of secrets',
+    'Crown of thorns',
+
+    // === CHANGE & TRANSFORMATION (10) ===
+    'Reshaping history',
+    'Rebuilding the future',
+    'Resistance to change',
+    'Acceptance of fate',
+    'Breaking the cycle',
+    'Eternal recurrence',
+    'Memory fading',
+    'Time unraveling',
+    'Destiny rewritten',
+    'Worlds converging'
+                ]
+            },
+            {
+                id: 'scale',
+                label: 'Scale & Environment',
+                question: 'What should feel overwhelming?',
+                options: [
+    // === COLOSSAL ARCHITECTURE (10) ===
+    'Colossal columns and floating platforms',
+    'Gigantic architecture and void',
+    'Massive arches into the sky',
+    'Colossal gates and towers',
+    'Gigantic broken structures',
+    'Overwhelming courtyards',
+    'Gigantic dual architecture',
+    'Massive overlapping structures',
+    'Gigantic citadel halls',
+    'Overwhelming fortress',
+
+    // === VERTICAL & TOWERING (10) ===
+    'Infinite stairways and bridges',
+    'Vast temples and hovering rings',
+    'Endless columns and terraces',
+    'Gigantic orreries and towers',
+    'Vast broken staircases',
+    'Immense endless pedestal towers',
+    'Gigantic watch towers',
+    'Towering spires of light',
+    'Vertical cities of glass',
+    'Sky-piercing monuments',
+
+    // === EXPANSIVE & VAST (10) ===
+    'Vast platforms and bridges',
+    'Endless sky platforms',
+    'Vast hidden civilizations',
+    'Endless ruins and space',
+    'Vast dream landscapes',
+    'Vast memory landscape',
+    'Gigantic mythic architecture',
+    'Infinite desert of glass',
+    'Endless ocean of clouds',
+    'Vast crystal fields',
+
+    // === SACRED & CEREMONIAL (10) ===
+    'Immense ceremonial halls',
+    'Overwhelming academy halls',
+    'Massive stained architecture',
+    'Gigantic oracular chambers',
+    'Overwhelming ballrooms',
+    'Gigantic whispering halls',
+    'Overwhelming gardens',
+    'Sacred temple complexes',
+    'Ceremonial pyramid steps',
+    'Cathedral of echoes',
+
+    // === ATMOSPHERIC & DREAMSCAPES (10) ===
+    'Floating platforms in mist',
+    'Diminutive cosmic palace',
+    'Diminutive ocean',
+    'Diminutive objects',
+    'Overwhelming darkness',
+    'Gigantic orcoral',
+    'Forest of towering mushrooms',
+    'Crystal caves of light',
+    'Floating islands of dreams',
+    'Underwater cathedral ruins'
+                ]
+            },
+            {
+                id: 'light',
+                label: 'Light',
+                question: 'What does light reveal/conceal?',
+                options: [
+    // === CONTRAST & DUALITY (10) ===
+    'Backlight reveals pain, conceals the other',
+    'Glow around one, darkness on the other',
+    'Light on one face, shadow on the other',
+    'Radiant warmth on one, cold void on other',
+    'Golden light surrounds one, blue shadows the other',
+    'Bright silhouette against darkness',
+    'Sunlight reveals one, darkness embraces other',
+    'Warm glow on one, icy shadows on other',
+    'Light divides them, darkness unites',
+    'One in daylight, one in twilight',
+
+    // === HIDING & REVEALING (10) ===
+    'Light conceals identity, reveals emotion',
+    'Soft light hides features, shows intent',
+    'Beam reveals one, conceals the other',
+    'Light veils expression, shows posture',
+    'Backlit figures, faces in shadow',
+    'Light reveals hands, hides faces',
+    'Dim light hides true nature',
+    'Light exposes truth, shadows hide secrets',
+    'Light reveals longing, conceals fear',
+    'Soft radiance shows care, hides pain',
+
+    // === ATMOSPHERIC LIGHT (10) ===
+    'Moonlight gardens of silver',
+    'Cosmic light from distant stars',
+    'Golden hour warmth',
+    'Misty morning light',
+    'Storm light before rain',
+    'Cathedral stained glass glow',
+    'Underwater light filtering down',
+    'Candlelight in darkness',
+    'Firelight dancing on walls',
+    'Northern lights in sky',
+
+    // === SYMBOLIC & NARRATIVE (10) ===
+    'Light from ancient relics',
+    'Planetary glow pulsates',
+    'Story light reveals memories',
+    'Dream light hides clarity',
+    'Light from hidden knowledge',
+    'City lights hide the stars',
+    'Light at the path reveals the way',
+    'Reflected light shows truth',
+    'Light from within, darkness without',
+    'Light of eternal watch',
+
+    // === DYNAMIC & MOVING (10) ===
+    'Light through windows hides',
+    'Light from above reveals all',
+    'Light curtain between them',
+    'Light from gears of time',
+    'Light ahead shows the future',
+    'Light behind shows the past',
+    'Shifting light reveals emotion',
+    'Flickering light of memory',
+    'Pulsing light of life',
+    'Gradual dawn light'
+                ]
+            },
+            {
+                id: 'symbols',
+                label: 'Symbols & Objects',
+                question: 'Which objects deepen meaning?',
+                options: [
+    // === CELESTIAL & COSMIC (15) ===
+    'Distant planets, broken orrery',
+    'Celestial map, fragmented moon',
+    'Two moons in twilight sky',
+    'Orbiting planets, armillary sphere',
+    'Eclipsed sun, star charts',
+    'Ringed planet, broken mirror',
+    'Star map, twin planets',
+    'Celestial globe, comet tail',
+    'Planetary system, lotus flower',
+    'Two suns, eternal eclipse',
+    'Milky way, twin comets',
+    'Constellations, silver chains',
+    'Planetary rings, hourglass',
+    'Cosmic wheel, zodiac signs',
+    'Stellar nursery, newborn stars',
+
+    // === TIME & MEMORY (15) ===
+    'Broken clock, planetary rings',
+    'Planetary gears, chronometer',
+    'Book, hourglass, planets',
+    'Moving gears, celestial clock',
+    'Memory circuit, photo fragments',
+    'Sundial, shadow markers',
+    'Ancient calendar, stone circles',
+    'Hourglass, falling sand',
+    'Pocket watch, broken glass',
+    'Grandfather clock, moon phases',
+    'Time spiral, endless loop',
+    'Hourglass, shattered glass',
+    'Clockwork heart, ticking gears',
+    'Memory orb, fading light',
+    'Time capsule, sealed secrets',
+
+    // === POWER & AUTHORITY (15) ===
+    'Broken crown, planet fragments',
+    'Planetary chart, sacred sword',
+    'Shield, planet, watchtower',
+    'Forbidden orb, planetary seal',
+    'All-seeing eye, planets',
+    'Rey, locked planet circuit',
+    'Scepter, celestial map',
+    'Throne of stars, fallen empire',
+    'Golden compass, ancient kings',
+    'Crown of thorns, planetary rings',
+    'Sword, broken oath, planets',
+    'Royal seal, wax and planets',
+    'Armor, cosmic reflection',
+    'Scepter, orb, crown',
+    'Shield, celestial patterns',
+
+    // === NATURE & ELEMENTS (15) ===
+    'Steerby orb, constellations',
+    'Lotus, moon, planets',
+    'Fire, trees, planets',
+    'Crystal heart, planets',
+    'Flower, cosmic bloom',
+    'Ocean wave, moon reflection',
+    'Mountain, star peak',
+    'River, cosmic current',
+    'Desert sand, hourglass',
+    'Forest, ancient trees, starlight',
+    'Crystal cave, glowing gems',
+    'Phoenix, rebirth, sun',
+    'Dragon, star guardian',
+    'Wolf, moon, star path',
+    'Raven, omens, planets',
+
+    // === PERSONAL & EMOTIONAL (15) ===
+    'Sealed letter, twin planets',
+    'Broken heart, lock, moon',
+    'Footsteps, paths, constellations',
+    'Crystal heart, shattered love',
+    'Photo, planet, memory circuit',
+    'Letter, quill, planet tees',
+    'Dreamlight, star vessels',
+    'Tears, cosmic river',
+    'Feather, falling star',
+    'Mask, hidden identity',
+    'Mirror, fractured self',
+    'Compass, lost direction',
+    'Lantern, guiding light',
+    'Locket, hidden portrait',
+    'Diary, forgotten memories'
+                ]
+            },
+            {
+                id: 'rhythm',
+                label: 'Rhythm & Composition',
+                question: 'Which shapes repeat? Where\'s the break?',
+                options: [
+    // === ARCHITECTURAL REPETITION (15) ===
+    'Columns repeat, one breaks into neon',
+    'Repeating arches break into metal arcs',
+    'Pillars to neon, walk under storm',
+    'Column repeat until one becomes a light tower',
+    'Columns repeat until fractured by light beams',
+    'Repeating columns break into digital lines',
+    'Columns repeat until shattered by energy',
+    'Columns repeat until one melts into light',
+    'Repeating columns break into crystal forms',
+    'Columns repeat then dissolve into mist',
+    'Columns repeat until broken by cables',
+    'Repeating statues break into mechanical forms',
+    'Columns repeat then collapse into rubble',
+    'Columns repeat until one becomes crystal',
+    'Repeating columns break into floating rings',
+
+    // === NATURAL PATTERNS (15) ===
+    'Trees repeat, one struck by lightning',
+    'Waves repeat, one crashes against rock',
+    'Flowers repeat, one wilts in shadow',
+    'Rocks repeat, one cracks open',
+    'Leaves repeat, one falls in stillness',
+    'Stars repeat, one becomes a comet',
+    'Mountains repeat, one crumbles into dust',
+    'Vines repeat, one grows through stone',
+    'Birds repeat, one breaks formation',
+    'Clouds repeat, one becomes a storm',
+    'Feathers repeat, one falls from flight',
+    'Thorns repeat, one pierces the heart',
+    'Roots repeat, one tears through marble',
+    'Branches repeat, one reaches toward light',
+    'Petals repeat, one scatters in wind',
+
+    // === SYMBOLIC PATTERNS (15) ===
+    'Repeating stars break into floating doors',
+    'Repeating, breaks into floating stars',
+    'Repeating, breaks into constellations',
+    'Repeating, broken sky clock',
+    'Repeating circles break into spirals',
+    'Repeating doors, one leads to void',
+    'Repeating windows, one shows the past',
+    'Repeating mirrors, one reflects truth',
+    'Repeating gears, one stops time',
+    'Repeating lanterns, one extinguishes',
+    'Repeating books, one contains forbidden knowledge',
+    'Repeating keys, one opens the gate',
+    'Repeating hearts, one breaks',
+    'Repeating crowns, one falls from head',
+    'Repeating thrones, one lies empty',
+
+    // === VEHICLES & MOVEMENT (15) ===
+    'Boat near oracle, broken sky clock',
+    'Boat on airship through clouds',
+    'Boat in memory, sailing time',
+    'Boat at watch, guarding the sea',
+    'Ships repeat, one lost at sea',
+    'Carriages repeat, one crashes into stone',
+    'Chariots repeat, one pulled by shadows',
+    'Wings repeat, one clipped in flight',
+    'Wheels repeat, one spins in reverse',
+    'Trains repeat, one derails in mist',
+    'Balloons repeat, one rises alone',
+    'Kites repeat, one tangled in branches',
+    'Lanterns repeat, one floats away',
+    'Flags repeat, one torn by wind',
+    'Sails repeat, one torn in storm',
+
+    // === BREAKS & DISRUPTIONS (15) ===
+    'Repeating, breaks into futuristic beams',
+    'Columns repeat until cracked',
+    'Repeating, breaks into stone',
+    'Repeating rocks shatter into dust',
+    'Repeating patterns, one dissolves in light',
+    'Repeating shapes, one melts into water',
+    'Repeating lines, one fades to shadow',
+    'Repeating circles, one shatters into glass',
+    'Repeating squares, one becomes a doorway',
+    'Repeating triangles, one points to the sky',
+    'Repeating waves, one becomes a tidal surge',
+    'Repeating shadows, one becomes solid',
+    'Repeating echoes, one becomes a voice',
+    'Repeating silences, one breaks into sound',
+    'Repeating voids, one becomes a star'
+                ]
+            },
+            {
+                id: 'layers',
+                label: 'Spatial Depth',
+                question: 'What belongs in foreground/middle/background?',
+                options: [
+    // === INTIMATE TO VAST (11) ===
+    'FG: intimate detail, MG: the figure, BG: vast scale',
+    'FG: broken objects, MG: the figure, BG: distant light',
+    'FG: architectural element, MG: void/space, BG: other realm',
+    'FG: symbolic object, MG: the figure, BG: transcendent light',
+    'FG: figure detail, MG: architectural frame, BG: cosmic horizon',
+    'FG: personal belongings, MG: character standing, BG: infinite landscape',
+    'FG: weathered hands, MG: figure in motion, BG: endless sky',
+    'FG: fallen petals, MG: solitary figure, BG: towering mountains',
+    'FG: open book, MG: figure reading, BG: galaxy forming',
+    'FG: broken mirror, MG: figure reflecting, BG: shattered cosmos',
+    'FG: floating feathers, MG: figure reaching, BG: celestial void',
+
+    // === NATURE & ELEMENTS (11) ===
+    'FG: rocks and grass, MG: figure walking, BG: storm clouds',
+    'FG: flowers and vines, MG: figure resting, BG: ancient forest',
+    'FG: water and reflections, MG: figure wading, BG: distant shore',
+    'FG: fallen leaves, MG: figure standing, BG: autumn trees',
+    'FG: desert sand, MG: figure kneeling, BG: endless dunes',
+    'FG: ocean foam, MG: figure gazing, BG: horizon line',
+    'FG: crystal shards, MG: figure reaching, BG: mountain peak',
+    'FG: moss and roots, MG: figure discovering, BG: cathedral ruins',
+    'FG: snow and ice, MG: figure trudging, BG: frozen mountains',
+    'FG: smoke and embers, MG: figure watching, BG: burning sky',
+    'FG: river stones, MG: figure crossing, BG: distant waterfall',
+
+    // === ARCHITECTURAL & STRUCTURAL (11) ===
+    'FG: broken columns, MG: figure passing, BG: grand temple',
+    'FG: arched doorway, MG: figure entering, BG: celestial hall',
+    'FG: stone steps, MG: figure climbing, BG: towering spires',
+    'FG: marble floor, MG: figure dancing, BG: ballroom ceiling',
+    'FG: iron gate, MG: figure pausing, BG: courtyard beyond',
+    'FG: wooden bridge, MG: figure crossing, BG: floating city',
+    'FG: glass windows, MG: figure peering, BG: city lights',
+    'FG: castle walls, MG: figure defending, BG: invading army',
+    'FG: temple pillars, MG: figure praying, BG: sacred light',
+    'FG: ruins and rubble, MG: figure searching, BG: distant towers',
+    'FG: spiral staircase, MG: figure ascending, BG: celestial dome',
+
+    // === SYMBOLIC & MYSTICAL (11) ===
+    'FG: glowing orb, MG: figure holding, BG: cosmic awakening',
+    'FG: ancient runes, MG: figure decoding, BG: mystical realm',
+    'FG: floating symbols, MG: figure surrounded, BG: infinite void',
+    'FG: sacred geometry, MG: figure meditating, BG: golden light',
+    'FG: celestial map, MG: figure studying, BG: moving planets',
+    'FG: crystal ball, MG: figure seeing, BG: future vision',
+    'FG: tarot cards, MG: figure reading, BG: cosmic forces',
+    'FG: incense smoke, MG: figure praying, BG: divine presence',
+    'FG: illuminated manuscript, MG: figure writing, BG: heavenly light',
+    'FG: dreamcatcher, MG: figure sleeping, BG: dream realm',
+    'FG: astrolabe, MG: figure navigating, BG: sea of stars',
+
+    // === PERSONAL & EMOTIONAL (11) ===
+    'FG: photograph, MG: figure holding, BG: memory lane',
+    'FG: love letter, MG: figure reading, BG: distant love',
+    'FG: diary pages, MG: figure writing, BG: shadows of past',
+    'FG: farewell notes, MG: figure leaving, BG: fading horizon',
+    'FG: broken heart, MG: figure mending, BG: healing light',
+    'FG: abandoned shoes, MG: figure walking away, BG: empty road',
+    'FG: worn mirror, MG: figure facing, BG: reflection of self',
+    'FG: old clock, MG: figure waiting, BG: timeless void',
+    'FG: candlelight, MG: figure guarding, BG: darkness beyond',
+    'FG: rose petals, MG: figure dancing, BG: moonlight garden',
+    'FG: tear-stained letter, MG: figure reflecting, BG: ocean sunset'
+                ]
+            },
+            {
+                id: 'eyepath',
+                label: 'Eye Path',
+                question: 'Where does the eye travel?',
+                options: [
+    // === CIRCULAR & CYCLICAL PATHS (11) ===
+    'Enters at figure, travels upward, returns to face',
+    'Circular path around the figure, then outward',
+    'Follows spiral from foreground through figure to sky',
+    'Eyes circle the figure, then fix on the hands',
+    'Circular motion around the light, then to shadow',
+    'Spirals inward from edges to center figure',
+    'Eyes trace the halo, then settle on the face',
+    'Cyclical path: face → hands → object → face',
+    'Follows circular arches, then drops to figure',
+    'Spirals upward through figures, stops at peak',
+    'Eyes orbit the scene, then fix on the void',
+
+    // === VERTICAL & ASCENDING PATHS (11) ===
+    'Enters at light source, descends to figure',
+    'Linear path from foreground through figure to horizon',
+    'Enters at bottom, ascends to face, exits through light',
+    'Climbs from shadows to light, rests on figure',
+    'Ascends from figures to celestial dome',
+    'Rises from foreground detail to distant peak',
+    'Moves from base of columns to their capitals',
+    'Travels from feet upward to eyes then beyond',
+    'Follows staircase from bottom to top figure',
+    'Climbs from darkness into golden light',
+    'Ascends from fallen objects to standing figure',
+
+    // === HORIZONTAL & LINEAR PATHS (11) ===
+    'Enters at void, pulled toward figure, then escapes upward',
+    'Sweeps from left to right across the scene',
+    'Travels from distant light to foreground object',
+    'Moves horizontally through figures, stops at gap',
+    'Glides from one figure to another across the space',
+    'Crosses from shadow realm to light realm',
+    'Moves from past (left) to future (right)',
+    'Follows the bridge from one side to the other',
+    'Traverses from ruin to ruin across the composition',
+    'Sweeps from chaos to order across the canvas',
+    'Moves from darkness into light horizontally',
+
+    // === DIAGONAL & DYNAMIC PATHS (11) ===
+    'Enters at lower left, cuts diagonally to upper right',
+    'Zigzag path between multiple figures',
+    'Cuts from bright light to deep shadow diagonally',
+    'S-curve through the composition',
+    'Angles from foreground to background through figure',
+    'Drops from sky to figure at dramatic diagonal',
+    'Darts from object to object in rhythmic diagonal',
+    'Sweeps from corner to corner across the scene',
+    'Cuts through the void diagonally to reach light',
+    'Sharp diagonal from falling figure to standing figure',
+    'Angles upward from broken objects to clear sky',
+
+    // === FOCAL & COMPOSITIONAL PATHS (11) ===
+    'Enters at dark edges, drawn to center of light',
+    'Held by the figure, then released into the distance',
+    'Lands on face, travels down, returns to face',
+    'Follows gaze of figure, then beyond',
+    'Triangulates between figure, object, and light',
+    'Enters through archway, down to figure, up to sky',
+    'From chaos at edges, into calm center',
+    'Follows the narrative: action → reaction → resolution',
+    'Finds balance between two figures, then transcends',
+    'From details in foreground to vastness of background',
+    'Guided by composition: line → shape → focal point'
+                ]
+            },
+            {
+                id: 'hidden',
+                label: 'Hidden Stories',
+                question: 'What deepens on second viewing?',
+                options: [
+    // === RELATIONSHIPS & CONNECTIONS (15) ===
+    'The figure\'s gaze connects two realms',
+    'Details suggest they once touched',
+    'The shadow belongs to someone else',
+    'Two figures mirror each other\'s pose',
+    'Hands reaching but not quite touching',
+    'Faces turn toward each other in reflection',
+    'One figure exists in two places at once',
+    'The distance between them tells a history',
+    'They shared a moment frozen in time',
+    'The figures complete each other\'s gestures',
+    'The way they stand reveals their past',
+    'Their shadows merge into one',
+    'One figure waits for the other to return',
+    'The space between them is filled with memory',
+    'They were once bound, now separated',
+
+    // === OBJECTS WITH HISTORY (15) ===
+    'The broken object was once a gift',
+    'The worn book has been read many times',
+    'The letter is sealed but never sent',
+    'The photograph shows a different time',
+    'The flower was picked just yesterday',
+    'The ring has been worn for centuries',
+    'The painting depicts an ancient prophecy',
+    'The map leads to a forgotten place',
+    'The crown once belonged to a greater king',
+    'The sword was used in a legendary battle',
+    'The mirror shows a past reflection',
+    'The hourglass holds time that was stolen',
+    'The locket contains a hidden portrait',
+    'The diary reveals a forbidden love',
+    'The mask hides a painful truth',
+
+    // === SYMBOLIC REVELATIONS (15) ===
+    'Symbols reveal past encounters',
+    'Architectural elements spell a narrative',
+    'Objects form a temporal sequence',
+    'Composition encodes a mathematical relationship',
+    'Light patterns follow a hidden geometry',
+    'The arrangement of figures tells a myth',
+    'Numbers and dates are hidden in the scene',
+    'Repeating motifs tell a secret story',
+    'The colors follow an emotional journey',
+    'The orientation of objects has meaning',
+    'The balance of light and dark tells a tale',
+    'The position of figures has symbolic weight',
+    'The way things align reveals a message',
+    'The scale of objects has hidden significance',
+    'The composition forms a sacred symbol',
+
+    // === EMOTIONAL DEPTH (15) ===
+    'The tears were wiped away moments before',
+    'The smile hides a deeper sorrow',
+    'The rage is barely contained',
+    'The calm is a fragile mask',
+    'The longing was never expressed',
+    'The forgiveness was never spoken',
+    'The goodbye was never said',
+    'The love was never acknowledged',
+    'The pride masks insecurity',
+    'The fear is hidden behind courage',
+    'The hope flickers in darkness',
+    'The despair was overcome',
+    'The regret lingers in the air',
+    'The relief comes too late',
+    'The surrender holds a quiet strength',
+
+    // === NARRATIVE THREADS (15) ===
+    'They met once, years ago, and never forgot',
+    'The journey began with a single step',
+    'The prophecy foretold this moment',
+    'The sacrifice was made in silence',
+    'The promise was kept against all odds',
+    'The secret was buried in the garden',
+    'The letter arrived a day too late',
+    'The door was locked from the other side',
+    'The words were left unspoken',
+    'The truth was hidden in plain sight',
+    'The memory was suppressed but not gone',
+    'The dream was of a different life',
+    'The echo of a past life lingers',
+    'The future was glimpsed in a dream',
+    'The cycle was meant to be broken'
+                ]
+            }
+        ];
+
+        const STORAGE_KEY = 'painting_concept_workbench';
+        let currentConcept = {};
+        let colors = [];
+
+        function loadConcept() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    currentConcept = JSON.parse(stored);
+                    colors = currentConcept.colors || [];
+                    return;
+                }
+            } catch (e) {
+                console.error('Failed to load concept:', e);
+            }
+            currentConcept = { choices: {}, notes: {}, images: [], colors: [] };
+            colors = [];
+        }
+
+        function saveConcept() {
+            currentConcept.lastSaved = new Date().toISOString();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(currentConcept));
+            updateStatus();
+        }
+
+        function updateStatus() {
+            const locked = Object.keys(currentConcept.locks || {}).filter(k => currentConcept.locks[k]).length;
+            const filled = Object.keys(currentConcept.choices || {}).filter(k => currentConcept.choices[k]).length;
+
+            document.getElementById('lockedCount').textContent = locked;
+            document.getElementById('filledCount').textContent = filled;
+
+            const lastSaved = currentConcept.lastSaved ? new Date(currentConcept.lastSaved).toLocaleTimeString() : 'just now';
+            document.getElementById('lastSaved').textContent = lastSaved;
+        }
+
+        function renderPillars() {
+            const container = document.getElementById('pillarsContainer');
+            container.innerHTML = '';
+
+            PILLARS.forEach((pillar, idx) => {
+                const choice = currentConcept.choices[pillar.id] || '';
+                const note = currentConcept.notes[pillar.id] || '';
+                const isLocked = currentConcept.locks && currentConcept.locks[pillar.id];
+
+                const card = document.createElement('div');
+                card.className = `pillar-card ${isLocked ? 'locked' : ''}`;
+                card.innerHTML = `
+                    <div class="pillar-header">
+                        <div class="pillar-label">
+                            <span>${pillar.label}</span>
+                        </div>
+                        <button class="lock-toggle ${isLocked ? 'locked' : ''}" 
+                                onclick="toggleLock('${pillar.id}')" 
+                                title="${isLocked ? 'Unlock pillar' : 'Lock this choice'}">
+                            ${isLocked ? '🔒' : '🔓'}
+                        </button>
+                    </div>
+                    <div class="pillar-question">${pillar.question}</div>
+                    <select class="pillar-select" 
+                            data-pillar="${pillar.id}" 
+                            onchange="updateChoice('${pillar.id}', this.value)"
+                            ${isLocked ? 'disabled' : ''}>
+                        <option value="">— choose —</option>
+                        ${[...new Set(pillar.options)].map(opt => `
+                            <option value="${opt}" ${opt === choice ? 'selected' : ''}>${opt}</option>
+                        `).join('')}
+                    </select>
+                    <label class="note-label">Why this choice?</label>
+                    <textarea class="pillar-note" 
+                              data-pillar="${pillar.id}" 
+                              onchange="updateNote('${pillar.id}', this.value)"
+                              placeholder="Explain why this pillar works for your concept...">${note}</textarea>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updateChoice(pillarId, value) {
+            if (!currentConcept.choices) currentConcept.choices = {};
+            currentConcept.choices[pillarId] = value;
+            saveConcept();
+            checkCoherence();
+        }
+
+        function updateNote(pillarId, value) {
+            if (!currentConcept.notes) currentConcept.notes = {};
+            currentConcept.notes[pillarId] = value;
+            saveConcept();
+        }
+
+        function toggleLock(pillarId) {
+            if (!currentConcept.locks) currentConcept.locks = {};
+            currentConcept.locks[pillarId] = !currentConcept.locks[pillarId];
+            saveConcept();
+            renderPillars();
+            showToast(currentConcept.locks[pillarId] ? '🔒 Pillar locked' : '🔓 Pillar unlocked');
+        }
+
+        function checkCoherence() {
+            const checks = [];
+            const choices = currentConcept.choices || {};
+
+            // Example coherence checks
+            if (choices.core && choices.emotion) {
+                if (choices.core.includes('distance') && choices.emotion.includes('wonder')) {
+                    checks.push({ type: 'aligned', text: 'Core idea and emotion reinforce each other' });
+                }
+            }
+
+            if (choices.figure && choices.scale) {
+                if (choices.figure.includes('observer') && choices.scale.includes('Colossal')) {
+                    checks.push({ type: 'aligned', text: 'Figure scale creates effective contrast' });
+                }
+            }
+
+            if (choices.light && choices.figure) {
+                if (choices.light && choices.figure && !choices.light.includes(choices.figure)) {
+                    checks.push({ type: 'tension', text: 'Light and figure have different staging — intentional?' });
+                }
+            }
+
+            // Render checks
+            const preview = document.getElementById('briefPreview');
+            if (checks.length > 0) {
+                // Coherence is displayed in brief preview
+            }
+        }
+
+        function updateConceptName() {
+            currentConcept.name = document.getElementById('conceptName').value;
+            document.getElementById('conceptTitle').textContent = currentConcept.name || 'Untitled';
+            saveConcept();
+        }
+
+        function addColor() {
+            const color = document.getElementById('colorInput').value;
+            if (color && !colors.includes(color)) {
+                colors.push(color);
+                currentConcept.colors = colors;
+                renderColorSwatches();
+                saveConcept();
+            }
+        }
+
+        function renderColorSwatches() {
+            const container = document.getElementById('colorSwatches');
+            container.innerHTML = colors.map(color => `
+                <div class="swatch" style="background: ${color}; cursor: pointer;" 
+                     onclick="removeColor('${color}')" title="Click to remove"></div>
+            `).join('');
+        }
+
+        function removeColor(color) {
+            colors = colors.filter(c => c !== color);
+            currentConcept.colors = colors;
+            renderColorSwatches();
+            saveConcept();
+        }
+
+        document.getElementById('colorInput').addEventListener('change', addColor);
+
+        function uploadImages(e) {
+            const files = e.target.files;
+            if (!currentConcept.images) currentConcept.images = [];
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    currentConcept.images.push(event.target.result);
+                    renderImages();
+                    saveConcept();
+                    showToast('📸 Image uploaded');
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderImages() {
+            const container = document.getElementById('uploadedImages');
+            if (!currentConcept.images || currentConcept.images.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = currentConcept.images.map((img, idx) => `
+                <div class="image-thumb">
+                    <img src="${img}" alt="Reference">
+                    <button class="remove-image" onclick="removeImage(${idx})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function removeImage(idx) {
+            currentConcept.images.splice(idx, 1);
+            renderImages();
+            saveConcept();
+        }
+
+        document.getElementById('imageInput').addEventListener('change', uploadImages);
+
+        function generateBrief() {
+            const choices = currentConcept.choices || {};
+            const notes = currentConcept.notes || {};
+            
+            let brief = `╔════════════════════════════════════════╗
+║  PAINTING CONCEPT BRIEF
+║  "${currentConcept.name || 'Untitled'}"
+║  ${new Date().toLocaleDateString()}
+╚════════════════════════════════════════╝
+
+`;
+
+            PILLARS.forEach(pillar => {
+                const choice = choices[pillar.id];
+                const note = notes[pillar.id];
+                if (choice) {
+                    brief += `▓ ${pillar.label.toUpperCase()}\n`;
+                    brief += `  ${choice}\n`;
+                    if (note) {
+                        brief += `  ⟶ ${note}\n`;
+                    }
+                    brief += '\n';
+                }
+            });
+
+            if (currentConcept.moodNotes) {
+                brief += `▓ MOOD & ATMOSPHERE\n  ${currentConcept.moodNotes}\n\n`;
+            }
+
+            brief += `════════════════════════════════════════
+Ready for development. All pillars locked
+and justified. Move to sketches.`;
+
+            document.getElementById('briefPreview').textContent = brief;
+            showToast('✓ Brief generated');
+        }
+
+        function downloadBrief() {
+            const preview = document.getElementById('briefPreview').textContent;
+            if (!preview) {
+                showToast('⚠ Generate brief first');
+                return;
+            }
+            const blob = new Blob([preview], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentConcept.name || 'concept'}_brief.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('⬇ Brief downloaded');
+        }
+
+        function copyBrief() {
+            const preview = document.getElementById('briefPreview').textContent;
+            if (!preview) {
+                showToast('⚠ Generate brief first');
+                return;
+            }
+            navigator.clipboard.writeText(preview).then(() => {
+                showToast('📋 Copied to clipboard');
+            });
+        }
+
+        function resetConcept() {
+            if (confirm('Clear all choices and start over?')) {
+                currentConcept = { choices: {}, notes: {}, images: [], colors: [], locks: {} };
+                colors = [];
+                localStorage.removeItem(STORAGE_KEY);
+                renderPillars();
+                renderColorSwatches();
+                renderImages();
+                document.getElementById('conceptName').value = '';
+                document.getElementById('moodNotes').value = '';
+                updateStatus();
+                showToast('↺ Concept reset');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // Update mood notes on change
+        document.getElementById('moodNotes').addEventListener('change', function() {
+            currentConcept.moodNotes = this.value;
+            saveConcept();
+        });
+
+        document.getElementById('conceptName').addEventListener('change', updateConceptName);
+
+        // Initialize
+        loadConcept();
+        renderPillars();
+        renderColorSwatches();
+        renderImages();
+        updateStatus();
+
+        if (currentConcept.name) {
+            document.getElementById('conceptName').value = currentConcept.name;
+        }
+        if (currentConcept.moodNotes) {
+            document.getElementById('moodNotes').value = currentConcept.moodNotes;
+        }
+    </script>
+</body>
+</html>
