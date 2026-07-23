@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>✦ Lenormand Mystic | Advanced Oracle Studio</title>
+  <!-- Tailwind CSS + Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <!-- React & ReactDOM -->
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: radial-gradient(circle at 10% 20%, #1e0f3a, #0f051e);
+      color: #f0e6d3;
+      font-family: 'EB Garamond', serif;
+      overflow-x: hidden;
+      margin: 0;
+    }
+    .font-cinzel { font-family: 'Cinzel', serif; }
+    .font-cinzel-deco { font-family: 'Cinzel Decorative', serif; }
+    .font-garamond { font-family: 'EB Garamond', serif; }
+
+    @keyframes float { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+    @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+    @keyframes cardReveal { from { opacity: 0; transform: rotateY(90deg) scale(0.8); } to { opacity: 1; transform: rotateY(0deg) scale(1); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes starTwinkle { 0%,100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 0.9; transform: scale(1.3); } }
+    
+    .animate-float { animation: float 4s ease-in-out infinite; }
+    .animate-card-reveal { animation: cardReveal 0.5s ease-out forwards; }
+    .animate-fade-up { animation: fadeUp 0.4s ease-out; }
+    .shimmer-text {
+      background: linear-gradient(90deg, #c9a84c 0%, #e8c97a 40%, #fff8dc 50%, #e8c97a 60%, #c9a84c 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+    }
+    .card-glow:hover { box-shadow: 0 0 20px rgba(201,168,76,0.5), 0 0 40px rgba(201,168,76,0.2); transform: translateY(-4px) scale(1.02); }
+    .card-selected { box-shadow: 0 0 25px rgba(201,168,76,0.7), 0 0 50px rgba(201,168,76,0.3); border-color: #c9a84c !important; }
+    .prose-mystical p { line-height: 1.8; margin-bottom: 1rem; }
+    .prose-mystical h3 { font-family: 'Cinzel', serif; color: #e8c97a; margin: 1.5rem 0 0.5rem; font-size: 1.1rem; }
+    .gold-border { border: 1px solid rgba(201,168,76,0.3); }
+    .text-gold { color: #c9a84c; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #2d1b4e; }
+    ::-webkit-scrollbar-thumb { background: #c9a84c; border-radius: 10px; }
+    .card-back { background: radial-gradient(ellipse at 40% 40%, #3d1f6e 0%, #1a0a2e 70%); }
+    .orb { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; animation: float 12s infinite alternate; }
+    @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .animate-spin-slow { animation: spin-slow 8s linear infinite; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+  // ------------------------------ DATA ---------------------------------
+  const LENORMAND_CARDS = [
+    { id:1, name:"The Rider", symbol:"🏇", keywords:["news","messages","speed","arrival"], upright:"News arrives swiftly. A messenger brings tidings.", reversed:"Delayed messages or troublesome news.", element:"Fire", planet:"Mercury" },
+    { id:2, name:"The Clover", symbol:"🍀", keywords:["luck","opportunity","serendipity"], upright:"Small luck blesses your path.", reversed:"Missed chance, fleeting luck.", element:"Earth", planet:"Jupiter" },
+    { id:3, name:"The Ship", symbol:"⛵", keywords:["travel","journey","commerce"], upright:"Voyage or expansion beckons.", reversed:"Delays, homesickness.", element:"Water", planet:"Neptune" },
+    { id:4, name:"The House", symbol:"🏠", keywords:["home","family","security"], upright:"Stability in domestic life.", reversed:"Family tension, instability.", element:"Earth", planet:"Saturn" },
+    { id:5, name:"The Tree", symbol:"🌳", keywords:["health","roots","growth"], upright:"Vitality, deep healing.", reversed:"Health concerns, stagnation.", element:"Earth", planet:"Jupiter" },
+    { id:6, name:"The Clouds", symbol:"☁️", keywords:["confusion","uncertainty","fog"], upright:"Clarity is hidden.", reversed:"Storm passing, clarity emerges.", element:"Air", planet:"Saturn" },
+    { id:7, name:"The Snake", symbol:"🐍", keywords:["deception","complexity","desire"], upright:"Hidden agendas, cunning.", reversed:"Overcoming deceit.", element:"Water", planet:"Saturn" },
+    { id:8, name:"The Coffin", symbol:"⚰️", keywords:["endings","transformation","release"], upright:"Closure, necessary end.", reversed:"Recovery, prolonged endings.", element:"Earth", planet:"Saturn" },
+    { id:9, name:"The Bouquet", symbol:"💐", keywords:["gifts","beauty","gratitude"], upright:"Invitation, appreciation.", reversed:"Superficial flattery.", element:"Water", planet:"Venus" },
+    { id:10, name:"The Scythe", symbol:"⚔️", keywords:["sudden change","harvest","warning"], upright:"Swift cut, decisive moment.", reversed:"Avoiding necessary cut.", element:"Fire", planet:"Mars" },
+    { id:11, name:"The Whip", symbol:"🔁", keywords:["conflict","repetition","discipline"], upright:"Recurring arguments, passion.", reversed:"Conflict resolves.", element:"Fire", planet:"Mars" },
+    { id:12, name:"The Birds", symbol:"🦅", keywords:["communication","gossip","nervousness"], upright:"Conversations, news.", reversed:"Misunderstanding, rumors.", element:"Air", planet:"Mercury" },
+    { id:13, name:"The Child", symbol:"👶", keywords:["new beginning","innocence","trust"], upright:"Fresh start, youthful joy.", reversed:"Naivety, immaturity.", element:"Air", planet:"Moon" },
+    { id:14, name:"The Fox", symbol:"🦊", keywords:["cunning","work","adaptability"], upright:"Clever strategy, be cautious.", reversed:"Deception uncovered.", element:"Fire", planet:"Mercury" },
+    { id:15, name:"The Bear", symbol:"🐻", keywords:["strength","authority","finance"], upright:"Power, protection, wealth.", reversed:"Overbearing, financial loss.", element:"Earth", planet:"Jupiter" },
+    { id:16, name:"The Stars", symbol:"⭐", keywords:["hope","guidance","destiny"], upright:"Inspiration, cosmic alignment.", reversed:"False hopes, disillusionment.", element:"Air", planet:"Uranus" },
+    { id:17, name:"The Stork", symbol:"🦢", keywords:["change","transformation","pregnancy"], upright:"Positive transitions, movement.", reversed:"Unwanted change.", element:"Air", planet:"Venus" },
+    { id:18, name:"The Dog", symbol:"🐕", keywords:["loyalty","friendship","trust"], upright:"True companion, support.", reversed:"Betrayal, false friend.", element:"Earth", planet:"Venus" },
+    { id:19, name:"The Tower", symbol:"🏰", keywords:["authority","isolation","ambition"], upright:"Structure, institutions.", reversed:"Collapse of authority, loneliness.", element:"Earth", planet:"Saturn" },
+    { id:20, name:"The Garden", symbol:"🌷", keywords:["social","community","public"], upright:"Gatherings, networking.", reversed:"Social anxiety, exclusion.", element:"Earth", planet:"Venus" },
+    { id:21, name:"The Mountain", symbol:"⛰️", keywords:["obstacle","delay","challenge"], upright:"Difficult blockage.", reversed:"Overcoming barrier.", element:"Earth", planet:"Saturn" },
+    { id:22, name:"The Crossroads", symbol:"🔀", keywords:["choices","decision","paths"], upright:"Critical decision ahead.", reversed:"Indecision, missed chance.", element:"Air", planet:"Mercury" },
+    { id:23, name:"The Mice", symbol:"🐭", keywords:["loss","anxiety","decay"], upright:"Worry, erosion of resources.", reversed:"Recovery, solving stress.", element:"Earth", planet:"Mercury" },
+    { id:24, name:"The Heart", symbol:"❤️", keywords:["love","romance","compassion"], upright:"Deep affection, emotional truth.", reversed:"Heartache, coldness.", element:"Water", planet:"Venus" },
+    { id:25, name:"The Ring", symbol:"💍", keywords:["commitment","contract","partnership"], upright:"Promises, alliances.", reversed:"Broken contract, divorce.", element:"Earth", planet:"Venus" },
+    { id:26, name:"The Book", symbol:"📖", keywords:["secrets","knowledge","mystery"], upright:"Hidden knowledge, study.", reversed:"Revelation, false info.", element:"Air", planet:"Mercury" },
+    { id:27, name:"The Letter", symbol:"✉️", keywords:["document","message","news"], upright:"Important written news.", reversed:"Delay, miscommunication.", element:"Air", planet:"Mercury" },
+    { id:28, name:"The Gentleman", symbol:"🎩", keywords:["man","masculine","action"], upright:"Male figure, logic.", reversed:"Deceptive man, block.", element:"Fire", planet:"Sun" },
+    { id:29, name:"The Lady", symbol:"👑", keywords:["woman","feminine","intuition"], upright:"Female figure, nurture.", reversed:"Manipulative woman.", element:"Water", planet:"Moon" },
+    { id:30, name:"The Lily", symbol:"🌸", keywords:["peace","wisdom","maturity"], upright:"Harmony, elder advice.", reversed:"Hypocrisy, repressed desire.", element:"Water", planet:"Saturn" },
+    { id:31, name:"The Sun", symbol:"☀️", keywords:["success","joy","vitality"], upright:"Radiance, victory.", reversed:"Delayed success, ego.", element:"Fire", planet:"Sun" },
+    { id:32, name:"The Moon", symbol:"🌙", keywords:["intuition","recognition","emotion"], upright:"Psychic depth, fame.", reversed:"Confusion, self-doubt.", element:"Water", planet:"Moon" },
+    { id:33, name:"The Key", symbol:"🗝️", keywords:["solution","destiny","access"], upright:"Clarity, fated moment.", reversed:"Locked doors.", element:"Earth", planet:"Jupiter" },
+    { id:34, name:"The Fish", symbol:"🐟", keywords:["abundance","finances","flow"], upright:"Wealth, prosperity.", reversed:"Financial loss.", element:"Water", planet:"Neptune" },
+    { id:35, name:"The Anchor", symbol:"⚓", keywords:["stability","perseverance","security"], upright:"Steadiness, career.", reversed:"Feeling stuck.", element:"Earth", planet:"Saturn" },
+    { id:36, name:"The Cross", symbol:"✝️", keywords:["burden","karma","sacrifice"], upright:"Fated hardship, spiritual strength.", reversed:"Release, avoidance.", element:"Earth", planet:"Saturn" }
+  ];
+
+  const SPREADS = [
+    { id:"single", name:"Single Card", description:"Focused answer", cardCount:1, positions:["The Message"], icon:"🌟" },
+    { id:"three", name:"Three Card", description:"Past · Present · Future", cardCount:3, positions:["Past","Present","Future"], icon:"🔱" },
+    { id:"five", name:"Five Card Cross", description:"Deeper insight", cardCount:5, positions:["Heart of Matter","Past Influence","Future Path","Hidden Factors","Outcome"], icon:"⭐" },
+    { id:"line_of_five", name:"Line of Five", description:"Narrative flow", cardCount:5, positions:["Foundation","Challenge","Core Theme","Advice","Resolution"], icon:"〰️" },
+    { id:"nine", name:"Nine Card Square", description:"Tableau lite", cardCount:9, positions:["Past","Present","Future","Unconscious","Heart of Matter","External Forces","Hidden","Hopes & Fears","Outcome"], icon:"🔮" }
+  ];
+
+  // ------------------------------ COMPONENTS ------------------------------
+  const LenormandCard = ({ card, isReversed = false, size = 'md', onClick, isRevealed = true }) => {
+    const sizeClasses = { sm:'w-16 h-24', md:'w-24 h-36', lg:'w-28 h-44', xl:'w-32 h-48' };
+    const textSizes = { sm:'text-2xl', md:'text-3xl', lg:'text-4xl', xl:'text-5xl' };
+    if (!card) return <div className={`${sizeClasses[size]} rounded-lg border-2 border-dashed border-amber-800/40 card-back flex items-center justify-center`}>❓</div>;
+    return (
+      <div className={`${sizeClasses[size]} rounded-lg cursor-pointer transition-all duration-300 relative group gold-border card-glow ${isRevealed ? 'animate-card-reveal' : ''}`}
+           style={{ border:'1px solid rgba(201,168,76,0.3)', background:'linear-gradient(135deg, #2d1b4e, #1a0a2e)' }} onClick={() => onClick && onClick(card, isReversed)}>
+        <div className="absolute top-1 left-1 text-amber-600/50 text-xs">✦</div>
+        <div className="absolute top-1 right-1 text-amber-600/50 text-xs">✦</div>
+        <div className="flex flex-col items-center justify-center h-full pb-2">
+          <span className={`${textSizes[size]} drop-shadow-lg`}>{card.symbol}</span>
+          <span className="font-cinzel text-amber-300/90 text-center text-xs md:text-sm px-1">{card.name}</span>
+          {isReversed && <span className="text-[9px] font-cinzel text-amber-500/80 mt-0.5">↺ reversed</span>}
+        </div>
+        <div className="absolute bottom-1 left-2 right-2 h-px bg-gradient-to-r from-transparent via-amber-600/40 to-transparent" />
+      </div>
+    );
+  };
+
+  // Layouts
+  const SingleLayout = ({ cards, positions, onCardClick }) => (
+    <div className="flex justify-center items-center py-8"><div className="flex flex-col items-center gap-3"><div className="text-amber-500/60 font-cinzel text-xs tracking-widest uppercase">{positions[0]}</div><LenormandCard card={cards[0]} size="xl" onClick={onCardClick} isReversed={cards[0]?.reversedFlag} /></div></div>
+  );
+  const ThreeLayout = ({ cards, positions, onCardClick }) => (
+    <div className="flex justify-center items-end gap-6 py-8 flex-wrap">{positions.map((pos,i)=><div key={i} className="flex flex-col items-center gap-2"><LenormandCard card={cards[i]} size="lg" onClick={onCardClick} isReversed={cards[i]?.reversedFlag} /><div className="text-amber-500/70 font-cinzel text-xs tracking-wider">{pos}</div></div>)}</div>
+  );
+  const FiveCrossLayout = ({ cards, positions, onCardClick }) => (
+    <div className="flex justify-center py-8"><div className="grid grid-cols-3 grid-rows-3 gap-4">
+      <div /><div className="flex flex-col items-center gap-2"><LenormandCard card={cards[0]} size="md" onClick={onCardClick} isReversed={cards[0]?.reversedFlag} /><div className="text-amber-500/70 font-cinzel text-xs tracking-wider text-center">{positions[0]}</div></div><div />
+      <div className="flex flex-col items-center gap-2"><LenormandCard card={cards[1]} size="md" onClick={onCardClick} isReversed={cards[1]?.reversedFlag} /><div className="text-amber-500/70 font-cinzel text-xs tracking-wider text-center">{positions[1]}</div></div>
+      <div className="flex flex-col items-center gap-2 relative"><div className="absolute inset-0 flex items-center justify-center pointer-events-none"><div className="w-full h-px bg-gradient-to-r from-amber-800/30 via-amber-600/50 to-amber-800/30" /></div><div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{transform:'rotate(90deg)'}}><div className="w-full h-px bg-gradient-to-r from-amber-800/30 via-amber-600/50 to-amber-800/30" /></div><LenormandCard card={cards[2]} size="lg" onClick={onCardClick} isReversed={cards[2]?.reversedFlag} /><div className="text-amber-400/90 font-cinzel text-xs tracking-wider text-center font-semibold">{positions[2]}</div></div>
+      <div className="flex flex-col items-center gap-2"><LenormandCard card={cards[3]} size="md" onClick={onCardClick} isReversed={cards[3]?.reversedFlag} /><div className="text-amber-500/70 font-cinzel text-xs tracking-wider text-center">{positions[3]}</div></div><div />
+      <div className="flex flex-col items-center gap-2"><LenormandCard card={cards[4]} size="md" onClick={onCardClick} isReversed={cards[4]?.reversedFlag} /><div className="text-amber-500/70 font-cinzel text-xs tracking-wider text-center">{positions[4]}</div></div><div />
+    </div></div>
+  );
+  const LineOfFiveLayout = ({ cards, positions, onCardClick }) => (
+    <div className="py-8"><div className="flex justify-center items-center gap-2 flex-wrap">{positions.map((pos,i)=><div key={i} className="flex flex-col items-center gap-2"><LenormandCard card={cards[i]} size="lg" onClick={onCardClick} isReversed={cards[i]?.reversedFlag} /><div className="text-amber-500/70 font-cinzel text-xs tracking-wider text-center max-w-20">{pos}</div></div>)}</div></div>
+  );
+  const NineSquareLayout = ({ cards, positions, onCardClick }) => {
+    const rows = [[0,1,2],[3,4,5],[6,7,8]], rowLabels = ['Past','Present','Future'];
+    return <div className="py-6 overflow-x-auto"><div className="flex flex-col gap-4 min-w-fit mx-auto" style={{width:'fit-content'}}>{rows.map((row,ri)=><div key={ri} className="flex items-center gap-2"><div className="text-amber-700/50 font-cinzel text-xs w-16 text-right pr-2 hidden md:block">{rowLabels[ri]}</div><div className="flex gap-3">{row.map(i=><div key={i} className="flex flex-col items-center gap-1"><LenormandCard card={cards[i]} size="md" onClick={onCardClick} isReversed={cards[i]?.reversedFlag} /><div className="text-amber-500/60 font-cinzel text-center leading-tight max-w-24" style={{fontSize:'10px'}}>{positions[i]}</div></div>)}</div></div>)}</div></div>;
+  };
+  const SpreadLayout = ({ spread, cards, reversedFlags, onCardClick }) => {
+    if (!spread) return null;
+    const fullCards = Array.from({ length: spread.cardCount }, (_, i) => cards[i] ? { ...cards[i], reversedFlag: reversedFlags?.[i] || false } : null);
+    const props = { cards: fullCards, positions: spread.positions, onCardClick };
+    switch (spread.id) {
+      case 'single': return <SingleLayout {...props} />;
+      case 'three': return <ThreeLayout {...props} />;
+      case 'five': return <FiveCrossLayout {...props} />;
+      case 'line_of_five': return <LineOfFiveLayout {...props} />;
+      case 'nine': return <NineSquareLayout {...props} />;
+      default: return <ThreeLayout {...props} />;
+    }
+  };
+
+  // Interpretation Panel with mystical offline generator
+  const generateMysticalReading = (spread, cards, question, reversedFlags) => {
+    let intro = `<h3>✦ The Oracle's Inner Voice ✦</h3><p>${question ? `You seek wisdom upon: “${question}”.` : "The spirits look into your path without question."} The ${spread.name} spread unveils ${cards.length} celestial keys.</p>`;
+    let cardMeanings = cards.map((c, idx) => `<p><strong>${spread.positions[idx] || `Position ${idx+1}`}: ${c.name} ${c.symbol}</strong> — ${reversedFlags?.[idx] ? (c.reversed || c.upright) : c.upright}</p>`).join('');
+    let pairInsight = cards.length >=2 ? `<h3>✦ Adjacent Whisper ✦</h3><p>${cards[0].name} next to ${cards[1].name}: ${cards[0].keywords[0]} meets ${cards[1].keywords[0]}, suggesting a dance between ${cards[0].element} and ${cards[1].element}.</p>` : '';
+    let guidance = `<h3>✦ Path of Light ✦</h3><p>Trust your intuition. ${cards.some(c=>c.id===31) ? "The Sun shines — success is near!" : "Patience reveals the hidden threads."}</p><p class="text-gold mt-4">✦ Affirmation: I walk in alignment with ancient currents, and clarity unfolds. ✦</p>`;
+    return intro + cardMeanings + pairInsight + guidance;
+  };
+  const InterpretationPanel = ({ spread, cards, question, reversedFlags }) => {
+    const [interpretation, setInterpretation] = React.useState('');
+    const [isLoading, setIsLoading] = React.useState(false);
+    const [hasRead, setHasRead] = React.useState(false);
+    const allCardsDrawn = cards.filter(Boolean).length === spread?.cardCount;
+    const getInterpretation = () => {
+      if (!allCardsDrawn) return;
+      setIsLoading(true); setHasRead(true);
+      setTimeout(() => { setInterpretation(generateMysticalReading(spread, cards, question, reversedFlags)); setIsLoading(false); }, 600);
+    };
+    return (<div className="mt-6">
+      {!hasRead && allCardsDrawn && (<div className="flex justify-center"><button onClick={getInterpretation} className="relative group px-8 py-4 rounded-xl font-cinzel text-base tracking-widest uppercase transition-all duration-300 overflow-hidden" style={{ background:'linear-gradient(135deg, #7c3aed, #4c1d95)', border:'1px solid rgba(201,168,76,0.5)', color:'#e8c97a' }}><span className="relative z-10">✦ Reveal the Oracle's Wisdom ✦</span></button></div>)}
+      {isLoading && <div className="flex flex-col items-center gap-4 py-8"><div className="relative w-16 h-16"><div className="absolute inset-0 rounded-full border-2 border-amber-600/30 animate-spin-slow" /><div className="absolute inset-2 rounded-full border border-amber-500/50 animate-spin-slow" style={{animationDirection:'reverse'}} /><div className="absolute inset-0 flex items-center justify-center text-2xl">🔮</div></div><p className="font-cinzel text-amber-400/70 text-sm animate-pulse">The oracle contemplates...</p></div>}
+      {interpretation && (<div className="animate-fade-up"><div className="flex items-center gap-3 mb-6"><div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent" /><span className="font-cinzel-deco text-amber-400/80 text-sm tracking-widest">Oracle Speaks</span><div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent" /></div><div className="rounded-2xl p-6 md:p-8 relative overflow-hidden" style={{ background:'linear-gradient(135deg, rgba(45,27,78,0.8), rgba(26,10,46,0.9))', border:'1px solid rgba(201,168,76,0.2)' }}><div className="prose-mystical font-garamond text-amber-100/90 text-lg leading-relaxed" dangerouslySetInnerHTML={{ __html: interpretation }} /></div></div>)}
+    </div>);
+  };
+
+  // StarField
+  const StarField = () => {
+    const stars = React.useMemo(() => Array.from({ length: 80 }, (_, i) => ({ id: i, top: `${Math.random()*100}%`, left: `${Math.random()*100}%`, size: Math.random()*2+1, delay: Math.random()*4, duration: 2+Math.random()*3 })), []);
+    return (<div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+      <div className="orb w-96 h-96 -top-20 -left-20 bg-purple-800" style={{ animationDelay: '0s' }} />
+      <div className="orb w-80 h-80 top-1/3 -right-20 bg-indigo-900" style={{ animationDelay: '2s' }} />
+      <div className="orb w-64 h-64 bottom-0 left-1/3 bg-violet-900" style={{ animationDelay: '4s' }} />
+      {stars.map(star => (<div key={star.id} className="absolute rounded-full bg-amber-100" style={{ top: star.top, left: star.left, width: star.size, height: star.size, animation: `starTwinkle ${star.duration}s ease-in-out ${star.delay}s infinite`, opacity: 0.4 }} />))}
+    </div>);
+  };
+
+  // Card Detail Modal
+    const CardDetailModal = ({ card, reversedMode, onClose }) => {
+  if (!card) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+      style={{ background: 'rgba(10,5,20,0.85)', backdropFilter: 'blur(8px)' }}>
+      <div
+        className="relative max-w-md w-full rounded-2xl p-6 animate-fade-up"
+        style={{
+          background: 'linear-gradient(135deg, #2d1b4e, #1a0a2e)',
+          border: '1px solid rgba(201,168,76,0.4)',
+          boxShadow: '0 0 60px rgba(124,58,237,0.3)',
+        }}
+        onClick={e => e.stopPropagation()}>
+
+        {/* Decorative borders */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/60 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+
+        <button onClick={onClose}
+          className="absolute top-3 right-3 text-amber-700/60 hover:text-amber-400 transition-colors text-xl leading-none">
+          ✕
+        </button>
+
+        {/* Card header */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-16 h-24 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, #3d1f6e, #1a0a2e)',
+              border: '1px solid rgba(201,168,76,0.5)'
+            }}>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-3xl">{card.symbol}</span>
+              <span className="font-cinzel text-amber-400/70 text-center leading-tight px-1" style={{ fontSize: '8px' }}>
+                {card.name}
+              </span>
+            </div>
+          </div>
+          <div>
+            <div className="text-amber-700/50 font-cinzel text-xs tracking-widest mb-1">Card {card.id}</div>
+            <h2 className="font-cinzel-deco text-xl text-amber-300 mb-1">{card.name}</h2>
+            <div className="flex gap-2 flex-wrap">
+              {card.keywords.slice(0, 3).map(kw => (
+                <span key={kw} className="text-xs font-cinzel text-amber-600/70 border border-amber-800/40 px-2 py-0.5 rounded-full">
+                  {kw}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="h-px bg-gradient-to-r from-transparent via-amber-700/30 to-transparent mb-4" />
+
+        {/* Planet & Element */}
+        <div className="flex gap-4 mb-4 text-sm">
+          <div className="text-amber-500/60 font-cinzel">
+            <span className="text-amber-700/50 text-xs">Planet: </span>{card.planet}
+          </div>
+          <div className="text-amber-500/60 font-cinzel">
+            <span className="text-amber-700/50 text-xs">Element: </span>{card.element}
+          </div>
+        </div>
+
+        {/* Upright meaning */}
+        <div className="mb-4">
+          <h3 className="font-cinzel text-amber-400 text-xs tracking-widest uppercase mb-2">Upright Meaning</h3>
+          <p className="font-garamond text-amber-100/80 text-base leading-relaxed">{card.upright}</p>
+        </div>
+
+        {/* All keywords */}
+        <div>
+          <h3 className="font-cinzel text-amber-400 text-xs tracking-widest uppercase mb-2">All Keywords</h3>
+          <div className="flex flex-wrap gap-2">
+            {card.keywords.map(kw => (
+              <span key={kw} className="text-xs font-garamond text-amber-200/60 border border-amber-800/30 px-2 py-0.5 rounded">
+                {kw}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+  // Spread Selector (for home)
+  const SpreadSelector = ({ selected, onSelect }) => (<div className="grid grid-cols-2 md:grid-cols-5 gap-3">{SPREADS.map(s=><button key={s.id} onClick={()=>onSelect(s)} className={`p-4 rounded-xl text-left transition ${selected?.id===s.id?'border border-amber-500/70 bg-amber-900/30':'border border-amber-800/40 bg-purple-950/40 hover:bg-purple-900/50'}`}><div className="text-2xl">{s.icon}</div><div className="font-cinzel text-amber-300 text-sm">{s.name}</div><div className="text-amber-400/60 text-xs">{s.cardCount} cards</div></button>)}</div>);
+
+  // Reading History
+  const ReadingHistory = ({ history, onLoad }) => (<div className="mt-8 border-t border-amber-800/40 pt-5"><h3 className="font-cinzel text-amber-400 text-sm tracking-widest mb-3">📜 PAST READINGS (click to restore)</h3>{history.length===0 && <p className="text-amber-600/50 text-sm">No readings saved yet.</p>}<div className="flex flex-wrap gap-2">{history.map((item,idx)=><button key={idx} onClick={()=>onLoad(item)} className="bg-purple-900/50 border border-amber-700/40 px-3 py-1 rounded-full text-xs font-cinzel hover:bg-amber-800/30 transition">{item.date} · {item.spreadName}</button>)}</div></div>);
+
+  // ------------------------------ MAIN APP ------------------------------
+  const App = () => {
+    const [view, setView] = React.useState('home'); // home, reading, gallery
+    const [selectedSpread, setSelectedSpread] = React.useState(SPREADS[0]);
+    const [drawnCards, setDrawnCards] = React.useState([]);
+    const [reversedFlags, setReversedFlags] = React.useState([]);
+    const [question, setQuestion] = React.useState("");
+    const [useReversed, setUseReversed] = React.useState(true);
+    const [readingHistory, setReadingHistory] = React.useState([]);
+    const [showCardLibrary, setShowCardLibrary] = React.useState(false);
+    const [pairCardA, setPairCardA] = React.useState(null);
+    const [pairCardB, setPairCardB] = React.useState(null);
+    const [modalCard, setModalCard] = React.useState(null);
+    const [isShuffling, setIsShuffling] = React.useState(false);
+
+    React.useEffect(() => {
+      const saved = localStorage.getItem("lenormand_readings_v2");
+      if (saved) setReadingHistory(JSON.parse(saved));
+    }, []);
+
+    const shuffleArray = (arr) => { const a = [...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+    const drawCards = async () => {
+      setIsShuffling(true);
+      await new Promise(r => setTimeout(r, 600));
+      const shuffled = shuffleArray(LENORMAND_CARDS);
+      const selected = shuffled.slice(0, selectedSpread.cardCount);
+      setDrawnCards(selected);
+      if (useReversed) setReversedFlags(selected.map(() => Math.random() < 0.3));
+      else setReversedFlags(selected.map(() => false));
+      setIsShuffling(false);
+    };
+    const resetReading = () => { setDrawnCards([]); setQuestion(""); };
+    const saveReading = () => {
+      if (drawnCards.length===0) return;
+      const record = { id: Date.now(), date: new Date().toLocaleString(), spreadName: selectedSpread.name, spreadId: selectedSpread.id, cardIds: drawnCards.map(c=>c.id), reversedState: reversedFlags, question };
+      const updated = [record, ...readingHistory.slice(0, 11)];
+      setReadingHistory(updated);
+      localStorage.setItem("lenormand_readings_v2", JSON.stringify(updated));
+    };
+    const loadReading = (record) => {
+      const loaded = record.cardIds.map(id=>LENORMAND_CARDS.find(c=>c.id===id)).filter(Boolean);
+      if (loaded.length) {
+        setDrawnCards(loaded);
+        setReversedFlags(record.reversedState || loaded.map(()=>false));
+        setQuestion(record.question || "");
+        const found = SPREADS.find(s=>s.id===record.spreadId) || SPREADS[0];
+        setSelectedSpread(found);
+        setView('reading');
+      }
+    };
+    const startReading = (spread) => { setSelectedSpread(spread); setDrawnCards([]); setQuestion(""); setView('reading'); };
+    const pairInsight = () => !pairCardA||!pairCardB ? "Select two cards from the library." : `✦ ${pairCardA.name} + ${pairCardB.name} ✦ — ${pairCardA.keywords[0]} intertwines with ${pairCardB.keywords[0]}. ${pairCardA.element}-${pairCardB.element} dynamic.`;
+
+    return (<div className="min-h-screen relative" style={{ background: 'linear-gradient(180deg, #0f0520 0%, #1a0a2e 50%, #12041e 100%)' }}>
+      <StarField />
+      <div className="relative z-10">
+        <header className="border-b border-amber-800/20 bg-black/20 backdrop-blur-sm sticky top-0 z-40"><div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between"><button onClick={()=>setView('home')} className="flex items-center gap-2 group"><span className="text-2xl group-hover:animate-float">🔮</span><div className="text-left"><div className="font-cinzel-deco text-amber-300 text-sm md:text-base shimmer-text">The Lenormand Oracle</div><div className="font-garamond text-amber-700/60 text-xs hidden md:block">Ancient wisdom revealed</div></div></button><nav className="flex gap-1"><button onClick={()=>setView('home')} className={`font-cinzel text-xs tracking-widest px-3 py-1.5 rounded-lg ${view==='home'?'text-amber-300 bg-amber-900/30 border border-amber-700/40':'text-amber-600/70 hover:text-amber-400/80'}`}>Readings</button><button onClick={()=>setView('gallery')} className={`font-cinzel text-xs tracking-widest px-3 py-1.5 rounded-lg ${view==='gallery'?'text-amber-300 bg-amber-900/30 border border-amber-700/40':'text-amber-600/70 hover:text-amber-400/80'}`}>Gallery</button></nav></div></header>
+
+        {view === 'home' && (<div className="max-w-5xl mx-auto px-4 py-12"><div className="text-center mb-14"><div className="text-6xl mb-4 animate-float">🔮</div><h1 className="font-cinzel-deco text-3xl md:text-5xl shimmer-text">The Lenormand Oracle</h1><p className="font-garamond text-amber-200/60 text-xl italic">Peer beyond the veil — let the 36 cards illuminate your path</p><div className="flex justify-center gap-3 mt-6"><div className="h-px w-24 bg-gradient-to-r from-transparent to-amber-700/50" /><span className="text-amber-600/50 font-cinzel text-xs tracking-widest">CHOOSE YOUR SPREAD</span><div className="h-px w-24 bg-gradient-to-l from-transparent to-amber-700/50" /></div></div><SpreadSelector selected={selectedSpread} onSelect={setSelectedSpread} /><div className="flex justify-center mt-10"><button onClick={()=>startReading(selectedSpread)} className="group relative px-10 py-5 rounded-2xl font-cinzel text-lg tracking-widest overflow-hidden transition-all" style={{ background:'linear-gradient(135deg, #4c1d95, #2d1b4e)', border:'1px solid rgba(201,168,76,0.5)', color:'#e8c97a', boxShadow:'0 0 30px rgba(124,58,237,0.25)' }}><span className="relative z-10">✦ Begin {selectedSpread.name} ✦</span></button></div>
+
+          <div className="grid md:grid-cols-2 gap-6 mt-16">
+            <div className="bg-black/30 rounded-xl p-4 gold-border"><button onClick={()=>setShowCardLibrary(!showCardLibrary)} className="font-cinzel text-amber-400 underline mb-2">📖 Full Card Grimoire (36 cards)</button>{showCardLibrary && <div className="max-h-64 overflow-y-auto grid grid-cols-2 gap-2">{LENORMAND_CARDS.map(c=><div key={c.id} onClick={()=>setModalCard({card:c, rev:false})} className="cursor-pointer bg-purple-800/40 p-2 rounded flex items-center gap-2 text-sm hover:bg-amber-800/50"><span className="text-xl">{c.symbol}</span><span>{c.name}</span></div>)}</div>}</div>
+            <div className="bg-black/30 rounded-xl p-4 gold-border"><h3 className="font-cinzel text-amber-400 text-sm mb-2">🔗 Lenormand Pair Alchemy</h3><div className="flex gap-2 flex-wrap"><select onChange={e=>setPairCardA(LENORMAND_CARDS.find(c=>c.id==e.target.value))} className="bg-mid-purple border border-amber-700/50 p-1 rounded text-sm"><option>Card A</option>{LENORMAND_CARDS.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><select onChange={e=>setPairCardB(LENORMAND_CARDS.find(c=>c.id==e.target.value))} className="bg-mid-purple border border-amber-700/50 p-1 rounded text-sm"><option>Card B</option>{LENORMAND_CARDS.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div><p className="text-amber-200/80 text-sm italic mt-2">{pairInsight()}</p></div>
+          </div>
+          <ReadingHistory history={readingHistory} onLoad={loadReading} />
+        </div>)}
+
+        {view === 'reading' && selectedSpread && (<div className="max-w-5xl mx-auto px-4 py-8"><div className="flex items-center gap-2 text-amber-700/50 font-cinzel text-xs mb-6"><button onClick={()=>setView('home')} className="hover:text-amber-500">Readings</button><span>›</span><span className="text-amber-500/70">{selectedSpread.name}</span></div><div className="flex items-center gap-4 mb-6"><div className="text-3xl">{selectedSpread.icon}</div><div><h2 className="font-cinzel-deco text-amber-300 text-xl md:text-2xl">{selectedSpread.name}</h2><p className="font-garamond text-amber-500/60 text-sm italic">{selectedSpread.description}</p></div></div>
+          <div className="mb-6 rounded-xl overflow-hidden" style={{ border:'1px solid rgba(201,168,76,0.2)', background:'rgba(45,27,78,0.3)' }}><div className="px-4 py-2 border-b border-amber-800/20"><label className="font-cinzel text-amber-600/70 text-xs tracking-widest">YOUR QUESTION (Optional)</label></div><input type="text" value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What guidance do you seek?" className="w-full px-4 py-3 bg-transparent font-garamond text-amber-100/80 outline-none" /></div>
+          <div className="flex justify-center mb-4"><label className="flex items-center gap-2 text-amber-300 text-sm"><input type="checkbox" checked={useReversed} onChange={()=>setUseReversed(!useReversed)} /> Include reversed meanings</label></div>
+          {drawnCards.length === 0 ? (<div className="flex flex-col items-center gap-5 py-10"><p className="font-garamond text-amber-200/50 text-center italic">Take a breath. Focus. When ready, draw your cards.</p><div className="flex gap-2 my-2">{Array.from({length: Math.min(selectedSpread.cardCount,5)}).map((_,i)=><div key={i} className="rounded-lg card-back gold-border animate-float" style={{width:50,height:75, background:'linear-gradient(135deg,#2d1b4e,#1a0a2e)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22}}>✦</div>)}</div><button onClick={drawCards} disabled={isShuffling} className="relative px-8 py-4 rounded-xl font-cinzel text-base tracking-widest overflow-hidden transition-all" style={{ background:'linear-gradient(135deg,#6d28d9,#3b0764)', border:'1px solid rgba(201,168,76,0.5)', color:'#e8c97a' }}>{isShuffling ? <span className="animate-pulse">✦ Shuffling...</span> : <span>🃏 Draw {selectedSpread.cardCount} Cards</span>}</button></div>) : (<><div className="rounded-2xl p-4 md:p-6 mb-4" style={{ background:'rgba(26,10,46,0.6)', border:'1px solid rgba(201,168,76,0.15)' }}><SpreadLayout spread={selectedSpread} cards={drawnCards} reversedFlags={reversedFlags} onCardClick={(card, rev)=>setModalCard({card, rev})} /></div><div className="flex justify-center gap-3 mt-2"><button onClick={resetReading} className="border border-amber-700/50 px-4 py-2 rounded-full text-amber-300 text-sm">↺ Draw Again</button><button onClick={saveReading} className="border border-amber-600/50 px-5 py-2 rounded-full text-sm">💾 Save Reading</button></div><InterpretationPanel spread={selectedSpread} cards={drawnCards} question={question} reversedFlags={reversedFlags} /></>)}</div>)}
+
+        {view === 'gallery' && (<div className="max-w-6xl mx-auto px-4 py-10"><div className="text-center mb-10"><h2 className="font-cinzel-deco text-2xl md:text-3xl text-amber-300">The 36 Lenormand Cards</h2><p className="font-garamond text-amber-500/60 italic">Click any card to discover its secrets</p></div><div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-9 gap-3 justify-items-center">{LENORMAND_CARDS.map((card,i)=><LenormandCard key={card.id} card={card} size="sm" onClick={()=>setModalCard({card, rev:false})} />)}</div></div>)}
+
+        <footer className="border-t border-amber-800/20 mt-16 py-6 text-center"><p className="font-cinzel text-amber-800/40 text-xs tracking-widest">✦ THE LENORMAND ORACLE ✦ Ancient Wisdom for Modern Seekers ✦</p></footer>
+      </div>
+      {modalCard && <CardDetailModal card={modalCard.card} reversedMode={modalCard.rev} onClose={()=>setModalCard(null)} />}
+    </div>);
+  };
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App />);
+</script>
+</body>
+</html>

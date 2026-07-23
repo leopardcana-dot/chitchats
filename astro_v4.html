@@ -1,0 +1,3163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASTROLOGJIA — Enhanced Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Cormorant+Garamond:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #f5f1e8;
+  --bg-surface: #fbf8f1;
+  --bg-panel: #ffffff;
+  --bg-elevated: #f7f3ea;
+  --bg-subtle: #efe9dc;
+  --gold-primary: #B8860B;
+  --gold-light: #D4AF37;
+  --gold-dark: #8B6508;
+  --accent-blue: #3e6fa8;
+  --accent-red: #c0392b;
+  --accent-green: #3d7a3d;
+  --accent-purple: #7b52ab;
+  --text-primary: #2c2a24;
+  --text-secondary: #5c5a52;
+  --text-dim: #8a8578;
+  --text-muted: #a8a396;
+  --border-soft: #d9d1bf;
+  --border-gold: rgba(184,134,11,0.35);
+  --border-focus: #B8860B;
+  --shadow-sm: 0 1px 2px rgba(80,60,20,0.06);
+  --shadow-card: 0 2px 10px rgba(80,60,20,0.08), 0 1px 3px rgba(80,60,20,0.05);
+  --shadow-lg: 0 6px 24px rgba(80,60,20,0.12);
+  --transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-display: 'Cinzel', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: linear-gradient(180deg, #f8f4ea 0%, #f0ead9 100%);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── TOP NAV TABS ─────────────────────────────────────────── */
+.app { max-width: 1680px; margin: 0 auto; padding: 12px; }
+.hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #fff 0%, #fbf5e8 100%);
+  border: 1px solid var(--border-soft);
+  border-bottom: 3px solid var(--gold-primary);
+  border-radius: var(--radius-lg);
+  margin-bottom: 8px;
+  box-shadow: var(--shadow-card);
+}
+.hdr-l { display: flex; align-items: center; gap: 16px; }
+.hdr-ic {
+  width: 44px; height: 44px; border: 2px solid var(--gold-primary); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--gold-primary);
+}
+.hdr-t { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--gold-primary); letter-spacing: 3px; }
+.hdr-s { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; margin-top: 2px; }
+.badge {
+  padding: 5px 12px;
+  background: linear-gradient(135deg, rgba(184,134,11,0.12), rgba(212,175,55,0.08));
+  border: 1px solid var(--border-gold);
+  border-radius: 20px; font-size: 10px; color: var(--gold-dark);
+}
+#status { font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+#status::before { content: ''; width: 8px; height: 8px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 6px rgba(74,222,128,.6); }
+#status.calc::before { background: #fbbf24; }
+#status.error::before { background: #ef4444; }
+
+/* ── MAIN NAV (top-level tabs) ────────────────────────────── */
+.main-nav {
+  display: flex; gap: 2px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+}
+.nav-tab {
+  padding: 8px 20px; border: none; background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-display); font-size: 11px; letter-spacing: 1.5px;
+  cursor: pointer; border-radius: var(--radius-sm); transition: var(--transition);
+}
+.nav-tab:hover { color: var(--gold-primary); background: var(--bg-elevated); }
+.nav-tab.active { background: var(--gold-primary); color: #fff; font-weight: 600; }
+.nav-section { display: none; }
+.nav-section.active { display: block; }
+
+/* ── SHARED PANEL STYLES ──────────────────────────────────── */
+.panel {
+  background: var(--bg-panel); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-card);
+}
+.panel-header {
+  padding: 10px 14px;
+  background: linear-gradient(90deg, #fbf7ec, #f5efde);
+  border-bottom: 1px solid var(--border-soft);
+  font-family: var(--font-display); font-size: 12px; color: var(--gold-primary);
+  letter-spacing: 2px; font-weight: 600;
+}
+.panel-body { padding: 14px; }
+.panel-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.panel-table th {
+  padding: 8px 10px;
+  font-family: var(--font-display); font-size: 9px; color: var(--text-dim);
+  letter-spacing: 1px; border-bottom: 1px solid var(--border-soft);
+  background: var(--bg-subtle); text-align: left; font-weight: 600;
+}
+.panel-table td { padding: 6px 10px; border-bottom: 1px solid rgba(217,209,191,.5); }
+.panel-table tbody tr:hover { background: var(--bg-elevated); }
+.panel-table tbody tr:last-child td { border-bottom: none; }
+
+.input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px; }
+.input-group { display: flex; flex-direction: column; gap: 4px; }
+.input-group label { font-family: var(--font-display); font-size: 9px; color: var(--text-dim); letter-spacing: 1.2px; font-weight: 600; }
+.input-group input, .input-group select {
+  background: var(--bg-elevated); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); color: var(--text-primary);
+  padding: 7px 9px; font-family: var(--font-mono); font-size: 12px; transition: var(--transition);
+}
+.input-group input:focus, .input-group select:focus { outline: none; border-color: var(--border-focus); background: #fff; box-shadow: 0 0 0 3px rgba(184,134,11,.12); }
+
+.btn {
+  padding: 7px 14px; border: 1px solid var(--border-soft); background: var(--bg-panel);
+  color: var(--text-secondary); font-family: var(--font-display); font-size: 10px;
+  letter-spacing: 1px; cursor: pointer; border-radius: var(--radius-sm); transition: var(--transition);
+}
+.btn:hover { border-color: var(--gold-primary); color: var(--gold-primary); }
+.btn.primary {
+  background: linear-gradient(135deg, var(--gold-primary), var(--gold-light));
+  color: #fff; border: none; font-weight: 600;
+  box-shadow: 0 2px 6px rgba(184,134,11,.25);
+}
+.btn.primary:hover { filter: brightness(1.05); color: #fff; }
+.btn.danger { border-color: #e8503a; color: #e8503a; }
+.btn.danger:hover { background: #e8503a; color: #fff; }
+.btn.success { border-color: var(--accent-green); color: var(--accent-green); }
+.btn.success:hover { background: var(--accent-green); color: #fff; }
+
+.rxb { color: var(--accent-red); font-size: 9px; background: rgba(192,57,43,.1); padding: 2px 5px; border-radius: 3px; font-weight: 700; }
+.dig-badge { font-size: 9px; padding: 2px 7px; border-radius: 3px; display: inline-block; font-weight: 600; }
+.dig-dom { background: rgba(184,134,11,.15); color: var(--gold-dark); }
+.dig-exl { background: rgba(61,122,61,.13); color: var(--accent-green); }
+.dig-det { background: rgba(192,57,43,.13); color: var(--accent-red); }
+.dig-fal { background: rgba(217,119,6,.15); color: #b45309; }
+
+/* ── TOOLBAR ──────────────────────────────────────────────── */
+.toolbar {
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+  background: var(--bg-panel); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md); margin-bottom: 10px; flex-wrap: wrap;
+  box-shadow: var(--shadow-sm);
+}
+.mode-toggle { display: flex; background: var(--bg-subtle); border: 1px solid var(--border-soft); border-radius: 6px; padding: 2px; }
+.mode-btn { padding: 7px 14px; border: none; background: transparent; color: var(--text-secondary); font-family: var(--font-display); font-size: 10px; letter-spacing: 1px; cursor: pointer; border-radius: 4px; transition: var(--transition); }
+.mode-btn:hover { color: var(--gold-primary); }
+.mode-btn.active { background: #fff; color: var(--gold-primary); box-shadow: var(--shadow-sm); }
+
+/* ── TRANSIT SECTION LAYOUT ───────────────────────────────── */
+.inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.main-layout {   display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.chart-wrapper {
+  background: var(--bg-panel); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg); padding: 12px; box-shadow: var(--shadow-card);
+}
+#svg { width: 100%; display: block; background: radial-gradient(circle at 50% 50%, #fffcf4 0%, #f5eed9 100%); border-radius: var(--radius-md); }
+.chart-legend { display: flex; gap: 14px; padding: 10px 14px; border-top: 1px solid var(--border-soft); font-size: 10px; color: var(--text-secondary); flex-wrap: wrap; }
+
+.side-col {     padding: 16px;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border-gold);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto; }
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; padding: 12px; }
+.stat-card { padding: 10px; text-align: center; background: var(--bg-subtle); border-radius: var(--radius-sm); border: 1px solid var(--border-soft); }
+.stat-label { font-family: var(--font-display); font-size: 9px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 4px; font-weight: 600; }
+.stat-value { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--gold-primary); }
+.stat-sub { font-size: 9px; color: var(--text-dim); margin-top: 2px; }
+.element-chart { display: flex; height: 30px; border-radius: var(--radius-sm); overflow: hidden; margin: 0 12px 12px; border: 1px solid var(--border-soft); }
+.element-segment { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: white; }
+
+/* ── FEATURE TABS (sub-tabs in transit section) ───────────── */
+.feature-tabs { display: flex; gap: 2px; background: var(--bg-subtle); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 3px; margin-bottom: 10px; width: fit-content; }
+.feature-tab { padding: 7px 16px; border: none; background: transparent; color: var(--text-secondary); font-family: var(--font-display); font-size: 10px; letter-spacing: 1px; cursor: pointer; border-radius: 4px; transition: var(--transition); }
+.feature-tab:hover { color: var(--gold-primary); }
+.feature-tab.active { background: var(--gold-primary); color: #fff; font-weight: 600; }
+.feature-content { display: none; }
+.feature-content.active { display: block; }
+
+.aspects-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.aspect-col { border: 1px solid var(--border-soft); border-radius: var(--radius-md); overflow: hidden; background: var(--bg-panel); box-shadow: var(--shadow-card); }
+.aspect-header { padding: 9px 12px; font-family: var(--font-display); font-size: 10px; color: var(--gold-primary); background: linear-gradient(90deg,#fbf7ec,#f5efde); border-bottom: 1px solid var(--border-soft); text-align: center; letter-spacing: 1px; font-weight: 600; }
+.aspect-list { max-height: 500px; overflow-y: auto; }
+.aspect-item { padding: 7px 12px; display: flex; align-items: flex-start; gap: 8px; font-size: 11px; border-bottom: 1px solid rgba(217,209,191,.4); }
+.aspect-item:hover { background: var(--bg-elevated); }
+.aspect-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.aspect-orb { margin-left: auto; font-size: 10px; color: var(--text-dim); }
+
+.bottom-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.time-nav { display: flex; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-soft); flex-wrap: wrap; align-items: center; }
+.time-btn { padding: 5px 10px; border: 1px solid var(--border-soft); background: var(--bg-panel); color: var(--text-secondary); font-size: 10px; border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition); }
+.time-btn:hover { border-color: var(--gold-primary); color: var(--gold-primary); }
+.time-btn.now { background: linear-gradient(135deg, var(--gold-primary), var(--gold-light)); border-color: var(--gold-primary); color: #fff; font-weight: 700; }
+.tz-badge { padding: 4px 10px; background: rgba(62,111,168,.12); border: 1px solid rgba(62,111,168,.3); border-radius: 12px; font-size: 10px; color: var(--accent-blue); margin-left: auto; }
+
+/* ── PERSON DATABASE SECTION ──────────────────────────────── */
+#section-database { }
+.db-layout { display: grid; grid-template-columns: 320px 1fr; gap: 12px; }
+.person-list { max-height: 600px; overflow-y: auto; }
+.person-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-bottom: 1px solid rgba(217,209,191,.5);
+  cursor: pointer; transition: var(--transition);
+}
+.person-item:hover { background: var(--bg-elevated); }
+.person-item.selected { background: rgba(184,134,11,.08); border-left: 3px solid var(--gold-primary); }
+.person-avatar {
+  width: 36px; height: 36px; border-radius: 50%; display: flex;
+  align-items: center; justify-content: center; font-family: var(--font-display);
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+  border: 2px solid var(--border-gold);
+}
+.person-name { font-family: var(--font-display); font-size: 11px; color: var(--text-primary); font-weight: 600; letter-spacing: 0.5px; }
+.person-dob { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
+.person-sign { font-size: 14px; margin-left: auto; }
+.person-actions { display: flex; gap: 6px; margin-left: 4px; }
+
+.db-form { }
+.db-detail {  }
+.db-detail-header {
+  display: flex; align-items: center; gap: 14px; padding: 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.db-avatar-lg {
+  width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-family: var(--font-display); font-size: 20px;
+  font-weight: 700; border: 2px solid var(--border-gold);
+}
+.db-name { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--gold-primary); }
+.db-meta { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+.db-actions { margin-left: auto; display: flex; gap: 8px; }
+
+.planet-profile {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+  padding: 14px;
+}
+.planet-card {
+  padding: 10px; background: var(--bg-subtle); border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft); text-align: center;
+}
+.planet-sym { font-size: 20px; display: block; margin-bottom: 4px; }
+.planet-pos { font-size: 10px; color: var(--text-primary); font-weight: 600; }
+.planet-name { font-size: 9px; color: var(--text-dim); letter-spacing: 0.5px; margin-top: 2px; }
+
+/* ── SYNASTRY SECTION ─────────────────────────────────────── */
+#section-synastry { }
+.synastry-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.synastry-select {
+  padding: 14px; background: var(--bg-elevated);
+  border-radius: var(--radius-sm); border: 1px solid var(--border-soft);
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.synastry-vs {
+  font-family: var(--font-display); font-size: 24px; font-weight: 700;
+  color: var(--gold-primary); padding: 0 8px;
+}
+.compatibility-meter {
+  margin: 14px;
+  background: var(--bg-subtle); border-radius: var(--radius-sm);
+  padding: 14px; border: 1px solid var(--border-soft);
+}
+.compat-bar { height: 8px; background: var(--border-soft); border-radius: 4px; overflow: hidden; margin: 6px 0; }
+.compat-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+.compat-label { font-size: 10px; color: var(--text-dim); display: flex; justify-content: space-between; margin-top: 4px; }
+
+/* ── PATTERNS ─────────────────────────────────────────────── */
+.pattern-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; padding: 14px; }
+.pattern-card {
+  padding: 12px; border: 1px solid var(--border-soft); border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+}
+.pattern-name { font-family: var(--font-display); font-size: 11px; color: var(--gold-primary); font-weight: 600; margin-bottom: 4px; }
+.pattern-planets { font-size: 10px; color: var(--text-primary); margin-bottom: 4px; }
+.pattern-desc { font-size: 10px; color: var(--text-dim); line-height: 1.4; }
+.pattern-none { padding: 20px; text-align: center; color: var(--text-dim); font-size: 11px; grid-column: 1/-1; }
+
+/* ── TIMELINE ─────────────────────────────────────────────── */
+.timeline-item {
+  padding: 10px 12px; display: grid; grid-template-columns: 120px 1fr auto;
+  gap: 10px; align-items: center; font-size: 11px;
+  border-bottom: 1px solid rgba(217,209,191,.4);
+}
+.timeline-date { color: var(--text-dim); font-size: 10px; }
+.tl-exact { color: var(--accent-green); font-size: 9px; font-weight: 700; }
+.tl-apply { color: var(--gold-primary); font-size: 9px; }
+
+/* ── MODAL ────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(44,42,36,.6);
+  z-index: 1000; display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--bg-panel); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg); padding: 24px; min-width: 480px;
+  box-shadow: var(--shadow-lg); max-width: 90vw;
+}
+.modal-title { font-family: var(--font-display); font-size: 14px; color: var(--gold-primary); letter-spacing: 2px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border-soft); }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-soft); }
+
+/* ── TOOLTIP ──────────────────────────────────────────────── */
+#planet-tooltip {
+  position: fixed; background: rgba(255,253,247,.98); border: 1px solid var(--border-gold);
+  border-radius: var(--radius-md); padding: 10px 14px; pointer-events: none; z-index: 9999;
+display: none; min-width: 260px; max-width: 340px; box-shadow: var(--shadow-lg);
+}
+.tip-title { font-family: var(--font-display); font-size: 11px; color: var(--gold-primary); margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid var(--border-gold); letter-spacing: 1px; font-weight: 600; }
+.tip-row { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; padding: 3px 0; }
+.tip-lbl { color: var(--text-dim); }
+.tip-val { color: var(--text-primary); font-weight: 500; }
+
+/* ── TOAST ────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(120px);
+  background: rgba(44,42,36,.95); color: #fff; padding: 12px 24px;
+  border-radius: 50px; transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  z-index: 10000; font-size: 12px; box-shadow: var(--shadow-lg);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── SCROLLBARS ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: var(--bg-subtle); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
+
+.empty-state { padding: 30px; text-align: center; color: var(--text-dim); font-size: 11px; }
+.section-divider { height: 1px; background: var(--border-soft); margin: 10px 0; }
+
+@media (max-width: 1200px) { .main-layout { grid-template-columns: 1fr; } .aspects-grid { grid-template-columns: 1fr; } .bottom-panels { grid-template-columns: 1fr; } .inputs { grid-template-columns: 1fr; } .db-layout { grid-template-columns: 1fr; } .synastry-layout { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .stats-grid { grid-template-columns: repeat(2,1fr); } #svg { height: 400px; } .planet-profile { grid-template-columns: repeat(2,1fr); } .pattern-grid { grid-template-columns: 1fr; } }
+/* ── TAB BAR ───────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  overflow-x: auto;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-gold);
+  flex-shrink: 0;
+  scrollbar-width: none;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+ 
+.tab-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  padding: 9px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tab-btn.active { color: var(--gold-bright); border-bottom-color: var(--gold-bright); }
+.tab-btn:hover:not(.active) { color: var(--text-mid); }
+ 
+/* ── TAB CONTENT ───────────────────────────────────── */
+.tab-pane { display: none; flex: 1; overflow-y: auto; }
+.tab-pane.active { display: flex; flex-direction: column; }
+ 
+.pane-header {
+  padding: 8px 14px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-gold);
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--text-mid);
+  flex-shrink: 0;
+}
+ 
+.pane-body {
+  padding: 10px 12px;
+  flex: 1;
+  overflow-y: auto;
+}
+/* ── PLANET TABLE ──────────────────────────────────── */
+.ptable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+.ptable th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10x;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--border-gold);
+  text-align: left;
+}
+.ptable td {
+  padding: 4px 6px;
+  border-bottom: 1px solid rgba(61,42,10,0.5);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  vertical-align: middle;
+}
+.ptable tr:hover td { background: var(--bg-hover); }
+@media print {
+  .app > *:not(#print-report) { display: none !important; }
+  .modal-overlay { position: static !important; background: none !important; display: block !important; opacity: 1 !important; }
+  .modal { box-shadow: none !important; border: none !important; max-height: none !important; min-width: 100% !important; }
+  .modal-title, .modal-footer, #report-name-badge, .btn { display: none !important; }
+  #report-preview { overflow: visible !important; max-height: none !important; }
+  body { background: white !important; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="hdr-ic">&#9737;</div>
+    <div>
+      <div class="hdr-t">ASTROLOGJIA</div>
+      <div class="hdr-s">Swiss Ephemeris Suite — Enhanced</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span id="status">Swiss Ephemeris Ready</span>
+    <div class="badge">Tropical · Geocentric · Placidus</div>
+    <div class="badge" id="db-count-badge">0 Persons</div>
+  </div>
+</div>
+
+<!-- MAIN NAVIGATION -->
+<div class="main-nav">
+  <button class="nav-tab active" onclick="switchSection('transit')">&#9737; Transit / Natal</button>
+  <button class="nav-tab" onclick="switchSection('database')">&#9760; Person Database</button>
+  <button class="nav-tab" onclick="switchSection('synastry')">&#9689; Synastry</button>
+  <button class="nav-tab" onclick="switchSection('patterns')">&#9670; Aspect Patterns</button>
+  <button class="nav-tab" onclick="switchSection('timeline')">&#8987; Timeline</button>
+  <button class="nav-tab" onclick="switchSection('interp')">&#9997; Interpretations</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     SECTION: TRANSIT / NATAL (original main view)
+════════════════════════════════════════════════════════ -->
+<div id="section-transit" class="nav-section active">
+
+  <div class="toolbar">
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="mb-both" onclick="setMode('both')">Composite</button>
+      <button class="mode-btn" id="mb-natal" onclick="setMode('natal')">Natal</button>
+      <button class="mode-btn" id="mb-transit" onclick="setMode('transit')">Transit</button>
+    </div>
+    <button class="btn primary" onclick="calc()">&#9654; Calculate</button>
+    <button class="btn" onclick="exportChart()">&#8659; Export</button>
+    <button class="btn success" onclick="saveCurrentAsProfile()">&#43; Save to Database</button>
+    <span style="font-size:10px;color:var(--text-dim);margin-left:auto">
+      Orb: <input type="number" id="orbm" value="1.0" step="0.1" min="0.1" max="3.0" style="width:46px;background:var(--bg-elevated);border:1px solid var(--border-soft);color:var(--text-primary);padding:2px 4px;border-radius:3px;margin:0 4px;font-family:var(--font-mono);font-size:11px">×
+    </span>
+  </div>
+
+  <div class="inputs">
+    <div class="panel" id="panel-natal">
+      <div class="panel-header">&#9737; Natal Chart — Birth Data</div>
+      <div class="panel-body">
+        <div class="input-grid">
+          <div class="input-group"><label>Name</label><input type="text" id="nname" value=""></div>
+          <div class="input-group"><label>Birth Date</label><input type="date" id="ndate" value="1977-07-20"></div>
+          <div class="input-group"><label>Local Time</label><input type="time" id="ntime" value="07:30"></div>
+          <div class="input-group"><label>Latitude (N)</label><input type="number" id="nlat" value="42.6629" step="0.01"></div>
+          <div class="input-group"><label>Longitude (E)</label><input type="number" id="nlon" value="21.1655" step="0.01"></div>
+          <div class="input-group"><label>Location</label><input type="text" id="nloc" value="Prishtina, Kosovo"></div>
+          <div class="input-group"><label>UTC Offset</label><input type="text" id="nutc" readonly value="+1"></div>
+          <div class="input-group"><label>Load from DB</label>
+            <select id="db-load-natal" onchange="loadFromDB('natal')">
+              <option value="">— Select person —</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel" id="panel-transit">
+      <div class="panel-header">&#9789; Transit Chart — Current Moment</div>
+      <div class="panel-body">
+        <div class="input-grid">
+          <div class="input-group"><label>Transit Date</label><input type="date" id="tdate"></div>
+          <div class="input-group"><label>Local Time</label><input type="time" id="ttime"></div>
+          <div class="input-group"><label>House System</label><select id="hsys"><option value="placidus">Placidus</option><option value="equal">Equal</option><option value="whole">Whole Sign</option></select></div>
+          <div class="input-group"><label>UTC Offset</label><input type="text" id="tutc" readonly value="+2"></div>
+        </div>
+        <div class="time-nav">
+          <button class="time-btn" onclick="shiftTime(-7*86400000)">−1w</button>
+          <button class="time-btn" onclick="shiftTime(-86400000)">−1d</button>
+          <button class="time-btn" onclick="shiftTime(-3600000)">−1h</button>
+          <button class="time-btn now" onclick="setNowTime()">NOW</button>
+          <button class="time-btn" onclick="shiftTime(3600000)">+1h</button>
+          <button class="time-btn" onclick="shiftTime(86400000)">+1d</button>
+          <button class="time-btn" onclick="shiftTime(7*86400000)">+1w</button>
+          <span class="tz-badge" id="tz-badge">CEST UTC+2</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <div class="chart-wrapper">
+      <svg id="svg" viewBox="0 0 700 700"></svg>
+      <div class="chart-legend">
+        <div><span style="width:10px;height:10px;background:#D4AF37;border:1px solid #B8860B;border-radius:50%;display:inline-block;margin-right:4px"></span>Natal</div>
+        <div><span style="width:10px;height:10px;border:2px dashed #3e6fa8;border-radius:50%;display:inline-block;margin-right:4px"></span>Transit</div>
+        <div><span style="width:14px;height:2px;background:#e84848;display:inline-block;margin-right:4px;vertical-align:middle"></span>Hard Aspects</div>
+        <div><span style="width:14px;height:2px;background:#5aa9e6;display:inline-block;margin-right:4px;vertical-align:middle"></span>Soft Aspects</div>
+      </div>
+    </div>
+    <div class="side-col">
+	  <div class="tab-bar" id="right-tabs">
+        <button class="tab-btn active" data-pane="placement">Chart</button>
+        <button class="tab-btn" data-pane="transits">Transits</button>
+        <button class="tab-btn" data-pane="aspects">Aspects</button>
+        <button class="tab-btn" data-pane="cusps">Houses</button>
+        <button class="tab-btn" data-pane="elements">Elements</button>
+        <button class="tab-btn" data-pane="dignities">Dignities</button>
+		<button class="tab-btn" data-pane="interpret">Interpret</button>
+      </div>
+	  <!-- Natal Placement -->
+      <div id="pane-placement" class="tab-pane active">
+	  <div class="panel">
+       <div class="panel-header">Natal Planets</div>
+        <table class="panel-table"><thead><tr><th>Planet</th><th>Position</th><th>H</th><th>Rx</th><th>Speed</th><th>Dignity</th></tr></thead><tbody id="ntbl"></tbody></table>
+      </div>
+      </div>
+ 
+      <!-- Transits -->
+      <div id="pane-transits" class="tab-pane">
+        <div class="panel">
+        <div class="panel-header">Transit Planets</div>
+        <table class="panel-table"><thead><tr><th>Planet</th><th>Position</th><th>H</th><th>Rx</th><th>Speed</th><th>Dignity</th></tr></thead><tbody id="ttbl"></tbody></table>
+      </div>
+      </div>
+ 
+      <!-- Aspects -->
+      <div id="pane-aspects" class="tab-pane">
+         <div class="feature-content active" id="feat-aspects">
+    <div class="aspects-grid">
+      <div class="aspect-col"><div class="aspect-header">T → N: Transit to Natal</div><div class="aspect-list" id="asp-tn"></div></div>
+      <div class="aspect-col"><div class="aspect-header">N → N: Natal Aspects</div><div class="aspect-list" id="asp-nn"></div></div>
+      <div class="aspect-col"><div class="aspect-header">T → T: Transit Aspects</div><div class="aspect-list" id="asp-tt"></div></div>
+    </div>
+  </div>
+      </div>
+ 
+      <!-- House Cusps -->
+      <div id="pane-cusps" class="tab-pane">
+        <div class="pane-header">HOUSE CUSPS — PLACIDUS</div>
+        <div class="pane-body">
+          <table class="ptable">
+            <thead><tr><th>House</th><th>Sign</th><th>Degree</th></tr></thead>
+            <tbody id="cusps-body"><tr><td colspan="3">—</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+ 
+      <!-- Elements -->
+      <div id="pane-elements" class="tab-pane">
+        <div class="panel-header">Chart Analysis</div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Chart Ruler</div><div class="stat-value" id="s-r">—</div><div class="stat-sub" id="s-rs">—</div></div>
+          <div class="stat-card"><div class="stat-label">Element</div><div class="stat-value" id="s-e">—</div><div class="stat-sub" id="s-es">—</div></div>
+          <div class="stat-card"><div class="stat-label">Modality</div><div class="stat-value" id="s-m">—</div><div class="stat-sub" id="s-ms">—</div></div>
+          <div class="stat-card"><div class="stat-label">ASC / MC</div><div class="stat-value" id="s-a" style="font-size:12px">—</div><div class="stat-sub" id="s-mc">—</div></div>
+        </div>
+        <div class="element-chart" id="element-chart"></div>
+      </div>
+     
+ 
+      <!-- Dignities -->
+      <div id="pane-dignities" class="tab-pane">
+        <div class="pane-header">ESSENTIAL DIGNITIES</div>  
+    <div class="pane-body">
+      <table class="panel-table">
+        <thead><tr><th>Planet</th><th style="color:#d4af37">Domicile</th><th style="color:#68d391">Exaltation</th><th style="color:#fca5a5">Detriment</th><th style="color:#fcd34d">Fall</th></tr></thead>
+        <tbody id="dignities-ref"></tbody>
+      </table>
+    </div>
+  </div>
+  <!-- Interpret pane -->
+<div id="pane-interpret" class="tab-pane">
+  <div class="pane-header">NATAL INTERPRETATION SUMMARY</div>
+  <div class="pane-body" id="interpret-pane-body">
+    <div class="empty-state">Calculate a chart first, then interpretations for loaded placements will appear here.</div>
+  </div>
+</div>
+  </div>
+<div id="pane-details" class="tab-pane">
+<div class="pane-header">Details</div>
+  <div class="feature-content" id="feat-detail">
+    <div style="overflow-x:auto">
+      <table class="panel-table">
+        <thead><tr><th>P1</th><th>Aspect</th><th>P2</th><th>Orb</th><th>Phase</th><th>Type</th></tr></thead>
+        <tbody id="adtbl"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+</div></div>  
+
+
+<!-- ════════════════════════════════════════════════════════
+     SECTION: PERSON DATABASE
+════════════════════════════════════════════════════════ -->
+<div id="section-database" class="nav-section">
+  <div class="toolbar">
+    <button class="btn primary" onclick="openAddPersonModal()">&#43; Add Person</button>
+    <button class="btn" onclick="exportDatabase()">&#8659; Export JSON</button>
+    <button class="btn" onclick="importDatabase()">&#8679; Import JSON</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
+    <span style="margin-left:auto;font-size:10px;color:var(--text-dim)" id="db-count-label">0 persons stored</span>
+  </div>
+  <div class="db-layout">
+    <div class="panel" style="overflow:hidden">
+      <div class="panel-header">&#9760; Saved Persons</div>
+      <div class="person-list" id="person-list">
+        <div class="empty-state">No persons saved yet.<br>Click <strong>+ Add Person</strong> to begin.</div>
+      </div>
+    </div>
+    <div class="panel" id="db-detail-panel">
+      <div class="panel-header">Person Detail</div>
+      <div id="db-detail-content">
+        <div class="empty-state">Select a person from the list to view their chart profile.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     SECTION: SYNASTRY
+════════════════════════════════════════════════════════ -->
+<div id="section-synastry" class="nav-section">
+  <div class="panel" style="margin-bottom:10px">
+    <div class="panel-header">&#9689; Synastry — Select Two Persons</div>
+    <div class="panel-body">
+      <div class="synastry-select">
+        <div class="input-group" style="flex:1">
+          <label>Person A</label>
+          <select id="syn-a" onchange="calcSynastry()"><option value="">— Select from Database —</option></select>
+        </div>
+        <span class="synastry-vs">VS</span>
+        <div class="input-group" style="flex:1">
+          <label>Person B</label>
+          <select id="syn-b" onchange="calcSynastry()"><option value="">— Select from Database —</option></select>
+        </div>
+        <button class="btn primary" onclick="calcSynastry()">Analyze</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="synastry-result">
+    <div class="empty-state" style="padding:40px">Select two persons from the database to see synastry analysis.</div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     SECTION: ASPECT PATTERNS
+════════════════════════════════════════════════════════ -->
+<div id="section-patterns" class="nav-section">
+  <div class="toolbar">
+    <button class="btn primary" onclick="if(ND)renderPatterns()">Detect Patterns</button>
+    <span style="font-size:10px;color:var(--text-dim);margin-left:10px">Uses currently loaded Natal chart</span>
+  </div>
+  <div class="panel" style="margin-bottom:10px">
+    <div class="panel-header">&#9670; Detected Natal Aspect Patterns</div>
+    <div class="pattern-grid" id="patterns-grid">
+      <div class="pattern-none">Calculate a natal chart first, then click "Detect Patterns".</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-header">Pattern Reference Guide</div>
+    <div style="padding:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+      <div class="pattern-card">
+        <div class="pattern-name">Grand Trine</div>
+        <div class="pattern-desc">Three planets, each 120° apart, forming an equilateral triangle. Talent, ease, flow — but can indicate complacency if not activated.</div>
+      </div>
+      <div class="pattern-card">
+        <div class="pattern-name">T-Square</div>
+        <div class="pattern-desc">Two planets in opposition (180°), both square (90°) to a third apex planet. High tension, great drive. The apex planet is the focal point of challenge.</div>
+      </div>
+      <div class="pattern-card">
+        <div class="pattern-name">Grand Cross</div>
+        <div class="pattern-desc">Four planets in two oppositions, all square each other. Maximum tension across all axes. Rare, intense, demands mastery of four life areas.</div>
+      </div>
+      <div class="pattern-card">
+        <div class="pattern-name">Yod (Finger of God)</div>
+        <div class="pattern-desc">Two planets sextile (60°) each other, both quincunx (150°) a third apex. A point of fate, adjustment, spiritual mission. The apex planet is redirected repeatedly.</div>
+      </div>
+      <div class="pattern-card">
+        <div class="pattern-name">Stellium</div>
+        <div class="pattern-desc">Three or more planets in the same sign or house (within 8°). Concentrated energy, strong focus, dominant theme in the chart.</div>
+      </div>
+      <div class="pattern-card">
+        <div class="pattern-name">Kite</div>
+        <div class="pattern-desc">Grand Trine with a fourth planet opposing one trine planet and sextiling the other two. The kite gives the trine a point of tension and release — making the ease productive.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     SECTION: TIMELINE
+════════════════════════════════════════════════════════ -->
+<div id="section-timeline" class="nav-section">
+  <div class="toolbar">
+    <div class="input-group" style="flex-direction:row;align-items:center;gap:8px">
+      <label style="font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:1px">From</label>
+      <input type="date" id="tl-from" style="background:var(--bg-elevated);border:1px solid var(--border-soft);color:var(--text-primary);padding:5px 8px;border-radius:4px;font-family:var(--font-mono);font-size:11px">
+    </div>
+    <div class="input-group" style="flex-direction:row;align-items:center;gap:8px">
+      <label style="font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:1px">To</label>
+      <input type="date" id="tl-to" style="background:var(--bg-elevated);border:1px solid var(--border-soft);color:var(--text-primary);padding:5px 8px;border-radius:4px;font-family:var(--font-mono);font-size:11px">
+    </div>
+    <button class="btn primary" onclick="calcTimeline()">&#8987; Scan Timeline</button>
+    <button class="btn" onclick="exportTimeline()">&#8659; Export CSV</button>
+    <span style="font-size:10px;color:var(--text-dim);margin-left:auto">Scans T→N aspects day-by-day</span>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">&#8987; Upcoming Aspects Timeline</div>
+    <div id="timeline-content" style="max-height:600px;overflow-y:auto">
+      <div class="empty-state">Set a date range and click "Scan Timeline" to find exact transit-to-natal aspect dates.</div>
+    </div>
+  </div>
+</div>
+<!-- ════════════════════════════════════════════════════════
+     SECTION: INTERPRETATIONS EDITOR
+════════════════════════════════════════════════════════ -->
+<div id="section-interp" class="nav-section">
+
+  <div class="toolbar">
+    <span style="font-family:var(--font-display);font-size:11px;color:var(--gold-primary);letter-spacing:1px">INTERPRETATION LIBRARY</span>
+    <span id="interp-count-badge" class="badge" style="margin-left:8px">0 entries</span>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn" onclick="exportInterpCSV()">&#8659; Export CSV</button>
+      <button class="btn" onclick="exportInterpJSON()">&#8659; Export JSON</button>
+      <button class="btn" onclick="document.getElementById('interp-import-file').click()">&#8679; Import CSV/JSON</button>
+      <input type="file" id="interp-import-file" accept=".csv,.json" style="display:none" onchange="handleInterpImport(event)">
+      <button class="btn primary" onclick="buildReport()">&#9654; Build Report</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:340px 1fr;gap:12px">
+
+    <!-- LEFT: selector panel -->
+    <div class="panel">
+      <div class="panel-header">&#9997; Select Entry to Edit</div>
+      <div class="panel-body" style="display:flex;flex-direction:column;gap:10px">
+
+        <div class="input-group">
+          <label>Category</label>
+          <select id="ie-cat" onchange="updateInterpKeySelector()">
+            <option value="ps">Planet in Sign (natal)</option>
+            <option value="ph">Planet in House (natal)</option>
+            <option value="na">Natal Aspect</option>
+            <option value="tn">Transit to Natal Aspect</option>
+            <option value="ts">Transit Planet in Sign</option>
+            <option value="th">Transit Planet in House</option>
+            <option value="di">Dignity / Debility</option>
+            <option value="ge">General / Chart Notes</option>
+          </select>
+        </div>
+
+        <!-- Planet in Sign -->
+        <div id="ie-ps-row" class="interp-cat-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="input-group">
+            <label>Planet</label>
+            <select id="ie-ps-planet">
+              <option>Sun</option><option>Moon</option><option>Mercury</option>
+              <option>Venus</option><option>Mars</option><option>Jupiter</option>
+              <option>Saturn</option><option>Uranus</option><option>Neptune</option><option>Pluto</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Sign</label>
+            <select id="ie-ps-sign">
+              <option>Aries</option><option>Taurus</option><option>Gemini</option><option>Cancer</option>
+              <option>Leo</option><option>Virgo</option><option>Libra</option><option>Scorpio</option>
+              <option>Sagittarius</option><option>Capricorn</option><option>Aquarius</option><option>Pisces</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Planet in House -->
+        <div id="ie-ph-row" class="interp-cat-row" style="display:none;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="input-group">
+            <label>Planet</label>
+            <select id="ie-ph-planet">
+              <option>Sun</option><option>Moon</option><option>Mercury</option>
+              <option>Venus</option><option>Mars</option><option>Jupiter</option>
+              <option>Saturn</option><option>Uranus</option><option>Neptune</option><option>Pluto</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>House</label>
+            <select id="ie-ph-house">
+              <option value="1">1st</option><option value="2">2nd</option><option value="3">3rd</option>
+              <option value="4">4th</option><option value="5">5th</option><option value="6">6th</option>
+              <option value="7">7th</option><option value="8">8th</option><option value="9">9th</option>
+              <option value="10">10th</option><option value="11">11th</option><option value="12">12th</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Natal Aspect -->
+        <div id="ie-na-row" class="interp-cat-row" style="display:none;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div class="input-group">
+            <label>Planet 1</label>
+            <select id="ie-na-p1">
+              <option>Sun</option><option>Moon</option><option>Mercury</option><option>Venus</option>
+              <option>Mars</option><option>Jupiter</option><option>Saturn</option><option>Uranus</option>
+              <option>Neptune</option><option>Pluto</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Aspect</label>
+            <select id="ie-na-asp">
+              <option>Conjunction</option><option>Opposition</option><option>Square</option>
+              <option>Trine</option><option>Sextile</option><option>Quincunx</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Planet 2</label>
+            <select id="ie-na-p2">
+              <option>Sun</option><option>Moon</option><option>Mercury</option><option>Venus</option>
+              <option>Mars</option><option>Jupiter</option><option>Saturn</option><option>Uranus</option>
+              <option>Neptune</option><option>Pluto</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Transit to Natal -->
+        <div id="ie-tn-row" class="interp-cat-row" style="display:none;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div class="input-group">
+            <label>Transit Planet</label>
+            <select id="ie-tn-tp">
+              <option>Sun</option><option>Moon</option><option>Mercury</option><option>Venus</option>
+              <option>Mars</option><option>Jupiter</option><option>Saturn</option><option>Uranus</option>
+              <option>Neptune</option><option>Pluto</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Aspect</label>
+            <select id="ie-tn-asp">
+              <option>Conjunction</option><option>Opposition</option><option>Square</option>
+              <option>Trine</option><option>Sextile</option><option>Quincunx</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Natal Planet</label>
+            <select id="ie-tn-np">
+              <option>Sun</option><option>Moon</option><option>Mercury</option><option>Venus</option>
+              <option>Mars</option><option>Jupiter</option><option>Saturn</option><option>Uranus</option>
+              <option>Neptune</option><option>Pluto</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Transit Planet in Sign -->
+        <div id="ie-ts-row" class="interp-cat-row" style="display:none;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="input-group">
+            <label>Transit Planet</label>
+            <select id="ie-ts-planet">
+              <option>Sun</option><option>Moon</option><option>Mercury</option><option>Venus</option>
+              <option>Mars</option><option>Jupiter</option><option>Saturn</option><option>Uranus</option>
+              <option>Neptune</option><option>Pluto</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Sign</label>
+            <select id="ie-ts-sign">
+              <option>Aries</option><option>Taurus</option><option>Gemini</option><option>Cancer</option>
+              <option>Leo</option><option>Virgo</option><option>Libra</option><option>Scorpio</option>
+              <option>Sagittarius</option><option>Capricorn</option><option>Aquarius</option><option>Pisces</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Transit Planet in House -->
+        <div id="ie-th-row" class="interp-cat-row" style="display:none;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="input-group">
+            <label>Transit Planet</label>
+            <select id="ie-th-planet">
+              <option>Sun</option><option>Moon</option><option>Mercury</option><option>Venus</option>
+              <option>Mars</option><option>Jupiter</option><option>Saturn</option><option>Uranus</option>
+              <option>Neptune</option><option>Pluto</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>House</label>
+            <select id="ie-th-house">
+              <option value="1">1st</option><option value="2">2nd</option><option value="3">3rd</option>
+              <option value="4">4th</option><option value="5">5th</option><option value="6">6th</option>
+              <option value="7">7th</option><option value="8">8th</option><option value="9">9th</option>
+              <option value="10">10th</option><option value="11">11th</option><option value="12">12th</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Dignity -->
+        <div id="ie-di-row" class="interp-cat-row" style="display:none;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="input-group">
+            <label>Planet</label>
+            <select id="ie-di-planet">
+              <option>Sun</option><option>Moon</option><option>Mercury</option><option>Venus</option>
+              <option>Mars</option><option>Jupiter</option><option>Saturn</option><option>Uranus</option>
+              <option>Neptune</option><option>Pluto</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Dignity</label>
+            <select id="ie-di-type">
+              <option value="dom">Domicile</option><option value="exl">Exaltation</option>
+              <option value="det">Detriment</option><option value="fal">Fall</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- General -->
+        <div id="ie-ge-row" class="interp-cat-row" style="display:none">
+          <div class="input-group">
+            <label>Topic key</label>
+            <input type="text" id="ie-ge-key" placeholder="e.g. chart_overview, stellium_note">
+          </div>
+        </div>
+
+        <!-- Current key display -->
+        <div style="padding:8px 10px;background:var(--bg-elevated);border:1px solid var(--border-gold);border-radius:var(--radius-sm)">
+          <div style="font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:3px">CURRENT KEY</div>
+          <div id="ie-key-display" style="font-family:var(--font-mono);font-size:11px;color:var(--gold-primary)">—</div>
+        </div>
+
+        <button class="btn" onclick="loadInterpEntry()">&#8599; Load existing text</button>
+
+        <!-- Library browser -->
+        <div style="border-top:1px solid var(--border-soft);padding-top:10px">
+          <div style="font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">SAVED ENTRIES</div>
+          <input type="text" id="ie-search" placeholder="Filter entries..." oninput="renderInterpList()"
+            style="width:100%;background:var(--bg-elevated);border:1px solid var(--border-soft);border-radius:var(--radius-sm);color:var(--text-primary);padding:6px 8px;font-family:var(--font-mono);font-size:11px;margin-bottom:6px">
+          <div id="ie-list" style="max-height:240px;overflow-y:auto;border:1px solid var(--border-soft);border-radius:var(--radius-sm)"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: editor + preview -->
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <div class="panel" style="flex:1">
+        <div class="panel-header">&#9997; Edit Interpretation Text</div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:10px">
+          <textarea id="ie-text"
+            placeholder="Type your interpretation here. You can use plain text or simple markdown-style formatting:&#10;&#10;**bold text**  _italic_  — em dash&#10;&#10;Leave blank to delete this entry."
+            style="width:100%;min-height:180px;background:var(--bg-elevated);border:1px solid var(--border-soft);border-radius:var(--radius-sm);color:var(--text-primary);padding:10px;font-family:var(--font-serif);font-size:13px;line-height:1.6;resize:vertical"
+            oninput="updateInterpPreview()"></textarea>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn primary" onclick="saveInterpEntry()">&#10003; Save Entry</button>
+            <button class="btn danger" onclick="deleteInterpEntry()">&#215; Delete Entry</button>
+            <span id="ie-save-status" style="font-size:10px;color:var(--text-dim);margin-left:4px"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">&#9788; Live Preview</div>
+        <div id="ie-preview" style="padding:14px;font-family:var(--font-serif);font-size:13px;line-height:1.7;color:var(--text-secondary);min-height:80px;max-height:200px;overflow-y:auto">
+          <em style="color:var(--text-muted)">Preview will appear as you type…</em>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div><!-- /app -->
+<!-- MODAL: Report Builder -->
+<div class="modal-overlay" id="modal-report">
+  <div class="modal" style="min-width:680px;max-width:92vw;max-height:90vh;display:flex;flex-direction:column">
+    <div class="modal-title" style="display:flex;align-items:center;gap:10px">
+      <span>&#9654; CHART INTERPRETATION REPORT</span>
+      <span id="report-name-badge" class="badge" style="margin-left:4px"></span>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn" onclick="exportReportTXT()">&#8659; .txt</button>
+        <button class="btn" onclick="exportReportHTML()">&#8659; .html</button>
+        <button class="btn" onclick="window.print()">&#9113; Print</button>
+        <button class="btn danger" onclick="closeReportModal()">&#215; Close</button>
+      </div>
+    </div>
+
+    <!-- Report options bar -->
+    <div style="display:flex;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-soft);flex-wrap:wrap;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer">
+        <input type="checkbox" id="ropt-ps" checked> Planet in Sign
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer">
+        <input type="checkbox" id="ropt-ph" checked> Planet in House
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer">
+        <input type="checkbox" id="ropt-na" checked> Natal Aspects
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer">
+        <input type="checkbox" id="ropt-tn" checked> Transits to Natal
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer">
+        <input type="checkbox" id="ropt-di" checked> Dignities
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer">
+        <input type="checkbox" id="ropt-empty"> Include empty entries
+      </label>
+      <button class="btn" style="margin-left:auto;padding:4px 10px;font-size:9px" onclick="buildReport()">&#8635; Refresh</button>
+    </div>
+
+    <!-- Report preview -->
+    <div id="report-preview" style="flex:1;overflow-y:auto;font-family:var(--font-serif);font-size:13px;line-height:1.75;color:var(--text-primary);padding-right:4px"></div>
+  </div>
+</div>
+<!-- MODAL: Add/Edit Person -->
+<div class="modal-overlay" id="modal-person">
+  <div class="modal">
+    <div class="modal-title" id="modal-person-title">&#9760; ADD NEW PERSON</div>
+    <div class="input-grid">
+      <div class="input-group" style="grid-column:1/-1"><label>Full Name</label><input type="text" id="mp-name" placeholder="e.g. Marie Curie"></div>
+      <div class="input-group"><label>Birth Date</label><input type="date" id="mp-date"></div>
+      <div class="input-group"><label>Birth Time</label><input type="time" id="mp-time" value="12:00"></div>
+      <div class="input-group"><label>Latitude</label><input type="number" id="mp-lat" step="0.01" placeholder="e.g. 52.2297"></div>
+      <div class="input-group"><label>Longitude</label><input type="number" id="mp-lon" step="0.01" placeholder="e.g. 21.0122"></div>
+      <div class="input-group" style="grid-column:1/-1"><label>Location Name</label><input type="text" id="mp-loc" placeholder="e.g. Warsaw, Poland"></div>
+      <div class="input-group"><label>Notes</label><input type="text" id="mp-notes" placeholder="Optional notes..."></div>
+      <div class="input-group"><label>Category</label>
+        <select id="mp-cat">
+          <option value="person">Person</option>
+          <option value="event">Event</option>
+          <option value="entity">Entity/Company</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="savePerson()">Save Person</button>
+    </div>
+  </div>
+</div>
+
+<div id="planet-tooltip">
+  <div class="tip-title" id="tip-title"></div>
+  <div id="tip-body"></div>
+</div>
+<div class="toast" id="toastMsg"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CORE DATA
+// ═══════════════════════════════════════════════════════════
+let ND = null, TD = null, HS = null, ASC_ = 0, MCC_ = 0;
+let MODE = 'both';
+let transitMs = Date.now();
+let editingPersonId = null;
+// ═══════════════════════════════════════════════════════════
+// INTERPRETATION STORE
+// ═══════════════════════════════════════════════════════════
+let INTERP = {};
+
+function loadInterp() {
+  try { INTERP = JSON.parse(localStorage.getItem('astro_interp') || '{}'); } catch { INTERP = {}; }
+}
+
+function saveInterp() {
+  localStorage.setItem('astro_interp', JSON.stringify(INTERP));
+}
+
+function getInterp(key) {
+  return INTERP[key] || '';
+}
+
+function setInterp(key, text) {
+  if (text.trim()) INTERP[key] = text.trim();
+  else delete INTERP[key];
+  saveInterp();
+}
+
+function interpKey(type, ...parts) {
+  if (type === 'ph') return `ph_${parts[0]}_H${parts[1]}`;
+  if (type === 'th') return `th_${parts[0]}_H${parts[1]}`;
+  return `${type}_${parts.join('_')}`;
+}
+
+function countInterp() {
+  return Object.keys(INTERP).length;
+}
+
+const PLANETS = ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto'];
+const PLANET_SYMS = {
+  Sun: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 12" width="20" height="20"><path fill-rule="nonzero" fill="#f5c842" d="M14.5,7.26c0,2-.71,3.71-2.13,5.13s-3.13,2.13-5.13,2.13-3.71-.71-5.12-2.13c-1.42-1.42-2.12-3.13-2.12-5.13S.71,3.55,2.12,2.13C3.54.71,5.25,0,7.25,0s3.71.71,5.13,2.13,2.13,3.13,2.13,5.13ZM12.75,7.26c0-1.5-.54-2.79-1.63-3.87-1.08-1.08-2.38-1.63-3.87-1.63s-2.79.54-3.87,1.63c-1.08,1.08-1.62,2.38-1.62,3.87s.54,2.79,1.62,3.87,2.37,1.63,3.87,1.63,2.79-.54,3.87-1.63,1.63-2.38,1.63-3.87ZM8.61,7.26c0,.91-.45,1.36-1.36,1.36s-1.36-.45-1.36-1.36.45-1.36,1.36-1.36,1.36.45,1.36,1.36Z"/></svg>',
+  Moon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 12" width="20" height="20"><path fill="#c8d8f8"  fill-rule="nonzero" d="M9.95,7.26c0,1.89-.71,3.57-2.12,5.04-1.42,1.48-3.08,2.21-4.98,2.21-.88,0-1.57-.05-2.08-.16-.51-.1-.76-.27-.76-.48s.13-.42.38-.6.73-.7,1.42-1.58c.69-.88,1.04-2.36,1.04-4.44s-.35-3.56-1.04-4.45C1.11,1.93.63,1.4.38,1.23c-.25-.17-.38-.37-.38-.6,0-.21.25-.37.76-.47.51-.11,1.2-.16,2.08-.16,1.9,0,3.56.74,4.98,2.21,1.42,1.48,2.13,3.16,2.13,5.04ZM8.19,7.26c0-1.53-.52-2.85-1.55-3.97-1.03-1.11-2.39-1.67-4.08-1.67.74.71,1.26,1.43,1.56,2.16.31.73.46,1.89.47,3.48,0,1.59-.15,2.75-.46,3.48-.31.73-.84,1.45-1.57,2.15,1.68,0,3.04-.55,4.08-1.67,1.04-1.11,1.55-2.43,1.55-3.96Z"/></svg>',
+  Mercury: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 12" width="20" height="20"><path fill-rule="nonzero"  fill="#80c8d8"  d="M8.44,1.92c-.05.09-.11.19-.16.29-.06.1-.13.21-.21.34-.07.09-.14.18-.21.27-.08.09-.15.18-.23.26-.05.06-.11.12-.18.17-.07.06-.14.11-.22.17.38.22.68.49.91.79.29.39.43.94.43,1.66,0,.77-.17,1.38-.52,1.82-.18.22-.37.41-.59.57-.21.16-.45.28-.69.37-.51.14-.9.24-1.18.29-.16.03-.25.07-.27.12v1.46c0,.12.06.19.18.19h2.07c.43,0,.64.29.64.86s-.21.88-.64.88h-2.07c-.12,0-.18.06-.18.18v1.24c0,.43-.29.65-.88.65s-.88-.22-.88-.65v-1.24c0-.12-.07-.18-.2-.18H1.3c-.43,0-.65-.29-.65-.88s.22-.86.65-.86h2.05c.13,0,.2-.06.2-.19v-1.46s-.11-.09-.26-.12c-.29-.05-.69-.14-1.19-.29-.26-.09-.49-.22-.7-.37-.21-.16-.41-.35-.58-.57-.35-.45-.52-1.05-.52-1.82,0-.72.14-1.27.43-1.66.22-.3.53-.56.91-.79-.08-.06-.15-.12-.22-.17-.07-.06-.13-.11-.18-.17-.08-.09-.16-.17-.23-.26-.08-.09-.15-.18-.21-.27-.09-.12-.16-.24-.22-.34-.06-.1-.12-.19-.16-.29-.08-.16-.2-.48-.36-.95-.03-.05-.04-.12-.04-.21C0,.51.18.29.53.1c.18-.07.34-.1.49-.1.28,0,.48.11.59.33.09.19.18.38.28.58s.2.39.33.59c.28.39.57.69.9.9.32.21.76.32,1.31.32s.98-.11,1.32-.32c.33-.21.62-.51.87-.88.14-.21.25-.41.34-.6.09-.19.18-.38.28-.57.12-.22.32-.33.6-.33.13,0,.29.03.47.09.36.19.54.41.54.66,0,.1-.01.17-.04.23-.16.47-.29.78-.37.95ZM6.86,5.87c0-.44-.24-.79-.71-1.04s-1.05-.38-1.72-.38-1.24.13-1.72.38c-.48.26-.71.6-.71,1.04,0,.49.2.86.61,1.11s1.01.38,1.83.38,1.42-.14,1.83-.43c.4-.29.61-.64.61-1.06Z"/></svg>',
+  Venus: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 12" width="20" height="20"><path fill-rule="nonzero" fill="#e8a060"  d="M9.27,4.64c0,.39-.05.8-.16,1.22s-.3.84-.57,1.28c-.27.43-.6.81-1.01,1.13-.4.32-.84.57-1.31.74-.47.17-.71.36-.71.56v.78c0,.35.15.52.44.52h2.03c.35,0,.52.3.52.91,0,.57-.17.85-.52.85h-2.01c-.31,0-.46.15-.46.44v.84c0,.41-.29.61-.88.61s-.88-.2-.88-.61v-.84c0-.3-.18-.44-.53-.44h-1.95c-.34,0-.5-.29-.5-.88s.17-.88.5-.88h1.95c.35,0,.53-.17.53-.52v-.78c0-.2-.24-.38-.71-.56-.47-.17-.91-.42-1.31-.74s-.74-.69-1.01-1.13c-.27-.43-.46-.86-.57-1.28s-.16-.82-.16-1.22c0-1.29.45-2.38,1.36-3.29s2-1.36,3.28-1.36,2.37.45,3.28,1.36c.9.9,1.36,2,1.36,3.29ZM7.51,4.64c0-.81-.28-1.49-.84-2.05-.56-.56-1.24-.84-2.04-.84s-1.48.28-2.04.84c-.56.56-.84,1.24-.84,2.05s.28,1.49.84,2.03c.56.55,1.24.82,2.04.82s1.48-.27,2.04-.82c.56-.55.84-1.22.84-2.03Z"/></svg>',
+  Mars: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 12" width="20" height="20"><path fill-rule="nonzero" fill="#e85050"  d="M14.31,6.01c0,.43-.29.65-.88.65-.62,0-.93-.21-.93-.64l.1-2.99-4.5,4.5c-.11.11-.17.21-.17.29,0,.14.02.29.05.47s.08.37.14.59h0c.13.42.2.85.2,1.27,0,1.14-.4,2.12-1.21,2.93-.81.82-1.79,1.22-2.94,1.22s-2.13-.41-2.95-1.22c-.81-.81-1.22-1.78-1.22-2.93s.41-2.13,1.22-2.94c.81-.81,1.8-1.22,2.95-1.22.3,0,.57.03.81.08.24.05.46.11.68.19.32.12.55.18.69.18.13,0,.24-.04.33-.13L11.27,1.71l-2.98.1c-.43,0-.64-.3-.64-.89s.21-.92.64-.92h6.02v6.01ZM6.59,10.15c0-.68-.24-1.26-.71-1.74-.24-.23-.5-.41-.78-.53-.28-.12-.6-.18-.94-.18-.68,0-1.26.24-1.73.71-.47.47-.71,1.05-.71,1.74s.24,1.25.71,1.72c.47.47,1.05.71,1.73.71.34,0,.65-.06.94-.18.28-.12.54-.3.78-.53.47-.47.71-1.05.71-1.72Z"/></svg>',
+  Jupiter: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 12" width="20" height="20"><path fill-rule="nonzero" fill="#b080e8"  d="M11.26,10.14c0,.57-.24.85-.71.85h-2.16c-.35,0-.52.19-.52.57v1.89c0,.51-.3.77-.9.77s-.91-.26-.91-.77v-1.89c0-.38-.2-.57-.61-.57H1.3c-.14,0-.28-.02-.4-.06-.13-.04-.24-.1-.33-.17s-.17-.16-.22-.27-.08-.22-.08-.34c0-.44.17-1.15.5-2.13.16-.47.29-.88.37-1.23.09-.35.13-.63.13-.85,0-.56-.03-1.06-.08-1.5s-.13-.84-.24-1.19c-.11-.35-.23-.71-.38-1.09C.43,1.77.25,1.37.05.95-.1.6.09.32.62.11,1.15-.08,1.51-.02,1.68.3c.41.84.74,1.7.98,2.57.24.87.35,1.83.35,2.86,0,.31-.03.62-.08.93-.05.31-.11.62-.2.95-.16.59-.25.98-.25,1.17,0,.16.05.28.15.35s.3.1.6.1h2.15c.44,0,.66-.2.66-.59v-4.3c.01-.39.3-.59.89-.6.28,0,.5.06.65.16.15.1.23.25.23.46v4.29c0,.39.2.58.6.58h2.1c.5,0,.75.3.75.91Z"/></svg>',
+  Saturn: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 12" width="20" height="20"><path fill-rule="nonzero" fill="#d0b030"  d="M4.29,3.73c-.14,0-.22.07-.22.22v1.71c.26-.24.53-.43.81-.58.4-.2.96-.31,1.69-.31.84,0,1.54.3,2.09.9.55.61.83,1.37.83,2.29,0,.45-.11.86-.32,1.23-.21.37-.55.71-1.01,1.02-.23.14-.46.28-.68.42-.22.14-.44.26-.65.39-.39.22-.66.42-.79.62s-.2.38-.2.56c0,.11.02.2.06.27.04.08.09.14.16.2s.15.11.24.17c.09.05.19.1.29.15.26.12.38.31.38.55,0,.15-.06.33-.18.52-.16.3-.38.45-.65.45-.12,0-.24-.03-.37-.1-.66-.34-1.09-.67-1.29-1-.21-.33-.32-.72-.32-1.18,0-.51.13-.95.38-1.32.12-.17.24-.33.38-.47.13-.14.27-.27.42-.39.15-.12.32-.23.52-.34.19-.11.42-.23.67-.35.45-.22.78-.46.98-.74s.3-.54.3-.8c0-.43-.13-.76-.39-1-.27-.24-.58-.36-.95-.36-.66,0-1.2.16-1.63.47-.11.07-.22.16-.32.27-.1.11-.19.23-.29.36-.24.34-.57.5-1,.5-.61,0-.92-.24-.92-.71v-3.39c0-.14-.07-.22-.22-.22H.62c-.41,0-.62-.29-.62-.88s.21-.88.62-.88h1.48c.14,0,.22-.07.22-.22V.66c0-.44.31-.66.94-.66.55,0,.82.22.82.66v1.09c0,.14.07.22.22.22h1.48c.41,0,.62.29.62.88s-.21.88-.62.88h-1.48Z"/></svg>',
+  Uranus: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 12" width="20" height="20"><path fill-rule="nonzero" fill="#40d8d8"  d="M10.68,8.96c-.2.16-.39.25-.57.25s-.32-.08-.44-.23c-.2-.25-.39-.49-.55-.72-.16-.23-.34-.52-.54-.86-.2-.34-.37-.82-.51-1.43-.08-.32-.24-.48-.48-.48h-.85c-.2,0-.3.1-.3.31v3.15c0,.14.19.34.56.58.14.1.28.21.41.34s.25.26.34.4c.31.46.46.96.46,1.49,0,.73-.26,1.36-.78,1.88-.52.51-1.14.77-1.87.77s-1.35-.26-1.87-.77c-.52-.53-.78-1.15-.78-1.88,0-.53.15-1.03.46-1.49.09-.14.2-.27.34-.4s.28-.24.41-.34c.38-.24.57-.44.57-.58v-3.15c0-.2-.1-.31-.3-.31h-.84c-.24,0-.4.16-.48.48-.14.61-.32,1.09-.51,1.43-.2.34-.38.63-.54.86-.16.23-.34.47-.55.72-.13.15-.27.23-.44.23s-.37-.08-.57-.25c-.31-.23-.46-.45-.46-.67,0-.11.05-.22.14-.34.24-.3.45-.59.63-.86.18-.27.36-.59.53-.96.17-.37.26-.88.26-1.53s-.09-1.16-.26-1.53c-.17-.37-.35-.69-.53-.96-.18-.27-.39-.56-.63-.86-.09-.11-.14-.22-.14-.34,0-.22.15-.44.46-.67.2-.16.39-.25.57-.25s.32.08.44.23c.2.25.39.49.55.72.16.23.34.52.54.86s.37.82.51,1.43c.08.32.24.48.48.48h.84c.2,0,.3-.1.3-.31v-1.38c0-.34.29-.5.87-.5s.88.17.88.5v1.38c0,.2.1.31.3.31h.85c.24,0,.4-.16.48-.48.14-.61.32-1.09.51-1.43s.38-.63.54-.86c.16-.23.34-.47.55-.71.12-.16.27-.24.44-.24s.37.08.57.25c.31.23.46.45.46.67,0,.11-.05.22-.14.34-.24.3-.45.59-.63.86-.18.27-.36.59-.53.96-.17.37-.26.88-.26,1.53s.09,1.16.26,1.53c.17.37.35.69.53.96.18.27.39.56.63.86.09.11.14.22.14.34,0,.22-.15.44-.46.67ZM6.54,11.75c0-.29-.09-.52-.27-.7-.18-.18-.42-.27-.7-.27s-.52.09-.7.27c-.18.18-.27.42-.27.7s.09.52.27.71c.18.18.42.27.7.27s.52-.09.7-.27c.18-.18.27-.42.27-.71Z"/></svg>',
+  Neptune: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 12" width="20" height="20"><path fill-rule="nonzero" fill="#4878e0"  d="M6.89,8.67v2.11c0,.18.09.27.27.27h1.54c.43,0,.64.29.64.88s-.21.88-.64.88h-1.54c-.18,0-.27.09-.27.27v.77c0,.45-.29.67-.87.67s-.88-.22-.88-.67v-.77c0-.18-.09-.27-.27-.27h-1.54c-.43,0-.64-.29-.64-.88s.21-.88.64-.88h1.54c.18,0,.27-.09.27-.27v-2.11C1.72,8.67,0,5.99,0,.61,0,.2.3,0,.89,0s.87.2.87.6c0,4.2,1.13,6.3,3.39,6.3V2.15c0-.41.29-.61.88-.61s.87.2.87.61v4.75c2.26,0,3.39-2.1,3.39-6.29,0-.41.29-.61.87-.61s.89.2.89.61c0,5.38-1.72,8.06-5.15,8.06Z"/></svg>',
+  Pluto: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 12" width="20" height="20"><path fill-rule="nonzero" fill="#c04878"  d="M13.03,1.64c0,2.38-.53,4.21-1.59,5.5-1.1,1.28-2.3,2.07-3.6,2.4-.3.11-.45.2-.45.3v.89c0,.13.07.2.2.2h1.25c.45,0,.67.29.67.88s-.22.88-.67.88h-1.25c-.13,0-.2.07-.2.2v1.09c0,.37-.29.55-.88.55s-.88-.18-.88-.55v-1.09c0-.13-.07-.2-.2-.2h-1.25c-.45,0-.67-.29-.67-.88s.22-.88.67-.88h1.25c.13,0,.2-.07.2-.2v-.89c0-.09-.15-.19-.45-.3-1.3-.32-2.5-1.12-3.6-2.4C.53,5.85,0,4.02,0,1.64c0-.34.29-.51.86-.51s.86.17.86.51c0,1.85.42,3.35,1.25,4.51.91,1.14,2.09,1.71,3.55,1.71s2.61-.57,3.55-1.71c.83-1.16,1.25-2.67,1.25-4.51,0-.34.29-.51.86-.51s.86.17.86.51ZM9.8,3.28c0,.91-.32,1.69-.97,2.32-.64.64-1.41.97-2.32.97s-1.68-.32-2.32-.97c-.64-.63-.97-1.4-.97-2.32s.32-1.68.97-2.32c.64-.64,1.41-.97,2.32-.97s1.67.32,2.32.97c.64.64.97,1.41.97,2.32ZM8.06,3.28c0-.43-.15-.79-.46-1.09-.3-.31-.66-.46-1.08-.46s-.8.15-1.1.46c-.3.3-.44.67-.44,1.09.01.43.16.8.45,1.1.3.3.67.45,1.09.45s.79-.15,1.09-.45c.3-.31.45-.68.45-1.1Z"/></svg>'
+}
+const PLANET_COLS = {Sun:'#f5c842',Moon:'#c8d8f8',Mercury:'#80c8d8',Venus:'#e8a060',Mars:'#e85050',Jupiter:'#b080e8',Saturn:'#d0b030',Uranus:'#40d8d8',Neptune:'#4878e0',Pluto:'#c04878'};
+const ELEMENT_COLS = {fire:'#d44820',earth:'#4a8a4a',air:'#c8b030',water:'#3080c0'};
+const SIGN_COLORS = ['#e85050','#e8a060','#80c8d8','#4878e0','#f5c842','#80c8d8','#e8a060','#c04878','#b080e8','#40d8d8','#4878e0','#4878e0'];
+
+const SIGNS = [
+  {name:'Aries',sym:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><g fill="#ca594a" fill-rule="nonzero"><path d="M8.53,12.51c-1.43-1.81-1.41-3.89-1.4-5.93.01-1.48.07-2.6.36-3.44.16-.46.37-.82.67-1.09,1.27-1.16,2.51-.31,2.91.69.56,1.38-.69,2.62-1.07,2.62l.62,1.05c4.86-1.56-.89-10.98-4.39-3.64C2.76-4.57-2.99,4.85,1.87,6.41l.62-1.05c-.37,0-1.62-1.24-1.07-2.62.4-1,1.65-1.85,2.91-.69.3.27.52.64.67,1.09.29.83.37,1.95.38,3.43.02,2.04-.03,4.22-1.43,5.94h4.56Z"/></g></svg>',el:'fire',mod:'Cardinal',ruler:'Mars',start:0},
+  {name:'Taurus',sym:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><g fill="#7fb900" fill-rule="nonzero"><path class="cls-1" d="M8.37,4.13c2.12-.72,3.7-2.37,3.61-4.13-.89,1.76-3.26,3.14-5.97,3.13C3.38,3.12,1.54,1.83.49,0c.39,1.77,1.52,3.48,3.46,4.18-2.31.64-3.95,2.2-3.95,4.01,0,2.38,2.81,4.32,6.26,4.32s6.26-1.94,6.26-4.32c0-1.87-1.73-3.46-4.14-4.07ZM8.58,11.38c-1.79.63-4.3-.28-5.58-2.04s-.86-3.71.93-4.34c1.79-.63,4.3.28,5.58,2.04s.86,3.71-.93,4.34Z"/></g></svg>',el:'earth',mod:'Fixed',ruler:'Venus',start:30},
+  {name:'Gemini',sym:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><g fill="#eaac04" fill-rule="nonzero"><path class="cls-1" d="M10.2,0H0c2.44.86,2.78,11,.03,12.03h10.14C7.43,11.01,7.76.87,10.2,0ZM6.59,11.06l-2.97.06V.95h2.97v10.12Z"/></g></svg>',el:'air',mod:'Mutable',ruler:'Mercury',start:60},
+  {name:'Cancer',sym:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><g fill="#0b84eb" fill-rule="nonzero"><path class="cls-1" d="M3.42,4.49c2.68.38,2.69,2.86,1.77,3.67-.81.71-.2-.36-.26-1.3-.04-.69-.67-1.24-1.31-1.29-2.4-.17-2.81,2.06-1.07,3.46,1.44,1.15,4.53,1.16,7.1-.06,2.9-1.38,2.01.2-.29,1.18-2.49,1.06-5.74,1.8-8.08-.18C-1.37,7.74.47,4.07,3.42,4.49ZM11.18,1.24c2.64,2.23.8,5.9-2.15,5.48-2.68-.38-2.69-2.86-1.77-3.67.81-.71.2.36.26,1.3.04.69.67,1.24,1.31,1.29,2.4.17,2.81-2.06,1.07-3.46-1.44-1.15-4.53-1.16-7.1.06-2.9,1.38-2.01-.2.29-1.18C5.58,0,8.83-.74,11.18,1.24Z"/></g></svg>',el:'water',mod:'Cardinal',ruler:'Moon',start:90},
+  {name:'Leo',sym:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><g fill="#ca594a" fill-rule="nonzero"><path class="cls-1" d="M5.08,6.73c.23-1.15-.11-2.74-.12-3.98-.02-2.64,4.67-2.66,4.69-.04.02,2.59-2.4,4.33-3.02,6.52-.11.4-.09.78.03,1.24.64,2.37,4.99,2.92,5.77.37.27-.9-.29-1.96-1.09-2.38-.37-.2-.82-.17-1.16-.06-.81.25-.94,1.47,0,1.76.81.25,1.24-.14,1.33-.13.04,0,.03.1-.08.37-.64,1.51-3.18,1.24-3.29-.62-.01-.24.01-.49.1-.76.71-2.15,3.41-3.89,3.41-6.29,0-3.29-8.73-3.94-8.73-.01,0,.43.78,1.53.74,2.6-.04,1.08-.37,2.06-1.04,2.29-.64.22-1.11-.11-1.41-.63-.15-.27-.19-.54-.21-.77-.05-.57-.8-.76-.97-.07-.14.56.27,1.31.68,1.66,1.54,1.32,4.07.43,4.37-1.06"/></g></svg>',el:'fire',mod:'Fixed',ruler:'Sun',start:120},
+  {name:'Virgo',sym:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><g fill="#7fb900" fill-rule="nonzero"><path class="cls-1" d="M1.11,1.37v9.5h1.85V2.17c.04-.6.43-.92.95-.93.53-.01.97.38.95.93v8.73h1.82V2.17c0-.57.41-.9.92-.9.54-.01.89.3.89.9,0,.4.12,1.41-.08,1.75-.2.34-.48.64-.63.99-.53,1.26-.63,2.59-.03,4.02.15.36.4.8.7,1.09.25.25.5.42.75.54-.98.87-1.88,2.41-.93,1.83,1.44-.88,1.75-.87,3.18,0,.93.57.07-.91-.89-1.79,1.38-.56,2.31-2.88,1.81-4.86-.14-.54-.59-1.44-1.06-1.93-.44-.46-.91-.51-.92-.57-.19-1.89-.53-3.39-1.46-3.21-1.06.2-1.13.9-2.14.91C6.15.93,5.45,0,4.87,0c-.62,0-1.36.91-1.98.91C1.97.91.99.06,0,.06v2.05c.03-.74.59-.74,1.11-.75M9.85,3.83c.75,0,1.36,1.38,1.36,3.07s-.61,3.07-1.36,3.07-1.36-1.38-1.36-3.07.61-3.07,1.36-3.07"/></g></svg>',el:'earth',mod:'Mutable',ruler:'Mercury',start:150},
+  {name:'Libra',sym:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><g fill="#eaac04" fill-rule="nonzero"><path class="cls-1" d="M12.51,11.09v1.42H0v-1.42h12.51ZM6.26,0c3.45,0,6.26,2.28,6.26,5.08,0,1.35-.65,2.57-1.71,3.48h1.71v1.42h-4.6c-.53.12-1.08.18-1.66.18-.61,0-1.19-.07-1.75-.2H0v-1.42h1.68C.64,7.63,0,6.42,0,5.08,0,2.28,2.81,0,6.26,0ZM6.26.47C4,.47,2.17,2.54,2.17,5.08s1.84,4.62,4.09,4.62,4.09-2.07,4.09-4.62S8.51.47,6.26.47Z"/></g></svg>',el:'air',mod:'Cardinal',ruler:'Venus',start:180},
+  {name:'Scorpio',sym:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><g fill="#0b84eb" fill-rule="nonzero"><path class="cls-1" d="M7.63,9.6c0,.09,0,.21.03.36.09.75.47,2.02,1.47,2.03.55,0,.87,0,1.21,0,.45-.02,1.53.05,1.74-.31.17-.28.13-.82.1-1.23-.01-.18-.04-.34-.05-.52.02-.37.22-.47.38-.66l-1.82-1.81.02,2.53h.6c.16.01.16.25.16.37v.61c0,.15-.07.31-.21.33h-.92s-.38,0-.38,0c-.56.02-.56-.84-.57-1.54,0-2.43-.1-4.97-.1-7.35C9.3.94,8.74-.1,8.01.04c-.87.18-1,.73-1.7.84-.06,0-.13.01-.2.01C5.54.9,4.91,0,4.39,0c-.56,0-1.22.87-1.78.87C1.77.88.9,0,0,0v2.03c.03-.71.53-.72,1-.72v9.18s1.67,0,1.67,0V2.09c.04-.57.38-.89.86-.9.47-.01.88.36.86.9v8.4h1.64V2.09c0-.31.11-.54.3-.69.14-.1.32-.16.5-.16.49-.01.8.29.81.87.03,1.42-.02,2.75,0,4.12.03,1.52,0,2.83,0,3.37"/></g></svg>',el:'water',mod:'Fixed',ruler:'Mars',start:210},
+  {name:'Sagittarius',sym:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><g fill="#ca594a" fill-rule="nonzero"><polygon class="cls-1" points="8.91 1.2 10.02 1.75 4.69 6.32 3.67 4.78 3.04 5.39 4.04 6.93 0 10.24 1.08 11.07 1.51 12.51 5.08 8.47 6.08 9.98 6.71 9.36 5.71 7.85 10.53 2.53 10.74 3.95 12.51 0 8.91 1.2"/></g></svg>',el:'fire',mod:'Mutable',ruler:'Jupiter',start:240},
+  {name:'Capricorn',sym:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><g fill="#91bf37" fill-rule="nonzero"><path class="cls-1" d="M9.53.65c-3.15.96-3.53.93-6.43-.57-.6-.31-1.33.25-1.9.88-.62.68-.66.63-1.2,1.37l1.59.02c.48-1.68,2.3.35,5.34.03C4.57,4.57,2.34,6.77.03,9v1.98l2.3-2.26c-.02,2.29,1.76,3.8,4.66,3.8,2.56,0,4.65-1.7,4.65-3.78s-2.09-3.78-4.65-3.78c-.23,0-.46.01-.69.04,1.41-1.43,5.56-3.82,6.14-4.66.31-.44-.5-.42-2.9.31ZM6.99,6.09c1.52,0,2.76,1.19,2.76,2.64s-1.24,2.64-2.76,2.64-2.76-1.19-2.76-2.64,1.24-2.64,2.76-2.64Z"/></g></svg>',el:'earth',mod:'Cardinal',ruler:'Saturn',start:270},
+  {name:'Aquarius',sym:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><g fill="#eaac04" fill-rule="nonzero"><path id="vodolija" class="cls-1" d="M0,1.13C.88.27,1.92-.24,2.93.13c1.04.38,2.12,1.89,3.24,1.87,1.16-.03,2.27-1.46,3.38-1.86,1.07-.38,2.08.03,2.96.89v2.48c-.19-.2-.35-.39-.56-.56-1.85-1.45-2.71-.28-3.87.52-1.78,1.22-2.33.98-4.05-.25-1.17-.83-2.01-1.54-4.02.38V1.13ZM0,6.24c.88-.87,1.92-1.37,2.93-1,1.04.38,2.12,1.89,3.24,1.87,1.16-.03,2.27-1.46,3.38-1.86,1.07-.38,2.08.03,2.96.89v2.48c-.19-.2-.35-.39-.56-.56-1.85-1.45-2.71-.28-3.87.52-1.78,1.22-2.33.98-4.05-.25-1.17-.83-2.01-1.54-4.02.38v-2.48Z"/></g></svg>',el:'air',mod:'Fixed',ruler:'Saturn',start:300},
+  {name:'Pisces',sym:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18"><g fill="#0b84eb" fill-rule="nonzero"><path id="ribe" class="cls-1" d="M.03.03c1.81,1.91,2.86,3.69,3.13,5.43-1.13.43-1.91,1.13-1.9,2.09.65-.41,1.31-.74,1.97-.99-.07,1.95-1.14,3.89-3.23,5.96,3.49-.03,5.25-3.56,5.27-6.26,0-.07,0-.15,0-.23.66-.09,1.32-.09,1.98-.02,0,.07,0,.15,0,.22.02,2.7,1.78,6.23,5.27,6.26-2.1-2.07-3.17-4.01-3.23-5.97.67.26,1.33.61,1.97,1.05-.01-.98-.79-1.68-1.9-2.11C9.61,3.7,10.66,1.92,12.48,0c-2.91-.02-4.64,2.73-5.11,5.01-.73-.08-1.5-.08-2.24,0C4.66,2.74,2.93.01.03.03"/></g></svg>',el:'water',mod:'Mutable',ruler:'Jupiter',start:330}
+];
+
+const DIGNITIES = {
+  Sun:{dom:['Leo'],exl:['Aries'],det:['Aquarius'],fal:['Libra']},
+  Moon:{dom:['Cancer'],exl:['Taurus'],det:['Capricorn'],fal:['Scorpio']},
+  Mercury:{dom:['Gemini','Virgo'],exl:['Virgo'],det:['Sagittarius','Pisces'],fal:['Pisces']},
+  Venus:{dom:['Taurus','Libra'],exl:['Pisces'],det:['Scorpio','Aries'],fal:['Virgo']},
+  Mars:{dom:['Aries','Scorpio'],exl:['Capricorn'],det:['Libra','Taurus'],fal:['Cancer']},
+  Jupiter:{dom:['Sagittarius','Pisces'],exl:['Cancer'],det:['Gemini','Virgo'],fal:['Capricorn']},
+  Saturn:{dom:['Capricorn','Aquarius'],exl:['Libra'],det:['Cancer','Leo'],fal:['Aries']},
+  Uranus:{dom:['Aquarius'],exl:['Scorpio'],det:['Leo'],fal:['Taurus']},
+  Neptune:{dom:['Pisces'],exl:['Cancer'],det:['Virgo'],fal:['Capricorn']},
+  Pluto:{dom:['Scorpio'],exl:['Aries'],det:['Taurus'],fal:['Libra']}
+};
+
+const ASPECTS = [
+  {name:'Conjunction',angle:0,orb:8,col:'#d4af37',sym:'☌',type:'major'},
+  {name:'Opposition',angle:180,orb:8,col:'#e84848',sym:'☍',type:'hard'},
+  {name:'Square',angle:90,orb:7,col:'#e86020',sym:'□',type:'hard'},
+  {name:'Trine',angle:120,orb:7,col:'#5aa9e6',sym:'△',type:'soft'},
+  {name:'Sextile',angle:60,orb:5,col:'#8ac88a',sym:'⚹',type:'soft'},
+  {name:'Quincunx',angle:150,orb:3,col:'#c878e8',sym:'⚻',type:'minor'}
+];
+
+// ═══════════════════════════════════════════════════════════
+// DATABASE (localStorage)
+// ═══════════════════════════════════════════════════════════
+function getDB() {
+  try { return JSON.parse(localStorage.getItem('astro_persons') || '[]'); } catch { return []; }
+}
+function saveDB(db) {
+  localStorage.setItem('astro_persons', JSON.stringify(db));
+  refreshDBUI();
+}
+function refreshDBUI() {
+  const db = getDB();
+  const count = db.length;
+  document.getElementById('db-count-badge').textContent = count + ' Person' + (count !== 1 ? 's' : '');
+  document.getElementById('db-count-label').textContent = count + ' persons stored';
+
+  // Render person list
+  const list = document.getElementById('person-list');
+  if (!db.length) { list.innerHTML = '<div class="empty-state">No persons saved yet.<br>Click <strong>+ Add Person</strong> to begin.</div>'; }
+  else {
+    list.innerHTML = db.map((p, i) => {
+      const sign = p.sunSign || '?';
+      const initials = p.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+      const col = SIGN_COLORS[p.sunSignIdx || 0];
+      return `<div class="person-item" id="pitem-${p.id}" onclick="selectPerson('${p.id}')">
+        <div class="person-avatar" style="background:${col}22;border-color:${col}66;color:${col}">${initials}</div>
+        <div>
+          <div class="person-name">${p.name}</div>
+          <div class="person-dob">${p.date} · ${p.loc || ''}</div>
+        </div>
+        <div class="person-sign">${p.sunSymbol || ''}</div>
+        <div class="person-actions">
+          <button class="btn" style="padding:3px 8px;font-size:9px" onclick="event.stopPropagation();loadPersonToNatal('${p.id}')">Load</button>
+          <button class="btn danger" style="padding:3px 8px;font-size:9px" onclick="event.stopPropagation();deletePerson('${p.id}')">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Refresh selects
+  const opts = '<option value="">— Select person —</option>' + db.map(p => `<option value="${p.id}">${p.name} (${p.sunSign || '?'})</option>`).join('');
+  document.getElementById('db-load-natal').innerHTML = opts;
+  document.getElementById('syn-a').innerHTML = '<option value="">— Person A —</option>' + db.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  document.getElementById('syn-b').innerHTML = '<option value="">— Person B —</option>' + db.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+}
+
+function selectPerson(id) {
+  document.querySelectorAll('.person-item').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById('pitem-' + id);
+  if (el) el.classList.add('selected');
+  const db = getDB();
+  const p = db.find(x => x.id === id);
+  if (!p) return;
+  renderPersonDetail(p);
+}
+
+function renderPersonDetail(p) {
+  const initials = p.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  const col = SIGN_COLORS[p.sunSignIdx || 0];
+  let planetCards = '';
+  if (p.planets && p.planets.length) {
+    planetCards = p.planets.filter(pl => PLANETS.includes(pl.id)).map(pl =>
+      `<div class="planet-card">
+        <span class="planet-sym" style="color:${pl.col}">${pl.g}</span>
+        <div class="planet-pos">${pl.sign ? pl.sign.sym + ' ' + pl.sign.deg + '°' + p2(pl.sign.min) : '—'}</div>
+        <div class="planet-name">${pl.id}${pl.rx ? ' Rx' : ''}</div>
+      </div>`
+    ).join('');
+  }
+
+  document.getElementById('db-detail-content').innerHTML = `
+    <div class="db-detail-header">
+      <div class="db-avatar-lg" style="background:${col}22;border-color:${col}66;color:${col}">${initials}</div>
+      <div>
+        <div class="db-name">${p.name}</div>
+        <div class="db-meta">${p.date} ${p.time || ''} · ${p.loc || ''}</div>
+        <div class="db-meta" style="margin-top:3px">${p.notes ? '📝 ' + p.notes : ''}</div>
+      </div>
+      <div class="db-actions">
+        <button class="btn" onclick="editPerson('${p.id}')">✎ Edit</button>
+        <button class="btn success" onclick="loadPersonToNatal('${p.id}')">Load to Natal</button>
+        <button class="btn danger" onclick="deletePerson('${p.id}')">✕ Delete</button>
+      </div>
+    </div>
+    <div class="panel-header" style="border-radius:0;border-left:none;border-right:none">Planet Positions at Birth</div>
+    <div class="planet-profile">${planetCards || '<div style="grid-column:1/-1;padding:16px;text-align:center;color:var(--text-dim)">Load this person to natal chart and recalculate to populate planets.</div>'}</div>
+    <div class="panel-header" style="border-radius:0;border-left:none;border-right:none">Quick Actions</div>
+    <div style="padding:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="loadPersonToNatal('${p.id}');switchSection('transit')">View Natal Chart</button>
+      <button class="btn" onclick="loadPersonForSynastry('${p.id}')">Add to Synastry</button>
+    </div>
+  `;
+}
+
+function openAddPersonModal() {
+  editingPersonId = null;
+  document.getElementById('modal-person-title').textContent = '✦ ADD NEW PERSON';
+  document.getElementById('mp-name').value = '';
+  document.getElementById('mp-date').value = '';
+  document.getElementById('mp-time').value = '12:00';
+  document.getElementById('mp-lat').value = '';
+  document.getElementById('mp-lon').value = '';
+  document.getElementById('mp-loc').value = '';
+  document.getElementById('mp-notes').value = '';
+  document.getElementById('mp-cat').value = 'person';
+  document.getElementById('modal-person').classList.add('open');
+}
+
+function editPerson(id) {
+  const db = getDB();
+  const p = db.find(x => x.id === id);
+  if (!p) return;
+  editingPersonId = id;
+  document.getElementById('modal-person-title').textContent = '✎ EDIT PERSON';
+  document.getElementById('mp-name').value = p.name;
+  document.getElementById('mp-date').value = p.date;
+  document.getElementById('mp-time').value = p.time || '12:00';
+  document.getElementById('mp-lat').value = p.lat || '';
+  document.getElementById('mp-lon').value = p.lon || '';
+  document.getElementById('mp-loc').value = p.loc || '';
+  document.getElementById('mp-notes').value = p.notes || '';
+  document.getElementById('mp-cat').value = p.category || 'person';
+  document.getElementById('modal-person').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-person').classList.remove('open'); }
+
+function savePerson() {
+  const name = document.getElementById('mp-name').value.trim();
+  if (!name) { showToast('Please enter a name'); return; }
+  const date = document.getElementById('mp-date').value;
+  if (!date) { showToast('Please enter a birth date'); return; }
+
+  const db = getDB();
+  const signIdx = getSignIdxFromDate(date);
+
+  const person = {
+    id: editingPersonId || 'p_' + Date.now(),
+    name, date,
+    time: document.getElementById('mp-time').value,
+    lat: parseFloat(document.getElementById('mp-lat').value) || null,
+    lon: parseFloat(document.getElementById('mp-lon').value) || null,
+    loc: document.getElementById('mp-loc').value.trim(),
+    notes: document.getElementById('mp-notes').value.trim(),
+    category: document.getElementById('mp-cat').value,
+    sunSign: SIGNS[signIdx].name,
+    sunSignIdx: signIdx,
+    sunSymbol: SIGNS[signIdx].sym,
+    planets: null,
+    created: editingPersonId ? undefined : new Date().toISOString()
+  };
+
+  if (editingPersonId) {
+    const idx = db.findIndex(x => x.id === editingPersonId);
+    if (idx >= 0) { person.planets = db[idx].planets; db[idx] = person; }
+    else db.push(person);
+  } else {
+    db.push(person);
+  }
+  saveDB(db);
+  closeModal();
+  showToast((editingPersonId ? 'Updated' : 'Added') + ': ' + name);
+  if (!editingPersonId) selectPerson(person.id);
+}
+
+function deletePerson(id) {
+  if (!confirm('Delete this person from the database?')) return;
+  let db = getDB();
+  db = db.filter(x => x.id !== id);
+  saveDB(db);
+  document.getElementById('db-detail-content').innerHTML = '<div class="empty-state">Select a person from the list.</div>';
+  showToast('Person deleted');
+}
+
+function loadFromDB(target) {
+  const id = document.getElementById('db-load-natal').value;
+  if (!id) return;
+  loadPersonToNatal(id);
+}
+
+function loadPersonToNatal(id) {
+  const db = getDB();
+  const p = db.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('nname').value = p.name;
+  document.getElementById('ndate').value = p.date;
+  document.getElementById('ntime').value = p.time || '00:00';
+  if (p.lat) document.getElementById('nlat').value = p.lat;
+  if (p.lon) document.getElementById('nlon').value = p.lon;
+  document.getElementById('nloc').value = p.loc || '';
+  showToast('Loaded: ' + p.name + ' — click Calculate');
+}
+
+function loadPersonForSynastry(id) {
+  const synA = document.getElementById('syn-a');
+  const synB = document.getElementById('syn-b');
+  if (!synA.value) synA.value = id;
+  else if (!synB.value) synB.value = id;
+  else synA.value = id;
+  switchSection('synastry');
+  showToast('Person added to Synastry');
+}
+
+function saveCurrentAsProfile() {
+  const name = document.getElementById('nname').value.trim() || 'Unnamed Chart';
+  const date = document.getElementById('ndate').value;
+  if (!date) { showToast('No natal data to save'); return; }
+  const db = getDB();
+  const signIdx = getSignIdxFromDate(date);
+  const person = {
+    id: 'p_' + Date.now(),
+    name, date,
+    time: document.getElementById('ntime').value,
+    lat: parseFloat(document.getElementById('nlat').value) || null,
+    lon: parseFloat(document.getElementById('nlon').value) || null,
+    loc: document.getElementById('nloc').value.trim(),
+    notes: '',
+    category: 'person',
+    sunSign: SIGNS[signIdx].name,
+    sunSignIdx: signIdx,
+    sunSymbol: SIGNS[signIdx].sym,
+    planets: ND ? ND.map(p => ({ id: p.id, g: p.g, col: p.col, lon: p.lon, rx: p.rx, sign: p.sign })) : null,
+    created: new Date().toISOString()
+  };
+  db.push(person);
+  saveDB(db);
+  showToast('Saved to database: ' + name);
+}
+
+function updatePersonPlanets(id, planets) {
+  const db = getDB();
+  const p = db.find(x => x.id === id);
+  if (p) { p.planets = planets; saveDB(db); }
+}
+
+function exportDatabase() {
+  const db = getDB();
+  const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'astrologjia_database.json'; a.click();
+}
+function importDatabase() { document.getElementById('import-file').click(); }
+function handleImport(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error('Not an array');
+      const existing = getDB();
+      const merged = [...existing];
+      for (const p of data) { if (!merged.find(x => x.id === p.id)) merged.push(p); }
+      saveDB(merged);
+      showToast('Imported ' + data.length + ' persons');
+    } catch { showToast('Import failed: invalid JSON'); }
+  };
+  reader.readAsText(file);
+}
+
+function getSignIdxFromDate(dateStr) {
+  // Approximate Sun sign from birth date (rough, not exact)
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const doy = (m - 1) * 30.44 + d;
+  // Spring equinox ~March 20 = day 79
+  const ecliptic = ((doy - 79) / 365.25 * 360 + 360) % 360;
+  return Math.floor(ecliptic / 30);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SYNASTRY
+// ═══════════════════════════════════════════════════════════
+async function calcSynastry() {
+  const aId = document.getElementById('syn-a').value;
+  const bId = document.getElementById('syn-b').value;
+  if (!aId || !bId || aId === bId) {
+    document.getElementById('synastry-result').innerHTML = '<div class="empty-state">Select two different persons.</div>';
+    return;
+  }
+  const db = getDB();
+  const pA = db.find(x => x.id === aId);
+  const pB = db.find(x => x.id === bId);
+  if (!pA || !pB) return;
+
+  // Check if planets are cached
+  if (!pA.planets || !pB.planets) {
+    document.getElementById('synastry-result').innerHTML = '<div class="empty-state">One or both persons have no planet data.<br>Load them to the Natal chart, calculate, then Save to Database again to cache their planets.</div>';
+    return;
+  }
+
+  // Compute cross-aspects
+  const aspects = [];
+  const orbM = parseFloat(document.getElementById('orbm').value) || 1;
+  for (const pa of pA.planets) {
+    for (const pb of pB.planets) {
+      const asp = findAspect(pa.lon, pb.lon, orbM);
+      if (asp) aspects.push({ pa, pb, asp });
+    }
+  }
+  aspects.sort((a,b) => a.asp.actualOrb - b.asp.actualOrb);
+
+  // Compatibility score
+  let score = 50;
+  for (const {asp} of aspects) {
+    if (asp.type === 'soft' || asp.type === 'major') score += 5 - asp.actualOrb;
+    if (asp.type === 'hard') score -= 2;
+  }
+  score = Math.min(99, Math.max(10, Math.round(score)));
+
+  const colA = SIGN_COLORS[pA.sunSignIdx || 0];
+  const colB = SIGN_COLORS[pB.sunSignIdx || 0];
+
+  const aspHtml = aspects.slice(0,25).map(({pa, pb, asp}) =>
+    `<div class="aspect-item">
+      <div class="aspect-dot" style="background:${asp.col}"></div>
+      <span style="color:${pa.col||colA}">${pa.g}</span>
+      <span style="font-size:9px;color:var(--text-dim)">${pA.name.split(' ')[0]}</span>
+      <span style="color:${asp.col};font-size:13px">${asp.sym}</span>
+      <span style="color:${pb.col||colB}">${pb.g}</span>
+      <span style="font-size:9px;color:var(--text-dim)">${pB.name.split(' ')[0]}</span>
+      <span class="aspect-orb">${asp.actualOrb.toFixed(2)}°</span>
+    </div>`
+  ).join('');
+
+  const compatColor = score > 70 ? '#3d7a3d' : score > 45 ? '#b8860b' : '#c0392b';
+
+  document.getElementById('synastry-result').innerHTML = `
+    <div class="synastry-layout">
+      <div class="panel">
+        <div class="panel-header">&#9689; Cross-Aspects: ${pA.name} → ${pB.name}</div>
+        <div class="aspect-list">${aspHtml || '<div class="empty-state">No significant aspects found</div>'}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">Compatibility Analysis</div>
+        <div class="compatibility-meter">
+          <div style="font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px">HARMONY SCORE</div>
+          <div style="font-family:var(--font-display);font-size:36px;font-weight:700;color:${compatColor}">${score}<span style="font-size:18px">%</span></div>
+          <div class="compat-bar"><div class="compat-fill" style="width:${score}%;background:${compatColor}"></div></div>
+          <div class="compat-label"><span>Tension</span><span>Harmony</span></div>
+          <div style="margin-top:12px;font-size:10px;color:var(--text-dim)">
+            Based on ${aspects.length} cross-aspects · ${aspects.filter(a=>a.asp.type==='soft'||a.asp.type==='major').length} harmonious · ${aspects.filter(a=>a.asp.type==='hard').length} challenging
+          </div>
+        </div>
+        <div style="padding:14px">
+          <div style="font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px">ASPECT BREAKDOWN</div>
+          ${['major','soft','hard','minor'].map(type => {
+            const n = aspects.filter(a=>a.asp.type===type).length;
+            const colors = {major:'#d4af37',soft:'#5aa9e6',hard:'#e84848',minor:'#c878e8'};
+            return n ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span style="width:10px;height:10px;border-radius:50%;background:${colors[type]};display:inline-block;flex-shrink:0"></span>
+              <span style="font-size:10px;color:var(--text-secondary);flex:1">${type.charAt(0).toUpperCase()+type.slice(1)}</span>
+              <span style="font-size:10px;color:var(--text-primary);font-weight:600">${n}</span>
+            </div>` : '';
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ASPECT PATTERNS
+// ═══════════════════════════════════════════════════════════
+function detectPatterns(planets) {
+  const patterns = [];
+  if (!planets || planets.length < 3) return patterns;
+
+  // Build aspect matrix
+  const aspMatrix = {};
+  for (let i = 0; i < planets.length; i++) {
+    for (let j = i+1; j < planets.length; j++) {
+      const asp = findAspect(planets[i].lon, planets[j].lon, 1.2);
+      if (asp) {
+        const key = i + '_' + j;
+        aspMatrix[key] = asp;
+      }
+    }
+  }
+
+  function hasAsp(i, j, types) {
+    const key = i < j ? i+'_'+j : j+'_'+i;
+    const a = aspMatrix[key];
+    if (!a) return false;
+    if (types && !types.includes(a.name)) return false;
+    return a;
+  }
+
+  // Grand Trine: 3 planets each trine each other
+  for (let i = 0; i < planets.length; i++)
+    for (let j = i+1; j < planets.length; j++)
+      for (let k = j+1; k < planets.length; k++) {
+        if (hasAsp(i,j,['Trine']) && hasAsp(j,k,['Trine']) && hasAsp(i,k,['Trine'])) {
+          const el = planets[i].sign.el;
+          patterns.push({ name:'Grand Trine', planets:[planets[i].id,planets[j].id,planets[k].id], element: el, type:'grand-trine', desc: `A harmonious triangle in ${el}. Natural talent and ease in ${el} themes.` });
+        }
+      }
+
+  // T-Square: 2 planets in opposition, both square a third
+  for (let i = 0; i < planets.length; i++)
+    for (let j = i+1; j < planets.length; j++) {
+      if (!hasAsp(i,j,['Opposition'])) continue;
+      for (let k = 0; k < planets.length; k++) {
+        if (k===i || k===j) continue;
+        if (hasAsp(i,k,['Square']) && hasAsp(j,k,['Square'])) {
+          patterns.push({ name:'T-Square', planets:[planets[i].id,planets[j].id,planets[k].id], apex: planets[k].id, type:'t-square', desc: `Apex: ${planets[k].id}. High tension pattern driving achievement through ${planets[k].sign.name}.` });
+        }
+      }
+    }
+
+  // Grand Cross: 4 planets, 2 oppositions, 4 squares
+  for (let i = 0; i < planets.length; i++)
+    for (let j = i+1; j < planets.length; j++)
+      for (let k = j+1; k < planets.length; k++)
+        for (let l = k+1; l < planets.length; l++) {
+          const grp = [i,j,k,l];
+          const opps = [];
+          const sqs = [];
+          for (let a = 0; a < 4; a++) for (let b = a+1; b < 4; b++) {
+            const asp = hasAsp(grp[a], grp[b]);
+            if (asp) { if (asp.name==='Opposition') opps.push([a,b]); if (asp.name==='Square') sqs.push([a,b]); }
+          }
+          if (opps.length >= 2 && sqs.length >= 4) {
+            patterns.push({ name:'Grand Cross', planets:[planets[i].id,planets[j].id,planets[k].id,planets[l].id], type:'grand-cross', desc:'Maximum cross-modal tension. Four life areas must be balanced simultaneously.' });
+          }
+        }
+
+  // Stellium: 3+ planets within 8° of each other in same sign
+  const signGroups = {};
+  for (const p of planets) {
+    const key = p.sign.name;
+    if (!signGroups[key]) signGroups[key] = [];
+    signGroups[key].push(p);
+  }
+  for (const [sign, grp] of Object.entries(signGroups)) {
+    if (grp.length >= 3) {
+      patterns.push({ name:'Stellium in ' + sign, planets: grp.map(p=>p.id), type:'stellium', desc: `${grp.length} planets concentrated in ${sign}. Dominant theme: ${SIGNS.find(s=>s.name===sign)?.el} energy, ${SIGNS.find(s=>s.name===sign)?.mod} mode.` });
+    }
+  }
+
+  // Yod: 2 planets sextile, both quincunx a third
+  for (let i = 0; i < planets.length; i++)
+    for (let j = i+1; j < planets.length; j++) {
+      if (!hasAsp(i,j,['Sextile'])) continue;
+      for (let k = 0; k < planets.length; k++) {
+        if (k===i || k===j) continue;
+        if (hasAsp(i,k,['Quincunx']) && hasAsp(j,k,['Quincunx'])) {
+          patterns.push({ name:'Yod (Finger of God)', planets:[planets[i].id,planets[j].id,planets[k].id], apex: planets[k].id, type:'yod', desc:`Apex: ${planets[k].id}. Point of fated adjustment and spiritual mission. Recurrent redirections around ${planets[k].sign.name} themes.` });
+        }
+      }
+    }
+
+  // Deduplicate
+  const seen = new Set();
+  return patterns.filter(p => { const k = p.name+p.planets.join(','); if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
+function renderPatterns() {
+  if (!ND) { showToast('Calculate a natal chart first'); return; }
+  const patterns = detectPatterns(ND);
+  const patternColors = { 'grand-trine':'#5aa9e6', 't-square':'#e84848', 'grand-cross':'#e86020', 'stellium':'#d4af37', 'yod':'#c878e8', 'kite':'#8ac88a' };
+  const grid = document.getElementById('patterns-grid');
+  if (!patterns.length) {
+    grid.innerHTML = '<div class="pattern-none">No major aspect patterns detected in this chart.<br>The nativity shows individual planet placements without major geometric configurations.</div>';
+    return;
+  }
+  grid.innerHTML = patterns.map(p => `
+    <div class="pattern-card" style="border-color:${patternColors[p.type]||'var(--border-soft)'}44;border-left:3px solid ${patternColors[p.type]||'var(--gold-primary)'}">
+      <div class="pattern-name" style="color:${patternColors[p.type]||'var(--gold-primary)'}">${p.name}</div>
+      <div class="pattern-planets" style="margin-bottom:6px">
+        ${p.planets.map(pid => `<span style="color:${PLANET_COLS[pid]||'var(--text-secondary)'};>${PLANET_SYMS[pid]||pid} ${pid}</span>`).join('')}
+      </div>
+      ${p.apex ? `<div style="font-size:9px;color:var(--text-dim);margin-bottom:4px">Apex: <strong>${p.apex}</strong></div>` : ''}
+      ${p.element ? `<div style="font-size:9px;color:${ELEMENT_COLS[p.element]||'var(--text-dim)'};margin-bottom:4px">${p.element.charAt(0).toUpperCase()+p.element.slice(1)} element</div>` : ''}
+      <div class="pattern-desc">${p.desc}</div>
+    </div>
+  `).join('');
+}
+// ═══════════════════════════════════════════════════════════
+// INTERPRETATION EDITOR LOGIC
+// ═══════════════════════════════════════════════════════════
+
+function updateInterpKeySelector() {
+  const cat = document.getElementById('ie-cat').value;
+  document.querySelectorAll('.interp-cat-row').forEach(r => r.style.display = 'none');
+  const row = document.getElementById('ie-' + cat + '-row');
+  if (row) row.style.display = cat === 'na' || cat === 'tn' ? 'grid' : 'grid';
+  updateInterpKeyDisplay();
+}
+
+function updateInterpKeyDisplay() {
+  const key = buildCurrentInterpKey();
+  document.getElementById('ie-key-display').textContent = key || '—';
+}
+
+function buildCurrentInterpKey() {
+  const cat = document.getElementById('ie-cat').value;
+  try {
+    if (cat === 'ps') return interpKey('ps', document.getElementById('ie-ps-planet').value, document.getElementById('ie-ps-sign').value);
+    if (cat === 'ph') return interpKey('ph', document.getElementById('ie-ph-planet').value, document.getElementById('ie-ph-house').value);
+    if (cat === 'na') return interpKey('na', document.getElementById('ie-na-p1').value, document.getElementById('ie-na-asp').value, document.getElementById('ie-na-p2').value);
+    if (cat === 'tn') return interpKey('tn', document.getElementById('ie-tn-tp').value, document.getElementById('ie-tn-asp').value, document.getElementById('ie-tn-np').value);
+    if (cat === 'ts') return interpKey('ts', document.getElementById('ie-ts-planet').value, document.getElementById('ie-ts-sign').value);
+    if (cat === 'th') return interpKey('th', document.getElementById('ie-th-planet').value, document.getElementById('ie-th-house').value);
+    if (cat === 'di') return interpKey('di', document.getElementById('ie-di-planet').value, document.getElementById('ie-di-type').value);
+    if (cat === 'ge') return 'ge_' + (document.getElementById('ie-ge-key').value.trim().replace(/\s+/g,'_') || 'note');
+  } catch { return ''; }
+  return '';
+}
+
+function loadInterpEntry() {
+  const key = buildCurrentInterpKey();
+  if (!key) return;
+  updateInterpKeyDisplay();
+  const text = getInterp(key);
+  document.getElementById('ie-text').value = text;
+  updateInterpPreview();
+  document.getElementById('ie-save-status').textContent = text ? '✓ Existing entry loaded' : 'No entry yet for this key';
+}
+
+function saveInterpEntry() {
+  const key = buildCurrentInterpKey();
+  if (!key) { showToast('Select a valid combination first'); return; }
+  const text = document.getElementById('ie-text').value;
+  setInterp(key, text);
+  refreshInterpUI();
+  document.getElementById('ie-save-status').textContent = '✓ Saved — ' + new Date().toLocaleTimeString();
+  showToast('Saved: ' + key);
+  // Refresh live displays if chart is loaded
+  if (ND && TD) {
+    renderAspects();
+    renderInterpretPane();
+  }
+}
+
+function deleteInterpEntry() {
+  const key = buildCurrentInterpKey();
+  if (!key) return;
+  if (!INTERP[key]) { showToast('No entry to delete'); return; }
+  if (!confirm('Delete interpretation for: ' + key + '?')) return;
+  delete INTERP[key];
+  saveInterp();
+  document.getElementById('ie-text').value = '';
+  updateInterpPreview();
+  refreshInterpUI();
+  showToast('Deleted: ' + key);
+}
+
+function updateInterpPreview() {
+  const raw = document.getElementById('ie-text').value;
+  updateInterpKeyDisplay();
+  if (!raw.trim()) {
+    document.getElementById('ie-preview').innerHTML = '<em style="color:var(--text-muted)">Preview will appear as you type…</em>';
+    return;
+  }
+  // Simple markdown-lite render
+  const html = raw
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/_(.+?)_/g, '<em>$1</em>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+  document.getElementById('ie-preview').innerHTML = '<p>' + html + '</p>';
+}
+
+function renderInterpList() {
+  const filter = (document.getElementById('ie-search')?.value || '').toLowerCase();
+  const entries = Object.keys(INTERP).filter(k => !filter || k.toLowerCase().includes(filter) || INTERP[k].toLowerCase().includes(filter));
+  entries.sort();
+  const list = document.getElementById('ie-list');
+  if (!entries.length) {
+    list.innerHTML = '<div style="padding:12px;text-align:center;color:var(--text-dim);font-size:10px">' + (filter ? 'No matches' : 'No entries saved yet') + '</div>';
+    return;
+  }
+  const catColors = { ps:'#b080e8', ph:'#b080e8', na:'#3e6fa8', tn:'#c0392b', ts:'#3d7a3d', th:'#3d7a3d', di:'#b8860b', ge:'#8a8578' };
+  list.innerHTML = entries.map(k => {
+    const prefix = k.split('_')[0];
+    const col = catColors[prefix] || 'var(--text-dim)';
+    const snippet = INTERP[k].slice(0,60).replace(/\n/g,' ') + (INTERP[k].length > 60 ? '…' : '');
+    return `<div onclick="jumpToInterpEntry('${k}')" style="padding:7px 10px;border-bottom:1px solid rgba(217,209,191,.4);cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-family:var(--font-mono);font-size:10px;color:${col};flex-shrink:0">${k}</span>
+      </div>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:2px;font-family:var(--font-serif)">${snippet}</div>
+    </div>`;
+  }).join('');
+}
+
+function jumpToInterpEntry(key) {
+  // Parse key and set selectors to match
+  const parts = key.split('_');
+  const cat = parts[0];
+  document.getElementById('ie-cat').value = cat;
+  updateInterpKeySelector();
+  try {
+    if (cat === 'ps') { document.getElementById('ie-ps-planet').value = parts[1]; document.getElementById('ie-ps-sign').value = parts[2]; }
+    else if (cat === 'ph') { document.getElementById('ie-ph-planet').value = parts[1]; document.getElementById('ie-ph-house').value = parts[2].replace('H',''); }
+    else if (cat === 'na') { document.getElementById('ie-na-p1').value = parts[1]; document.getElementById('ie-na-asp').value = parts[2]; document.getElementById('ie-na-p2').value = parts[3]; }
+    else if (cat === 'tn') { document.getElementById('ie-tn-tp').value = parts[1]; document.getElementById('ie-tn-asp').value = parts[2]; document.getElementById('ie-tn-np').value = parts[3]; }
+    else if (cat === 'ts') { document.getElementById('ie-ts-planet').value = parts[1]; document.getElementById('ie-ts-sign').value = parts[2]; }
+    else if (cat === 'th') { document.getElementById('ie-th-planet').value = parts[1]; document.getElementById('ie-th-house').value = parts[2].replace('H',''); }
+    else if (cat === 'di') { document.getElementById('ie-di-planet').value = parts[1]; document.getElementById('ie-di-type').value = parts[2]; }
+    else if (cat === 'ge') { document.getElementById('ie-ge-key').value = parts.slice(1).join('_'); }
+  } catch(e) {}
+  document.getElementById('ie-text').value = getInterp(key);
+  updateInterpPreview();
+  updateInterpKeyDisplay();
+}
+
+function refreshInterpUI() {
+  const count = countInterp();
+  const badge = document.getElementById('interp-count-badge');
+  if (badge) badge.textContent = count + ' entr' + (count === 1 ? 'y' : 'ies');
+  renderInterpList();
+}
+
+// ── IMPORT / EXPORT ──────────────────────────────────────
+
+function exportInterpCSV() {
+  if (!countInterp()) { showToast('No interpretations to export'); return; }
+  const rows = ['type,key,text'];
+  for (const [k, v] of Object.entries(INTERP)) {
+    const type = k.split('_')[0];
+    const escaped = '"' + v.replace(/"/g, '""').replace(/\n/g, '\\n') + '"';
+    rows.push(`${type},${k},${escaped}`);
+  }
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'astrologjia_interpretations.csv'; a.click();
+  showToast('Exported ' + countInterp() + ' entries as CSV');
+}
+
+function exportInterpJSON() {
+  if (!countInterp()) { showToast('No interpretations to export'); return; }
+  const blob = new Blob([JSON.stringify(INTERP, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'astrologjia_interpretations.json'; a.click();
+  showToast('Exported ' + countInterp() + ' entries as JSON');
+}
+
+function handleInterpImport(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const content = ev.target.result;
+    let imported = 0;
+    try {
+      if (file.name.endsWith('.json')) {
+        const data = JSON.parse(content);
+        for (const [k, v] of Object.entries(data)) { if (typeof v === 'string') { INTERP[k] = v; imported++; } }
+      } else {
+        // CSV parse
+        const lines = content.split('\n').slice(1); // skip header
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const match = line.match(/^([^,]+),([^,]+),"?([\s\S]*?)"?$/);
+          if (match) {
+            const key = match[2].trim();
+            const text = match[3].replace(/""/g, '"').replace(/\\n/g, '\n');
+            if (key && text) { INTERP[key] = text; imported++; }
+          }
+        }
+      }
+      saveInterp();
+      refreshInterpUI();
+      showToast('Imported ' + imported + ' entries');
+    } catch(err) { showToast('Import failed: ' + err.message); }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════════════
+// REPORT BUILDER
+// ═══════════════════════════════════════════════════════════
+
+function buildReport() {
+  if (!ND) { showToast('Calculate a natal chart first'); return; }
+
+  const name  = document.getElementById('nname').value.trim() || 'Unknown';
+  const ndate = document.getElementById('ndate').value;
+  const ntime = document.getElementById('ntime').value;
+  const nloc  = document.getElementById('nloc').value.trim();
+  const tdate = document.getElementById('tdate').value;
+
+  document.getElementById('report-name-badge').textContent = name;
+  document.getElementById('modal-report').classList.add('open');
+
+  renderReportPreview({ name, ndate, ntime, nloc, tdate });
+}
+
+function closeReportModal() {
+  document.getElementById('modal-report').classList.remove('open');
+}
+
+function getReportSections({ name, ndate, ntime, nloc, tdate }) {
+  const orbM      = parseFloat(document.getElementById('orbm').value) || 1;
+  const showEmpty = document.getElementById('ropt-empty')?.checked;
+  const opts = {
+    ps: document.getElementById('ropt-ps')?.checked,
+    ph: document.getElementById('ropt-ph')?.checked,
+    na: document.getElementById('ropt-na')?.checked,
+    tn: document.getElementById('ropt-tn')?.checked,
+    di: document.getElementById('ropt-di')?.checked,
+  };
+
+  const sections = [];
+
+  // ── Chart header data ─────────────────────────────────
+  const ascSign = getSign(ASC_);
+  const mcSign  = getSign(MCC_);
+  const headerLines = [
+    { label: 'Name',       value: name },
+    { label: 'Birth Date', value: ndate + ' ' + ntime },
+    { label: 'Location',   value: nloc },
+    { label: 'Transit Date', value: tdate },
+    { label: 'Ascendant', value: ascSign.name + ' ' + ascSign.deg + '°' + p2(ascSign.min) + "'" },
+    { label: 'Midheaven', value: mcSign.name  + ' ' + mcSign.deg  + '°' + p2(mcSign.min)  + "'" },
+  ];
+  sections.push({ type: 'header', lines: headerLines });
+
+  // ── Planet positions summary table ────────────────────
+  const positions = ND.map(p => ({
+    planet: p.name,
+    position: p.sign.name + ' ' + p.sign.deg + '°' + p2(p.sign.min) + "'",
+    house: 'H' + p.house,
+    rx: p.rx ? 'Rx' : '',
+    dignity: p.dig ? p.dig.label : ''
+  }));
+  sections.push({ type: 'positions', rows: positions });
+
+  // ── Planet in Sign ────────────────────────────────────
+  if (opts.ps) {
+    const entries = [];
+    for (const p of ND) {
+      const key  = interpKey('ps', p.id, p.sign.name);
+      const text = getInterp(key);
+      if (text || showEmpty) {
+        entries.push({
+          label:    p.name + ' in ' + p.sign.name,
+          subLabel: p.sign.name + ' — ' + p.sign.el + ' / ' + p.sign.mod,
+          text:     text || '',
+          key
+        });
+      }
+    }
+    if (entries.length) sections.push({ type: 'section', title: 'Planets in Signs', cat: 'ps', entries });
+  }
+
+  // ── Planet in House ───────────────────────────────────
+  if (opts.ph) {
+    const entries = [];
+    for (const p of ND) {
+      const key  = interpKey('ph', p.id, p.house);
+      const text = getInterp(key);
+      if (text || showEmpty) {
+        entries.push({
+          label:    p.name + ' in House ' + p.house,
+          subLabel: 'House ' + p.house,
+          text:     text || '',
+          key
+        });
+      }
+    }
+    if (entries.length) sections.push({ type: 'section', title: 'Planets in Houses', cat: 'ph', entries });
+  }
+
+  // ── Natal Aspects ─────────────────────────────────────
+  if (opts.na) {
+    const entries = [];
+    for (let i = 0; i < ND.length; i++) {
+      for (let j = i + 1; j < ND.length; j++) {
+        const asp = findAspect(ND[i].lon, ND[j].lon, 1);
+        if (!asp) continue;
+        const key    = interpKey('na', ND[i].id, asp.name, ND[j].id);
+        const keyRev = interpKey('na', ND[j].id, asp.name, ND[i].id);
+        const text   = getInterp(key) || getInterp(keyRev);
+        if (text || showEmpty) {
+          entries.push({
+            label:    ND[i].name + ' ' + asp.name + ' ' + ND[j].name,
+            subLabel: 'Orb: ' + asp.actualOrb.toFixed(2) + '° — ' + asp.type,
+            aspCol:   asp.col,
+            aspSym:   asp.sym,
+            text:     text || '',
+            key
+          });
+        }
+      }
+    }
+    entries.sort((a, b) => parseFloat(a.subLabel.split(':')[1]) - parseFloat(b.subLabel.split(':')[1]));
+    if (entries.length) sections.push({ type: 'section', title: 'Natal Aspects', cat: 'na', entries });
+  }
+
+  // ── Transit to Natal ──────────────────────────────────
+  if (opts.tn && TD) {
+    const entries = [];
+    for (const t of TD) {
+      for (const n of ND) {
+        const asp = findAspect(t.lon, n.lon, orbM);
+        if (!asp) continue;
+        const key  = interpKey('tn', t.id, asp.name, n.id);
+        const text = getInterp(key);
+        if (text || showEmpty) {
+          entries.push({
+            label:    'tr.' + t.name + ' ' + asp.name + ' n.' + n.name,
+            subLabel: 'Orb: ' + asp.actualOrb.toFixed(2) + '° — ' + asp.type,
+            aspCol:   asp.col,
+            aspSym:   asp.sym,
+            text:     text || '',
+            key
+          });
+        }
+      }
+    }
+    entries.sort((a, b) => parseFloat(a.subLabel.split(':')[1]) - parseFloat(b.subLabel.split(':')[1]));
+    if (entries.length) sections.push({ type: 'section', title: 'Transits to Natal', cat: 'tn', entries });
+  }
+
+  // ── Dignities ─────────────────────────────────────────
+  if (opts.di) {
+    const entries = [];
+    for (const p of ND) {
+      if (!p.dig) continue;
+      const key  = interpKey('di', p.id, p.dig.type);
+      const text = getInterp(key);
+      if (text || showEmpty) {
+        entries.push({
+          label:    p.name + ' — ' + p.dig.label,
+          subLabel: p.sign.name,
+          text:     text || '',
+          key
+        });
+      }
+    }
+    if (entries.length) sections.push({ type: 'section', title: 'Dignities & Debilities', cat: 'di', entries });
+  }
+
+  return sections;
+}
+
+function renderReportPreview(meta) {
+  const sections  = getReportSections(meta);
+  const catColors = {
+    ps: '#7b52ab', ph: '#7b52ab',
+    na: '#3e6fa8', tn: '#c0392b',
+    di: '#B8860B'
+  };
+
+  let html = '';
+
+  for (const sec of sections) {
+
+    if (sec.type === 'header') {
+      html += `
+        <div style="border-bottom:3px solid var(--gold-primary);padding-bottom:14px;margin-bottom:20px">
+          <div style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--gold-primary);letter-spacing:3px;margin-bottom:8px">
+            CHART INTERPRETATION REPORT
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+            ${sec.lines.map(l =>
+              `<div style="font-size:11px">
+                <span style="color:var(--text-dim);font-family:var(--font-display);font-size:9px;letter-spacing:1px;display:block">${l.label.toUpperCase()}</span>
+                <span style="color:var(--text-primary);font-weight:600">${l.value || '—'}</span>
+              </div>`
+            ).join('')}
+          </div>
+        </div>`;
+      continue;
+    }
+
+    if (sec.type === 'positions') {
+      html += `
+        <div style="margin-bottom:22px">
+          <div style="font-family:var(--font-display);font-size:11px;color:var(--gold-primary);letter-spacing:2px;margin-bottom:8px;font-weight:600">PLANETARY POSITIONS</div>
+          <table style="width:100%;border-collapse:collapse;font-size:11px">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border-soft)">
+                <th style="text-align:left;padding:4px 8px;font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:1px">Planet</th>
+                <th style="text-align:left;padding:4px 8px;font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:1px">Position</th>
+                <th style="text-align:left;padding:4px 8px;font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:1px">House</th>
+                <th style="text-align:left;padding:4px 8px;font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:1px">Rx</th>
+                <th style="text-align:left;padding:4px 8px;font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:1px">Dignity</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sec.rows.map((r, i) =>
+                `<tr style="border-bottom:1px solid rgba(217,209,191,.4);background:${i%2===0?'transparent':'rgba(245,241,232,.4)'}">
+                  <td style="padding:5px 8px;font-weight:600">${r.planet}</td>
+                  <td style="padding:5px 8px">${r.position}</td>
+                  <td style="padding:5px 8px">${r.house}</td>
+                  <td style="padding:5px 8px;color:#c0392b;font-size:10px;font-weight:700">${r.rx}</td>
+                  <td style="padding:5px 8px;font-size:10px;color:var(--gold-dark)">${r.dignity}</td>
+                </tr>`
+              ).join('')}
+            </tbody>
+          </table>
+        </div>`;
+      continue;
+    }
+
+    if (sec.type === 'section') {
+      const col = catColors[sec.cat] || 'var(--gold-primary)';
+      const filled = sec.entries.filter(e => e.text).length;
+
+      html += `
+        <div style="margin-bottom:26px">
+          <div style="font-family:var(--font-display);font-size:11px;color:${col};letter-spacing:2px;margin-bottom:10px;font-weight:600;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border-soft);padding-bottom:6px">
+            ${sec.title.toUpperCase()}
+            <span style="font-size:9px;color:var(--text-dim);font-weight:400;letter-spacing:0">${filled}/${sec.entries.length} interpreted</span>
+          </div>
+          ${sec.entries.map(e => `
+            <div style="margin-bottom:14px;padding:12px 14px;border-left:3px solid ${e.text ? col : 'var(--border-soft)'};background:${e.text ? 'rgba(245,241,232,.5)' : 'transparent'};border-radius:0 var(--radius-sm) var(--radius-sm) 0">
+              <div style="font-family:var(--font-display);font-size:11px;font-weight:600;color:${e.text ? 'var(--text-primary)' : 'var(--text-dim)'};margin-bottom:2px">
+                ${e.aspSym ? `<span style="color:${e.aspCol}">${e.aspSym}</span> ` : ''}${e.label}
+              </div>
+              <div style="font-size:9px;color:var(--text-dim);margin-bottom:${e.text ? '8px' : '0'};letter-spacing:0.5px">${e.subLabel}</div>
+              ${e.text
+                ? `<div style="font-family:var(--font-serif);font-size:13px;line-height:1.75;color:var(--text-secondary)">${
+                    e.text
+                      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                      .replace(/_(.+?)_/g, '<em>$1</em>')
+                      .replace(/\n\n/g, '</p><p style="margin-top:8px">')
+                      .replace(/\n/g, '<br>')
+                  }</div>`
+                : `<div style="font-size:10px;color:var(--text-muted);font-style:italic">No interpretation saved for this placement.</div>`
+              }
+            </div>`
+          ).join('')}
+        </div>`;
+    }
+  }
+
+  document.getElementById('report-preview').innerHTML = html ||
+    '<div class="empty-state">No sections to show. Add interpretations in the Interpretations tab first.</div>';
+}
+
+// ── Plain text export ─────────────────────────────────────
+function exportReportTXT() {
+  const meta = {
+    name:  document.getElementById('nname').value.trim() || 'Unknown',
+    ndate: document.getElementById('ndate').value,
+    ntime: document.getElementById('ntime').value,
+    nloc:  document.getElementById('nloc').value.trim(),
+    tdate: document.getElementById('tdate').value
+  };
+  const sections = getReportSections(meta);
+  const lines = [];
+  const div = '═'.repeat(60);
+  const sub = '─'.repeat(60);
+
+  for (const sec of sections) {
+    if (sec.type === 'header') {
+      lines.push(div);
+      lines.push('  CHART INTERPRETATION REPORT');
+      lines.push(div);
+      for (const l of sec.lines) lines.push(`  ${l.label.padEnd(14)}: ${l.value}`);
+      lines.push('');
+    }
+    if (sec.type === 'positions') {
+      lines.push(sub);
+      lines.push('  PLANETARY POSITIONS');
+      lines.push(sub);
+      for (const r of sec.rows) {
+        lines.push(`  ${r.planet.padEnd(10)} ${r.position.padEnd(22)} ${r.house.padEnd(5)} ${r.rx.padEnd(4)} ${r.dignity}`);
+      }
+      lines.push('');
+    }
+    if (sec.type === 'section') {
+      lines.push(sub);
+      lines.push('  ' + sec.title.toUpperCase());
+      lines.push(sub);
+      for (const e of sec.entries) {
+        lines.push('');
+        lines.push('  ◆ ' + e.label);
+        lines.push('    ' + e.subLabel);
+        if (e.text) {
+          const clean = e.text.replace(/\*\*(.+?)\*\*/g,'$1').replace(/_(.+?)_/g,'$1');
+          clean.split('\n').forEach(l => lines.push('    ' + l));
+        } else {
+          lines.push('    [No interpretation]');
+        }
+      }
+      lines.push('');
+    }
+  }
+
+  lines.push(div);
+  lines.push('  Generated by ASTROLOGJIA — ' + new Date().toLocaleString());
+  lines.push(div);
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'astrologjia_report_' + (meta.name.replace(/\s+/g,'_') || 'chart') + '.txt';
+  a.click();
+  showToast('Report exported as .txt');
+}
+
+// ── HTML export (self-contained, printable) ───────────────
+function exportReportHTML() {
+  const meta = {
+    name:  document.getElementById('nname').value.trim() || 'Unknown',
+    ndate: document.getElementById('ndate').value,
+    ntime: document.getElementById('ntime').value,
+    nloc:  document.getElementById('nloc').value.trim(),
+    tdate: document.getElementById('tdate').value
+  };
+
+  const previewHTML = document.getElementById('report-preview').innerHTML;
+
+  const doc = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Astrologjia Report — ${meta.name}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold-primary:#B8860B; --gold-dark:#8B6508;
+    --text-primary:#2c2a24; --text-secondary:#5c5a52;
+    --text-dim:#8a8578; --text-muted:#a8a396;
+    --border-soft:#d9d1bf; --border-gold:rgba(184,134,11,0.35);
+    --bg-elevated:#f7f3ea; --radius-sm:4px;
+    --font-serif:'Cormorant Garamond',Georgia,serif;
+    --font-display:'Cinzel',Georgia,serif;
+    --font-mono:'JetBrains Mono',monospace;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#faf6ed; color:var(--text-primary); font-family:var(--font-serif); font-size:14px; line-height:1.7; }
+  .page { max-width:820px; margin:0 auto; padding:40px 32px; }
+  strong { font-weight:700; }
+  em { font-style:italic; }
+  @media print { body { background:white; } .page { padding:20px; } }
+</style>
+</head>
+<body>
+<div class="page">
+${previewHTML}
+<hr style="border:none;border-top:1px solid var(--border-soft);margin:30px 0">
+<p style="font-size:10px;color:var(--text-dim);font-family:var(--font-mono);text-align:center">
+  Generated by ASTROLOGJIA &mdash; ${new Date().toLocaleString()}
+</p>
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([doc], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'astrologjia_report_' + (meta.name.replace(/\s+/g,'_') || 'chart') + '.html';
+  a.click();
+  showToast('Report exported as .html');
+}
+// ═══════════════════════════════════════════════════════════
+// TIMELINE SCANNER
+// ═══════════════════════════════════════════════════════════
+async function calcTimeline() {
+  if (!ND) { showToast('Load natal chart first'); return; }
+  const fromStr = document.getElementById('tl-from').value;
+  const toStr = document.getElementById('tl-to').value;
+  if (!fromStr || !toStr) { showToast('Set date range'); return; }
+
+  const fromMs = new Date(fromStr).getTime();
+  const toMs = new Date(toStr).getTime();
+  const days = Math.round((toMs - fromMs) / 86400000);
+  if (days > 365) { showToast('Max range: 365 days'); return; }
+  if (days < 1) { showToast('Invalid range'); return; }
+
+  document.getElementById('timeline-content').innerHTML = '<div class="empty-state">Scanning ' + days + ' days...</div>';
+  const orbM = parseFloat(document.getElementById('orbm').value) || 1;
+  const events = [];
+
+  // Day-by-day scan
+  for (let d = 0; d <= days; d++) {
+    const ms = fromMs + d * 86400000;
+    const dt = new Date(ms);
+    const year = dt.getUTCFullYear(), month = dt.getUTCMonth()+1, day = dt.getUTCDate();
+    const off = getUTCOffset(year, month, day);
+    const data = await fetchPlanets(year, month, day, 12, 0);
+    if (!data) continue;
+    const transitPlanets = [];
+    for (const pName of PLANETS) {
+      if (data[pName]) {
+        transitPlanets.push({ id: pName, lon: data[pName].longitude });
+      }
+    }
+    for (const t of transitPlanets) {
+      for (const n of ND) {
+        const asp = findAspect(t.lon, n.lon, orbM);
+        if (asp && asp.actualOrb <= 0.5) {
+          events.push({
+            date: `${year}-${p2(month)}-${p2(day)}`,
+            transit: t.id, natal: n.id, asp,
+            orb: asp.actualOrb
+          });
+        }
+      }
+    }
+  }
+
+  tlEvents = events;
+  renderTimelineResults(events);
+}
+
+let tlEvents = [];
+function renderTimelineResults(events) {
+  if (!events.length) {
+    document.getElementById('timeline-content').innerHTML = '<div class="empty-state">No exact aspects (orb ≤0.5°) found in this period. Try a wider orb or longer range.</div>';
+    return;
+  }
+  document.getElementById('timeline-content').innerHTML = events.map(e =>
+    `<div class="timeline-item">
+      <div class="timeline-date">${e.date}</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px">
+        <span style="color:${PLANET_COLS[e.transit]}">${PLANET_SYMS[e.transit]} ${e.transit}</span>
+        <span style="color:${e.asp.col}">${e.asp.sym} ${e.asp.name}</span>
+        <span style="color:${PLANET_COLS[e.natal]||'var(--text-primary)'}">${PLANET_SYMS[e.natal]||''} ${e.natal}</span>
+      </div>
+      <div class="tl-exact">${e.orb.toFixed(3)}°</div>
+    </div>`
+  ).join('');
+}
+
+function exportTimeline() {
+  if (!tlEvents.length) { showToast('No timeline data to export'); return; }
+  const csv = 'Date,Transit Planet,Aspect,Natal Planet,Orb\n' +
+    tlEvents.map(e => `${e.date},${e.transit},${e.asp.name},${e.natal},${e.orb.toFixed(4)}`).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'astrologjia_timeline.csv'; a.click();
+}
+
+// ═══════════════════════════════════════════════════════════
+// SWISS EPHEMERIS API
+// ═══════════════════════════════════════════════════════════
+async function fetchPlanets(year, month, day, hour, minute) {
+  const url = `api.php?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&second=0`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    return data;
+  } catch(e) {
+    console.error(e); showToast('API Error: ' + e.message); return null;
+  }
+}
+
+function p2(n) { return String(Math.abs(Math.floor(n))).padStart(2,'0'); }
+function nm(x) { return ((x%360)+360)%360; }
+
+function getUTCOffset(year, month, day) {
+  function lastSunday(y, jsMonth) {
+    let dt = new Date(y, jsMonth+1, 0);
+    while (dt.getDay() !== 0) dt.setDate(dt.getDate()-1);
+    return dt.getDate();
+  }
+  const dstStart = lastSunday(year,2), dstEnd = lastSunday(year,9);
+  const inDST = (month>3 && month<10) || (month===3 && day>=dstStart) || (month===10 && day<dstEnd);
+  return inDST ? 2 : 1;
+}
+
+function getSign(lon) {
+  const idx = Math.floor(nm(lon)/30);
+  const deg = nm(lon) - idx*30;
+  return { ...SIGNS[idx], deg: Math.floor(deg), min: Math.floor((deg%1)*60), sec: Math.floor(((deg%1)*60%1)*60) };
+}
+
+function getDignity(planet, signName) {
+  const d = DIGNITIES[planet]; if (!d) return null;
+  if (d.dom.includes(signName)) return {type:'dom',label:'Domicile',class:'dig-dom',score:5};
+  if (d.exl.includes(signName)) return {type:'exl',label:'Exaltation',class:'dig-exl',score:4};
+  if (d.det.includes(signName)) return {type:'det',label:'Detriment',class:'dig-det',score:-5};
+  if (d.fal.includes(signName)) return {type:'fal',label:'Fall',class:'dig-fal',score:-4};
+  return null;
+}
+
+function findAspect(lon1, lon2, orbMultiplier=1) {
+  let diff = Math.abs(nm(lon1-lon2));
+  if (diff > 180) diff = 360-diff;
+  for (const a of ASPECTS) {
+    const orbDiff = Math.abs(diff - a.angle);
+    if (orbDiff <= a.orb * orbMultiplier) return { ...a, actualOrb: orbDiff };
+  }
+  return null;
+}
+
+async function calculateChart(dateStr, timeStr, tzOffset, lat, lon) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const [hour, minute] = timeStr.split(':').map(Number);
+  let utcHour = hour - tzOffset, utcDay = day;
+  if (utcHour < 0) { utcHour += 24; utcDay--; }
+  if (utcHour >= 24) { utcHour -= 24; utcDay++; }
+  const data = await fetchPlanets(year, month, utcDay, utcHour, minute);
+  if (!data) return null;
+  const planets = [];
+  for (const p of PLANETS) {
+    if (data[p]) {
+      const sign = getSign(data[p].longitude);
+      planets.push({ id:p, name:p, g:PLANET_SYMS[p], col:PLANET_COLS[p], lon:data[p].longitude, rx:data[p].speed<0, dm:Math.abs(data[p].speed||0), sign, dig:getDignity(p,sign.name) });
+    }
+  }
+  return planets;
+}
+
+// ═══════════════════════════════════════════════════════════
+// MAIN CALCULATION
+// ═══════════════════════════════════════════════════════════
+async function calc() {
+  const status = document.getElementById('status');
+  status.textContent = 'Calculating...'; status.className = 'calc';
+  try {
+    const ndate = document.getElementById('ndate').value;
+    const ntime = document.getElementById('ntime').value;
+    const lat = parseFloat(document.getElementById('nlat').value);
+    const lon = parseFloat(document.getElementById('nlon').value);
+    const tdate = document.getElementById('tdate').value;
+    const ttime = document.getElementById('ttime').value;
+
+    if (!ndate || !tdate) { showToast('Please set both Natal and Transit dates'); return; }
+
+    const nParts = ndate.split('-').map(Number);
+    const tParts = tdate.split('-').map(Number);
+    const nOff = getUTCOffset(nParts[0], nParts[1], nParts[2]);
+    const tOff = getUTCOffset(tParts[0], tParts[1], tParts[2]);
+    document.getElementById('nutc').value = (nOff > 0 ? '+' : '') + nOff;
+    document.getElementById('tutc').value = (tOff > 0 ? '+' : '') + tOff;
+    document.getElementById('tz-badge').innerHTML = tOff === 2 ? 'CEST UTC+2' : 'MST UTC-7';
+
+    ND = await calculateChart(ndate, ntime, nOff, lat, lon);
+    TD = await calculateChart(tdate, ttime, tOff, lat, lon);
+    if (!ND || !TD) throw new Error('Calculation failed');
+
+    // Calculate ASC/MC and House Cusps (Placidus)
+    const [nYear, nMonth, nDay] = nParts;
+    const nHour = parseInt(ntime.split(':')[0]), nMin = parseInt(ntime.split(':')[1]);
+    const utcH = nHour - nOff + nMin / 60;
+    
+    // Julian Day calculation
+    let a = Math.floor((14 - nMonth) / 12);
+    let y = nYear + 4800 - a;
+    let m = nMonth + 12 * a - 3;
+    let jd = nDay + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045 + (utcH - 12) / 24;
+    
+    const T = (jd - 2451545.0) / 36525.0;
+    let GST = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T - (T * T * T) / 38710000.0;
+    GST = nm(GST);
+    let LST = nm(GST + lon);
+    
+    const eps = (23.439291111 - 0.013004167 * T) * Math.PI / 180;
+    const latRad = lat * Math.PI / 180;
+    const lstRad = LST * Math.PI / 180;
+    
+    // Calculate ASC
+    let ascRad = Math.atan2(Math.cos(lstRad), -(Math.sin(lstRad) * Math.cos(eps) + Math.tan(latRad) * Math.sin(eps)));
+    ASC_ = nm(ascRad * 180 / Math.PI);
+    
+    // Calculate MC
+    let mcRad = Math.atan2(Math.sin(lstRad), Math.cos(lstRad) * Math.cos(eps));
+    MCC_ = nm(mcRad * 180 / Math.PI);
+    if (Math.abs(MCC_ - LST) > 90 && Math.abs(MCC_ - LST) < 270) MCC_ = nm(MCC_ + 180);
+    
+    // Calculate ALL 12 House Cusps (Porphyry/Placidus approximation)
+    const MC = MCC_;
+    const IC = nm(MC + 180);
+    const ASC = ASC_;
+    const DSC = nm(ASC + 180);
+    
+    // Calculate house cusps using equal house method (Placidus approximation)
+    const cusps = [];
+    
+    // Quadrant house system (Porphyry - splits each quadrant equally)
+    const houses = [ASC, DSC, MC, IC];
+    
+    // 1st quadrant: ASC to IC (houses 1-3)
+    const quad1 = nm(IC - ASC);
+    const step1 = quad1 / 3;
+    
+    // 2nd quadrant: IC to DSC (houses 4-6)
+    const quad2 = nm(DSC - IC);
+    const step2 = quad2 / 3;
+    
+    // 3rd quadrant: DSC to MC (houses 7-9)
+    const quad3 = nm(MC - DSC);
+    const step3 = quad3 / 3;
+    
+    // 4th quadrant: MC to ASC (houses 10-12)
+    let quad4 = nm(ASC - MC);
+    if (quad4 <= 0) quad4 += 360;
+    const step4 = quad4 / 3;
+    
+    // Build all 12 cusps
+    cusps[0] = nm(ASC);                    // House 1 - ASC
+    cusps[1] = nm(ASC + step1);            // House 2
+    cusps[2] = nm(ASC + 2 * step1);        // House 3
+    cusps[3] = nm(IC);                     // House 4 - IC
+    cusps[4] = nm(IC + step2);             // House 5
+    cusps[5] = nm(IC + 2 * step2);         // House 6
+    cusps[6] = nm(DSC);                    // House 7 - DSC
+    cusps[7] = nm(DSC + step3);            // House 8
+    cusps[8] = nm(DSC + 2 * step3);        // House 9
+    cusps[9] = nm(MC);                     // House 10 - MC
+    cusps[10] = nm(MC + step4);            // House 11
+    cusps[11] = nm(MC + 2 * step4);        // House 12
+    
+    // Store as HS array
+    HS = [];
+    for (let i = 0; i < 12; i++) {
+      HS.push({ 
+        num: i + 1, 
+        cusp: cusps[i], 
+        sign: getSign(cusps[i]) 
+      });
+    }
+    
+    // Assign houses to planets
+    function assignHouse(lon) {
+      for (let i = 0; i < 12; i++) {
+        const cuspStart = HS[i].cusp;
+        const cuspEnd = HS[(i + 1) % 12].cusp;
+        let span = nm(cuspEnd - cuspStart);
+        if (span <= 0) span = 30;
+        if (nm(lon - cuspStart) < span) {
+          return i + 1;
+        }
+      }
+      return 1;
+    }
+    
+    for (const p of ND) p.house = assignHouse(p.lon);
+    for (const p of TD) p.house = assignHouse(p.lon);
+    
+    renderTables();
+    renderStats();
+    renderAspects();
+    renderDignities();
+    renderElementChart();
+    renderCusps(); 
+    drawChart();
+	renderInterpretPane();
+    
+    status.textContent = '✓ Swiss Ephemeris Ready';
+    status.className = '';
+    showToast('Calculation complete');
+  } catch(e) {
+    console.error(e);
+    status.textContent = 'Error: ' + e.message;
+    status.className = 'error';
+    showToast(e.message);
+  }
+}
+
+// Make sure renderCusps function exists and is correct
+function renderCusps() {
+  if (!HS) return;
+  const tbody = document.getElementById('cusps-body');
+  if (!tbody) return;
+  let html = '';
+  const labels = ['ASC', '', '', 'IC', '', '', 'DSC', '', '', 'MC', '', ''];
+  for (let i = 0; i < 12; i++) {
+    const h = HS[i];
+    html += `<tr>
+      <td style="color:var(--gold-bright); font-weight:600">H${h.num} ${labels[i] ? `<span style="color:var(--text-dim); font-size:8px">${labels[i]}</span>` : ''}</td>
+      <td>${h.sign.sym} ${h.sign.name}</td>
+      <td>${h.sign.deg}°${p2(h.sign.min)}'</td>
+    </tr>`;
+  }
+  tbody.innerHTML = html;
+}
+// ═══════════════════════════════════════════════════════════
+// CHART SVG
+// ═══════════════════════════════════════════════════════════
+const CX=350,CY=350,RO=298,RZ=268,RT=233,RN=188,RA=153,RC=78;
+function svgAngle(lon) { return (180-nm(lon-ASC_))*Math.PI/180; }
+function pt(lon,r) { const a=svgAngle(lon); return {x:CX+r*Math.cos(a),y:CY+r*Math.sin(a)}; }
+function secPath(lon1,lon2,ro,ri) {
+  const a1=svgAngle(lon1),a2=svgAngle(lon2);
+  const p1={x:CX+ro*Math.cos(a1),y:CY+ro*Math.sin(a1)};
+  const p2={x:CX+ro*Math.cos(a2),y:CY+ro*Math.sin(a2)};
+  const p3={x:CX+ri*Math.cos(a2),y:CY+ri*Math.sin(a2)};
+  const p4={x:CX+ri*Math.cos(a1),y:CY+ri*Math.sin(a1)};
+  return `M${p1.x},${p1.y} A${ro},${ro} 0 0,0 ${p2.x},${p2.y} L${p3.x},${p3.y} A${ri},${ri} 0 0,1 ${p4.x},${p4.y} Z`;
+}
+
+function drawChart() {
+  if (!ND || !HS || !HS.length) return;
+  const elColor = {fire:'#f2c9b5',earth:'#c9dfc3',air:'#f5ebb8',water:'#bfd4ec'};
+  const elStroke = {fire:'#c0392b',earth:'#3d7a3d',air:'#b08810',water:'#2d5aa8'};
+  let h = `<defs>
+    <radialGradient id="wbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#f3ecd7"/></radialGradient>
+    <filter id="ss"><feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="#5a4a20" flood-opacity="0.22"/></filter>
+  </defs>`;
+  h += `<circle cx="${CX}" cy="${CY}" r="${RO}" fill="url(#wbg)" stroke="#bf9016" stroke-width="1.5"/>`;
+
+  for (const s of SIGNS) {
+    const p = secPath(s.start, s.start+30, RO, RZ);
+    h += `<path d="${p}" fill="${elColor[s.el]}" fill-opacity="0.5" stroke="${elStroke[s.el]}" stroke-width="0.4" stroke-opacity="0.4"/>`;
+    const sp = pt(s.start+15, (RO+RZ)/2);
+    const symbolX = sp.x - 9;  // Adjust positioning as needed
+const symbolY = sp.y - 9;
+h += `<g transform="translate(${symbolX}, ${symbolY})" fill="${elStroke[s.el]}" opacity="0.8">${s.sym}</g>`;
+  }
+
+  h += `<circle cx="${CX}" cy="${CY}" r="${RO}" fill="none" stroke="#b8860b" stroke-width="1.3" stroke-opacity="0.5"/>`;
+  h += `<circle cx="${CX}" cy="${CY}" r="${RZ}" fill="none" stroke="#bf9016" stroke-width="1.5" stroke-opacity="0.6"/>`;
+  h += `<circle cx="${CX}" cy="${CY}" r="${RT}" fill="none" stroke="#3e6fa8" stroke-width="0.5" stroke-opacity="0.25" stroke-dasharray="3,4"/>`;
+  h += `<circle cx="${CX}" cy="${CY}" r="${RN}" fill="none" stroke="#b8860b" stroke-width="0.5" stroke-opacity="0.2"/>`;
+  h += `<circle cx="${CX}" cy="${CY}" r="${RC}" fill="#fff" fill-opacity="0.7" stroke="#d9c98a" stroke-width="0.8"/>`;
+
+  for (let d = 0; d < 360; d++) {
+    const tl = d%10===0?9:d%5===0?5:2.5;
+    const a = svgAngle(d);
+    const x1=CX+RO*Math.cos(a),y1=CY+RO*Math.sin(a),x2=CX+(RO-tl)*Math.cos(a),y2=CY+(RO-tl)*Math.sin(a);
+    h += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#010101" stroke-width="${d%10===0?0.8:0.35}" stroke-opacity="${d%10===0?0.5:0.25}"/>`;
+  }
+
+  for (let i = 0; i < 12; i++) {
+    const cu = HS[i].cusp, isA = [0,3,6,9].includes(i);
+    const a = svgAngle(cu);
+    const x1=CX+RZ*Math.cos(a),y1=CY+RZ*Math.sin(a),x2=CX+RC*Math.cos(a),y2=CY+RC*Math.sin(a);
+    h += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isA?'#010101':'#8a8578'}" stroke-width="${isA?1.4:0.5}" stroke-opacity="${isA?0.75:1}"}/>`;
+    const hp = pt(nm(cu+15), RA);
+    h += `<text x="${hp.x}" y="${hp.y}" text-anchor="middle" dominant-baseline="central" font-size="9" fill="#8a8578" font-family="'Cinzel',serif" font-weight="600">${i+1}</text>`;
+  }
+
+  if (MODE==='both' && TD && ND) {
+    const orbM = parseFloat(document.getElementById('orbm').value)||1;
+    for (const t of TD) for (const n of ND) {
+      const asp = findAspect(t.lon, n.lon, orbM);
+      if (asp && asp.actualOrb < 2.5) {
+        const pp1 = pt(t.lon, RN-12), pp2 = pt(n.lon, RN-12);
+        const alpha = Math.max(0.15, 0.65 - asp.actualOrb/asp.orb*0.45);
+        h += `<line x1="${pp1.x}" y1="${pp1.y}" x2="${pp2.x}" y2="${pp2.y}" stroke="${asp.col}" stroke-width="${asp.type==='major'?1.1:0.8}" stroke-opacity="${alpha}" stroke-dasharray="${asp.type==='hard'?'5,3':'8,3'}"/>`;
+      }
+    }
+  }
+  if (MODE !== 'transit' && ND) {
+    for (let i = 0; i < ND.length; i++) for (let j = i+1; j < ND.length; j++) {
+      const asp = findAspect(ND[i].lon, ND[j].lon, 1.1);
+      if (asp && asp.actualOrb < 1.8) {
+        const pp1 = pt(ND[i].lon, RN-12), pp2 = pt(ND[j].lon, RN-12);
+        h += `<line x1="${pp1.x}" y1="${pp1.y}" x2="${pp2.x}" y2="${pp2.y}" stroke="${asp.col}" stroke-width="0.6" stroke-opacity="0.28"/>`;
+      }
+    }
+  }
+
+ if (MODE !== 'natal' && TD) {
+  const used = [];
+  for (const p of TD) {
+    const a = svgAngle(p.lon);
+    let offset = 0;
+    for (const u of used) if (Math.abs(nm(p.lon-u.lon)) < 8) offset += 13;
+    used.push({lon:p.lon});
+    const x=CX+(RT+offset)*Math.cos(a), y=CY+(RT+offset)*Math.sin(a);
+    const xr=CX+RZ*Math.cos(a), yr=CY+RZ*Math.sin(a);
+    h += `<line x1="${xr}" y1="${yr}" x2="${x}" y2="${y}" stroke="${p.col}" stroke-width="3" stroke-opacity="0.35"/>`;
+    h += `<circle cx="${x}" cy="${y}" r="15" fill="#fff" stroke="${p.col}" stroke-width="0.4" stroke-dasharray="3,2" data-pid="${p.id}" data-type="transit" style="cursor:pointer" filter="url(#ss)"/>`;
+    
+    // p.g already contains the SVG string from PLANET_SYMS
+    if (p.g && p.g.includes('svg')) {
+      h += `<g transform="translate(${x-9}, ${y-9})" fill="${p.col}" pointer-events="none">${p.g}</g>`;
+    } else {
+      // Fallback to text
+      h += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="13" fill="${p.col}" pointer-events="none" font-weight="600">${p.id}</text>`;
+    }
+    
+    if (p.rx) h += `<text x="${x+9}" y="${y-9}" font-size="8" fill="#c0392b" pointer-events="none" font-weight="700">Rx</text>`;
+  }
+}
+
+if (MODE !== 'transit' && ND) {
+  const used = [];
+  for (const p of ND) {
+    const a = svgAngle(p.lon);
+    let offset = 0;
+    for (const u of used) if (Math.abs(nm(p.lon-u.lon)) < 8) offset += 13;
+    used.push({lon:p.lon});
+    const x = CX + (RN - offset) * Math.cos(a);
+    const y = CY + (RN - offset) * Math.sin(a);
+    const xr = CX + (RN + 16) * Math.cos(a);
+    const yr = CY + (RN + 16) * Math.sin(a);
+    h += `<line x1="${xr}" y1="${yr}" x2="${CX + (RN + 5) * Math.cos(a)}" y2="${CY + (RN + 5) * Math.sin(a)}" stroke="${p.col}" stroke-width="0.9" stroke-opacity="0.5"/>`;
+    h += `<circle cx="${x}" cy="${y}" r="15" fill="#fff" stroke="${p.col}" stroke-width="0.4" data-pid="${p.id}" data-type="natal" style="cursor:pointer" filter="url(#ss)"/>`;
+    
+    // p.g already contains the SVG string from PLANET_SYMS
+    if (p.g && p.g.includes('svg')) {
+      h += `<g transform="translate(${x-9}, ${y-9})" fill="${p.col}" pointer-events="none">${p.g}</g>`;
+    } else {
+      // Fallback to text using p.id (planet name)
+      h += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="14" fill="${p.col}" pointer-events="none" font-weight="700">${p.id}</text>`;
+    }
+    
+    if (p.rx) h += `<text x="${x+10}" y="${y-10}" font-size="7" fill="#c0392b" pointer-events="none" font-weight="700">Rx</text>`;
+  }
+}
+
+  function axisLabel(lon, text, col) {
+    const a = svgAngle(lon);
+    const lx=CX+(RO+18)*Math.cos(a), ly=CY+(RO+18)*Math.sin(a);
+    return `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central" font-size="9" fill="${col}" font-family="'Cinzel',serif" font-weight="700">${text}</text>`;
+  }
+  h += axisLabel(ASC_,'ASC','#b8860b');
+  h += axisLabel(nm(ASC_+180),'DSC','#8a6508');
+  h += axisLabel(MCC_,'MC','#3e6fa8');
+  h += axisLabel(nm(MCC_+180),'IC','#2d5aa8');
+  h += `<circle cx="${CX}" cy="${CY}" r="4" fill="#b8860b"/>`;
+
+  document.getElementById('svg').innerHTML = h;
+  document.getElementById('svg').querySelectorAll('[data-pid]').forEach(el => {
+    el.addEventListener('mouseenter', ev => showTip(ev, el.getAttribute('data-pid'), el.getAttribute('data-type')));
+    el.addEventListener('mousemove', moveTip);
+    el.addEventListener('mouseleave', hideTip);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER TABLES
+// ═══════════════════════════════════════════════════════════
+function renderTables() {
+  const DC = {dom:'dig-dom',exl:'dig-exl',det:'dig-det',fal:'dig-fal'};
+  const DL = {dom:'Dom',exl:'Exl',det:'Det',fal:'Fal'};
+
+  function speedBar(dm) {
+    const pct = Math.min(100, dm/2*100);
+    return `<div style="display:inline-flex;align-items:center;gap:4px"><span>${dm.toFixed(2)}</span><div style="width:30px;height:3px;background:var(--border-soft);border-radius:2px;overflow:hidden;display:inline-block"><div style="width:${pct}%;height:100%;background:var(--gold-light);border-radius:2px"></div></div></div>`;
+  }
+
+  let ntbl = '', ttbl = '';
+  for (const p of ND) {
+    const d = p.dig ? `<span class="dig-badge ${DC[p.dig.type]}">${DL[p.dig.type]}</span>` : '—';
+    ntbl += `<tr><td><span style="color:${p.col}">${p.g}</span> ${p.name}</td><td>${p.sign.sym} ${p.sign.deg}°${p2(p.sign.min)}' ${p.sign.name}</td><td>${p.house}</td><td>${p.rx?'<span class="rxb">Rx</span>':'—'}</td><td>${speedBar(p.dm)}</td><td>${d}</td></tr>`;
+  }
+  for (const p of TD) {
+    const d = p.dig ? `<span class="dig-badge ${DC[p.dig.type]}">${DL[p.dig.type]}</span>` : '—';
+    ttbl += `<tr><td><span style="color:${p.col}">${p.g}</span> ${p.name}</td><td>${p.sign.sym} ${p.sign.deg}°${p2(p.sign.min)}' ${p.sign.name}</td><td>${p.house}</td><td>${p.rx?'<span class="rxb">Rx</span>':'—'}</td><td>${speedBar(p.dm)}</td><td>${d}</td></tr>`;
+  }
+  document.getElementById('ntbl').innerHTML = ntbl;
+  document.getElementById('ttbl').innerHTML = ttbl;
+}
+
+function renderStats() {
+  const ascSign = getSign(ASC_);
+  const ruler = SIGNS.find(s => s.name === ascSign.name).ruler;
+  document.getElementById('s-r').innerHTML = ruler;
+  const ec = {fire:0,earth:0,air:0,water:0};
+  for (const p of ND) ec[p.sign.el]++;
+  const maxEl = Object.keys(ec).reduce((a,b) => ec[a]>=ec[b]?a:b);
+  document.getElementById('s-e').innerHTML = maxEl.charAt(0).toUpperCase()+maxEl.slice(1);
+  const mods = {Cardinal:0,Fixed:0,Mutable:0};
+  for (const p of ND) mods[p.sign.mod]++;
+  const maxMod = Object.keys(mods).reduce((a,b) => mods[a]>=mods[b]?a:b);
+  document.getElementById('s-m').innerHTML = maxMod;
+  const af = getSign(ASC_), mf = getSign(MCC_);
+  document.getElementById('s-a').innerHTML = `${af.sym} ${af.deg}°${p2(af.min)}'`;
+  document.getElementById('s-mc').innerHTML = `MC: ${mf.sym} ${mf.deg}°${p2(mf.min)}'`;
+}
+
+function renderAspects() {
+  const orb = parseFloat(document.getElementById('orbm').value) || 1;
+  const tn = [], nn = [], tt = [];
+  if (TD && ND) for (const t of TD) for (const n of ND) { const a = findAspect(t.lon, n.lon, orb); if (a) tn.push({p1:t, p2:n, a}); }
+  if (ND) for (let i = 0; i < ND.length; i++) for (let j = i+1; j < ND.length; j++) { const a = findAspect(ND[i].lon, ND[j].lon, 1); if (a) nn.push({p1:ND[i], p2:ND[j], a}); }
+  if (TD) for (let i = 0; i < TD.length; i++) for (let j = i+1; j < TD.length; j++) { const a = findAspect(TD[i].lon, TD[j].lon, orb); if (a) tt.push({p1:TD[i], p2:TD[j], a}); }
+
+  function aspHtml(list, aspType) {
+    if (!list.length) return '<div class="empty-state">No aspects</div>';
+    return list.sort((a, b) => a.a.actualOrb - b.a.actualOrb).slice(0, 25).map(x => {
+      let interpText = '';
+      if (aspType === 'tn') {
+        interpText = getInterp(interpKey('tn', x.p1.id, x.a.name, x.p2.id));
+      } else if (aspType === 'nn') {
+        interpText = getInterp(interpKey('na', x.p1.id, x.a.name, x.p2.id)) ||
+                     getInterp(interpKey('na', x.p2.id, x.a.name, x.p1.id));
+      }
+      const snippet = interpText
+        ? interpText.replace(/\*\*(.+?)\*\*/g, '$1').replace(/_(.+?)_/g, '$1').slice(0, 110) + (interpText.length > 110 ? '…' : '')
+        : '';
+      const editKey = aspType === 'tn'
+        ? interpKey('tn', x.p1.id, x.a.name, x.p2.id)
+        : interpKey('na', x.p1.id, x.a.name, x.p2.id);
+      return `<div class="aspect-item" style="flex-direction:column;align-items:flex-start;gap:3px;padding:8px 12px">
+        <div style="display:flex;align-items:center;gap:8px;width:100%">
+          <div class="aspect-dot" style="background:${x.a.col};flex-shrink:0"></div>
+          <span style="color:${x.p1.col}">${x.p1.g}</span>
+          <span style="color:${x.a.col};font-size:14px">${x.a.sym}</span>
+          <span style="font-size:9px;color:var(--text-dim)">${x.a.name}</span>
+          <span style="color:${x.p2.col}">${x.p2.g}</span>
+          <span class="aspect-orb" style="margin-left:auto">${x.a.actualOrb.toFixed(2)}°</span>
+        </div>
+        ${snippet
+          ? `<div style="font-family:var(--font-serif);font-size:11px;color:var(--text-secondary);line-height:1.5;padding-left:16px;padding-top:2px">${snippet}</div>`
+          : `<div style="font-size:9px;color:var(--text-muted);padding-left:16px;font-style:italic"><span onclick="jumpToInterpEditorKey('${editKey}')" style="cursor:pointer;color:var(--gold-primary);text-decoration:underline">+ add interp</span></div>`
+        }
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('asp-tn').innerHTML = aspHtml(tn, 'tn');
+  document.getElementById('asp-nn').innerHTML = aspHtml(nn, 'nn');
+  document.getElementById('asp-tt').innerHTML = aspHtml(tt, 'tt');
+
+  const all = [...tn, ...nn, ...tt].sort((a, b) => a.a.actualOrb - b.a.actualOrb);
+  document.getElementById('adtbl').innerHTML = all.slice(0, 25).map(x => {
+    const isTN = tn.includes(x);
+    const adKey    = isTN ? interpKey('tn', x.p1.id, x.a.name, x.p2.id) : interpKey('na', x.p1.id, x.a.name, x.p2.id);
+    const adKeyRev = isTN ? adKey : interpKey('na', x.p2.id, x.a.name, x.p1.id);
+    const adText   = getInterp(adKey) || getInterp(adKeyRev);
+    const adSnippet = adText
+      ? adText.replace(/\*\*(.+?)\*\*/g, '$1').replace(/_(.+?)_/g, '$1').slice(0, 140) + (adText.length > 140 ? '…' : '')
+      : '';
+    return `<tr>
+      <td><span style="color:${x.p1.col}">${x.p1.g}</span> ${x.p1.name}</td>
+      <td style="color:${x.a.col}">${x.a.sym} ${x.a.name}</td>
+      <td><span style="color:${x.p2.col}">${x.p2.g}</span> ${x.p2.name}</td>
+      <td>${x.a.actualOrb.toFixed(2)}°</td>
+      <td><span style="color:${x.p1.dm>0||x.p2.dm>0?'var(--accent-green)':'var(--accent-red)'}">
+        ${x.p1.dm>0||x.p2.dm>0?'Applying':'Separating'}
+      </span></td>
+      <td><span style="font-size:9px;color:var(--text-dim)">${x.a.type}</span></td>
+    </tr>
+    ${adSnippet
+      ? `<tr style="background:rgba(245,241,232,.5)"><td colspan="6" style="padding:4px 10px 8px 22px;font-family:var(--font-serif);font-size:11px;color:var(--text-secondary);line-height:1.5;border-bottom:1px solid var(--border-soft)">${adSnippet}</td></tr>`
+      : `<tr><td colspan="6" style="padding:2px 10px 6px 22px;border-bottom:1px solid var(--border-soft)"><span onclick="jumpToInterpEditorKey('${adKey}')" style="font-size:9px;color:var(--gold-primary);cursor:pointer;font-style:italic;text-decoration:underline">+ add interpretation</span></td></tr>`
+    }`;
+  }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-dim)">—</td></tr>';
+}
+function renderDignities() {
+  document.getElementById('dignities-ref').innerHTML = PLANETS.map(p => {
+    const d = DIGNITIES[p];
+    return `<tr>
+      <td><span style="color:${PLANET_COLS[p]}">${PLANET_SYMS[p]}</span> ${p}</td>
+      <td style="color:#d4af37">${d.dom.join(', ')}</td>
+      <td style="color:#68d391">${d.exl.join(', ')}</td>
+      <td style="color:#fca5a5">${d.det.join(', ')}</td>
+      <td style="color:#fcd34d">${d.fal.join(', ')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderElementChart() {
+  const ec={fire:0,earth:0,air:0,water:0};
+  for (const p of ND) ec[p.sign.el]++;
+  const colors={fire:'#c84018',earth:'#3a7a3a',air:'#b09020',water:'#2070b0'};
+  const total = ND.length;
+  document.getElementById('element-chart').innerHTML = ['fire','earth','air','water'].map(el => {
+    const pct = (ec[el]/total)*100;
+    return pct > 0 ? `<div class="element-segment" style="width:${pct}%;background:${colors[el]}" title="${el}: ${ec[el]}">${ec[el]}</div>` : '';
+  }).join('');
+}
+function renderInterpretPane() {
+  const body = document.getElementById('interpret-pane-body');
+  if (!body) return;
+  if (!ND) {
+    body.innerHTML = '<div class="empty-state">Calculate a chart first.</div>';
+    return;
+  }
+
+  const sections = [];
+
+  // ── Natal: Planet in Sign ─────────────────────────────
+  const psEntries = [];
+  for (const p of ND) {
+    const key = interpKey('ps', p.id, p.sign.name);
+    const text = getInterp(key);
+    psEntries.push({ p, key, text });
+  }
+  sections.push({
+    title: 'Planets in Signs',
+    cat: 'ps',
+    entries: psEntries,
+    labelFn: e => `<span style="color:${e.p.col}">${e.p.g}</span> ${e.p.name} in ${e.p.sign.name}`
+  });
+
+  // ── Natal: Planet in House ────────────────────────────
+  const phEntries = [];
+  for (const p of ND) {
+    const key = interpKey('ph', p.id, p.house);
+    const text = getInterp(key);
+    phEntries.push({ p, key, text });
+  }
+  sections.push({
+    title: 'Planets in Houses',
+    cat: 'ph',
+    entries: phEntries,
+    labelFn: e => `<span style="color:${e.p.col}">${e.p.g}</span> ${e.p.name} in House ${e.p.house}`
+  });
+
+  // ── Natal Aspects ─────────────────────────────────────
+  const naEntries = [];
+  for (let i = 0; i < ND.length; i++) {
+    for (let j = i + 1; j < ND.length; j++) {
+      const asp = findAspect(ND[i].lon, ND[j].lon, 1);
+      if (!asp) continue;
+      const key = interpKey('na', ND[i].id, asp.name, ND[j].id);
+      const keyRev = interpKey('na', ND[j].id, asp.name, ND[i].id);
+      const text = getInterp(key) || getInterp(keyRev);
+      naEntries.push({ p1: ND[i], p2: ND[j], asp, key, text });
+    }
+  }
+  naEntries.sort((a, b) => a.asp.actualOrb - b.asp.actualOrb);
+  sections.push({
+    title: 'Natal Aspects',
+    cat: 'na',
+    entries: naEntries,
+    labelFn: e =>
+      `<span style="color:${e.p1.col}">${e.p1.g}</span>
+       <span style="color:${e.asp.col}">${e.asp.sym}</span>
+       <span style="color:${e.p2.col}">${e.p2.g}</span>
+       <span style="font-size:9px;color:var(--text-dim)">${e.p1.name} ${e.asp.name} ${e.p2.name} · ${e.asp.actualOrb.toFixed(2)}°</span>`
+  });
+
+  // ── Transit to Natal ──────────────────────────────────
+  const tnEntries = [];
+  if (TD) {
+    for (const t of TD) {
+      for (const n of ND) {
+        const asp = findAspect(t.lon, n.lon, parseFloat(document.getElementById('orbm').value) || 1);
+        if (!asp) continue;
+        const key = interpKey('tn', t.id, asp.name, n.id);
+        const text = getInterp(key);
+        tnEntries.push({ t, n, asp, key, text });
+      }
+    }
+    tnEntries.sort((a, b) => a.asp.actualOrb - b.asp.actualOrb);
+  }
+  sections.push({
+    title: 'Transits to Natal',
+    cat: 'tn',
+    entries: tnEntries,
+    labelFn: e =>
+      `<span style="color:${e.t.col}">${e.t.g}</span>
+       <span style="color:${e.asp.col}">${e.asp.sym}</span>
+       <span style="color:${e.n.col}">${e.n.g}</span>
+       <span style="font-size:9px;color:var(--text-dim)">tr.${e.t.name} ${e.asp.name} n.${e.n.name} · ${e.asp.actualOrb.toFixed(2)}°</span>`
+  });
+
+  // ── Dignities ─────────────────────────────────────────
+  const diEntries = [];
+  for (const p of ND) {
+    if (!p.dig) continue;
+    const key = interpKey('di', p.id, p.dig.type);
+    const text = getInterp(key);
+    diEntries.push({ p, key, text });
+  }
+  if (diEntries.length) {
+    sections.push({
+      title: 'Dignities & Debilities',
+      cat: 'di',
+      entries: diEntries,
+      labelFn: e => `<span style="color:${e.p.col}">${e.p.g}</span> ${e.p.name} — ${e.p.dig.label}`
+    });
+  }
+
+  // ── Render ────────────────────────────────────────────
+  const catColors = {
+    ps: 'var(--accent-purple)', ph: 'var(--accent-purple)',
+    na: 'var(--accent-blue)',   tn: 'var(--accent-red)',
+    di: 'var(--gold-primary)'
+  };
+
+  body.innerHTML = sections.map(sec => {
+    const filled = sec.entries.filter(e => e.text).length;
+    const total  = sec.entries.length;
+
+    const rows = sec.entries.map(e => {
+      const hasText = !!e.text;
+      const editKey = e.key;
+
+      const textHtml = hasText
+        ? `<div style="font-family:var(--font-serif);font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:4px;padding-top:4px;border-top:1px solid rgba(217,209,191,.4)">${
+            e.text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/_(.+?)_/g,'<em>$1</em>').replace(/\n/g,'<br>')
+          }</div>`
+        : `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;font-style:italic">No interpretation saved —
+            <span onclick="jumpToInterpEditorKey('${editKey}')" style="color:var(--gold-primary);cursor:pointer;text-decoration:underline">add one</span>
+          </div>`;
+
+      return `<div style="padding:8px 12px;border-bottom:1px solid rgba(217,209,191,.35)">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px">
+          ${sec.labelFn(e)}
+        </div>
+        ${textHtml}
+      </div>`;
+    }).join('');
+
+    return `<div style="margin-bottom:14px;border:1px solid var(--border-soft);border-radius:var(--radius-md);overflow:hidden">
+      <div style="padding:8px 12px;background:linear-gradient(90deg,#fbf7ec,#f5efde);border-bottom:1px solid var(--border-soft);display:flex;align-items:center;gap:8px">
+        <span style="font-family:var(--font-display);font-size:10px;color:${catColors[sec.cat]||'var(--gold-primary)'};letter-spacing:1.5px;font-weight:600">${sec.title.toUpperCase()}</span>
+        <span style="margin-left:auto;font-size:9px;color:var(--text-dim)">${filled}/${total} interpreted</span>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+// Jump from the Interpret pane directly to the editor for a specific key
+function jumpToInterpEditorKey(key) {
+  jumpToInterpEntry(key);
+  switchSection('interp');
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOOLTIP
+// ═══════════════════════════════════════════════════════════
+function showTip(ev, pid, type) {
+  const dataset = type === 'natal' ? ND : TD;
+  if (!dataset) return;
+  const p = dataset.find(x => x.id === pid);
+  if (!p) return;
+  const DL = { dom:'Domicile', exl:'Exaltation', det:'Detriment', fal:'Fall' };
+
+  document.getElementById('tip-title').innerHTML =
+    `<span style="color:${p.col}">${p.g}</span> ${p.name}
+     <span style="opacity:0.6;font-size:8px">${type.toUpperCase()}</span>`;
+
+  const rows = [
+    ['Position', `${p.sign.sym} ${p.sign.deg}°${p2(p.sign.min)}'${p2(p.sign.sec)}" ${p.sign.name}`],
+    ['House',    `House ${p.house}`],
+    ['Speed',    `${p.rx ? 'Rx ' : ''}${p.dm.toFixed(3)}°/day`],
+    ['Element',  `<span style="color:${ELEMENT_COLS[p.sign.el]}">${p.sign.el.charAt(0).toUpperCase()+p.sign.el.slice(1)}</span>`],
+    ['Modality', p.sign.mod],
+    ['Dignity',  p.dig ? `<span class="dig-badge ${p.dig.class}">${DL[p.dig.type]}</span>` : '—']
+  ];
+
+  document.getElementById('tip-body').innerHTML =
+    rows.map(([l,v]) =>
+      `<div class="tip-row"><span class="tip-lbl">${l}</span><span class="tip-val">${v}</span></div>`
+    ).join('');
+
+  // ── Interpretation snippet ──────────────────────────────
+  const interpLines = [];
+
+  if (type === 'natal') {
+    // Planet in sign
+    const psKey = interpKey('ps', p.id, p.sign.name);
+    const psText = getInterp(psKey);
+    if (psText) interpLines.push({ label: p.name + ' in ' + p.sign.name, text: psText });
+
+    // Planet in house
+    const phKey = interpKey('ph', p.id, p.house);
+    const phText = getInterp(phKey);
+    if (phText) interpLines.push({ label: p.name + ' in House ' + p.house, text: phText });
+
+    // Dignity interpretation
+    if (p.dig) {
+      const diKey = interpKey('di', p.id, p.dig.type);
+      const diText = getInterp(diKey);
+      if (diText) interpLines.push({ label: DL[p.dig.type], text: diText });
+    }
+  }
+
+  if (type === 'transit') {
+    // Transit planet in sign
+    const tsKey = interpKey('ts', p.id, p.sign.name);
+    const tsText = getInterp(tsKey);
+    if (tsText) interpLines.push({ label: 'Transit ' + p.name + ' in ' + p.sign.name, text: tsText });
+
+    // Transit planet in house
+    const thKey = interpKey('th', p.id, p.house);
+    const thText = getInterp(thKey);
+    if (thText) interpLines.push({ label: 'Transit ' + p.name + ' in House ' + p.house, text: thText });
+
+    // Transit-to-natal aspects for this planet (top 2 by orb)
+    if (ND) {
+      const aspHits = [];
+      for (const n of ND) {
+        const asp = findAspect(p.lon, n.lon, parseFloat(document.getElementById('orbm').value) || 1);
+        if (asp) {
+          const tnKey = interpKey('tn', p.id, asp.name, n.id);
+          const tnText = getInterp(tnKey);
+          if (tnText) aspHits.push({ label: p.name + ' ' + asp.sym + ' ' + n.name, text: tnText, orb: asp.actualOrb });
+        }
+      }
+      aspHits.sort((a, b) => a.orb - b.orb).slice(0, 2).forEach(h => interpLines.push(h));
+    }
+  }
+
+  if (interpLines.length) {
+    const interpHtml = interpLines.map(il => {
+      const snippet = il.text.length > 160
+        ? il.text.slice(0, 160).trimEnd() + '…'
+        : il.text;
+      return `<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border-gold)">
+        <div style="font-family:var(--font-display);font-size:8px;color:var(--gold-primary);letter-spacing:1px;margin-bottom:3px">${il.label.toUpperCase()}</div>
+        <div style="font-family:var(--font-serif);font-size:11px;color:var(--text-secondary);line-height:1.5">${snippet}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('tip-body').innerHTML += interpHtml;
+  }
+
+  document.getElementById('planet-tooltip').style.display = 'block';
+  moveTip(ev);
+}
+function moveTip(ev) {
+  const tip = document.getElementById('planet-tooltip');
+  let x=ev.clientX+16, y=ev.clientY-12;
+  if (x+220>window.innerWidth) x=ev.clientX-230;
+  if (y+180>window.innerHeight) y=ev.clientY-185;
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+function hideTip() { document.getElementById('planet-tooltip').style.display='none'; }
+
+// ═══════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function switchSection(id) {
+  document.querySelectorAll('.nav-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('section-'+id).classList.add('active');
+  const tabs = document.querySelectorAll('.nav-tab');
+  const map = {transit:0,database:1,synastry:2,patterns:3,timeline:4,interp:5};
+  if (map[id] !== undefined) tabs[map[id]].classList.add('active');
+}
+
+function switchFeature(e, feature) {
+  document.querySelectorAll('.feature-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.feature-content').forEach(c => c.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById('feat-'+feature).classList.add('active');
+}
+
+function setMode(m) {
+  MODE = m;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mb-'+m).classList.add('active');
+  drawChart();
+}
+
+function shiftTime(ms) { transitMs += ms; applyTransitTime(); }
+function setNowTime() { transitMs = Date.now(); applyTransitTime(); }
+function applyTransitTime() {
+  const dt = new Date(transitMs);
+  const off = getUTCOffset(dt.getUTCFullYear(), dt.getUTCMonth()+1, dt.getUTCDate());
+  const local = new Date(transitMs + off*3600000);
+  document.getElementById('tdate').value = `${local.getUTCFullYear()}-${p2(local.getUTCMonth()+1)}-${p2(local.getUTCDate())}`;
+  document.getElementById('ttime').value = `${p2(local.getUTCHours())}:${p2(local.getUTCMinutes())}`;
+  calc();
+}
+
+function exportChart() {
+  const svgEl = document.getElementById('svg');
+  const serializer = new XMLSerializer();
+  const svgStr = serializer.serializeToString(svgEl);
+  const blob = new Blob([svgStr], {type:'image/svg+xml'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'astrologjia_chart.svg'; a.click();
+  showToast('Chart exported as SVG');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toastMsg');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+ 
+window.addEventListener('load', () => {
+
+  // ── Right panel tabs ──────────────────────────────────
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const pane = document.getElementById('pane-' + btn.getAttribute('data-pane'));
+      if (pane) pane.classList.add('active');
+    });
+  });
+
+  // ── Timeline date defaults ────────────────────────────
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
+  document.getElementById('tl-from').value = `${y}-${m}-${d}`;
+  const future = new Date(now.getTime() + 30*86400000);
+  const fy = future.getFullYear(), fm = String(future.getMonth()+1).padStart(2,'0'), fd = String(future.getDate()).padStart(2,'0');
+  document.getElementById('tl-to').value = `${fy}-${fm}-${fd}`;
+
+  document.getElementById('orbm').addEventListener('change', () => { if (ND && TD) { renderAspects(); drawChart(); } });
+  document.getElementById('modal-person').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+  document.getElementById('modal-report').addEventListener('click', function(e) { if (e.target === this) closeReportModal(); });
+
+  refreshDBUI();
+  loadInterp();
+  refreshInterpUI();
+  setNowTime();
+});
+</script>
+</body>
+</html>

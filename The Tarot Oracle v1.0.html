@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>✦ The Tarot Oracle | 78-Card Mystic Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: radial-gradient(circle at 10% 20%, #1a0a2e, #0d0518 60%, #160820);
+      color: #f0e6d3;
+      font-family: 'EB Garamond', serif;
+      overflow-x: hidden;
+      margin: 0;
+    }
+    .font-cinzel { font-family: 'Cinzel', serif; }
+    .font-cinzel-deco { font-family: 'Cinzel Decorative', serif; }
+    .font-garamond { font-family: 'EB Garamond', serif; }
+
+    @keyframes float { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+    @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+    @keyframes cardReveal { from { opacity: 0; transform: rotateY(90deg) scale(0.8); } to { opacity: 1; transform: rotateY(0deg) scale(1); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes starTwinkle { 0%,100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 0.9; transform: scale(1.3); } }
+    @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 15px rgba(201,168,76,0.3); } 50% { box-shadow: 0 0 35px rgba(201,168,76,0.7), 0 0 60px rgba(201,168,76,0.2); } }
+    @keyframes typing { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+
+    .animate-float { animation: float 4s ease-in-out infinite; }
+    .animate-card-reveal { animation: cardReveal 0.5s ease-out forwards; }
+    .animate-fade-up { animation: fadeUp 0.4s ease-out; }
+    .animate-spin-slow { animation: spin-slow 8s linear infinite; }
+    .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+    .shimmer-text {
+      background: linear-gradient(90deg, #c9a84c 0%, #e8c97a 40%, #fff8dc 50%, #e8c97a 60%, #c9a84c 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+    }
+    .card-glow:hover { box-shadow: 0 0 20px rgba(201,168,76,0.5), 0 0 40px rgba(201,168,76,0.2); transform: translateY(-4px) scale(1.02); }
+    .prose-mystical p { line-height: 1.8; margin-bottom: 1rem; }
+    .prose-mystical h3 { font-family: 'Cinzel', serif; color: #e8c97a; margin: 1.5rem 0 0.5rem; font-size: 1.1rem; letter-spacing: 0.05em; }
+    .prose-mystical strong { color: #e8c97a; }
+    .prose-mystical ul { list-style: none; padding-left: 0; }
+    .prose-mystical ul li::before { content: "✦ "; color: #c9a84c; }
+    .gold-border { border: 1px solid rgba(201,168,76,0.3); }
+    .text-gold { color: #c9a84c; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #2d1b4e; }
+    ::-webkit-scrollbar-thumb { background: #c9a84c; border-radius: 10px; }
+    .orb { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; animation: float 12s infinite alternate; }
+    .streaming-cursor::after { content: '▋'; animation: typing 0.8s infinite; color: #c9a84c; }
+    .major-card { background: linear-gradient(135deg, #2d1260 0%, #1a0a2e 100%); }
+    .wands-card { background: linear-gradient(135deg, #3d1a00 0%, #1a0800 100%); }
+    .cups-card { background: linear-gradient(135deg, #002d3d 0%, #000d1a 100%); }
+    .swords-card { background: linear-gradient(135deg, #1a1a2e 0%, #0a0a1a 100%); }
+    .pentacles-card { background: linear-gradient(135deg, #0d2d00 0%, #041400 100%); }
+    
+    select option { background: #1a0a2e; color: #f0e6d3; }
+    input, select { background: rgba(45,27,78,0.5) !important; color: #f0e6d3; }
+    input::placeholder { color: rgba(201,168,76,0.3); }
+    input:focus, select:focus { outline: none; border-color: rgba(201,168,76,0.5) !important; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+// ==================== 78 TAROT CARDS ====================
+const TAROT_CARDS = [
+  // MAJOR ARCANA (0-21)
+  { id:0, name:"The Fool", suit:"major", num:"0", symbol:"🌟", keywords:["beginnings","innocence","spontaneity","free spirit"], upright:"New beginnings, innocence, adventure. A leap of faith into the unknown.", reversed:"Recklessness, risk-taking, holding back, foolishness.", element:"Air", planet:"Uranus", archetype:"The Seeker" },
+  { id:1, name:"The Magician", suit:"major", num:"I", symbol:"🪄", keywords:["willpower","skill","manifestation","resourcefulness"], upright:"Manifestation, resourcefulness, skill. You have all the tools you need.", reversed:"Manipulation, untapped talents, trickery.", element:"Air", planet:"Mercury", archetype:"The Alchemist" },
+  { id:2, name:"The High Priestess", suit:"major", num:"II", symbol:"🌙", keywords:["intuition","mystery","inner knowledge","subconscious"], upright:"Intuition, sacred knowledge, divine feminine. Trust what is hidden.", reversed:"Secrets, disconnected from intuition, withdrawing inward.", element:"Water", planet:"Moon", archetype:"The Oracle" },
+  { id:3, name:"The Empress", suit:"major", num:"III", symbol:"👸", keywords:["fertility","abundance","nature","nurturing"], upright:"Femininity, beauty, abundance, nature. Creative energy flourishes.", reversed:"Creative block, dependence, smothering.", element:"Earth", planet:"Venus", archetype:"The Mother" },
+  { id:4, name:"The Emperor", suit:"major", num:"IV", symbol:"👑", keywords:["authority","structure","control","stability"], upright:"Authority, structure, stability. Establish order and lead with strength.", reversed:"Domination, rigidity, excessive control.", element:"Fire", planet:"Aries", archetype:"The Father" },
+  { id:5, name:"The Hierophant", suit:"major", num:"V", symbol:"⛪", keywords:["tradition","conformity","morality","ethics"], upright:"Spiritual wisdom, tradition, institutions. Seek established guidance.", reversed:"Rebellion, subversiveness, unconventional beliefs.", element:"Earth", planet:"Taurus", archetype:"The Teacher" },
+  { id:6, name:"The Lovers", suit:"major", num:"VI", symbol:"💑", keywords:["love","harmony","choices","alignment"], upright:"Love, harmony, alignment of values. A significant choice awaits.", reversed:"Self-love lacking, disharmony, imbalance, misalignment.", element:"Air", planet:"Gemini", archetype:"The Union" },
+  { id:7, name:"The Chariot", suit:"major", num:"VII", symbol:"🏆", keywords:["willpower","victory","assertion","control"], upright:"Control, willpower, success. Drive forward with determination.", reversed:"Self-discipline lacking, aggression, no direction.", element:"Water", planet:"Cancer", archetype:"The Conqueror" },
+  { id:8, name:"Strength", suit:"major", num:"VIII", symbol:"🦁", keywords:["strength","courage","patience","inner power"], upright:"Strength, courage, patience. Tame your inner beast with love.", reversed:"Inner strength lacking, self-doubt, raw emotion.", element:"Fire", planet:"Leo", archetype:"The Champion" },
+  { id:9, name:"The Hermit", suit:"major", num:"IX", symbol:"🕯️", keywords:["soul-searching","introspection","guidance","solitude"], upright:"Soul-searching, introspection, inner guidance. Seek your inner truth.", reversed:"Isolation, loneliness, withdrawal, lost.", element:"Earth", planet:"Virgo", archetype:"The Sage" },
+  { id:10, name:"Wheel of Fortune", suit:"major", num:"X", symbol:"⚙️", keywords:["cycles","fate","turning point","luck"], upright:"Good luck, destiny, a turning point. The wheel spins in your favor.", reversed:"Bad luck, resistance to change, breaking cycles.", element:"Fire", planet:"Jupiter", archetype:"The Cycle" },
+  { id:11, name:"Justice", suit:"major", num:"XI", symbol:"⚖️", keywords:["justice","truth","fairness","law"], upright:"Justice, fairness, truth. Cause and effect—all will be balanced.", reversed:"Unfairness, dishonesty, not taking accountability.", element:"Air", planet:"Libra", archetype:"The Judge" },
+  { id:12, name:"The Hanged Man", suit:"major", num:"XII", symbol:"🙃", keywords:["suspension","restriction","sacrifice","new perspective"], upright:"Pause, surrender, letting go. A new perspective through sacrifice.", reversed:"Delays, resistance, stalling, indecision.", element:"Water", planet:"Neptune", archetype:"The Martyr" },
+  { id:13, name:"Death", suit:"major", num:"XIII", symbol:"💀", keywords:["transformation","endings","transition","change"], upright:"Endings, transformation, transition. One chapter closes, another opens.", reversed:"Resistance to change, unable to move on, stagnation.", element:"Water", planet:"Scorpio", archetype:"The Transformer" },
+  { id:14, name:"Temperance", suit:"major", num:"XIV", symbol:"🏺", keywords:["balance","moderation","patience","purpose"], upright:"Balance, moderation, patience. Find your middle path.", reversed:"Imbalance, excess, self-healing needed.", element:"Fire", planet:"Sagittarius", archetype:"The Alchemist" },
+  { id:15, name:"The Devil", suit:"major", num:"XV", symbol:"😈", keywords:["shadow","bondage","materialism","sexuality"], upright:"Shadow self, attachment, addiction. Confront your chains.", reversed:"Releasing limiting beliefs, exploring dark thoughts, detachment.", element:"Earth", planet:"Capricorn", archetype:"The Shadow" },
+  { id:16, name:"The Tower", suit:"major", num:"XVI", symbol:"⚡", keywords:["sudden change","upheaval","revelation","chaos"], upright:"Sudden change, upheaval, revelation. Structures crumble so truth can emerge.", reversed:"Fear of change, averting disaster, delaying the inevitable.", element:"Fire", planet:"Mars", archetype:"The Awakener" },
+  { id:17, name:"The Star", suit:"major", num:"XVII", symbol:"🌟", keywords:["hope","faith","rejuvenation","inspiration"], upright:"Hope, faith, renewal. After darkness, your guiding star appears.", reversed:"Faithlessness, despair, discouragement, hopelessness.", element:"Air", planet:"Aquarius", archetype:"The Dreamer" },
+  { id:18, name:"The Moon", suit:"major", num:"XVIII", symbol:"🌕", keywords:["illusion","fear","subconscious","anxiety"], upright:"Illusion, fear, the subconscious. Not all is as it seems.", reversed:"Release of fear, repressed emotion, inner confusion.", element:"Water", planet:"Pisces", archetype:"The Dreamer" },
+  { id:19, name:"The Sun", suit:"major", num:"XIX", symbol:"☀️", keywords:["positivity","joy","success","vitality"], upright:"Joy, success, positivity. Radiant energy and vitality embrace you.", reversed:"Inner child, feeling down, overly optimistic.", element:"Fire", planet:"Sun", archetype:"The Illuminator" },
+  { id:20, name:"Judgement", suit:"major", num:"XX", symbol:"🎺", keywords:["reflection","reckoning","awakening","absolution"], upright:"Reflection, reckoning, absolution. Hear your higher calling.", reversed:"Unable to forgive yourself, self-doubt, refusal of self-examination.", element:"Fire", planet:"Pluto", archetype:"The Judge" },
+  { id:21, name:"The World", suit:"major", num:"XXI", symbol:"🌍", keywords:["completion","integration","accomplishment","travel"], upright:"Completion, accomplishment, wholeness. The journey reaches fulfillment.", reversed:"Incomplete, lack of closure, delays.", element:"Earth", planet:"Saturn", archetype:"The Seeker" },
+
+  // WANDS (22-35)
+  { id:22, name:"Ace of Wands", suit:"wands", num:"Ace", symbol:"🔥", keywords:["inspiration","creation","new ventures","potential"], upright:"Inspiration strikes. A new creative venture ignites.", reversed:"Delays, creativity blocked, hesitation.", element:"Fire", planet:"Mars", archetype:"The Spark" },
+  { id:23, name:"Two of Wands", suit:"wands", num:"2", symbol:"🔥", keywords:["planning","future","progress","discovery"], upright:"Planning and progress. Venture beyond familiar territory.", reversed:"Fear of the unknown, lack of planning.", element:"Fire", planet:"Mars", archetype:"The Planner" },
+  { id:24, name:"Three of Wands", suit:"wands", num:"3", symbol:"🔥", keywords:["expansion","foresight","overseas","travel"], upright:"Expansion, foresight, overseas opportunities beckon.", reversed:"Playing small, lack of foresight, unexpected delays.", element:"Fire", planet:"Sun", archetype:"The Explorer" },
+  { id:25, name:"Four of Wands", suit:"wands", num:"4", symbol:"🔥", keywords:["celebration","homecoming","harmony","community"], upright:"Celebration, harmony, homecoming. Milestone reached.", reversed:"Lack of support, transience, instability at home.", element:"Fire", planet:"Venus", archetype:"The Celebrant" },
+  { id:26, name:"Five of Wands", suit:"wands", num:"5", symbol:"🔥", keywords:["conflict","competition","disagreement","tension"], upright:"Conflict, competition, tension. Rise to the challenge.", reversed:"Conflict avoidance, inner conflict, easing tensions.", element:"Fire", planet:"Saturn", archetype:"The Warrior" },
+  { id:27, name:"Six of Wands", suit:"wands", num:"6", symbol:"🔥", keywords:["victory","success","public recognition","progress"], upright:"Victory, success, public recognition. Triumph is yours.", reversed:"Private achievement, fall from grace, ego.", element:"Fire", planet:"Jupiter", archetype:"The Victor" },
+  { id:28, name:"Seven of Wands", suit:"wands", num:"7", symbol:"🔥", keywords:["challenge","perseverance","defense","stamina"], upright:"Challenge your position, persevere. Defend what you've built.", reversed:"Giving up, overwhelmed, overprotective.", element:"Fire", planet:"Mars", archetype:"The Defender" },
+  { id:29, name:"Eight of Wands", suit:"wands", num:"8", symbol:"🔥", keywords:["speed","action","movement","swift change"], upright:"Speed, movement, swift change. Energy surges forward.", reversed:"Delays, frustration, resisting change.", element:"Fire", planet:"Mercury", archetype:"The Messenger" },
+  { id:30, name:"Nine of Wands", suit:"wands", num:"9", symbol:"🔥", keywords:["resilience","persistence","courage","boundaries"], upright:"Resilience, persistence. You are close—don't give up now.", reversed:"Exhaustion, giving up, overwhelmed.", element:"Fire", planet:"Moon", archetype:"The Survivor" },
+  { id:31, name:"Ten of Wands", suit:"wands", num:"10", symbol:"🔥", keywords:["burden","responsibility","hard work","completion"], upright:"Burden, responsibility, hard work. The end is near—carry on.", reversed:"Taking on too much, delegating, letting go.", element:"Fire", planet:"Saturn", archetype:"The Bearer" },
+  { id:32, name:"Page of Wands", suit:"wands", num:"Page", symbol:"🔥", keywords:["exploration","enthusiasm","discovery","free spirit"], upright:"Exploration, enthusiasm, discovery. A passionate spirit awakens.", reversed:"Lack of direction, hasty, scattered energy.", element:"Fire", planet:"Mercury", archetype:"The Apprentice" },
+  { id:33, name:"Knight of Wands", suit:"wands", num:"Knight", symbol:"🔥", keywords:["action","adventure","impulsiveness","energy"], upright:"Action, adventure, passion. Charge forward boldly.", reversed:"Impulsive, reckless, arrogant, hasty.", element:"Fire", planet:"Mars", archetype:"The Adventurer" },
+  { id:34, name:"Queen of Wands", suit:"wands", num:"Queen", symbol:"🔥", keywords:["courage","confidence","independence","social butterfly"], upright:"Courage, confidence, independence. Own your radiance.", reversed:"Self-respect issues, jealousy, introversion.", element:"Fire", planet:"Sun", archetype:"The Sovereign" },
+  { id:35, name:"King of Wands", suit:"wands", num:"King", symbol:"🔥", keywords:["vision","entrepreneurship","leadership","honour"], upright:"Vision, entrepreneurship, leadership. Command with authority.", reversed:"Impulsive, ruthless, high expectations.", element:"Fire", planet:"Sun", archetype:"The Leader" },
+
+  // CUPS (36-49)
+  { id:36, name:"Ace of Cups", suit:"cups", num:"Ace", symbol:"💧", keywords:["love","compassion","creativity","emotion"], upright:"New love, compassion, creativity. The heart overflows.", reversed:"Emotional loss, blocked creativity, emptiness.", element:"Water", planet:"Venus", archetype:"The Lover" },
+  { id:37, name:"Two of Cups", suit:"cups", num:"2", symbol:"💧", keywords:["partnership","duality","connection","romance"], upright:"Unified love, partnership, attraction. A sacred bond forms.", reversed:"Imbalance, broken relationships, misunderstanding.", element:"Water", planet:"Venus", archetype:"The Partner" },
+  { id:38, name:"Three of Cups", suit:"cups", num:"3", symbol:"💧", keywords:["celebration","friendship","creativity","community"], upright:"Celebration, friendship, creativity. Joy shared multiplies.", reversed:"Overindulgence, gossip, isolation.", element:"Water", planet:"Mercury", archetype:"The Celebrant" },
+  { id:39, name:"Four of Cups", suit:"cups", num:"4", symbol:"💧", keywords:["apathy","contemplation","disconnectedness","withdrawal"], upright:"Meditation, apathy, contemplation. Look inward for answers.", reversed:"Sudden awareness, choosing happiness, acceptance.", element:"Water", planet:"Moon", archetype:"The Contemplator" },
+  { id:40, name:"Five of Cups", suit:"cups", num:"5", symbol:"💧", keywords:["loss","grief","despair","regret"], upright:"Loss, grief, self-pity. Focus on what remains, not what is lost.", reversed:"Acceptance, moving on, finding peace.", element:"Water", planet:"Mars", archetype:"The Mourner" },
+  { id:41, name:"Six of Cups", suit:"cups", num:"6", symbol:"💧", keywords:["nostalgia","childhood","innocence","past"], upright:"Nostalgia, childhood, revisiting the past. Innocence restored.", reversed:"Stuck in the past, naivety, unrealistic.", element:"Water", planet:"Sun", archetype:"The Child" },
+  { id:42, name:"Seven of Cups", suit:"cups", num:"7", symbol:"💧", keywords:["illusion","fantasy","wishful thinking","choices"], upright:"Illusion, fantasy, choices. Beware wishful thinking.", reversed:"Clarity, sobriety, temptation overcome.", element:"Water", planet:"Venus", archetype:"The Dreamer" },
+  { id:43, name:"Eight of Cups", suit:"cups", num:"8", symbol:"💧", keywords:["withdrawal","escapism","disappointment","leaving"], upright:"Withdrawal, escapism, turning away. Walk away from what no longer serves.", reversed:"Aimlessness, hopelessness, fear of abandonment.", element:"Water", planet:"Saturn", archetype:"The Wanderer" },
+  { id:44, name:"Nine of Cups", suit:"cups", num:"9", symbol:"💧", keywords:["satisfaction","gratitude","wish fulfillment","pleasure"], upright:"Wishes granted, contentment, satisfaction. Your dream is realized.", reversed:"Greed, dissatisfaction, materialistic.", element:"Water", planet:"Jupiter", archetype:"The Fulfilled" },
+  { id:45, name:"Ten of Cups", suit:"cups", num:"10", symbol:"💧", keywords:["harmony","happy family","divine love","abundance"], upright:"Divine love, harmony, happy family. Emotional fulfillment is yours.", reversed:"Disconnection, misaligned values, broken home.", element:"Water", planet:"Mars", archetype:"The Family" },
+  { id:46, name:"Page of Cups", suit:"cups", num:"Page", symbol:"💧", keywords:["creative beginnings","intuition","curiosity","message"], upright:"Creative beginnings, intuitive, curious, sensitive messages.", reversed:"Emotional immaturity, insecurity, disappointment.", element:"Water", planet:"Mercury", archetype:"The Sensitive" },
+  { id:47, name:"Knight of Cups", suit:"cups", num:"Knight", symbol:"💧", keywords:["romance","charm","imagination","beauty"], upright:"Romance, charm, following the heart. The poetic knight arrives.", reversed:"Moodiness, over-emotional, jealousy.", element:"Water", planet:"Venus", archetype:"The Romantic" },
+  { id:48, name:"Queen of Cups", suit:"cups", num:"Queen", symbol:"💧", keywords:["emotional stability","intuitive","compassionate","caring"], upright:"Emotional stability, compassion, intuitive. Lead with your heart.", reversed:"Martyrdom, insecurity, giving too much.", element:"Water", planet:"Moon", archetype:"The Empath" },
+  { id:49, name:"King of Cups", suit:"cups", num:"King", symbol:"💧", keywords:["emotional balance","compassionate","diplomatic","calm"], upright:"Emotional balance, compassion, diplomacy. Wisdom of the heart.", reversed:"Self-compassion lacking, emotionally manipulative.", element:"Water", planet:"Sun", archetype:"The Wise" },
+
+  // SWORDS (50-63)
+  { id:50, name:"Ace of Swords", suit:"swords", num:"Ace", symbol:"⚔️", keywords:["clarity","breakthrough","new idea","truth"], upright:"Clarity, breakthrough, truth emerges. A mental breakthrough.", reversed:"Confusion, brutality, chaos, lack of clarity.", element:"Air", planet:"Mercury", archetype:"The Truth-Seeker" },
+  { id:51, name:"Two of Swords", suit:"swords", num:"2", symbol:"⚔️", keywords:["indecision","stalemate","blocked emotion","denial"], upright:"Difficult choices, stalemate, blocked emotion. Weigh carefully.", reversed:"Indecision, information overload, no right choice.", element:"Air", planet:"Moon", archetype:"The Diplomat" },
+  { id:52, name:"Three of Swords", suit:"swords", num:"3", symbol:"⚔️", keywords:["heartbreak","grief","pain","sorrow"], upright:"Heartbreak, sorrow, grief. Pain is real but temporary.", reversed:"Recovery, forgiveness, moving on from grief.", element:"Air", planet:"Saturn", archetype:"The Wounded" },
+  { id:53, name:"Four of Swords", suit:"swords", num:"4", symbol:"⚔️", keywords:["rest","contemplation","recuperation","passive"], upright:"Rest, contemplation, recuperation. Stillness is your medicine.", reversed:"Exhaustion, burn-out, deep contemplation, stagnation.", element:"Air", planet:"Jupiter", archetype:"The Resting" },
+  { id:54, name:"Five of Swords", suit:"swords", num:"5", symbol:"⚔️", keywords:["conflict","defeat","win at all costs","hollow victory"], upright:"Conflict, defeat, hollow victory. Some battles aren't worth winning.", reversed:"Reconciliation, open to change, past resentment.", element:"Air", planet:"Venus", archetype:"The Challenger" },
+  { id:55, name:"Six of Swords", suit:"swords", num:"6", symbol:"⚔️", keywords:["transition","change","escape","moving on"], upright:"Transition, moving on, leaving trouble behind. Progress.", reversed:"Cannot escape, trapped, baggage carried forward.", element:"Air", planet:"Mercury", archetype:"The Traveler" },
+  { id:56, name:"Seven of Swords", suit:"swords", num:"7", symbol:"⚔️", keywords:["deception","strategy","sneaky","dishonest"], upright:"Deception, strategy, sneaky behavior. Beware betrayal.", reversed:"Confession, conscience, exposure of deceit.", element:"Air", planet:"Moon", archetype:"The Strategist" },
+  { id:57, name:"Eight of Swords", suit:"swords", num:"8", symbol:"⚔️", keywords:["imprisonment","entrapment","self-victimization","crisis"], upright:"Restriction, self-imposed imprisonment. Your cage has no lock.", reversed:"Self-acceptance, new perspective, freedom.", element:"Air", planet:"Jupiter", archetype:"The Bound" },
+  { id:58, name:"Nine of Swords", suit:"swords", num:"9", symbol:"⚔️", keywords:["anxiety","fear","nightmares","negative thinking"], upright:"Anxiety, fear, nightmares. The mind torments itself in the dark.", reversed:"Inner turmoil, secrets, releasing fear.", element:"Air", planet:"Mars", archetype:"The Anxious" },
+  { id:59, name:"Ten of Swords", suit:"swords", num:"10", symbol:"⚔️", keywords:["endings","failure","collapse","defeat"], upright:"Painful endings, deep wounds, betrayal. Rock bottom—now rise.", reversed:"Recovery, regeneration, inevitable end.", element:"Air", planet:"Sun", archetype:"The Phoenix" },
+  { id:60, name:"Page of Swords", suit:"swords", num:"Page", symbol:"⚔️", keywords:["curiosity","intelligence","speaking truth","communication"], upright:"Curiosity, quick-witted, communicative, truth-seeker.", reversed:"Cynical, sarcastic, childish, all talk.", element:"Air", planet:"Mercury", archetype:"The Curious" },
+  { id:61, name:"Knight of Swords", suit:"swords", num:"Knight", symbol:"⚔️", keywords:["action","impulse","direct","authoritative"], upright:"Action, ambition, drive. Charge forward—but watch your wake.", reversed:"No direction, disregard for consequences, rudeness.", element:"Air", planet:"Mars", archetype:"The Crusader" },
+  { id:62, name:"Queen of Swords", suit:"swords", num:"Queen", symbol:"⚔️", keywords:["complexity","clear boundaries","direct","wit"], upright:"Clear-minded, direct, complexity embraced. Cold but fair.", reversed:"Overly emotional, bitchy, cold-hearted.", element:"Air", planet:"Saturn", archetype:"The Strategist" },
+  { id:63, name:"King of Swords", suit:"swords", num:"King", symbol:"⚔️", keywords:["intellectual","truth","authority","clear thinking"], upright:"Intellectual power, authority, truth. Think clearly, act justly.", reversed:"Misuse of power, manipulation, coldness.", element:"Air", planet:"Jupiter", archetype:"The Thinker" },
+
+  // PENTACLES (64-77)
+  { id:64, name:"Ace of Pentacles", suit:"pentacles", num:"Ace", symbol:"🌿", keywords:["new venture","prosperity","abundance","manifestation"], upright:"New financial or material beginning. Manifestation unfolds.", reversed:"Lost opportunity, lack of planning, scarcity.", element:"Earth", planet:"Venus", archetype:"The Creator" },
+  { id:65, name:"Two of Pentacles", suit:"pentacles", num:"2", symbol:"🌿", keywords:["adaptability","balance","juggling","flexibility"], upright:"Balance, adaptability, juggling priorities. Find your rhythm.", reversed:"Imbalance, unorganized, overwhelmed.", element:"Earth", planet:"Jupiter", archetype:"The Juggler" },
+  { id:66, name:"Three of Pentacles", suit:"pentacles", num:"3", symbol:"🌿", keywords:["teamwork","collaboration","learning","implementation"], upright:"Teamwork, collaboration, building together. Craft with mastery.", reversed:"Disharmony, lack of teamwork, undervalued.", element:"Earth", planet:"Mars", archetype:"The Craftsman" },
+  { id:67, name:"Four of Pentacles", suit:"pentacles", num:"4", symbol:"🌿", keywords:["control","stability","security","conservation"], upright:"Control, stability, security. Guard your resources wisely.", reversed:"Over-spending, materialism, self-protection issues.", element:"Earth", planet:"Sun", archetype:"The Keeper" },
+  { id:68, name:"Five of Pentacles", suit:"pentacles", num:"5", symbol:"🌿", keywords:["hardship","loss","isolation","poverty"], upright:"Hardship, financial loss, isolation. Help is nearer than you think.", reversed:"Recovery, charity, improving health.", element:"Earth", planet:"Mercury", archetype:"The Seeker" },
+  { id:69, name:"Six of Pentacles", suit:"pentacles", num:"6", symbol:"🌿", keywords:["generosity","giving","receiving","sharing"], upright:"Generosity, giving and receiving. Wealth circulates to those who share.", reversed:"Strings attached, power and domination, unpaid debts.", element:"Earth", planet:"Moon", archetype:"The Giver" },
+  { id:70, name:"Seven of Pentacles", suit:"pentacles", num:"7", symbol:"🌿", keywords:["vision","perseverance","investment","long-term"], upright:"Long-term view, perseverance, sustaining effort. Keep watering.", reversed:"Limited success, no reward for hard work, lack of growth.", element:"Earth", planet:"Saturn", archetype:"The Farmer" },
+  { id:71, name:"Eight of Pentacles", suit:"pentacles", num:"8", symbol:"🌿", keywords:["mastery","skill development","commitment","dedication"], upright:"Mastery, skill, dedication to craft. Commit to excellence.", reversed:"Perfectionism, lacking ambition, uninspired work.", element:"Earth", planet:"Sun", archetype:"The Master" },
+  { id:72, name:"Nine of Pentacles", suit:"pentacles", num:"9", symbol:"🌿", keywords:["abundance","luxury","self-sufficiency","independence"], upright:"Abundance, luxury, self-sufficiency. You have built something beautiful.", reversed:"Self-worth, over-investment in work, financial setbacks.", element:"Earth", planet:"Venus", archetype:"The Sovereign" },
+  { id:73, name:"Ten of Pentacles", suit:"pentacles", num:"10", symbol:"🌿", keywords:["wealth","inheritance","family","permanent success"], upright:"Wealth, legacy, family abundance. Lasting material success.", reversed:"Family conflict, financial failure, lacking stability.", element:"Earth", planet:"Mercury", archetype:"The Patriarch" },
+  { id:74, name:"Page of Pentacles", suit:"pentacles", num:"Page", symbol:"🌿", keywords:["manifestation","diligence","financial opportunity","studious"], upright:"Manifestation, financial opportunity, diligent study.", reversed:"Procrastination, laziness, missed opportunity.", element:"Earth", planet:"Mercury", archetype:"The Student" },
+  { id:75, name:"Knight of Pentacles", suit:"pentacles", num:"Knight", symbol:"🌿", keywords:["efficiency","routine","conservatism","methodical"], upright:"Efficiency, routine, methodical. Slow and steady wins.", reversed:"Self-disciplined, boredom, stagnation.", element:"Earth", planet:"Mars", archetype:"The Worker" },
+  { id:76, name:"Queen of Pentacles", suit:"pentacles", num:"Queen", symbol:"🌿", keywords:["practical","creature comforts","financial security","nurturing"], upright:"Nurturing, practical, financially secure. The gracious provider.", reversed:"Self-confidence, work-home conflict, financial independence.", element:"Earth", planet:"Venus", archetype:"The Provider" },
+  { id:77, name:"King of Pentacles", suit:"pentacles", num:"King", symbol:"🌿", keywords:["wealth","business","leadership","security"], upright:"Wealth, business mastery, security. Steady, reliable abundance.", reversed:"Stubborn, possessive, materialism, over-indulging.", element:"Earth", planet:"Saturn", archetype:"The Magnate" },
+];
+
+const SPREADS = [
+  { id:"single", name:"Single Card", description:"Focused oracle answer", cardCount:1, positions:["The Message"], icon:"🌟" },
+  { id:"three", name:"Three Card", description:"Past · Present · Future", cardCount:3, positions:["Past","Present","Future"], icon:"🔱" },
+  { id:"celtic", name:"Celtic Cross", description:"Deep life reading", cardCount:10, positions:["Present","Challenge","Foundation","Past","Crown","Future","Self","Environment","Hopes & Fears","Outcome"], icon:"✝️" },
+  { id:"five_cross", name:"Five Card Cross", description:"Deeper insight", cardCount:5, positions:["Heart of Matter","Past Influence","Future Path","Hidden Factors","Outcome"], icon:"⭐" },
+  { id:"horseshoe", name:"Horseshoe", description:"Seven-card guidance", cardCount:7, positions:["Past","Present","Near Future","Unconscious","External Influence","Advice","Outcome"], icon:"🔮" },
+];
+
+// ==================== COMPONENTS ====================
+const suitClass = (suit) => {
+  if (suit==='major') return 'major-card';
+  if (suit==='wands') return 'wands-card';
+  if (suit==='cups') return 'cups-card';
+  if (suit==='swords') return 'swords-card';
+  return 'pentacles-card';
+};
+
+const suitColor = (suit) => {
+  if (suit==='major') return '#a78bfa';
+  if (suit==='wands') return '#fb923c';
+  if (suit==='cups') return '#60a5fa';
+  if (suit==='swords') return '#94a3b8';
+  return '#4ade80';
+};
+
+const TarotCard = ({ card, isReversed=false, size='md', onClick, isRevealed=true }) => {
+  const sizes = { sm:'w-14 h-22', md:'w-20 h-32', lg:'w-24 h-40', xl:'w-28 h-44' };
+  const textSz = { sm:'text-xl', md:'text-2xl', lg:'text-3xl', xl:'text-4xl' };
+  const nameSz = { sm:'text-[7px]', md:'text-[9px]', lg:'text-[10px]', xl:'text-xs' };
+  if (!card) return (
+    <div className={`w-20 h-32 rounded-lg border-2 border-dashed border-amber-800/40 flex items-center justify-center`}
+         style={{background:'linear-gradient(135deg,#1a0a2e,#0f051e)'}}>
+      <span className="text-amber-800/40 text-xl">✦</span>
+    </div>
+  );
+  return (
+    <div className={`w-20 h-32 rounded-xl cursor-pointer transition-all duration-300 relative group gold-border card-glow ${isRevealed?'animate-card-reveal':''} ${suitClass(card.suit)}`}
+         style={{border:`1px solid ${suitColor(card.suit)}40`, minWidth:'80px'}}
+         onClick={()=>onClick&&onClick(card,isReversed)}>
+      <div className="absolute top-1 left-1 font-cinzel text-[8px]" style={{color:`${suitColor(card.suit)}60`}}>{card.num}</div>
+      <div className="absolute top-1 right-1 text-[8px]" style={{color:`${suitColor(card.suit)}50`}}>✦</div>
+      <div className={`flex flex-col items-center justify-center h-full pb-1 ${isReversed?'scale-y-[-1]':''}`}>
+        <span className={`${textSz['md']} drop-shadow-lg`}>{card.symbol}</span>
+        <span className={`font-cinzel text-center px-1 mt-1 leading-tight ${nameSz['md']}`} style={{color:`${suitColor(card.suit)}cc`}}>{card.name}</span>
+        {isReversed && <span className="text-[7px] font-cinzel text-amber-500/80 mt-0.5" style={{transform:'scaleY(-1)'}}>↺ rv</span>}
+      </div>
+      <div className="absolute bottom-1 left-2 right-2 h-px" style={{background:`linear-gradient(to right, transparent, ${suitColor(card.suit)}40, transparent)`}} />
+    </div>
+  );
+};
+
+// Layouts
+const SingleLayout = ({cards,positions,onCardClick}) => (
+  <div className="flex justify-center items-center py-8">
+    <div className="flex flex-col items-center gap-3">
+      <div className="text-amber-500/60 font-cinzel text-xs tracking-widest uppercase">{positions[0]}</div>
+      <div style={{width:120, height:190, position:'relative'}} className="cursor-pointer" onClick={()=>onCardClick&&onCardClick(cards[0],cards[0]?.reversedFlag)}>
+        {cards[0] && <div className={`w-full h-full rounded-2xl flex flex-col items-center justify-center animate-card-reveal card-glow gold-border ${suitClass(cards[0].suit)}`} style={{border:`1px solid ${suitColor(cards[0].suit)}60`}}>
+          <span className="text-6xl drop-shadow-lg">{cards[0].symbol}</span>
+          <span className="font-cinzel text-center px-2 mt-2 text-sm leading-tight" style={{color:`${suitColor(cards[0].suit)}cc`}}>{cards[0].name}</span>
+          <span className="font-cinzel text-xs text-amber-700/50 mt-1">{cards[0].num}</span>
+        </div>}
+      </div>
+    </div>
+  </div>
+);
+
+const ThreeLayout = ({cards,positions,onCardClick}) => (
+  <div className="flex justify-center items-end gap-6 py-8 flex-wrap">
+    {positions.map((pos,i) => (
+      <div key={i} className="flex flex-col items-center gap-2">
+        <TarotCard card={cards[i]} onClick={onCardClick} isReversed={cards[i]?.reversedFlag} />
+        <div className="font-cinzel text-xs tracking-wider text-center max-w-20" style={{color: cards[i] ? suitColor(cards[i].suit)+'99' : '#c9a84c66'}}>{pos}</div>
+      </div>
+    ))}
+  </div>
+);
+
+const FiveCrossLayout = ({cards,positions,onCardClick}) => (
+  <div className="flex justify-center py-8">
+    <div className="grid grid-cols-3 grid-rows-3 gap-4">
+      <div/><div className="flex flex-col items-center gap-2"><TarotCard card={cards[0]} onClick={onCardClick} isReversed={cards[0]?.reversedFlag}/><div className="font-cinzel text-xs text-center text-amber-500/70 max-w-20">{positions[0]}</div></div><div/>
+      <div className="flex flex-col items-center gap-2"><TarotCard card={cards[1]} onClick={onCardClick} isReversed={cards[1]?.reversedFlag}/><div className="font-cinzel text-xs text-center text-amber-500/70 max-w-20">{positions[1]}</div></div>
+      <div className="flex flex-col items-center gap-2 relative"><TarotCard card={cards[2]} onClick={onCardClick} isReversed={cards[2]?.reversedFlag}/><div className="font-cinzel text-xs text-center text-amber-400/90 font-semibold max-w-20">{positions[2]}</div></div>
+      <div className="flex flex-col items-center gap-2"><TarotCard card={cards[3]} onClick={onCardClick} isReversed={cards[3]?.reversedFlag}/><div className="font-cinzel text-xs text-center text-amber-500/70 max-w-20">{positions[3]}</div></div>
+      <div/><div className="flex flex-col items-center gap-2"><TarotCard card={cards[4]} onClick={onCardClick} isReversed={cards[4]?.reversedFlag}/><div className="font-cinzel text-xs text-center text-amber-500/70 max-w-20">{positions[4]}</div></div><div/>
+    </div>
+  </div>
+);
+
+const CelticCrossLayout = ({cards,positions,onCardClick}) => (
+  <div className="py-6 overflow-x-auto">
+    <div className="flex gap-6 min-w-fit mx-auto" style={{width:'fit-content'}}>
+      {/* Left: cross */}
+      <div className="relative" style={{width:180,height:280}}>
+        {/* Center */}
+        {[0,1].map(i=><div key={i} className="absolute flex flex-col items-center gap-1" style={{top:80,left:50,zIndex:i+1}}>
+          <TarotCard card={cards[i]} onClick={onCardClick} isReversed={cards[i]?.reversedFlag}/>
+        </div>)}
+        {/* Top */}
+        <div className="absolute flex flex-col items-center gap-1" style={{top:0,left:50}}>
+          <TarotCard card={cards[4]} onClick={onCardClick} isReversed={cards[4]?.reversedFlag}/>
+          <div className="font-cinzel text-xs text-amber-500/60" style={{fontSize:9}}>{positions[4]}</div>
+        </div>
+        {/* Bottom */}
+        <div className="absolute flex flex-col items-center gap-1" style={{top:190,left:50}}>
+          <TarotCard card={cards[3]} onClick={onCardClick} isReversed={cards[3]?.reversedFlag}/>
+          <div className="font-cinzel text-xs text-amber-500/60" style={{fontSize:9}}>{positions[3]}</div>
+        </div>
+        {/* Left */}
+        <div className="absolute flex flex-col items-center gap-1" style={{top:80,left:-30}}>
+          <TarotCard card={cards[1]} onClick={onCardClick} isReversed={cards[1]?.reversedFlag}/>
+          <div className="font-cinzel text-xs text-amber-500/60 text-center" style={{fontSize:9,maxWidth:60}}>{positions[1]}</div>
+        </div>
+        {/* Right */}
+        <div className="absolute flex flex-col items-center gap-1" style={{top:80,left:130}}>
+          <TarotCard card={cards[5]} onClick={onCardClick} isReversed={cards[5]?.reversedFlag}/>
+          <div className="font-cinzel text-xs text-amber-500/60" style={{fontSize:9}}>{positions[5]}</div>
+        </div>
+      </div>
+      {/* Right: staff */}
+      <div className="flex flex-col gap-2 justify-center">
+        {[9,8,7,6].map(i=>(
+          <div key={i} className="flex items-center gap-2">
+            <TarotCard card={cards[i]} onClick={onCardClick} isReversed={cards[i]?.reversedFlag}/>
+            <div className="font-cinzel text-xs text-amber-500/60" style={{fontSize:9,maxWidth:70}}>{positions[i]}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const HorseshoeLayout = ({cards,positions,onCardClick}) => (
+  <div className="flex justify-center gap-3 py-8 flex-wrap">
+    {positions.map((pos,i)=>(
+      <div key={i} className="flex flex-col items-center gap-2">
+        <TarotCard card={cards[i]} onClick={onCardClick} isReversed={cards[i]?.reversedFlag}/>
+        <div className="font-cinzel text-xs text-center text-amber-500/70 max-w-20" style={{fontSize:9}}>{pos}</div>
+      </div>
+    ))}
+  </div>
+);
+
+const SpreadLayout = ({spread,cards,reversedFlags,onCardClick}) => {
+  if (!spread) return null;
+  const fullCards = Array.from({length:spread.cardCount},(_,i)=>cards[i]?{...cards[i],reversedFlag:reversedFlags?.[i]||false}:null);
+  const props = {cards:fullCards,positions:spread.positions,onCardClick};
+  switch(spread.id) {
+    case 'single': return <SingleLayout {...props}/>;
+    case 'three': return <ThreeLayout {...props}/>;
+    case 'five_cross': return <FiveCrossLayout {...props}/>;
+    case 'celtic': return <CelticCrossLayout {...props}/>;
+    case 'horseshoe': return <HorseshoeLayout {...props}/>;
+    default: return <ThreeLayout {...props}/>;
+  }
+};
+
+// ==================== AI INTERPRETATION ====================
+const InterpretationPanel = ({spread,cards,question,reversedFlags}) => {
+  const [text,setText] = React.useState('');
+  const [loading,setLoading] = React.useState(false);
+  const [done,setDone] = React.useState(false);
+  const [hasStarted,setHasStarted] = React.useState(false);
+  const allDrawn = cards.filter(Boolean).length===spread?.cardCount;
+
+  const getReading = async () => {
+    setLoading(true); setHasStarted(true); setText('');
+    const cardDescriptions = cards.map((c,i)=>{
+      const isRev = reversedFlags?.[i]||false;
+      return `Position ${i+1} (${spread.positions[i]}): ${c.name} (${c.suit}, ${c.num})${isRev?' — REVERSED':''} — ${isRev?c.reversed:c.upright} | Keywords: ${c.keywords.join(', ')} | Element: ${c.element} | Planet: ${c.planet}`;
+    }).join('\n');
+    const prompt = `You are a masterful Tarot reader with deep esoteric knowledge. Provide an eloquent, insightful, mystical yet grounded reading.
+
+Spread: ${spread.name}
+${question?`Seeker's question: "${question}"`:'No specific question — provide a general life reading.'}
+
+Cards drawn:
+${cardDescriptions}
+
+Provide a reading with these sections:
+1. **Opening Invocation** — Set the mystical scene (2 sentences)
+2. **Card by Card Wisdom** — For each card, provide the position name in bold, then 2-3 sentences of deep interpretation connecting to the spread context
+3. **The Weave** — How the cards interrelate, patterns, elemental dynamics (3-4 sentences)
+4. **Oracle's Final Word** — A powerful closing guidance paragraph with an affirmation
+
+Write in flowing, poetic yet clear prose. Use mystical but accessible language. Be specific and insightful, not vague. Total length: approximately 400-500 words.`;
+
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:1000,
+          stream:true,
+          messages:[{role:'user',content:prompt}]
+        })
+      });
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buf='';
+      while(true){
+        const {done:d,value}=await reader.read();
+        if(d)break;
+        buf+=decoder.decode(value,{stream:true});
+        const lines=buf.split('\n');
+        buf=lines.pop()||'';
+        for(const line of lines){
+          if(line.startsWith('data: ')){
+            const data=line.slice(6).trim();
+            if(data==='[DONE]')continue;
+            try{
+              const obj=JSON.parse(data);
+              if(obj.type==='content_block_delta'&&obj.delta?.type==='text_delta'){
+                setText(prev=>prev+obj.delta.text);
+              }
+            }catch{}
+          }
+        }
+      }
+    } catch(e) {
+      setText('The oracle speaks through a veil... The cards whisper their ancient wisdom. Please check your connection and try again.');
+    }
+    setLoading(false); setDone(true);
+  };
+
+  const formatText = (raw) => {
+    if (!raw) return '';
+    return raw
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\n\n/g,'</p><p>')
+      .replace(/\n/g,'<br/>');
+  };
+
+  return (
+    <div className="mt-6">
+      {!hasStarted && allDrawn && (
+        <div className="flex justify-center">
+          <button onClick={getReading} className="relative group px-8 py-4 rounded-xl font-cinzel text-base tracking-widest uppercase transition-all duration-300 overflow-hidden animate-pulse-glow"
+            style={{background:'linear-gradient(135deg,#7c3aed,#4c1d95)',border:'1px solid rgba(201,168,76,0.5)',color:'#e8c97a'}}>
+            <span className="relative z-10">✦ Invoke the Oracle's Wisdom ✦</span>
+          </button>
+        </div>
+      )}
+      {loading && !text && (
+        <div className="flex flex-col items-center gap-4 py-8">
+          <div className="relative w-16 h-16">
+            <div className="absolute inset-0 rounded-full border-2 border-amber-600/30 animate-spin-slow"/>
+            <div className="absolute inset-2 rounded-full border border-amber-500/50 animate-spin-slow" style={{animationDirection:'reverse'}}/>
+            <div className="absolute inset-0 flex items-center justify-center text-2xl">🔮</div>
+          </div>
+          <p className="font-cinzel text-amber-400/70 text-sm animate-pulse">The oracle reads the cosmic tapestry...</p>
+        </div>
+      )}
+      {(text || done) && (
+        <div className="animate-fade-up">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent"/>
+            <span className="font-cinzel-deco text-amber-400/80 text-sm tracking-widest">✦ Oracle Speaks ✦</span>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent"/>
+          </div>
+          <div className="rounded-2xl p-6 md:p-8 relative overflow-hidden" style={{background:'linear-gradient(135deg,rgba(45,27,78,0.8),rgba(26,10,46,0.9))',border:'1px solid rgba(201,168,76,0.2)'}}>
+            <div className={`prose-mystical font-garamond text-amber-100/90 text-lg leading-relaxed ${!done?'streaming-cursor':''}`}>
+              <p dangerouslySetInnerHTML={{__html:formatText(text)}}/>
+            </div>
+          </div>
+          {done && (
+            <div className="flex justify-center mt-4">
+              <button onClick={getReading} className="border border-amber-700/40 px-5 py-2 rounded-full font-cinzel text-xs text-amber-500/70 hover:text-amber-400 hover:border-amber-600/50 transition">
+                ↺ Request Another Reading
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ==================== CARD MODAL ====================
+const CardModal = ({card,isReversed,onClose}) => {
+  if(!card)return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}
+      style={{background:'rgba(10,5,20,0.85)',backdropFilter:'blur(8px)'}}>
+      <div className="relative max-w-md w-full rounded-2xl p-6 animate-fade-up" onClick={e=>e.stopPropagation()}
+        style={{background:'linear-gradient(135deg,#2d1b4e,#1a0a2e)',border:`1px solid ${suitColor(card.suit)}50`,boxShadow:`0 0 60px ${suitColor(card.suit)}30`}}>
+        <div className="absolute top-0 left-0 right-0 h-px" style={{background:`linear-gradient(to right,transparent,${suitColor(card.suit)}80,transparent)`}}/>
+        <button onClick={onClose} className="absolute top-3 right-3 text-amber-700/60 hover:text-amber-400 transition-colors text-xl">✕</button>
+        <div className="flex items-center gap-4 mb-5">
+          <div className={`w-16 h-24 rounded-xl flex flex-col items-center justify-center flex-shrink-0 ${suitClass(card.suit)}`} style={{border:`1px solid ${suitColor(card.suit)}60`}}>
+            <span className="text-3xl">{card.symbol}</span>
+            <span className="font-cinzel text-center leading-tight px-1 mt-1" style={{fontSize:'7px',color:`${suitColor(card.suit)}cc`}}>{card.name}</span>
+          </div>
+          <div>
+            <div className="font-cinzel text-xs tracking-widest mb-1" style={{color:`${suitColor(card.suit)}80`}}>{card.suit.toUpperCase()} · {card.num}</div>
+            <h2 className="font-cinzel-deco text-xl mb-1" style={{color:suitColor(card.suit)}}>{card.name}</h2>
+            <div className="text-amber-600/60 font-cinzel text-xs">{card.archetype}</div>
+            <div className="flex gap-2 flex-wrap mt-2">
+              {card.keywords.slice(0,3).map(kw=>(
+                <span key={kw} className="text-xs font-cinzel px-2 py-0.5 rounded-full" style={{border:`1px solid ${suitColor(card.suit)}40`,color:`${suitColor(card.suit)}99`}}>{kw}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="h-px mb-4" style={{background:`linear-gradient(to right,transparent,${suitColor(card.suit)}30,transparent)`}}/>
+        <div className="flex gap-4 mb-4 text-sm">
+          <div><span className="font-cinzel text-amber-700/50 text-xs">Element: </span><span style={{color:suitColor(card.suit)}}>{card.element}</span></div>
+          <div><span className="font-cinzel text-amber-700/50 text-xs">Planet: </span><span style={{color:suitColor(card.suit)}}>{card.planet}</span></div>
+        </div>
+        <div className="mb-4">
+          <h3 className="font-cinzel text-xs tracking-widest uppercase mb-2" style={{color:suitColor(card.suit)}}>✦ Upright</h3>
+          <p className="font-garamond text-amber-100/80 text-base leading-relaxed">{card.upright}</p>
+        </div>
+        <div>
+          <h3 className="font-cinzel text-xs tracking-widest uppercase mb-2" style={{color:suitColor(card.suit)+'99'}}>↺ Reversed</h3>
+          <p className="font-garamond text-amber-100/60 text-base leading-relaxed">{card.reversed}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==================== STAR FIELD ====================
+const StarField = () => {
+  const stars = React.useMemo(()=>Array.from({length:80},(_,i)=>({id:i,top:`${Math.random()*100}%`,left:`${Math.random()*100}%`,size:Math.random()*2+1,delay:Math.random()*4,duration:2+Math.random()*3})),[]);
+  return (
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+      <div className="orb w-96 h-96 -top-20 -left-20 bg-purple-900" style={{animationDelay:'0s'}}/>
+      <div className="orb w-80 h-80 top-1/3 -right-20 bg-indigo-950" style={{animationDelay:'2s'}}/>
+      <div className="orb w-64 h-64 bottom-0 left-1/3 bg-violet-950" style={{animationDelay:'4s'}}/>
+      {stars.map(star=>(
+        <div key={star.id} className="absolute rounded-full bg-amber-100"
+          style={{top:star.top,left:star.left,width:star.size,height:star.size,animation:`starTwinkle ${star.duration}s ease-in-out ${star.delay}s infinite`,opacity:0.4}}/>
+      ))}
+    </div>
+  );
+};
+
+// ==================== MAIN APP ====================
+const App = () => {
+  const [view,setView] = React.useState('home');
+  const [selectedSpread,setSelectedSpread] = React.useState(SPREADS[0]);
+  const [drawnCards,setDrawnCards] = React.useState([]);
+  const [reversedFlags,setReversedFlags] = React.useState([]);
+  const [question,setQuestion] = React.useState('');
+  const [useReversed,setUseReversed] = React.useState(true);
+  const [readingHistory,setReadingHistory] = React.useState([]);
+  const [modalCard,setModalCard] = React.useState(null);
+  const [isShuffling,setIsShuffling] = React.useState(false);
+  const [galleryFilter,setGalleryFilter] = React.useState('all');
+  const [pairA,setPairA] = React.useState(null);
+  const [pairB,setPairB] = React.useState(null);
+
+  React.useEffect(()=>{
+    try{const s=localStorage.getItem('tarot78_v1');if(s)setReadingHistory(JSON.parse(s));}catch{}
+  },[]);
+
+  const shuffle = arr=>{const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+  const drawCards = async () => {
+    setIsShuffling(true);
+    await new Promise(r=>setTimeout(r,700));
+    const shuf = shuffle(TAROT_CARDS);
+    const sel = shuf.slice(0,selectedSpread.cardCount);
+    setDrawnCards(sel);
+    setReversedFlags(sel.map(()=>useReversed?Math.random()<0.3:false));
+    setIsShuffling(false);
+  };
+
+  const resetReading = ()=>{setDrawnCards([]);setQuestion('');};
+  const saveReading = ()=>{
+    if(!drawnCards.length)return;
+    const r={id:Date.now(),date:new Date().toLocaleString(),spreadName:selectedSpread.name,spreadId:selectedSpread.id,cardIds:drawnCards.map(c=>c.id),reversedState:reversedFlags,question};
+    const upd=[r,...readingHistory.slice(0,9)];
+    setReadingHistory(upd);
+    try{localStorage.setItem('tarot78_v1',JSON.stringify(upd));}catch{}
+  };
+  const loadReading = rec=>{
+    const loaded=rec.cardIds.map(id=>TAROT_CARDS.find(c=>c.id===id)).filter(Boolean);
+    if(loaded.length){setDrawnCards(loaded);setReversedFlags(rec.reversedState||[]);setQuestion(rec.question||'');const found=SPREADS.find(s=>s.id===rec.spreadId)||SPREADS[0];setSelectedSpread(found);setView('reading');}
+  };
+  const startReading = spread=>{setSelectedSpread(spread);setDrawnCards([]);setQuestion('');setView('reading');};
+
+  const pairInsight = ()=>{
+    if(!pairA||!pairB)return 'Select two cards to explore their synergy.';
+    return `✦ ${pairA.name} & ${pairB.name} ✦ — The ${pairA.element} of ${pairA.name} meets the ${pairB.element} of ${pairB.name}. ${pairA.keywords[0]} intertwines with ${pairB.keywords[0]}, suggesting ${pairA.archetype} and ${pairB.archetype} in dialogue.`;
+  };
+
+  const filteredCards = galleryFilter==='all'?TAROT_CARDS:TAROT_CARDS.filter(c=>c.suit===galleryFilter);
+
+  return (
+    <div className="min-h-screen relative" style={{background:'linear-gradient(180deg,#0f0520 0%,#1a0a2e 50%,#12041e 100%)'}}>
+      <StarField/>
+      <div className="relative z-10">
+        {/* HEADER */}
+        <header className="border-b border-amber-800/20 bg-black/20 backdrop-blur-sm sticky top-0 z-40">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <button onClick={()=>setView('home')} className="flex items-center gap-2 group">
+              <span className="text-2xl group-hover:animate-float">🔮</span>
+              <div className="text-left">
+                <div className="font-cinzel-deco text-amber-300 text-sm md:text-base shimmer-text">The Tarot Oracle</div>
+                <div className="font-garamond text-amber-700/60 text-xs hidden md:block">78 cards · Ancient wisdom</div>
+              </div>
+            </button>
+            <nav className="flex gap-1">
+              {['home','gallery'].map(v=>(
+                <button key={v} onClick={()=>setView(v)} className={`font-cinzel text-xs tracking-widest px-3 py-1.5 rounded-lg capitalize ${view===v?'text-amber-300 bg-amber-900/30 border border-amber-700/40':'text-amber-600/70 hover:text-amber-400/80'}`}>{v==='home'?'Readings':v}</button>
+              ))}
+            </nav>
+          </div>
+        </header>
+
+        {/* HOME */}
+        {view==='home' && (
+          <div className="max-w-5xl mx-auto px-4 py-12">
+            <div className="text-center mb-14">
+              <div className="text-6xl mb-4 animate-float">🔮</div>
+              <h1 className="font-cinzel-deco text-3xl md:text-5xl shimmer-text mb-2">The Tarot Oracle</h1>
+              <p className="font-garamond text-amber-200/60 text-xl italic">78 sacred cards · Illuminate your path through the mystic veil</p>
+              <div className="flex justify-center gap-3 mt-6">
+                <div className="h-px w-24 bg-gradient-to-r from-transparent to-amber-700/50"/>
+                <span className="text-amber-600/50 font-cinzel text-xs tracking-widest">CHOOSE YOUR SPREAD</span>
+                <div className="h-px w-24 bg-gradient-to-l from-transparent to-amber-700/50"/>
+              </div>
+            </div>
+
+            {/* Spread Selector */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-10">
+              {SPREADS.map(s=>(
+                <button key={s.id} onClick={()=>setSelectedSpread(s)} className={`p-4 rounded-xl text-left transition ${selectedSpread?.id===s.id?'border border-amber-500/70 bg-amber-900/30':'border border-amber-800/40 bg-purple-950/40 hover:bg-purple-900/50'}`}>
+                  <div className="text-2xl">{s.icon}</div>
+                  <div className="font-cinzel text-amber-300 text-sm mt-1">{s.name}</div>
+                  <div className="text-amber-400/60 text-xs">{s.cardCount} cards</div>
+                  <div className="text-amber-500/40 text-xs italic">{s.description}</div>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-center">
+              <button onClick={()=>startReading(selectedSpread)} className="group relative px-10 py-5 rounded-2xl font-cinzel text-lg tracking-widest overflow-hidden transition-all animate-pulse-glow"
+                style={{background:'linear-gradient(135deg,#4c1d95,#2d1b4e)',border:'1px solid rgba(201,168,76,0.5)',color:'#e8c97a',boxShadow:'0 0 30px rgba(124,58,237,0.25)'}}>
+                <span className="relative z-10">✦ Begin {selectedSpread?.name} Reading ✦</span>
+              </button>
+            </div>
+
+            {/* Tools */}
+            <div className="grid md:grid-cols-2 gap-6 mt-16">
+              <div className="bg-black/30 rounded-xl p-5 gold-border">
+                <h3 className="font-cinzel text-amber-400 text-sm mb-3">🔗 Card Pair Alchemy</h3>
+                <div className="flex gap-2 flex-wrap mb-3">
+                  <select onChange={e=>setPairA(TAROT_CARDS.find(c=>c.id==e.target.value))} className="flex-1 border border-amber-700/50 p-2 rounded text-sm font-garamond">
+                    <option value="">Card A...</option>
+                    {TAROT_CARDS.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                  <select onChange={e=>setPairB(TAROT_CARDS.find(c=>c.id==e.target.value))} className="flex-1 border border-amber-700/50 p-2 rounded text-sm font-garamond">
+                    <option value="">Card B...</option>
+                    {TAROT_CARDS.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <p className="text-amber-200/80 text-sm italic font-garamond">{pairInsight()}</p>
+              </div>
+
+              <div className="bg-black/30 rounded-xl p-5 gold-border">
+                <h3 className="font-cinzel text-amber-400 text-sm mb-3">📜 Suit Guide</h3>
+                {[['major','#a78bfa','Major Arcana','Life\'s great archetypes & soul lessons'],['wands','#fb923c','Wands','Fire · Passion, action, creativity'],['cups','#60a5fa','Cups','Water · Emotions, relationships, intuition'],['swords','#94a3b8','Swords','Air · Mind, conflict, truth'],['pentacles','#4ade80','Pentacles','Earth · Material, work, abundance']].map(([s,col,name,desc])=>(
+                  <div key={s} className="flex items-start gap-2 mb-2">
+                    <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{background:col}}/>
+                    <div><span className="font-cinzel text-xs" style={{color:col}}>{name}</span><span className="text-amber-500/50 text-xs"> — {desc}</span></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* History */}
+            {readingHistory.length>0 && (
+              <div className="mt-8 border-t border-amber-800/40 pt-5">
+                <h3 className="font-cinzel text-amber-400 text-sm tracking-widest mb-3">📜 PAST READINGS</h3>
+                <div className="flex flex-wrap gap-2">
+                  {readingHistory.map((item,idx)=>(
+                    <button key={idx} onClick={()=>loadReading(item)} className="bg-purple-900/50 border border-amber-700/40 px-3 py-1 rounded-full text-xs font-cinzel hover:bg-amber-800/30 transition">
+                      {item.date} · {item.spreadName}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* READING */}
+        {view==='reading' && selectedSpread && (
+          <div className="max-w-5xl mx-auto px-4 py-8">
+            <div className="flex items-center gap-2 text-amber-700/50 font-cinzel text-xs mb-6">
+              <button onClick={()=>setView('home')} className="hover:text-amber-500">Readings</button>
+              <span>›</span><span className="text-amber-500/70">{selectedSpread.name}</span>
+            </div>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="text-3xl">{selectedSpread.icon}</div>
+              <div>
+                <h2 className="font-cinzel-deco text-amber-300 text-xl md:text-2xl">{selectedSpread.name}</h2>
+                <p className="font-garamond text-amber-500/60 text-sm italic">{selectedSpread.description} · {selectedSpread.cardCount} cards</p>
+              </div>
+            </div>
+            <div className="mb-5 rounded-xl overflow-hidden" style={{border:'1px solid rgba(201,168,76,0.2)',background:'rgba(45,27,78,0.3)'}}>
+              <div className="px-4 py-2 border-b border-amber-800/20"><label className="font-cinzel text-amber-600/70 text-xs tracking-widest">YOUR QUESTION (Optional)</label></div>
+              <input type="text" value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What guidance do you seek from the cards?" className="w-full px-4 py-3 bg-transparent font-garamond text-amber-100/80 outline-none border-0"/>
+            </div>
+            <div className="flex justify-center mb-4">
+              <label className="flex items-center gap-2 text-amber-300 text-sm cursor-pointer">
+                <input type="checkbox" checked={useReversed} onChange={()=>setUseReversed(!useReversed)} className="accent-amber-600"/>
+                Include reversed card meanings
+              </label>
+            </div>
+
+            {drawnCards.length===0 ? (
+              <div className="flex flex-col items-center gap-5 py-10">
+                <p className="font-garamond text-amber-200/50 text-center italic">Breathe deeply. Clear your mind. When ready, draw your cards.</p>
+                <div className="flex gap-2 my-2">
+                  {Array.from({length:Math.min(selectedSpread.cardCount,7)}).map((_,i)=>(
+                    <div key={i} className="rounded-xl card-back gold-border animate-float flex items-center justify-center text-amber-800/40 text-lg"
+                      style={{width:50,height:78,background:'linear-gradient(135deg,#2d1b4e,#1a0a2e)',animationDelay:`${i*0.2}s`,border:'1px solid rgba(201,168,76,0.2)'}}>✦</div>
+                  ))}
+                </div>
+                <button onClick={drawCards} disabled={isShuffling} className="relative px-8 py-4 rounded-xl font-cinzel text-base tracking-widest overflow-hidden transition-all"
+                  style={{background:'linear-gradient(135deg,#6d28d9,#3b0764)',border:'1px solid rgba(201,168,76,0.5)',color:'#e8c97a'}}>
+                  {isShuffling?<span className="animate-pulse">✦ Shuffling the 78 cards...</span>:<span>🃏 Draw {selectedSpread.cardCount} Card{selectedSpread.cardCount>1?'s':''}</span>}
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="rounded-2xl p-4 md:p-6 mb-4 overflow-x-auto" style={{background:'rgba(26,10,46,0.6)',border:'1px solid rgba(201,168,76,0.15)'}}>
+                  <SpreadLayout spread={selectedSpread} cards={drawnCards} reversedFlags={reversedFlags} onCardClick={(card,rev)=>setModalCard({card,rev})}/>
+                </div>
+                <div className="flex justify-center gap-3 mt-2 flex-wrap">
+                  <button onClick={resetReading} className="border border-amber-700/50 px-4 py-2 rounded-full text-amber-300 text-sm font-cinzel hover:bg-amber-900/20">↺ Draw Again</button>
+                  <button onClick={saveReading} className="border border-amber-600/50 px-5 py-2 rounded-full text-sm font-cinzel hover:bg-amber-900/20">💾 Save Reading</button>
+                </div>
+                <InterpretationPanel spread={selectedSpread} cards={drawnCards} question={question} reversedFlags={reversedFlags}/>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* GALLERY */}
+        {view==='gallery' && (
+          <div className="max-w-6xl mx-auto px-4 py-10">
+            <div className="text-center mb-8">
+              <h2 className="font-cinzel-deco text-2xl md:text-3xl text-amber-300">The 78 Tarot Cards</h2>
+              <p className="font-garamond text-amber-500/60 italic">Tap any card to reveal its secrets</p>
+            </div>
+            <div className="flex justify-center gap-2 mb-8 flex-wrap">
+              {[['all','All 78'],['major','Major Arcana'],['wands','Wands 🔥'],['cups','Cups 💧'],['swords','Swords ⚔️'],['pentacles','Pentacles 🌿']].map(([val,label])=>(
+                <button key={val} onClick={()=>setGalleryFilter(val)} className={`font-cinzel text-xs px-4 py-2 rounded-full transition ${galleryFilter===val?'bg-amber-800/50 border border-amber-500/60 text-amber-300':'border border-amber-800/40 text-amber-600/60 hover:text-amber-400'}`}>{label}</button>
+              ))}
+            </div>
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 justify-items-center">
+              {filteredCards.map(card=>(
+                <div key={card.id} onClick={()=>setModalCard({card,rev:false})} className={`w-14 rounded-lg cursor-pointer transition-all duration-300 card-glow flex flex-col items-center justify-center py-2 ${suitClass(card.suit)}`}
+                  style={{height:88,border:`1px solid ${suitColor(card.suit)}40`}}>
+                  <span className="text-xl">{card.symbol}</span>
+                  <span className="font-cinzel text-center leading-tight px-1 mt-1" style={{fontSize:'7px',color:`${suitColor(card.suit)}cc`}}>{card.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <footer className="border-t border-amber-800/20 mt-16 py-6 text-center">
+          <p className="font-cinzel text-amber-800/40 text-xs tracking-widest">✦ THE TAROT ORACLE · 78 SACRED CARDS · ANCIENT WISDOM FOR MODERN SEEKERS ✦</p>
+        </footer>
+      </div>
+
+      {modalCard && <CardModal card={modalCard.card} isReversed={modalCard.rev} onClose={()=>setModalCard(null)}/>}
+    </div>
+  );
+};
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
+</script>
+</body>
+</html>
