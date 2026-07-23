@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mental Atlas v2</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+   <link rel="preload" href="fonts/financier-display-vt.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #fdf2e5;
+      --surface: #ffffff;
+      --surface2: #efe0ce;
+      --surface3: #f0e5da;
+      --border: rgba(0,0,0,0.08);
+      --border2: rgba(0,0,0,0.16);
+      --text: #1a1a18;
+      --text2: #5a5a54;
+      --text3: #9a9990;
+      --accent: #272a33;
+      --accent-text: #ffffff;
+      --info-bg: #eef2fd;
+      --info-text: #2250c4;
+      --info-border: rgba(34,80,196,0.2);
+      --green-bg: #edf6ee;
+      --green-text: #1f6b2e;
+      --green-border: rgba(31,107,46,0.2);
+      --amber-bg: #fef6e4;
+      --amber-text: #8a5500;
+      --amber-border: rgba(138,85,0,0.2);
+      --rose-bg: #fdf0f0;
+      --rose-text: #9b2626;
+      --rose-border: rgba(155,38,38,0.2);
+      --purple-bg: #f3f0fd;
+      --purple-text: #4f2fb8;
+      --purple-border: rgba(79,47,184,0.2);
+      --radius: 10px;
+      --radius-lg: 14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141412;
+        --surface: #1c1c19;
+        --surface2: #232320;
+        --surface3: #2a2a26;
+        --border: rgba(255,255,255,0.07);
+        --border2: rgba(255,255,255,0.14);
+        --text: #e6e4dc;
+        --text2: #94927f;
+        --text3: #5e5c50;
+        --accent: #c8bc98;
+        --accent-text: #141412;
+        --info-bg: #141e3a;
+        --info-text: #809cf0;
+        --green-bg: #0e2414;
+        --green-text: #6dbf7e;
+        --amber-bg: #221800;
+        --amber-text: #d4a040;
+        --rose-bg: #230d0d;
+        --rose-text: #d47070;
+        --purple-bg: #160e30;
+        --purple-text: #9b82f0;
+      }
+    }
+
+    body {
+      background: var(--bg);
+      font-family: 'Georgia', serif;
+      color: var(--text);
+      padding: 2rem 1.5rem 4rem;
+      line-height: 1.5;
+    }
+
+    .container { max-width: 900px; margin: 0 auto; }
+
+    .header { text-align: center; margin-bottom: 2.5rem; }
+    .header h1 { font-size: 40px; font-weight: 400; margin-bottom: 6px; letter-spacing: -0.02em; }
+    .header p { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: var(--text3); }
+
+    .tabs { display: flex; gap: 2px; border-bottom: 0.5px solid var(--border2); margin-bottom: 1.5rem; }
+    .tab {
+      padding: 8px 16px;
+      font-size: 15px;
+      color: var(--text2);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 500; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .panel {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text3);
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+
+    .pillar-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+    .pillar-chip {
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: transparent;
+      border: 0.5px solid var(--border2);
+      color: var(--text2);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .pillar-chip:hover { background: var(--surface2); }
+    .pillar-chip.active { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+
+    .triad-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 1.25rem; }
+    .pillar-card {
+      background: var(--surface2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      text-align: center;
+    }
+    .pillar-card.p1 { border-top: 2px solid var(--info-text); }
+    .pillar-card.p2 { border-top: 2px solid var(--purple-text); }
+    .pillar-card.p3 { border-top: 2px solid var(--green-text); }
+    .pillar-cat { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text3); margin-bottom: 8px; font-weight: 600; }
+    .pillar-word { font-size: 14px; font-weight: 500; line-height: 1.3; }
+
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1.25rem; }
+    .stat-card { background: var(--surface2); border-radius: var(--radius); padding: 0.75rem; text-align: center; }
+    .stat-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-val { font-size: 20px; font-weight: 500; }
+
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      background: transparent;
+      border: 0.5px solid var(--border2);
+      border-radius: 20px;
+      padding: 7px 16px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    button:hover { background: var(--surface2); }
+    button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+
+    .prompt-box {
+      border-left: 2px solid var(--border2);
+      padding: 0.875rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text);
+      font-style: italic;
+    }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+    .tag {
+      font-size: 13px;
+      background: var(--surface2);
+      border: 0.5px solid var(--border);
+      border-radius: 10px;
+      padding: 3px 10px;
+      color: var(--text2);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .tag:hover { background: var(--info-bg); color: var(--info-text); }
+
+    .reflections { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
+    .ref-card { background: var(--surface2); border-radius: var(--radius); padding: 0.875rem; }
+    .ref-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 6px; font-weight: 600; }
+    .ref-body { font-size: 13px; line-height: 1.55; color: var(--text2); }
+
+    .title-output {
+      background: var(--surface2);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .title-main { font-size: 18px; font-weight: 500; margin-bottom: 8px; }
+    .title-pillar-badge { display: inline-block; font-size: 11px; padding: 2px 10px; border-radius: 8px; margin-bottom: 12px; }
+    .title-hook { font-size: 13px; color: var(--text2); padding-top: 10px; margin-top: 4px; border-top: 0.5px solid var(--border); }
+
+    .titles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+    .title-card {
+      background: var(--surface2);
+      border-radius: var(--radius);
+      padding: 0.875rem;
+      cursor: pointer;
+    }
+    .title-card:hover { background: var(--surface3); }
+    .title-card-text { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+    .title-card-pillar { font-size: 11px; color: var(--text3); }
+
+    .weeks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+    .week-card { background: var(--surface2); border-radius: var(--radius); padding: 1rem; }
+    .week-title { font-size: 12px; font-weight: 600; }
+    .week-theme { font-size: 11px; color: var(--text3); margin-bottom: 10px; }
+    .post-item { display: flex; gap: 8px; padding: 6px 0; font-size: 12px; color: var(--text2); cursor: pointer; border-bottom: 0.5px solid var(--border); }
+    .post-check { width: 14px; height: 14px; border: 0.5px solid var(--border2); border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .post-check.done { background: var(--green-text); border-color: var(--green-text); color: white; }
+
+    .history-panel { background: var(--surface); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; display: none; }
+    .hist-item { display: flex; gap: 8px; padding: 7px 0; font-size: 12px; color: var(--text2); cursor: pointer; border-bottom: 0.5px solid var(--border); }
+    .hist-pill { background: var(--surface2); border-radius: 8px; padding: 2px 8px; font-size: 11px; }
+
+    .editor-panel { background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; }
+    .editor-head { display: flex; justify-content: space-between; padding: 0.875rem 1.25rem; background: var(--surface2); flex-wrap: wrap; gap: 8px; }
+    textarea {
+      width: 100%;
+      padding: 1.25rem;
+      font-size: 16px;
+      line-height: 1.6;
+      border: none;
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      resize: vertical;
+      outline: none;
+      min-height: 220px;
+    }
+    .editor-foot { display: flex; justify-content: space-between; padding: 0.75rem 1.25rem; background: var(--surface2); flex-wrap: wrap; }
+
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--accent); color: var(--accent-text); padding: 8px 18px; border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999; }
+
+    .badge-1 { background: var(--info-bg); color: var(--info-text); }
+    .badge-2 { background: var(--purple-bg); color: var(--purple-text); }
+    .badge-3 { background: var(--green-bg); color: var(--green-text); }
+    .badge-4 { background: var(--amber-bg); color: var(--amber-text); }
+    .badge-5 { background: var(--rose-bg); color: var(--rose-text); }
+    .divider { height: 0.5px; background: var(--border); margin: 1rem 0; }
+
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      .triad-grid { grid-template-columns: 1fr; }
+      .stat-row { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>MENTAL ATLAS v3.1</h1>
+    <p>human nature · systems · creation · mastery</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="triad"><i class="ti ti-atom-2"></i> triad generator</button>
+    <button class="tab" data-tab="titles"><i class="ti ti-writing"></i> post titles</button>
+    <button class="tab" data-tab="planner"><i class="ti ti-calendar-week"></i> 30-day launch</button>
+    <button class="tab" data-tab="draft"><i class="ti ti-pencil"></i> essay draft</button>
+  </div>
+
+  <!-- TAB 1: TRIAD -->
+  <div class="tab-content active" id="tab-triad">
+    <div class="panel">
+      <div class="section-label">LEVEL 1 — META FIELD</div>
+      <div class="pillar-row" id="metaFieldRow">
+        <button class="pillar-chip active" data-meta="all">all fields</button>
+        <button class="pillar-chip" data-meta="human_nature">🧠 Human Nature</button>
+        <button class="pillar-chip" data-meta="systems">⚙️ Systems</button>
+        <button class="pillar-chip" data-meta="creation">🎨 Creation</button>
+        <button class="pillar-chip" data-meta="mastery">🏆 Mastery</button>
+      </div>
+
+      <div class="section-label">LEVEL 2 — FIELD</div>
+      <div class="pillar-row" id="fieldRow">
+        <button class="pillar-chip active" data-field="all">all fields</button>
+      </div>
+
+      <div class="section-label">LEVEL 3 — PILLAR</div>
+      <div class="pillar-row" id="pillarRowV2">
+        <button class="pillar-chip active" data-pillar="all">all pillars</button>
+        <button class="pillar-chip" data-pillar="decision">① decision & certainty</button>
+        <button class="pillar-chip" data-pillar="belief">② belief & perception</button>
+        <button class="pillar-chip" data-pillar="psych_behavior">③ psychology & behavior</button>
+        <button class="pillar-chip" data-pillar="system_patterns">④ systems & patterns</button>
+        <button class="pillar-chip" data-pillar="creative_meaning">⑤ creativity & meaning</button>
+      </div>
+
+      <div class="section-label">GENERATIVE TRIAD (Lens × Behavior × Domain)</div>
+      <div class="triad-grid" id="triadGrid"></div>
+
+      <div class="stat-row">
+        <div class="stat-card"><div class="stat-label">pool size</div><div class="stat-val" id="statPool">—</div></div>
+        <div class="stat-card"><div class="stat-label">generated</div><div class="stat-val" id="statCount">0</div></div>
+        <div class="stat-card"><div class="stat-label">draft words</div><div class="stat-val" id="statWords">0</div></div>
+        <div class="stat-card"><div class="stat-label">posts planned</div><div class="stat-val" id="statPosts">0</div></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="primary" id="btnGen"><i class="ti ti-refresh"></i> new triad</button>
+        <button id="btnPin"><i class="ti ti-pin"></i> pin lens</button>
+        <button id="btnHistory"><i class="ti ti-history"></i> history</button>
+        <button id="btnSendDraft"><i class="ti ti-arrow-right"></i> send to draft</button>
+        <button id="btnExport"><i class="ti ti-download"></i> export</button>
+      </div>
+    </div>
+
+    <div id="historyPanel" class="history-panel">
+      <div class="section-label">triad history</div>
+      <div id="histList"></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-label">REFLECTION ARCHITECTURE</div>
+      <div class="prompt-box" id="mainPrompt"></div>
+      <div class="tags" id="tagCloud"></div>
+      <div class="divider"></div>
+      <div class="reflections" id="reflGrid"></div>
+      <div id="articleIdea" style="margin-top: 1rem;"></div>
+    </div>
+  </div>
+
+  <!-- TAB 2: TITLES -->
+  <div class="tab-content" id="tab-titles">
+    <div class="panel">
+      <div class="section-label">pillar filter</div>
+      <div class="pillar-row" id="titlePillarRow">
+        <button class="pillar-chip active" data-pillar="all">all</button>
+        <button class="pillar-chip" data-pillar="1">① decision & certainty</button>
+        <button class="pillar-chip" data-pillar="2">② belief & perception</button>
+        <button class="pillar-chip" data-pillar="3">③ psychology & behavior</button>
+        <button class="pillar-chip" data-pillar="4">④ systems & patterns</button>
+        <button class="pillar-chip" data-pillar="5">⑤ creativity & meaning</button>
+      </div>
+      <div class="btn-row">
+        <button class="primary" id="btnPickTitle"><i class="ti ti-sparkles"></i> random title</button>
+        <button id="btnShuffleTitles"><i class="ti ti-refresh"></i> shuffle grid</button>
+      </div>
+    </div>
+
+    <div class="panel" id="featuredTitle" style="display:none;">
+      <div class="section-label">selected title</div>
+      <div class="title-output" id="titleOutput"></div>
+      <div class="btn-row">
+        <button id="btnTitleToDraft"><i class="ti ti-pencil"></i> use in draft</button>
+        <button id="btnTitleCopy"><i class="ti ti-copy"></i> copy title</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-label" id="titlesGridLabel">all post titles</div>
+      <div class="titles-grid" id="titlesGrid"></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: PLANNER -->
+  <div class="tab-content" id="tab-planner">
+    <div class="panel">
+      <div class="section-label">30-day launch plan — 6 weeks</div>
+      <p style="font-size:13px; margin-bottom:1rem;">Click any post to mark it done and send the title to your draft. Your progress saves locally.</p>
+      <div class="weeks-grid" id="weeksGrid"></div>
+    </div>
+    <div class="panel">
+      <div class="section-label">content pillar distribution</div>
+      <div id="pillarBars"></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: DRAFT -->
+  <div class="tab-content" id="tab-draft">
+    <div class="editor-panel">
+      <div class="editor-head">
+        <span>essay incubator</span>
+        <div class="active-title-label" id="activeTitleLabel">no title selected</div>
+        <span id="charCount" style="font-size:12px;">0 chars</span>
+      </div>
+      <textarea id="draft" rows="15" placeholder="SCENE START
+Start with a real moment.
+Sot e pashë…/Ai/ajo më tha…/Në atë moment…/Kur po flisnim…/Një situatë…
+
+MODEL SHIFT
+Break the scene and create tension
+Problemi real është…/Kjo në fakt tregon që…/Modeli këtu është…/Njerëzit mendojnë…, por në realitet…
+
+DIALOG / FRACTURE
+Expand the pattern to more real-life situations
+Më shikoi dhe…/U ndal për një sekondë…/Nuk e tha direkt, po u kuptu…Nuk reagova menjëherë…
+
+TRANSITION THINKING
+End with an open loop or unresolved thought
+Në fund të ditës…/Nëse e shohim më thellë…/E njëjta gjë ndodh edhe në…/Kjo lidhet me…"></textarea>
+      <div class="editor-foot">
+        <button class="danger" id="btnClear"><i class="ti ti-trash"></i> clear</button>
+        <button id="btnCopy"><i class="ti ti-copy"></i> copy</button>
+        <button id="btnExportDraft" class="primary"><i class="ti ti-download"></i> export</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="section-label">inject tag into draft</div>
+      <div class="tags" id="draftTags"></div>
+    </div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// DATA STRUCTURES
+// ════════════════════════════════════════════════════════
+
+const PILLARS = {
+  human_nature: { name: "Human Nature", short: "human", color: "badge-1", level: 1 },
+  systems: { name: "Systems", short: "systems", color: "badge-2", level: 1 },
+  creation: { name: "Creation", short: "creation", color: "badge-3", level: 1 },
+  mastery: { name: "Mastery", short: "mastery", color: "badge-4", level: 1 },
+  
+  psychology: { name: "Psychology", short: "psych", color: "badge-1", parent: "human_nature" },
+  identity: { name: "Identity", short: "id", color: "badge-1", parent: "human_nature" },
+  relationships: { name: "Relationships", short: "rel", color: "badge-1", parent: "human_nature" },
+  beliefs: { name: "Beliefs", short: "beliefs", color: "badge-1", parent: "human_nature" },
+  trading: { name: "Trading", short: "trade", color: "badge-2", parent: "systems" },
+  business: { name: "Business", short: "biz", color: "badge-2", parent: "systems" },
+  marketing: { name: "Marketing", short: "mkt", color: "badge-2", parent: "systems" },
+  ai: { name: "AI & Tech", short: "ai", color: "badge-2", parent: "systems" },
+  society: { name: "Society", short: "soc", color: "badge-2", parent: "systems" },
+  writing: { name: "Writing", short: "write", color: "badge-3", parent: "creation" },
+  design: { name: "Design", short: "design", color: "badge-3", parent: "creation" },
+  art: { name: "Art", short: "art", color: "badge-3", parent: "creation" },
+  communication: { name: "Communication", short: "comm", color: "badge-3", parent: "creation" },
+  learning: { name: "Learning", short: "learn", color: "badge-4", parent: "mastery" },
+  skills: { name: "Skills", short: "skills", color: "badge-4", parent: "mastery" },
+  expertise: { name: "Expertise", short: "exp", color: "badge-4", parent: "mastery" },
+  performance: { name: "Performance", short: "perf", color: "badge-4", parent: "mastery" },
+  
+  decision: { name: "Decision & Certainty", short: "decision", color: "badge-1", level: 3 },
+  belief: { name: "Belief & Perception", short: "belief", color: "badge-2", level: 3 },
+  psych_behavior: { name: "Psychology & Behavior", short: "psych", color: "badge-3", level: 3 },
+  system_patterns: { name: "Systems & Patterns", short: "systems", color: "badge-4", level: 3 },
+  creative_meaning: { name: "Creativity & Meaning", short: "creative", color: "badge-5", level: 3 },
+};
+
+const FIELDS_BY_META = {
+  human_nature: ["psychology", "identity", "relationships", "beliefs"],
+  systems: ["trading", "business", "marketing", "ai", "society"],
+  creation: ["writing", "design", "art", "communication"],
+  mastery: ["learning", "skills", "expertise", "performance"]
+};
+
+const ALL_FIELDS = ["psychology", "identity", "relationships", "beliefs", "trading", "business", "marketing", "ai", "society", "writing", "design", "art", "communication", "learning", "skills", "expertise", "performance"];
+
+// LENSES by Pillar
+const LENSES = {
+  decision: [ "decision under uncertainty",
+  "conviction vs hesitation",
+  "confidence calibration",
+  "regret minimization",
+  "reversible vs irreversible decisions",
+  "commitment thresholds",
+  "bounded rationality",
+  "incomplete information",
+  "asymmetric outcomes",
+  "scenario thinking",
+  "assumption testing",
+  "pre-mortem thinking",
+  "outcome quality vs decision quality",
+  "Knightian uncertainty",
+  "ambiguity aversion",
+  "Ellsberg paradox",
+  "maximin vs maximax",
+  "Bayesian updating",
+  "prior elicitation",
+  "posterior calibration",
+  "decision trees",
+  "real options thinking",
+  "precautionary principle",
+  "satisficing vs optimizing",
+  "counterfactual reasoning",
+  "optionality thinking",
+  "trade-off analysis",
+  "exploration vs exploitation",
+  "resource allocation"],
+  belief: ["belief system architecture",
+  "narrative capture",
+  "confirmation architecture",
+  "identity lock",
+  "perception filters",
+  "expectation gap",
+  "cognitive distortion",
+  "illusory control",
+  "availability cascade",
+  "framing effects",
+  "cognitive dissonance management",
+  "explanatory depth illusion",
+  "theory contamination",
+  "perceptual set",
+  "top-down processing",
+  "predictive coding",
+  "Bayesian brain hypothesis",
+  "free energy principle",
+  "active inference",
+  "meta-cognition",
+  "epistemic humility",
+  "epistemic uncertainty",
+  "belief updating",
+  "map vs territory",
+  "frame switching",
+  "narrative drift",
+  "interpretation layer",
+  "sensemaking",
+  "meaning construction"],
+  psych_behavior: [ "behavioral inertia",
+  "habit architecture",
+  "emotional reasoning",
+  "subconscious patterning",
+  "self-sabotage loops",
+  "motivation decay",
+  "loss aversion asymmetry",
+  "sunk cost entrapment",
+  "psychological safety thresholds",
+  "execution resistance",
+  "polyvagal theory",
+  "interoception",
+  "neuroception",
+  "attachment dynamics",
+  "therapeutic alliance",
+  "countertransference",
+  "corrective emotional experience",
+  "earned secure attachment"],
+  system_patterns: [ "pattern recognition",
+  "systems thinking",
+  "hidden structure",
+  "nonlinear dynamics",
+  "leverage points",
+  "constraint mapping",
+  "mental models",
+  "adaptive thinking",
+  "probabilistic reasoning",
+  "model collision",
+  "structural tension",
+  "bottleneck identification",
+  "second-order effects",
+  "threshold dynamics",
+  "asymmetric information",
+  "weak signal amplification",
+  "phase transitions",
+  "irreversibility mapping",
+  "regime change detection",
+  "causal density",
+  "lock-in dynamics",
+  "critical mass thresholds",
+  "complexity vs complicatedness",
+  "Goodhart's law",
+  "adjacent possible",
+  "via negativa",
+  "graceful degradation",
+  "requisite variety",
+  "Ashby's law",
+  "sensitivity to initial conditions",
+  "strange attractors",
+  "edge of chaos",
+  "autopoiesis",
+  "structural coupling",
+  "enactivism",
+  "second-order cybernetics",
+  "abductive reasoning",
+  "first principles thinking",
+  "recursive analysis",
+  "self-reference",
+  "reflexivity",
+  "causal inference",
+  "causal loops",
+  "causal emergence",
+  "distributed cognition",
+  "collective intelligence",
+  "information asymmetry",
+  "information cascades",
+  "network topology",
+  "small-world networks",
+  "scale-free networks",
+  "percolation dynamics",
+  "cascade failure",
+  "resilience engineering",
+  "robustness analysis",
+  "failure mode analysis",
+  "error correction",
+  "redundancy mapping",
+  "optimization traps",
+  "search space navigation",
+  "local maxima",
+  "global optimization",
+  "fitness landscapes",
+  "evolutionary dynamics",
+  "selection pressures",
+  "adaptation cycles",
+  "coevolution",
+  "dynamic equilibrium",
+  "homeostasis",
+  "allostasis",
+  "attractor basins",
+  "hysteresis effects",
+  "feedback dominance",
+  "latent variables",
+  "hidden dependencies",
+  "structural causality",
+  "constraint propagation",
+  "boundary conditions",
+  "cross-scale interactions",
+  "temporal layering",
+  "time horizon analysis",
+  "context sensitivity",
+  "observer effects",
+  "reinforcing vs balancing loops",
+  "stocks and flows",
+  "system traps",
+  "time delays in feedback",
+  "policy resistance",
+  "oscillation",
+  "drift to low performance",
+  "tragedy of the commons",
+  "unintended consequences",
+  "success to the successful",
+  "escalation",
+  "fixes that fail",
+  "limits to growth",
+  "shifting the burden",
+  "eroding goals",
+  "accidental adversaries",
+  "attractor dynamics",
+  "basin of attraction",
+  "tipping elements",
+  "planetary boundaries",
+  "carrying capacity"],
+  creative_meaning: ["constraint", "negative space", "tension", "release", "revision", "deletion", "form", "structure", "voice", "style", "imitation", "originality", "recombination", "taste", "craft", "finishing", "resistance", "flow","constraint-driven creativity",
+  "structural analogy",
+  "symbolic compression",
+  "aesthetic tension",
+  "narrative architecture",
+  "creative destruction",
+  "pattern language",
+  "multi-modal thinking",
+  "oblique strategies",
+  "negative space in art",
+  "form follows function",
+  "gestalt principles",
+  "figure-ground relationship",
+  "semiotic analysis",
+  "signifier vs signified",
+  "bricolage",
+  "remix culture",
+  "generative constraints",
+  "elegance as compression",
+  "beauty as feedback"]
+};
+
+// BEHAVIORS
+const BEHAVIORS = {
+  decision: ["loss aversion",
+    "risk seeking",
+    "status quo bias",
+    "endowment effect",
+    "disposition effect",
+    "gambler's fallacy",
+    "overconfidence",
+    "analysis paralysis",
+    "impulsivity",
+    "regret aversion",
+    "decision deferral",
+    "option hoarding",
+    "commitment escalation",
+    "premature commitment",
+    "satisficing",
+    "over-optimization",
+    "choice overload",
+    "risk compensation",
+    "hedging",
+    "reversible decision avoidance",
+    "irreversible decision fear",
+    "confidence inflation",
+    "underconfidence",
+    "scenario neglect",
+    "probability neglect",
+    "ambiguity avoidance",
+    "black-and-white decision making",
+    "reactive decision making",
+    "short-term optimization",
+    "hyperbolic discounting",
+    "sunk cost continuation",
+    "last-minute decision making",
+    "decision fatigue",
+    "premortem avoidance",
+    "action bias",
+    "inaction bias","loss aversion", "risk seeking", "status quo bias", "endowment effect", "disposition effect", "gambler's fallacy", "overconfidence", "analysis paralysis", "impulsivity", "regret aversion"],
+  belief: ["confirmation seeking",
+    "motivated reasoning",
+    "identity defense",
+    "cognitive dissonance reduction",
+    "belief perseverance",
+    "attribution bias",
+    "hindsight distortion",
+    "outcome bias",
+
+    "selective attention",
+    "selective exposure",
+    "cherry-picking evidence",
+    "filtering contradictions",
+    "narrative preservation",
+    "rationalization",
+    "identity-protective cognition",
+    "tribal signaling",
+    "belief shielding",
+    "premature certainty",
+    "epistemic closure",
+    "pattern over-detection",
+    "apophenia",
+    "authority dependence",
+    "consensus dependence",
+    "availability reliance",
+    "anchoring",
+    "frame dependence",
+    "illusion of explanatory depth",
+    "projection of beliefs",
+    "theory maintenance",
+    "belief contagion",
+    "moralization",
+    "dogmatism",
+    "skepticism theater",
+    "intellectual defensiveness",
+    "belief updating resistance","confirmation seeking", "motivated reasoning", "identity defense", "cognitive dissonance reduction", "belief perseverance", "attribution bias", "hindsight distortion", "outcome bias"],
+  psych_behavior: ["attachment patterns",
+    "splitting",
+    "projection",
+    "idealization",
+    "devaluation",
+    "enactment",
+    "repetition compulsion",
+    "avoidance",
+    "procrastination",
+    "perfectionism",
+    "people-pleasing",
+    "defensiveness",
+
+    "self-sabotage",
+    "emotional reasoning",
+    "rumination",
+    "catastrophizing",
+    "emotional withdrawal",
+    "emotional suppression",
+    "emotional flooding",
+    "shutdown response",
+    "fight response",
+    "flight response",
+    "freeze response",
+    "fawn response",
+    "validation seeking",
+    "reassurance seeking",
+    "approval dependence",
+    "conflict avoidance",
+    "hypervigilance",
+    "self-criticism",
+    "shame spiraling",
+    "identity protection",
+    "compulsive caretaking",
+    "boundary erosion",
+    "resentment accumulation",
+    "over-functioning",
+    "under-functioning",
+    "motivation cycling",
+    "habitual distraction",
+    "novelty seeking",
+    "dopamine chasing",
+    "learned helplessness",
+    "passive aggression",
+    "control seeking",
+    "withdrawal after failure","attachment patterns", "splitting", "projection", "idealization", "devaluation", "enactment", "repetition compulsion", "avoidance", "procrastination", "perfectionism", "people-pleasing", "defensiveness"],
+  system_patterns: [ "herding",
+    "conformity",
+    "social proof",
+    "groupthink",
+    "bystander effect",
+    "authority bias",
+    "crowd psychology",
+    "panic",
+    "capitulation",
+    "fomo",
+    "recency bias",
+
+    "information cascades",
+    "feedback amplification",
+    "feedback suppression",
+    "coordination failure",
+    "free riding",
+    "local optimization",
+    "goal displacement",
+    "metric gaming",
+    "Goodhart behavior",
+    "resource hoarding",
+    "network clustering",
+    "echo chamber formation",
+    "polarization",
+    "contagion dynamics",
+    "norm enforcement",
+    "status competition",
+    "arms race dynamics",
+    "organizational drift",
+    "bureaucratic inertia",
+    "policy resistance",
+    "blame shifting",
+    "responsibility diffusion",
+    "cascading failure",
+    "path dependence reinforcement",
+    "lock-in reinforcement",
+    "winner-take-all concentration",
+    "attention concentration",
+    "coordination emergence",
+    "collective sensemaking",
+    "collective blindness","herding", "conformity", "social proof", "groupthink", "bystander effect", "authority bias", "crowd psychology", "panic", "capitulation", "fomo", "recency bias"],
+  creative_meaning: ["resistance",
+    "creative block",
+    "procrastination on high-value work",
+    "perfectionism",
+    "premature sharing",
+    "audience capture",
+    "imitation",
+    "finishing avoidance",
+    "taste-ability gap",
+    "idea hoarding",
+    "endless ideation",
+    "revision looping",
+    "concept abandonment",
+    "novelty chasing",
+    "craft avoidance",
+    "fear of judgment",
+    "fear of originality",
+    "creative self-censorship",
+    "over-polishing",
+    "under-editing",
+    "style mimicry",
+    "audience pleasing",
+    "trend chasing",
+    "creative rigidity",
+    "formula dependence",
+    "constraint avoidance",
+    "constraint exploitation",
+    "cross-domain synthesis",
+    "iterative refinement",
+    "playful exploration",
+    "productive experimentation",
+    "symbolic thinking",
+    "meaning making",
+    "narrative construction",
+    "aesthetic calibration",
+    "taste development",
+    "creative risk taking",
+    "flow seeking",
+    "completion momentum","resistance", "creative block", "procrastination on high-value work", "perfectionism", "premature sharing", "audience capture", "imitation", "finishing avoidance", "taste-ability gap"]
+};
+
+// DOMAINS
+const DOMAINS = {
+  trading: ["position sizing",
+    "risk management",
+    "edge definition",
+    "drawdown management",
+    "leverage",
+    "correlation",
+    "regime detection",
+    "order flow",
+    "liquidity",
+    "volatility",
+    "tail risk",
+    "mean reversion",
+    "momentum",
+
+    "market microstructure",
+    "execution quality",
+    "slippage",
+    "risk-adjusted returns",
+    "portfolio construction",
+    "factor exposure",
+    "alpha generation",
+    "beta exposure",
+    "market making",
+    "volatility clustering",
+    "trend following",
+    "carry trades",
+    "risk parity",
+    "capital allocation",
+    "expectancy",
+    "Kelly criterion",
+    "black swans",
+    "position concentration",
+    "hedging",
+    "market sentiment",
+    "trade journaling","position sizing", "risk management", "edge definition", "drawdown management", "leverage", "correlation", "regime detection", "order flow", "liquidity", "volatility", "tail risk", "mean reversion", "momentum"],
+  business: [ "pricing power",
+    "unit economics",
+    "customer acquisition",
+    "retention",
+    "churn",
+    "network effects",
+    "moat",
+    "competitive positioning",
+    "sales funnel",
+    "operating leverage",
+    "scale",
+
+    "product-market fit",
+    "market segmentation",
+    "customer lifetime value",
+    "customer success",
+    "distribution channels",
+    "business model design",
+    "go-to-market strategy",
+    "gross margin",
+    "contribution margin",
+    "cash flow",
+    "working capital",
+    "capital efficiency",
+    "market expansion",
+    "strategic partnerships",
+    "organizational design",
+    "incentive alignment",
+    "founder-market fit",
+    "platform economics",
+    "vertical integration",
+    "competitive dynamics","pricing power", "unit economics", "customer acquisition", "retention", "churn", "network effects", "moat", "competitive positioning", "sales funnel", "operating leverage", "scale"],
+  marketing: ["attention allocation",
+    "hook",
+    "narrative",
+    "positioning",
+    "segmentation",
+    "funnel architecture",
+    "offer design",
+    "scarcity",
+    "social proof",
+
+    "brand building",
+    "message-market fit",
+    "audience research",
+    "customer psychology",
+    "demand generation",
+    "lead nurturing",
+    "conversion optimization",
+    "copywriting",
+    "content strategy",
+    "category creation",
+    "trust building",
+    "authority positioning",
+    "virality",
+    "word of mouth",
+    "distribution strategy",
+    "channel economics",
+    "retargeting",
+    "customer journey",
+    "behavioral targeting",
+    "market awareness","attention allocation", "hook", "narrative", "positioning", "segmentation", "funnel architecture", "offer design", "scarcity", "social proof"],
+  ai: [ "prediction",
+    "automation",
+    "alignment",
+    "scaling laws",
+    "prompt engineering",
+    "latent space",
+    "attention mechanism",
+    "fine-tuning",
+
+    "reasoning models",
+    "retrieval augmentation",
+    "vector embeddings",
+    "transformers",
+    "tokenization",
+    "context windows",
+    "agent architectures",
+    "tool use",
+    "multi-agent systems",
+    "hallucination reduction",
+    "model evaluation",
+    "synthetic data",
+    "reinforcement learning",
+    "knowledge distillation",
+    "inference optimization",
+    "multimodal learning",
+    "world models",
+    "capability scaling",
+    "AI safety",
+    "interpretability","prediction", "automation", "alignment", "scaling laws", "prompt engineering", "latent space", "attention mechanism", "fine-tuning"],
+  writing: ["voice",
+    "structure",
+    "hook",
+    "thesis",
+    "argument",
+    "narrative arc",
+    "revision",
+    "killing darlings",
+    "compression",
+
+    "clarity",
+    "coherence",
+    "scene construction",
+    "paragraph flow",
+    "transitions",
+    "rhetorical devices",
+    "cadence",
+    "tone",
+    "style consistency",
+    "reader engagement",
+    "information density",
+    "specificity",
+    "metaphor",
+    "symbolism",
+    "framing",
+    "editing",
+    "story architecture",
+    "tension management",
+    "opening lines",
+    "ending resonance","voice", "structure", "hook", "thesis", "argument", "narrative arc", "revision", "killing darlings", "compression"],
+  psychology: ["therapy relationship",
+    "attachment repair",
+    "trauma processing",
+    "shadow work",
+    "parts work",
+    "somatic experiencing",
+
+    "emotion regulation",
+    "personality structure",
+    "cognitive distortions",
+    "behavioral conditioning",
+    "self-concept",
+    "identity formation",
+    "memory reconsolidation",
+    "resilience",
+    "psychological flexibility",
+    "self-compassion",
+    "mentalization",
+    "affect regulation",
+    "nervous system regulation",
+    "developmental trauma",
+    "defense mechanisms",
+    "emotional processing",
+    "interpersonal dynamics",
+    "meaning making",
+    "motivation systems",
+    "psychological growth","therapy relationship", "attachment repair", "trauma processing", "shadow work", "parts work", "somatic experiencing"],
+  relationships: ["trust",
+    "repair",
+    "boundaries",
+    "communication patterns",
+    "conflict resolution",
+    "intimacy",
+    "vulnerability",
+
+    "attachment styles",
+    "emotional attunement",
+    "rupture and repair",
+    "secure functioning",
+    "mutual influence",
+    "empathy",
+    "active listening",
+    "co-regulation",
+    "expectation management",
+    "relational contracts",
+    "power dynamics",
+    "emotional safety",
+    "commitment",
+    "reciprocity",
+    "forgiveness",
+    "relational resilience",
+    "love languages",
+    "shared meaning",
+    "interdependence",
+    "relational maturity","trust", "repair", "boundaries", "communication patterns", "conflict resolution", "intimacy", "vulnerability"],
+  society: ["coordination",
+    "collective action",
+    "tragedy of the commons",
+    "incentive design",
+    "institutions",
+    "norms",
+    "signaling",
+    "status",
+
+    "governance",
+    "social capital",
+    "cultural evolution",
+    "collective intelligence",
+    "power structures",
+    "legitimacy",
+    "bureaucracy",
+    "social trust",
+    "elite dynamics",
+    "wealth distribution",
+    "public goods",
+    "information ecosystems",
+    "social contagion",
+    "polarization",
+    "coordination failures",
+    "institutional decay",
+    "state capacity",
+    "social mobility",
+    "collective sensemaking",
+    "civilization resilience","coordination", "collective action", "tragedy of the commons", "incentive design", "institutions", "norms", "signaling", "status"],
+  learning: ["deliberate practice",
+    "feedback loops",
+    "plateaus",
+    "skill transfer",
+    "retention",
+    "spaced repetition",
+
+    "active recall",
+    "retrieval practice",
+    "mental models",
+    "chunking",
+    "interleaving",
+    "learning curves",
+    "metacognition",
+    "error correction",
+    "knowledge transfer",
+    "deep work",
+    "cognitive load",
+    "scaffolding",
+    "understanding vs memorization",
+    "expertise development",
+    "reflective practice",
+    "adaptive learning",
+    "knowledge integration",
+    "practice quality",
+    "feedback quality",
+    "concept mastery", "feedback loops", "plateaus", "skill transfer", "retention", "spaced repetition"],
+  skills: ["automaticity",
+    "habit formation",
+    "consistency",
+    "performance under pressure",
+
+    "skill acquisition",
+    "execution speed",
+    "precision",
+    "coordination",
+    "adaptability",
+    "self-monitoring",
+    "deliberate repetition",
+    "error recovery",
+    "practice volume",
+    "practice intensity",
+    "muscle memory",
+    "situational awareness",
+    "focus control",
+    "energy management",
+    "performance reliability",
+    "habit stacking",
+    "skill maintenance",
+    "fluency",
+    "competence development",
+    "mastery progression","automaticity", "habit formation", "consistency", "performance under pressure"],
+  expertise: [ "pattern recognition",
+    "intuition",
+    "blind spots",
+    "tacit knowledge",
+
+    "domain expertise",
+    "signal detection",
+    "judgment quality",
+    "knowledge compression",
+    "expert forecasting",
+    "mental simulation",
+    "heuristics",
+    "sensemaking",
+    "anomaly detection",
+    "case-based reasoning",
+    "experience accumulation",
+    "knowledge integration",
+    "uncertainty navigation",
+    "situational diagnosis",
+    "expert calibration",
+    "problem framing",
+    "deep specialization",
+    "cross-domain synthesis",
+    "wisdom development",
+    "expert adaptability","pattern recognition", "intuition", "blind spots", "tacit knowledge"],
+  performance: [ "state management",
+    "execution",
+    "pressure response",
+    "choking",
+
+    "flow state",
+    "mental toughness",
+    "focus",
+    "stress adaptation",
+    "energy regulation",
+    "recovery",
+    "preparation rituals",
+    "competitive mindset",
+    "performance consistency",
+    "resilience under pressure",
+    "arousal regulation",
+    "peak performance",
+    "attention control",
+    "confidence management",
+    "performance feedback",
+    "execution discipline",
+    "decision speed",
+    "situational awareness",
+    "clutch performance",
+    "sustainable excellence","state management", "execution", "pressure response", "choking"],
+  identity: ["self-concept",
+    "narrative identity",
+    "role adoption",
+    "identity threat",
+
+    "identity formation",
+    "self-authorship",
+    "personal values",
+    "self-coherence",
+    "role conflict",
+    "identity transition",
+    "authenticity",
+    "social identity",
+    "future self",
+    "identity integration",
+    "self-esteem",
+    "self-efficacy",
+    "purpose",
+    "meaning systems",
+    "identity repair",
+    "identity expansion",
+    "self-definition",
+    "personal mythology",
+    "character development",
+    "identity resilience","self-concept", "narrative identity", "role adoption", "identity threat"],
+  beliefs: [ "formation",
+    "maintenance",
+    "change",
+    "resistance",
+
+    "belief updating",
+    "epistemology",
+    "certainty",
+    "doubt",
+    "worldview construction",
+    "evidence evaluation",
+    "truth seeking",
+    "sensemaking",
+    "narrative formation",
+    "ideology",
+    "assumption structures",
+    "mental models",
+    "interpretation",
+    "perception",
+    "belief revision",
+    "cognitive frameworks",
+    "epistemic trust",
+    "knowledge acquisition",
+    "meaning attribution",
+    "conviction","formation", "maintenance", "change", "resistance"],
+  design: [ "constraint",
+    "hierarchy",
+    "balance",
+    "negative space",
+    "form vs function",
+
+    "affordances",
+    "usability",
+    "information architecture",
+    "visual rhythm",
+    "proportion",
+    "composition",
+    "contrast",
+    "alignment",
+    "visual weight",
+    "design systems",
+    "interaction design",
+    "human-centered design",
+    "accessibility",
+    "simplicity",
+    "consistency",
+    "visual language",
+    "feedback mechanisms",
+    "wayfinding",
+    "progressive disclosure",
+    "design coherence","constraint", "hierarchy", "balance", "negative space", "form vs function"],
+  art: ["expression",
+    "interpretation",
+    "medium",
+    "style",
+
+    "composition",
+    "symbolism",
+    "aesthetic tension",
+    "visual language",
+    "creative process",
+    "artistic voice",
+    "abstraction",
+    "representation",
+    "cultural context",
+    "emotional resonance",
+    "form",
+    "texture",
+    "rhythm",
+    "contrast",
+    "movement",
+    "meaning making",
+    "experimentation",
+    "craftsmanship",
+    "artistic evolution",
+    "creative identity","expression", "interpretation", "medium", "style"],
+  communication: ["clarity",
+    "persuasion",
+    "storytelling",
+    "audience",
+
+    "framing",
+    "active listening",
+    "rhetoric",
+    "negotiation",
+    "message design",
+    "information transfer",
+    "feedback exchange",
+    "questioning",
+    "narrative persuasion",
+    "audience adaptation",
+    "conflict communication",
+    "nonverbal communication",
+    "signal clarity",
+    "conversation design",
+    "rapport building",
+    "sensemaking communication",
+    "influence",
+    "explanation quality",
+    "shared understanding",
+    "communication effectiveness","clarity", "persuasion", "storytelling", "audience"],
+};
+
+// POST TITLES (shortened for brevity - keep your existing POST_TITLES array here)
+const POST_TITLES = [
+  // Pillar 1 — Decision & Certainty
+  { t: "Why Confidence Is a Lagging Indicator", p: "decision", hook: "The feeling of certainty arrives after the system has already shifted. By the time you feel sure, the window has usually closed." },
+  { t: "The Danger of Being Right Too Often", p: "decision", hook: "Consecutive wins don't build skill — they build blind spots. Each correct call narrows your model of how the world works." },
+  { t: "Expertise Makes You Blind to Regime Change", p: "decision", hook: "Deep domain knowledge is perfectly calibrated to the last environment. When the game changes, expertise becomes a liability." },
+  { t: "Why Conviction Without Testing Is Expensive", p: "decision", hook: "Conviction is a compression of prior experience. Without pressure-testing, it's just expensive certainty wearing the mask of analysis." },
+  { t: "How Success Trains You to Ignore Evidence", p: "decision", hook: "The feedback loop of success selectively filters out disconfirming signals. You stop seeing what doesn't fit the story that's been working." },
+  { t: "The Seduction of Coherent Narratives", p: "decision", hook: "A coherent story feels like understanding. But coherence is not accuracy — it's just the absence of visible contradiction." },
+  { t: "When Your Best Skill Becomes Your Worst Liability", p: "decision", hook: "The tool that solved the last ten problems will be applied to the eleventh — even when it's wrong." },
+  { t: "Why Certainty Should Trigger Skepticism, Not Confidence", p: "decision", hook: "Strong conviction is a signal to stop and investigate, not to accelerate. The feeling of knowing is not the same as knowing." },
+  { t: "The Hidden Cost of Knowing You're Right", p: "decision", hook: "Certainty stops information-seeking. When you know the answer, you stop asking the question — and that's when you become wrong." },
+  { t: "How Confidence Compounds Into Overconfidence", p: "decision", hook: "Small calibration errors accumulate. Each correct decision adds confidence; each added confidence reduces verification. The gap widens invisibly." },
+  { t: "Decision Quality vs. Outcome Quality — Why They Diverge", p: "decision", hook: "A good process can produce a bad outcome. A bad process can produce a good one. Conflating them is one of the most expensive cognitive errors." },
+  { t: "Why Good Decisions Create Bad Outcomes", p: "decision", hook: "Randomness is not fair. The best available decision under uncertainty still fails regularly. That's not a flaw — it's the structure of probability." },
+  { t: "How to Decide When Nobody Knows What Happens Next", p: "decision", hook: "The demand for certainty before acting is itself a decision — and usually the wrong one." },
+  { t: "Prediction Is Not the Goal; Adaptation Is", p: "decision", hook: "Forecasting is the wrong frame. The question isn't what will happen. The question is what will you do when reality diverges from the model." },
+  { t: "Why Experience Sometimes Makes You Worse at Deciding", p: "decision", hook: "Experience teaches pattern recognition. In a stable environment, that's an asset. In a changing one, it's a trap." },
+  { t: "The Skill of Updating Your Mind", p: "decision", hook: "Belief revision is a skill, not a personality trait. Most people think in binary: right or wrong. The sophisticated move is probabilistic revision." },
+  { t: "The Decision You Don't Know You're Making", p: "decision", hook: "The most consequential decisions are the ones made by default — the action not taken, the question not asked, the assumption not examined." },
+  { t: "How Regret Teaches You What Actually Mattered", p: "decision", hook: "Regret is a retrospective priority-ranking. What you grieve reveals what you actually valued — not what you thought you valued." },
+  { t: "Why Discipline Is Not About Willpower", p: "decision", hook: "Discipline is architecture, not effort. The most consistent people don't fight themselves — they designed the fight out." },
+  { t: "The Trading Lesson Nobody Teaches: When Not to Trade", p: "decision", hook: "The best decision in uncertainty is often no decision. But the ego demands action. Mastery is knowing which moments require nothing." },
+  { t: "How Investing Teaches You About Time Preference", p: "decision", hook: "Every investment is a bet on a specific future. Your time horizon reveals more about your psychology than your analysis." },
+  { t: "The Discipline of Doing Nothing", p: "decision", hook: "Persistence is often mistaken for action. Sometimes the hardest discipline is waiting — without checking, without tweaking, without intervening." },
+  { t: "Why Smart People Make Predictable Mistakes", p: "decision", hook: "Intelligence improves problem-solving. It also improves rationalization. The smarter you are, the easier it becomes to defend a bad model." },
+{ t: "The Cost of Optimizing the Wrong Variable", p: "decision", hook: "Systems don't care about your intentions. Whatever you measure becomes the target, and whatever becomes the target eventually gets distorted." },
+{ t: "Why Optionality Beats Prediction", p: "decision", hook: "The future rewards flexibility more often than foresight. You don't need to know what's coming if you're prepared for multiple outcomes." },
+{ t: "How Incentives Quietly Rewrite Reality", p: "decision", hook: "People rarely lie outright. Incentives simply reshape what they notice, remember, and believe to be true." },
+{ t: "The Hidden Tax of Complexity", p: "decision", hook: "Every layer of optimization creates another point of failure. Complexity accumulates slowly, then fails all at once." },
+{ t: "Why Most Risks Are Invisible Until They're Obvious", p: "decision", hook: "The biggest threats don't announce themselves. They grow silently beneath the threshold of attention until attention is no longer useful." },
+{ t: "The Difference Between Signal and Story", p: "decision", hook: "A signal changes your model. A story merely reinforces it. Most information consumption is narrative maintenance disguised as learning." },
+{ t: "How Systems Drift Without Anyone Noticing", p: "decision", hook: "Decline rarely arrives as a dramatic event. It emerges through small tolerated deviations that compound into a new normal." },
+{ t: "Why First-Order Thinking Creates Second-Order Problems", p: "decision", hook: "The immediate consequence is usually obvious. The consequences of the consequence are where most mistakes live." },
+{ t: "The Fragility Hidden Inside Efficiency", p: "decision", hook: "What looks optimized often lacks redundancy. The system performs brilliantly until reality asks for a margin of safety." },
+{ t: "Why Feedback Arrives Too Late", p: "decision", hook: "In complex systems, cause and effect are separated by time. By the time the lesson appears, the decision has already been repeated." },
+{ t: "The Psychological Cost of Having an Identity", p: "decision", hook: "The stronger your attachment to who you are, the harder it becomes to notice evidence that requires becoming someone else." },
+{ t: "Why Leverage Magnifies More Than Returns", p: "decision", hook: "Leverage doesn't just amplify outcomes. It amplifies mistakes, emotions, assumptions, and the consequences of being slightly wrong." },
+{ t: "The Problem With Winning the Wrong Game", p: "decision", hook: "Success is dangerous when it rewards behavior that won't survive the next environment. Victory can hide strategic failure." },
+{ t: "Why Most People Misunderstand Luck", p: "decision", hook: "Luck is not the opposite of skill. It's the invisible variable that makes skill look larger or smaller than it really is." },
+{ t: "How Comfort Becomes a Constraint", p: "decision", hook: "Every successful adaptation eventually creates a preference. Every preference eventually narrows the range of futures you're willing to explore." },
+{ t: "The Asymmetry Between Building and Destroying", p: "decision", hook: "A reputation takes years to accumulate and minutes to lose. Most valuable things are easier to break than to create." },
+{ t: "Why Reality Doesn't Care About Your Model", p: "decision", hook: "A model is useful precisely because it's incomplete. Problems begin when the map becomes more important than the territory." },
+  
+  // Pillar 2 — Belief & Perception
+  { t: "Why Intelligent People Believe Intelligent Nonsense", p: "belief", hook: "Intelligence doesn't protect against bad beliefs. It makes them more elaborate, more internally consistent, and harder to dislodge." },
+  { t: "How Beliefs Survive Evidence", p: "belief", hook: "Evidence doesn't update beliefs automatically. It gets processed through the belief itself — which selects, reframes, and discards accordingly." },
+  { t: "The Architecture of Self-Deception", p: "belief", hook: "Self-deception isn't a flaw in thinking. It's a structural feature — a protective layer between identity and reality." },
+  { t: "Why Explanation Feels Better Than Understanding", p: "belief", hook: "Explanation closes the loop. Understanding opens it further. We reach for explanation because uncertainty is uncomfortable — not because we've found the answer." },
+  { t: "How Stories Become Reality in Your Mind", p: "belief", hook: "The narrative we construct around events shapes what we remember, what we notice, and what we expect next. It becomes indistinguishable from reality." },
+  { t: "The Belief You Don't Know You're Living In", p: "belief", hook: "The most powerful beliefs are invisible. Not because they're hidden — but because they feel like facts, not interpretations." },
+  { t: "Why People Stay in False Frameworks", p: "belief", hook: "A false framework is still a framework. It organizes experience, reduces uncertainty, and creates identity. Abandoning it means facing the gap." },
+  { t: "How Confirmation Bias Builds Alternate Realities", p: "belief", hook: "Confirmation bias doesn't just distort individual beliefs. Compounded over time, it constructs an entirely different version of history." },
+  { t: "The Invisible Cage of Inherited Beliefs", p: "belief", hook: "Most of what we believe, we were handed. Not given — handed. The distinction matters: you can return what's given. The handed-to-you was never identified as a belief." },
+  { t: "Why Abandoning a Belief Feels Like Losing Identity", p: "belief", hook: "Beliefs aren't just positions. They're load-bearing structures in the architecture of self. Removing one destabilizes more than the argument." },
+  { t: "How Your Brain Creates Patterns That Don't Exist", p: "belief", hook: "Pattern recognition is not selective — it's compulsive. The brain will find structure in noise rather than tolerate the discomfort of randomness." },
+  { t: "Real Patterns vs. Narrative Patterns — How to Tell the Difference", p: "belief", hook: "A narrative pattern feels compelling and complete. A real pattern has predictive power. Most of what we call insight is the former wearing the clothes of the latter." },
+  { t: "Why Pattern Recognition Is Your Strength and Weakness", p: "belief", hook: "The same capacity that extracts signal from noise also extracts signal from nothing. The mechanism doesn't know the difference." },
+  { t: "The Patterns You See Because You Expect Them", p: "belief", hook: "Expectation is a filter. It doesn't just bias interpretation — it actively shapes what reaches perception in the first place." },
+  { t: "Why Randomness Tricks the Pattern-Seeking Brain", p: "belief", hook: "Random sequences contain streaks, clusters, and apparent structure. The brain sees this and concludes causation. It's wrong almost every time." },
+  { t: "The Pattern Nobody Talks About Because It's Invisible", p: "belief", hook: "The most important patterns in any system are invisible not because they're hidden — but because they're too close. They're the water you're swimming in." },
+  { t: "What Astrology Teaches About Pattern Projection", p: "belief", hook: "Whether you believe in it or not, astrology reveals how powerfully the mind projects meaning onto structure — and then mistakes the projection for reality." },
+  { t: "The Tarot Principle: Constraints Generate Insight", p: "belief", hook: "Tarot works not because cards predict the future but because arbitrary constraints force novel pattern recognition. The same mechanism drives creative breakthroughs." },
+  { t: "Why Fame Warps Belief More Than Money", p: "belief", hook: "Fame provides a distorted feedback loop. Applause comes regardless of accuracy. Over time, the belief system optimizes for approval rather than truth." },
+  { t: "Why Seeing Isn't Believing — It's Interpreting", p: "belief", hook: "Perception feels immediate, but it arrives pre-processed. You don't see reality directly; you see your brain's best guess about it." },
+{ t: "The Hidden Assumptions Behind Everything You Believe", p: "belief", hook: "Every belief rests on deeper assumptions that rarely get examined. Most disagreements happen at the surface while the foundation remains invisible." },
+{ t: "Why Certainty Feels Like Truth", p: "belief", hook: "The mind confuses the feeling of certainty with evidence. Conviction is experienced internally; truth exists independently of how strongly it's felt." },
+{ t: "How Identity Hijacks Reason", p: "belief", hook: "Once a belief becomes part of who you are, reasoning shifts from discovery to defense. The goal quietly changes from finding truth to protecting self." },
+{ t: "The Reality You Construct Without Knowing It", p: "belief", hook: "Your experience of the world is less a reflection and more a reconstruction. Most of what feels objective was assembled behind the scenes." },
+{ t: "Why Groups Believe Things Individuals Would Question", p: "belief", hook: "Collective belief creates social gravity. Ideas that seem absurd alone can feel undeniable when reinforced by a tribe." },
+{ t: "How Language Limits What You Can Think", p: "belief", hook: "The categories available to describe reality shape the categories available to perceive it. Vocabulary is not just communication — it's cognition." },
+{ t: "The Difference Between Truth and Consensus", p: "belief", hook: "Agreement creates social stability, not accuracy. Entire populations can converge on the same conclusion and still be wrong." },
+{ t: "Why Your Mind Prefers Familiar Falsehoods", p: "belief", hook: "The known falsehood offers predictability. The unfamiliar truth introduces uncertainty. Most minds optimize for comfort before accuracy." },
+{ t: "How Meaning Gets Manufactured", p: "belief", hook: "Events arrive neutral. Meaning is assigned afterward. The interpretation feels inherent only because the assignment happened so quickly." },
+{ t: "The Beliefs Hidden Inside Common Sense", p: "belief", hook: "What feels obvious is usually cultural inheritance made invisible through repetition. Common sense is often belief that forgot its origin." },
+{ t: "Why Contradictions Rarely Change Minds", p: "belief", hook: "People can hold conflicting beliefs for years without discomfort. Consistency matters less to the mind than preserving a stable identity." },
+{ t: "The Illusion of Independent Thinking", p: "belief", hook: "Many ideas feel self-generated because we forget where they came from. Influence becomes invisible once it's been fully absorbed." },
+{ t: "How Social Reality Becomes Physical Reality", p: "belief", hook: "Money, status, laws, and institutions begin as shared beliefs. Enough agreement transforms imagination into something with real-world consequences." },
+{ t: "Why People Defend Conclusions They Never Chose", p: "belief", hook: "Many beliefs emerge gradually through environment and exposure. By the time they're questioned, they feel like deliberate convictions." },
+{ t: "The Gap Between What You Think and What You Notice", p: "belief", hook: "Attention is selective by necessity. Entire dimensions of reality remain unseen not because they're hidden, but because they're filtered out." },
+{ t: "Why Being Skeptical Doesn't Make You Objective", p: "belief", hook: "Skepticism can become its own ideology. Doubting everything equally is no closer to truth than believing everything equally." },
+{ t: "How Reality Gets Rewritten in Memory", p: "belief", hook: "Memory is not retrieval; it's reconstruction. Every recollection subtly edits the past, creating a history that feels accurate but isn't." },
+  
+  // Pillar 3 — Psychology & Behavior
+  { t: "Why People Stay in Situations That Harm Them", p: "psych", hook: "The harm is rarely invisible. What's invisible is the cost of leaving — which the mind systematically overestimates and the cost of staying underestimates." },
+  { t: "How Fear Reorganizes Your Perception", p: "psych", hook: "Fear doesn't add distortion on top of perception. It reorganizes perception itself — shifting the signal-to-noise ratio, narrowing attention, reweighting threats." },
+  { t: "The Psychology of Being Wrong and Staying Wrong", p: "psych", hook: "The discomfort of being wrong is less about the error than the identity damage. People stay wrong to stay intact." },
+  { t: "Why Emotion Is Information, Not Noise", p: "psych", hook: "Emotion is a rapid-computation system that processes what the analytical mind is still catching up to. Dismissing it means operating with half the available data." },
+  { t: "How Your Past Teaches You to See Threats That Aren't There", p: "psych", hook: "The threat-detection system learns from the past environment, not the present one. Old dangers generate present responses — even in safe territory." },
+  { t: "The Hidden Architecture of Avoidance", p: "psych", hook: "Avoidance doesn't look like avoidance. It looks like strategy, caution, patience, or preparation. The structure is the same — movement away from the uncomfortable." },
+  { t: "Why Knowing Better Doesn't Change Behavior", p: "psych", hook: "Information is not the missing ingredient. Behavior is organized by the nervous system, not the intellect. Insight without integration changes nothing." },
+  { t: "How Trauma Creates Patterns That Repeat", p: "psych", hook: "Trauma is not the event. It's the adaptive response that outlasts the event — the pattern that made sense then and runs on autopilot now." },
+  { t: "The Invisible Motivations Behind Visible Actions", p: "psych", hook: "People explain their behavior in terms of reasons. The reasons are real. They are rarely the cause." },
+  { t: "Why People Protect Beliefs More Than They Protect Interests", p: "psych", hook: "Beliefs are load-bearing. Interests are peripheral. When forced to choose between a belief and an outcome, identity wins — almost every time." },
+  { t: "How Emotions Distort Risk Perception", p: "psych", hook: "Risk is not assessed analytically in the moment. It's felt. And the feeling is calibrated to past experience, not present probability." },
+  { t: "Why Intelligent People Make Expensive Mistakes", p: "psych", hook: "Intelligence makes mistakes more elaborate, better justified, and harder to reverse. The error isn't less sophisticated — it's more." },
+  { t: "What Psychotherapy Taught Me About Pattern Recognition", p: "psych", hook: "The therapeutic relationship is a living lab for seeing how past patterns organize present perception — and how to interrupt them." },
+  { t: "Why Relationships Recreate Childhood Dynamics", p: "psych", hook: "Attachment patterns don't stay in the past. They become the architecture of every future relationship — until you see the structure." },
+  { t: "The Discipline of Showing Up When It Doesn't Matter", p: "psych", hook: "Persistence is not forged in crisis. It's built in the unremarkable moments — the days when nothing depends on showing up and you do anyway." },
+  { t: "How Writing Builds the Container for Uncertainty", p: "psych", hook: "The blank page is the purest form of uncertainty. Writing teaches you to act without knowing the outcome — and to trust the process." },
+  { t: "Why Self-Awareness Doesn't Automatically Create Change", p: "psych", hook: "Seeing the pattern and interrupting the pattern are different skills. Awareness is the beginning of change, not the completion of it." },
+{ t: "The Emotional Reward Hidden Inside Self-Sabotage", p: "psych", hook: "Self-sabotage persists because it solves a problem. The behavior looks destructive from the outside while serving a protective function underneath." },
+{ t: "Why Your Nervous System Prefers Familiar Pain", p: "psych", hook: "The nervous system values predictability more than happiness. Familiar suffering often feels safer than unfamiliar possibility." },
+{ t: "How Shame Shapes Behavior From the Shadows", p: "psych", hook: "Shame rarely announces itself directly. It appears as perfectionism, withdrawal, people-pleasing, defensiveness, and endless self-monitoring." },
+{ t: "The Difference Between Growth and Compensation", p: "psych", hook: "Not every improvement is healing. Sometimes strength is built around a wound rather than through it." },
+{ t: "Why Validation Feels Like Survival", p: "psych", hook: "The need for approval isn't weakness. It's rooted in ancient social wiring where belonging and survival were once inseparable." },
+{ t: "How Anxiety Creates the Illusion of Control", p: "psych", hook: "Anxiety convinces you that constant mental engagement is productive. Worry feels like preparation even when it changes nothing." },
+{ t: "The Hidden Psychology of Procrastination", p: "psych", hook: "Procrastination is rarely about laziness. It's an emotional regulation strategy designed to avoid discomfort in the present." },
+{ t: "Why People Repeat the Same Mistake in Different Forms", p: "psych", hook: "The surface details change, but the underlying pattern remains. Different situations become stages for the same unresolved script." },
+{ t: "How Resentment Reveals Unspoken Boundaries", p: "psych", hook: "Resentment is often a boundary that was never communicated. The emotion emerges where responsibility and expectation drift apart." },
+{ t: "The Psychological Cost of Suppressing Emotion", p: "psych", hook: "Emotions that aren't processed don't disappear. They relocate — into behavior, relationships, attention, and the body itself." },
+{ t: "Why Motivation Is an Unreliable Foundation", p: "psych", hook: "Motivation fluctuates with mood, energy, and circumstance. Systems endure because they require less negotiation with yourself." },
+{ t: "How Insecurity Creates the Behaviors It Fears", p: "psych", hook: "The fear of rejection often generates the very behaviors that produce rejection. Protection and self-fulfillment become the same process." },
+{ t: "The Internal Conflict You Mistake for Laziness", p: "psych", hook: "Many people aren't lacking discipline. They're running multiple competing motivations simultaneously and calling the friction laziness." },
+{ t: "Why Control Becomes a Coping Mechanism", p: "psych", hook: "Control is often an attempt to manage uncertainty externally when uncertainty cannot be tolerated internally." },
+{ t: "How the Mind Turns Temporary Feelings Into Permanent Truths", p: "psych", hook: "A passing emotional state can temporarily redefine reality. What you're feeling becomes what you believe until the state changes." },
+{ t: "The Fear Beneath Perfectionism", p: "psych", hook: "Perfectionism is rarely about high standards. It's often an attempt to avoid judgment, rejection, failure, or exposure." },
+{ t: "Why Healing Feels Worse Before It Feels Better", p: "psych", hook: "Many coping mechanisms reduce pain in the short term. Removing them means feeling what they've been protecting you from all along." },
+  
+  // Pillar 4 — Systems & Patterns
+  { t: "The Feedback Loops That Quietly Shape Your Life", p: "system", hook: "Most of what organizes your behavior has no name. It runs as infrastructure — invisible, self-reinforcing, and resistant to interruption." },
+  { t: "Why Every System Eventually Teaches the Wrong Lesson", p: "system", hook: "Systems reward what worked in their last equilibrium. As the environment shifts, the reward signal persists — teaching an increasingly wrong curriculum." },
+  { t: "How Incentives Create the Behaviors You See", p: "system", hook: "Behavior is not character. It's the rational response to the incentive structure. Change the structure and the behavior follows — without anyone deciding to change." },
+  { t: "The Second-Order Effects Nobody Plans For", p: "system", hook: "First-order effects are visible and intended. Second-order effects are real and ignored. Policy, decisions, and interventions are evaluated on the first — and produce the second." },
+  { t: "Why Organizations Become What They Were Designed to Prevent", p: "system", hook: "The structure built to solve a problem becomes optimized for its own survival. The original purpose becomes secondary to institutional self-maintenance." },
+  { t: "How Small Changes Create Disproportionate Results", p: "system", hook: "In nonlinear systems, the relationship between input and output is not proportional. The smallest variable is often the one that controls everything." },
+  { t: "The Invisible Architecture Behind Every Repeated Behavior", p: "system", hook: "Behavior that repeats is not random and not a choice. It's the output of a structure — one that continues regardless of whether you understand it." },
+  { t: "Why Complexity Punishes Linear Thinking", p: "system", hook: "Linear thinking works inside linear systems. Most real systems are not linear — they have feedback, time delays, thresholds, and emergent behavior." },
+  { t: "How Systems Reward Adaptation More Than Accuracy", p: "system", hook: "Being right is less important than being responsive. The system doesn't care about your model. It rewards what survives contact with reality." },
+  { t: "The Leverage Point That Changes Everything", p: "system", hook: "Every system has one point where a small shift produces disproportionate results. It's almost never where you're looking." },
+  { t: "Markets Reward Adaptation, Not Intelligence", p: "system", hook: "Intelligence constructs better models of the past. Adaptation survives the future. In markets — and in life — they are not the same skill." },
+  { t: "Why Every Bubble Begins as a Reasonable Story", p: "system", hook: "Bubbles don't start as irrationality. They start as a correct observation, then a narrative, then a crowd, then a self-sustaining system that loses contact with the original fact." },
+  { t: "How Crowd Psychology Creates Predictable Patterns", p: "system", hook: "Crowds don't think. They feel. And feelings spread with structural regularity — fear, greed, consensus, capitulation." },
+  { t: "Why Regime Transitions Are Invisible Until They're Not", p: "system", hook: "Regime change in markets — and in any system — is only obvious in retrospect. Before the transition, the old signals look normal." },
+  { t: "The Real Product Being Traded Is Belief", p: "system", hook: "What moves markets is not value — it's the collective revision of expectations. The price is a summary of beliefs, not a measure of worth." },
+  { t: "Why Forecasts Feel Better Than They Perform", p: "system", hook: "A forecast satisfies the need for certainty. That psychological function is real even when the predictive function fails." },
+  { t: "The Marketing Feedback Loop Nobody Sees", p: "system", hook: "Marketing doesn't just promote products — it reshapes desires. The feedback loop between promotion and perception runs deeper than most marketers understand." },
+  { t: "How Promotion Systems Reward the Wrong Behaviors", p: "system", hook: "What gets measured gets manipulated. The gap between the metric and the goal is where systems break — and where smart operators find edge." },
+  { t: "The Attention Economy's Hidden Architecture", p: "system", hook: "Fame is not earned — it's allocated. The systems that distribute attention have their own logic. Understanding it changes how you create." },
+  { t: "Why Optimization Eventually Creates Fragility", p: "system", hook: "Systems optimized for efficiency remove slack, redundancy, and margin for error. What looks stronger becomes increasingly vulnerable to surprise." },
+{ t: "The Constraint That Actually Controls the System", p: "system", hook: "Every system appears limited by many factors. In reality, one bottleneck determines the pace of everything else. Find it, and the system reveals itself." },
+{ t: "How Success Changes the Rules of the Game", p: "system", hook: "Success doesn't just improve your position within a system. It changes your incentives, your constraints, and eventually the system itself." },
+{ t: "Why Every Metric Eventually Becomes Corrupted", p: "system", hook: "The moment a metric becomes a target, people begin optimizing for the measurement instead of the outcome it was meant to represent." },
+{ t: "The Emergent Behaviors Nobody Designed", p: "system", hook: "Complex systems produce outcomes that no participant intended. The result emerges from interaction, not instruction." },
+{ t: "How Local Optimization Creates Global Failure", p: "system", hook: "Each component improves its own performance while the overall system deteriorates. The parts win; the whole loses." },
+{ t: "Why Stable Systems Suddenly Collapse", p: "system", hook: "Collapse rarely begins when the system appears weak. It begins when hidden vulnerabilities accumulate beneath the appearance of stability." },
+{ t: "The Coordination Problem Behind Modern Life", p: "system", hook: "Many failures are not failures of intelligence or effort. They're failures of coordination among actors pursuing individually rational goals." },
+{ t: "How Positive Feedback Loops Create Extremes", p: "system", hook: "Small advantages compound into dominance. Small disadvantages compound into disappearance. Positive feedback doesn't create balance — it creates concentration." },
+{ t: "Why Scale Changes Everything", p: "system", hook: "A strategy that works at one scale often fails at another. Growth changes the physics of the system more than the participants realize." },
+{ t: "The Hidden Trade-Off Behind Every Improvement", p: "system", hook: "Every solution transfers costs somewhere else. Systems don't eliminate trade-offs; they redistribute them." },
+{ t: "How Path Dependence Locks In the Future", p: "system", hook: "Early decisions create constraints that shape all future decisions. Long after the original choice is forgotten, its consequences remain." },
+{ t: "Why Systems Resist the Changes They Need Most", p: "system", hook: "The mechanisms that create stability also resist adaptation. The cure often appears to the system as a threat." },
+{ t: "The Dynamics of Success Breeding Failure", p: "system", hook: "The behavior that creates success gets reinforced until it's applied beyond its useful range. Strength becomes excess. Excess becomes weakness." },
+{ t: "How Information Gets Distorted as It Moves", p: "system", hook: "Every layer between reality and decision-making introduces compression, incentives, and interpretation. The signal arrives altered by the journey." },
+{ t: "Why Competition Creates Convergence", p: "system", hook: "Competitive environments reward successful strategies. Over time, participants begin to look alike, creating hidden systemic risk." },
+{ t: "The Delays That Make Systems Hard to Understand", p: "system", hook: "When consequences arrive months or years after actions, cause and effect become difficult to connect. The system becomes opaque to its own participants." },
+{ t: "How Invisible Structures Produce Visible Outcomes", p: "system", hook: "Outcomes attract attention because they're easy to see. Structures determine outcomes because they're difficult to see. Most analysis focuses on the former and misses the latter." },
+  
+  // Pillar 5 — Creativity & Meaning
+  { t: "Why Creativity and Analysis Are the Same Skill", p: "creative", hook: "Both require seeing what isn't named yet. The difference is output format, not cognitive architecture." },
+  { t: "How Art Teaches You to See What Markets Hide", p: "creative", hook: "Art trains the eye to see the invisible — structure beneath surface, meaning beneath form. That's exactly what markets ask of you." },
+  { t: "The Symbolic Language Behind Every Decision", p: "creative", hook: "Every decision encodes a belief about the world, a theory of cause and effect, and a story about who's making it. The symbol is always present." },
+  { t: "Why Meaning-Making Is More Valuable Than Information", p: "creative", hook: "We are drowning in information and starving for frameworks. The bottleneck is not data — it's the capacity to organize experience into meaning." },
+  { t: "How Visual Thinking Changes What You Can Understand", p: "creative", hook: "Some structures can only be seen, not described. Visual thinking doesn't complement analytical thinking — it accesses a different layer of reality." },
+  { t: "The Pattern Language Nobody Taught You", p: "creative", hook: "There is a grammar beneath every domain — structural moves that appear across markets, relationships, organisms, and ideas. Learning to see it changes everything." },
+  { t: "Why Great Frameworks Look Like Art", p: "creative", hook: "The best frameworks are elegant — minimal, generative, and structurally beautiful. They feel like art because they share the same compression of complexity into visible form." },
+  { t: "Why Beautiful Theories Can Be Dangerously Wrong", p: "creative", hook: "Elegance is a cognitive bias. The more beautiful a theory, the more we want it to be true — and the less likely we are to test it." },
+  { t: "Why Your Success in One Domain Fails in Another", p: "creative", hook: "Skills don't transfer automatically. The mental model that worked in one environment is often the exact wrong model for the next." },
+  { t: "The Skill of Unlearning", p: "creative", hook: "Unlearning is harder than learning. Learning adds. Unlearning requires removing something that once worked — which means overriding the evidence of your own success." },
+  { t: "Why Change Is Harder Than Starting Over", p: "creative", hook: "Starting over has no attachment to protect. Change requires dismantling something while it's still running — while it's still you." },
+  { t: "How Adaptation Beats Prediction Every Time", p: "creative", hook: "Prediction requires knowing the future. Adaptation only requires noticing the present — and moving before the gap becomes a crisis." },
+  { t: "What Graphic Design Taught Me About Constraints", p: "creative", hook: "Design is not about unlimited options — it's about finding freedom within the constraint. The same principle applies to thinking, deciding, and creating." },
+  { t: "Why Illustration Requires Seeing the Negative Space", p: "creative", hook: "What you don't draw matters as much as what you do. The same is true in strategy, relationships, and understanding complex systems." },
+  { t: "How Books Become Frameworks", p: "creative", hook: "A book is not information transfer — it's architecture for thought. The best books don't tell you what to think; they reorganize how you think." },
+  { t: "The Persistence Paradox: Why Forcing Creates Resistance", p: "creative", hook: "Persistence works when it follows direction. Blind persistence — forcing the same approach — creates friction that looks like progress but isn't." },
+  { t: "What Painting Taught Me About Decision-Making", p: "creative", hook: "Every brushstroke is an irreversible decision. Painting teaches you to commit, to revise, and to know when the work is finished — skills that translate directly to life." },
+  { t: "Why Meaning Emerges From Constraints", p: "creative", hook: "A world with infinite options contains no significance. Meaning appears when reality says no more often than yes." },
+{ t: "The Creative Power of Not Knowing", p: "creative", hook: "Creativity begins where certainty ends. The blank space isn't a problem to solve — it's the condition that makes discovery possible." },
+{ t: "Why Mastery Feels Less Certain Over Time", p: "creative", hook: "Beginners see answers. Experts see complexity. Mastery often looks less like confidence and more like precision about what remains unknown." },
+{ t: "How Every Creative Act Is a Decision About Attention", p: "creative", hook: "Creation is not adding everything. It's deciding what deserves attention and what must be left outside the frame." },
+{ t: "The Difference Between Expression and Communication", p: "creative", hook: "Expression reveals what's inside you. Communication creates understanding in someone else. Great creators know the difference." },
+{ t: "Why Meaning Cannot Be Consumed", p: "creative", hook: "Information can be consumed. Meaning must be constructed. No book, course, or philosophy can do the work for you." },
+{ t: "How Identity Emerges Through Creation", p: "creative", hook: "Most people search for themselves through reflection. Often you discover who you are by building something and observing what repeatedly emerges." },
+{ t: "The Hidden Cost of Endless Optimization", p: "creative", hook: "A life optimized for efficiency can become hostile to meaning. The most valuable experiences rarely justify themselves on a spreadsheet." },
+{ t: "Why Every Creative Breakthrough Looks Irrational at First", p: "creative", hook: "Novel ideas violate existing frameworks by definition. If they made immediate sense, they wouldn't be genuinely new." },
+{ t: "The Relationship Between Beauty and Truth", p: "creative", hook: "Beauty doesn't guarantee truth. But throughout history, humans have repeatedly used beauty as a signal that hidden order may be present." },
+{ t: "How Ambition Quietly Changes What You Value", p: "creative", hook: "The pursuit of a goal doesn't just alter your circumstances. It reshapes your identity, priorities, and definition of success." },
+{ t: "Why Fulfillment and Achievement Are Different Games", p: "creative", hook: "Achievement answers the question: 'Did I get it?' Fulfillment answers a different one: 'Was it worth wanting?'" },
+{ t: "The Creative Advantage of Limited Resources", p: "creative", hook: "Abundance encourages expansion. Scarcity forces invention. Many of history's most original ideas emerged from constraint, not freedom." },
+{ t: "Why Great Work Requires Emotional Risk", p: "creative", hook: "Technical skill creates competence. Memorable work requires exposing uncertainty, vulnerability, or a perspective that could be rejected." },
+{ t: "How Meaning Changes Across a Lifetime", p: "creative", hook: "The questions stay familiar. The answers evolve. Meaning is not discovered once; it's renegotiated with every stage of life." },
+{ t: "The Paradox of Seeking Purpose", p: "creative", hook: "Purpose often appears indirectly. The harder it's pursued as an object, the more likely it is to remain out of reach." },
+{ t: "Why Originality Is Mostly Recombination", p: "creative", hook: "New ideas rarely emerge from nothing. Creativity is usually the unexpected collision of patterns that previously lived in separate worlds." },
+{ t: "The Art of Knowing When the Work Is Finished", p: "creative", hook: "Every creator faces the same question: improve it further or release it. Knowing the difference is its own form of mastery." },
+];
+
+
+// PLANNER
+const PLAN = [
+  { week: 1, theme: "Foundation — Seeing the System", posts: [{ title: "What I study and why", p: "creative_meaning" }, { title: "The pattern that repeats", p: "system_patterns" }, { title: "The invisible architecture", p: "decision" }] },
+  { week: 2, theme: "Deepen — Decision & Belief", posts: [{ title: "Decision-making under uncertainty", p: "decision" }, { title: "How beliefs form", p: "belief" }, { title: "Pattern recognition", p: "belief" }] },
+  { week: 3, theme: "Engage — Psychology", posts: [{ title: "How people respond to being wrong", p: "psych_behavior" }, { title: "Feedback loops", p: "system_patterns" }, { title: "Why relationships recreate childhood", p: "psych_behavior" }] },
+  { week: 4, theme: "Systems — Markets", posts: [{ title: "How everything connects", p: "system_patterns" }, { title: "Markets reward adaptation", p: "system_patterns" }, { title: "The incentive structure", p: "system_patterns" }] }
+];
+
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+let currentPillar = "all";
+let currentMetaField = "all";
+let currentField = "all";
+let titlePillar = "all";
+let triadCount = 0;
+let pinnedKeyword = null;
+let history = [];
+let currentTriad = null;
+let activeTitleText = "";
+let plannerChecked = JSON.parse(localStorage.getItem("ma_planner") || "{}");
+
+// ════════════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════════════
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.opacity = "1";
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.style.opacity = "0", 2000);
+}
+function savePlanner() { localStorage.setItem("ma_planner", JSON.stringify(plannerChecked)); }
+function updateWordCount() {
+  const txt = document.getElementById("draft").value;
+  const words = txt.trim() ? txt.trim().split(/\s+/).length : 0;
+  document.getElementById("statWords").textContent = words;
+  document.getElementById("charCount").textContent = txt.length + " chars";
+}
+function updateStats(poolSize) {
+  document.getElementById("statPool").textContent = poolSize || "—";
+  document.getElementById("statCount").textContent = triadCount;
+  const done = Object.values(plannerChecked).filter(Boolean).length;
+  document.getElementById("statPosts").textContent = done;
+}
+
+// ════════════════════════════════════════════════════════
+// TRIAD GENERATION
+// ════════════════════════════════════════════════════════
+function getAvailableLenses() {
+  if (currentPillar !== "all") return LENSES[currentPillar] || Object.values(LENSES).flat();
+  return Object.values(LENSES).flat();
+}
+function getAvailableBehaviors() {
+  if (currentPillar !== "all") return BEHAVIORS[currentPillar] || Object.values(BEHAVIORS).flat();
+  return Object.values(BEHAVIORS).flat();
+}
+function getAvailableDomains() {
+  if (currentField !== "all" && DOMAINS[currentField]) return DOMAINS[currentField];
+  return Object.values(DOMAINS).flat();
+}
+
+function generate() {
+  let lenses = getAvailableLenses();
+  let behaviors = getAvailableBehaviors();
+  let domains = getAvailableDomains();
+  
+  if (!lenses.length) lenses = Object.values(LENSES).flat();
+  if (!behaviors.length) behaviors = Object.values(BEHAVIORS).flat();
+  if (!domains.length) domains = Object.values(DOMAINS).flat();
+  
+  let lens = pinnedKeyword || rand(lenses);
+  let behavior = rand(behaviors);
+  let domain = rand(domains);
+  
+  let tries = 0;
+  while (behavior === lens && tries++ < 20) behavior = rand(behaviors);
+  tries = 0;
+  while ((domain === lens || domain === behavior) && tries++ < 20) domain = rand(domains);
+  
+  currentTriad = { lens, behavior, domain };
+  triadCount++;
+  history.unshift({ lens, behavior, domain, time: new Date().toLocaleTimeString() });
+  if (history.length > 12) history.pop();
+  
+  renderTriad();
+  renderInspiration();
+  renderArticleIdea();
+  updateStats(lenses.length + behaviors.length + domains.length);
+}
+
+function renderTriad() {
+  if (!currentTriad) return;
+  const { lens, behavior, domain } = currentTriad;
+  document.getElementById("triadGrid").innerHTML = `
+    <div class="pillar-card p1"><div class="pillar-cat">🔍 LENS</div><div class="pillar-word">${esc(lens)}</div></div>
+    <div class="pillar-card p2"><div class="pillar-cat">🧠 BEHAVIOR</div><div class="pillar-word">${esc(behavior)}</div></div>
+    <div class="pillar-card p3"><div class="pillar-cat">🌍 DOMAIN</div><div class="pillar-word">${esc(domain)}</div></div>
+  `;
+}
+
+function renderInspiration() {
+  if (!currentTriad) return;
+  const { lens, behavior, domain } = currentTriad;
+  const angle = `${lens} × ${behavior} × ${domain} — How does ${lens} shape ${behavior} in the context of ${domain}? What's the hidden mechanism nobody names?`;
+  document.getElementById("mainPrompt").textContent = angle;
+  
+  const tags = [lens, behavior, domain, "feedback loop", "threshold", "hidden architecture", "regime shift", "second-order effect", "constraint", "leverage", "inversion", "belief system", "incentive structure", "narrative"];
+  document.getElementById("tagCloud").innerHTML = tags.map(t => `<button class="tag" onclick="injectTagToTriad(this)">${esc(t)}</button>`).join("");
+  
+  const reflections = [
+    { title: "structural tension", body: `How does "${lens}" reveal what "${domain}" is pretending not to be?` },
+    { title: "behavioral layer", body: `Where does "${behavior}" distort the signal inside "${domain}"?` },
+    { title: "leverage point", body: `What single intervention would make "${domain}" reorganize itself?` },
+    { title: "inversion test", body: `What if "${behavior}" is load-bearing in "${domain}"?` }
+  ];
+  document.getElementById("reflGrid").innerHTML = reflections.map(r => `<div class="ref-card"><div class="ref-title">${r.title}</div><div class="ref-body">${r.body}</div></div>`).join("");
+}
+
+function generateArticleIdea() {
+  if (!currentTriad) return "";
+  const { lens, behavior, domain } = currentTriad;
+  const templates = [
+    `Why ${behavior} makes ${lens} harder in ${domain}`,
+    `The hidden cost of ${lens} when ${behavior} shows up in ${domain}`,
+    `How ${domain} reveals what ${behavior} hides about ${lens}`,
+    `${lens} × ${behavior}: What nobody tells you about ${domain}`,
+    `Why your ${lens} fails when ${behavior} takes over in ${domain}`,
+    `The ${domain} paradox: ${lens} requires defeating ${behavior}`
+  ];
+  return rand(templates);
+}
+
+function renderArticleIdea() {
+  const idea = generateArticleIdea();
+  const container = document.getElementById("articleIdea");
+  if (container) {
+    container.innerHTML = `<div class="prompt-box" style="background: var(--info-bg); border-left-color: var(--info-text);">💡 ARTICLE IDEA: ${idea}</div>`;
+  }
+}
+
+function injectTagToTriad(el) {
+  const word = el.textContent;
+  const ta = document.getElementById("draft");
+  const pos = ta.selectionStart || ta.value.length;
+  ta.value = ta.value.slice(0, pos) + word + ta.value.slice(pos);
+  updateWordCount();
+  showToast("tag added to draft");
+}
+
+// ════════════════════════════════════════════════════════
+// FILTERS
+// ════════════════════════════════════════════════════════
+document.getElementById("metaFieldRow")?.addEventListener("click", e => {
+  const btn = e.target.closest("[data-meta]");
+  if (!btn) return;
+  currentMetaField = btn.dataset.meta;
+  document.querySelectorAll("#metaFieldRow [data-meta]").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  
+  const fieldRow = document.getElementById("fieldRow");
+  if (fieldRow) {
+    let fields = currentMetaField === "all" ? ALL_FIELDS : (FIELDS_BY_META[currentMetaField] || []);
+    fieldRow.innerHTML = `<button class="pillar-chip active" data-field="all">all fields</button>` +
+      fields.map(f => `<button class="pillar-chip" data-field="${f}">${PILLARS[f]?.name || f}</button>`).join("");
+    currentField = "all";
+  }
+  generate();
+});
+
+document.addEventListener("click", e => {
+  const btn = e.target.closest("[data-field]");
+  if (!btn) return;
+  const fieldRow = document.getElementById("fieldRow");
+  if (!fieldRow?.contains(btn)) return;
+  
+  currentField = btn.dataset.field;
+  document.querySelectorAll("#fieldRow [data-field]").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  
+  if (currentField !== "all") {
+    currentPillar = "all";
+    document.querySelectorAll("#pillarRowV2 [data-pillar]").forEach(b => b.classList.remove("active"));
+    document.querySelector("#pillarRowV2 [data-pillar='all']")?.classList.add("active");
+  }
+  generate();
+});
+
+document.getElementById("pillarRowV2")?.addEventListener("click", e => {
+  const btn = e.target.closest("[data-pillar]");
+  if (!btn) return;
+  currentPillar = btn.dataset.pillar;
+  document.querySelectorAll("#pillarRowV2 [data-pillar]").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  
+  if (currentPillar !== "all") {
+    currentField = "all";
+    currentMetaField = "all";
+    document.querySelectorAll("#metaFieldRow [data-meta]").forEach(b => b.classList.remove("active"));
+    document.querySelector("#metaFieldRow [data-meta='all']")?.classList.add("active");
+    
+    const fieldRow = document.getElementById("fieldRow");
+    if (fieldRow) {
+      fieldRow.innerHTML = `<button class="pillar-chip active" data-field="all">all fields</button>` +
+        ALL_FIELDS.map(f => `<button class="pillar-chip" data-field="${f}">${PILLARS[f]?.name || f}</button>`).join("");
+    }
+  }
+  generate();
+});
+
+// ════════════════════════════════════════════════════════
+// HISTORY
+// ════════════════════════════════════════════════════════
+document.getElementById("btnHistory")?.addEventListener("click", () => {
+  const panel = document.getElementById("historyPanel");
+  const visible = panel.style.display !== "none";
+  panel.style.display = visible ? "none" : "block";
+  if (!visible) {
+    document.getElementById("histList").innerHTML = history.length
+      ? history.map((h, i) => `<div class="hist-item" onclick="loadTriad(${i})"><span style="min-width:52px">${h.time}</span><div class="hist-pills"><span class="hist-pill">${esc(h.lens)}</span><span class="hist-pill">${esc(h.behavior)}</span><span class="hist-pill">${esc(h.domain)}</span></div></div>`).join("")
+      : `<div style="color:var(--text3);">no history yet</div>`;
+  }
+});
+
+function loadTriad(idx) {
+  const h = history[idx];
+  if (h) {
+    currentTriad = { lens: h.lens, behavior: h.behavior, domain: h.domain };
+    renderTriad();
+    renderInspiration();
+    renderArticleIdea();
+    document.getElementById("historyPanel").style.display = "none";
+    showToast("triad restored");
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// BUTTONS
+// ════════════════════════════════════════════════════════
+document.getElementById("btnGen")?.addEventListener("click", generate);
+document.getElementById("btnPin")?.addEventListener("click", () => {
+  if (!currentTriad) return;
+  pinnedKeyword = pinnedKeyword ? null : currentTriad.lens;
+  document.getElementById("btnPin").innerHTML = pinnedKeyword ? '<i class="ti ti-pin-filled"></i> unpin lens' : '<i class="ti ti-pin"></i> pin lens';
+  showToast(pinnedKeyword ? `pinned: ${pinnedKeyword}` : "pin released");
+});
+document.getElementById("btnSendDraft")?.addEventListener("click", () => {
+  if (!currentTriad) return;
+  const { lens, behavior, domain } = currentTriad;
+  const ta = document.getElementById("draft");
+  const header = `Triad: [${lens}] × [${behavior}] × [${domain}]\n\n`;
+  if (!ta.value.startsWith("Triad:")) ta.value = header + ta.value;
+  updateWordCount();
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+  document.querySelector('[data-tab="draft"]').classList.add("active");
+  document.getElementById("tab-draft").classList.add("active");
+  renderDraftTags();
+  showToast("triad sent to draft");
+});
+document.getElementById("btnExport")?.addEventListener("click", () => {
+  if (!currentTriad) return;
+  const blob = new Blob([JSON.stringify(currentTriad, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "mental-atlas-triad.json";
+  a.click();
+  showToast("exported");
+});
+
+// ════════════════════════════════════════════════════════
+// TITLES TAB
+// ════════════════════════════════════════════════════════
+function getFilteredTitles() {
+  if (titlePillar === "all") return POST_TITLES;
+  return POST_TITLES.filter(t => t.p === titlePillar);
+}
+function renderTitleFeature(item) {
+  const pl = PILLARS[item.p] || PILLARS.decision;
+  document.getElementById("featuredTitle").style.display = "block";
+  document.getElementById("titleOutput").innerHTML = `<div class="title-main">${esc(item.t)}</div><span class="title-pillar-badge ${pl.color}">${pl.name}</span><div class="title-hook">${esc(item.hook)}</div>`;
+  activeTitleText = item.t;
+  document.getElementById("activeTitleLabel").textContent = item.t;
+}
+function renderTitlesGrid() {
+  const items = getFilteredTitles();
+  document.getElementById("titlesGridLabel").textContent = `all post titles (${items.length})`;
+  document.getElementById("titlesGrid").innerHTML = items.map((item, i) => `<div class="title-card" onclick="selectTitle(${i})"><div class="title-card-text">${esc(item.t)}</div><div class="title-card-pillar">${PILLARS[item.p]?.name || item.p}</div></div>`).join("");
+}
+function selectTitle(idx) { renderTitleFeature(POST_TITLES[idx]); showToast("title selected"); }
+document.getElementById("btnPickTitle")?.addEventListener("click", () => { const items = getFilteredTitles(); if (items.length) renderTitleFeature(rand(items)); });
+document.getElementById("btnShuffleTitles")?.addEventListener("click", () => { const grid = document.getElementById("titlesGrid"); const cards = [...grid.children]; cards.sort(() => Math.random() - 0.5); cards.forEach(c => grid.appendChild(c)); });
+document.getElementById("btnTitleToDraft")?.addEventListener("click", () => {
+  if (!activeTitleText) return;
+  const ta = document.getElementById("draft");
+  if (!ta.value.includes(activeTitleText)) ta.value = `Title: ${activeTitleText}\n\n` + ta.value;
+  updateWordCount();
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelector('[data-tab="draft"]').classList.add("active");
+  document.getElementById("tab-draft").classList.add("active");
+  showToast("title sent to draft");
+});
+document.getElementById("btnTitleCopy")?.addEventListener("click", async () => { if (activeTitleText) { await navigator.clipboard.writeText(activeTitleText); showToast("copied"); } });
+document.getElementById("titlePillarRow")?.addEventListener("click", e => {
+  const btn = e.target.closest("[data-pillar]");
+  if (btn) { titlePillar = btn.dataset.pillar; document.querySelectorAll("#titlePillarRow [data-pillar]").forEach(b => b.classList.remove("active")); btn.classList.add("active"); renderTitlesGrid(); }
+});
+
+// ════════════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════════════
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
+    if (tab.dataset.tab === "titles") renderTitlesGrid();
+    if (tab.dataset.tab === "planner") renderPlanner();
+    if (tab.dataset.tab === "draft") renderDraftTags();
+  });
+});
+
+// ════════════════════════════════════════════════════════
+// PLANNER TAB
+// ════════════════════════════════════════════════════════
+function renderPlanner() {
+  const grid = document.getElementById("weeksGrid");
+  grid.innerHTML = PLAN.map(week => `<div class="week-card"><div class="week-title">week ${week.week}</div><div class="week-theme">${week.theme}</div>${week.posts.map((post, i) => { const key = `w${week.week}p${i}`; const done = plannerChecked[key]; return `<div class="post-item" onclick="togglePost('${key}', '${post.title}')"><div class="post-check ${done ? 'done' : ''}">${done ? '✓' : ''}</div><span>${post.title}</span></div>`; }).join("")}</div>`).join("");
+}
+function togglePost(key, title) {
+  plannerChecked[key] = !plannerChecked[key];
+  savePlanner();
+  if (plannerChecked[key]) { const found = POST_TITLES.find(t => t.t === title); if (found) renderTitleFeature(found); }
+  renderPlanner();
+  updateStats();
+}
+
+// ════════════════════════════════════════════════════════
+// DRAFT TAB
+// ════════════════════════════════════════════════════════
+function renderDraftTags() {
+  const baseTags = currentTriad ? [currentTriad.lens, currentTriad.behavior, currentTriad.domain, "feedback loop", "threshold", "leverage", "inversion", "narrative"] : ["pattern recognition", "feedback loop", "leverage", "constraint"];
+  document.getElementById("draftTags").innerHTML = baseTags.map(t => `<button class="tag" onclick="injectToDraft('${t.replace(/'/g,"\\'")}')">+ ${esc(t)}</button>`).join("");
+}
+function injectToDraft(word) {
+  const ta = document.getElementById("draft");
+  const pos = ta.selectionStart || ta.value.length;
+  ta.value = ta.value.slice(0, pos) + word + ta.value.slice(pos);
+  updateWordCount();
+  showToast("inserted");
+}
+document.getElementById("draft")?.addEventListener("input", () => { updateWordCount(); localStorage.setItem("ma_draft", document.getElementById("draft").value); });
+document.getElementById("btnClear")?.addEventListener("click", () => { if (confirm("Clear draft?")) { document.getElementById("draft").value = ""; localStorage.removeItem("ma_draft"); activeTitleText = ""; document.getElementById("activeTitleLabel").textContent = "no title selected"; updateWordCount(); showToast("cleared"); } });
+document.getElementById("btnCopy")?.addEventListener("click", async () => { const txt = document.getElementById("draft").value; if (txt.trim()) { await navigator.clipboard.writeText(txt); showToast("copied"); } });
+document.getElementById("btnExportDraft")?.addEventListener("click", () => { const draft = document.getElementById("draft").value; const blob = new Blob([draft], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "mental-atlas-draft.txt"; a.click(); showToast("exported"); });
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+const savedDraft = localStorage.getItem("ma_draft");
+if (savedDraft) document.getElementById("draft").value = savedDraft;
+updateWordCount();
+renderTitlesGrid();
+renderPlanner();
+renderDraftTags();
+generate();
+</script>
+</body>
+</html>
