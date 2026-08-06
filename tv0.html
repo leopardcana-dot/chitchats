@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>FX Replay - Complete Trading System</title>
+    
+    <!-- Lightweight Charts - Free, open-source, no license needed -->
+    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0e17;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: #131722;
+        }
+        
+        .chart-container {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+            padding: 10px;
+        }
+        
+        #chart {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+        
+        .bottom-panel {
+            background: #1e222d;
+            border-top: 1px solid #2a2e39;
+            padding: 12px 16px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 30px;
+            font-size: 13px;
+            color: #d1d4dc;
+            flex-wrap: wrap;
+        }
+        
+        .stat-value {
+            color: #2962ff;
+            font-weight: bold;
+        }
+        
+        .stat-value.positive {
+            color: #089981;
+        }
+        
+        .stat-value.negative {
+            color: #f23645;
+        }
+        
+        .replay-toolbar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            background: #1e222d;
+            border-radius: 12px;
+            border: 1px solid #2a2e39;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            display: flex;
+            gap: 4px;
+            padding: 6px;
+        }
+        
+        .replay-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: #d1d4dc;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .replay-btn:hover {
+            background: #2a2e39;
+        }
+        
+        .replay-btn.active {
+            background: #2962ff;
+            color: white;
+        }
+        
+        .replay-btn.icon-only {
+            padding: 6px 10px;
+        }
+        
+        .separator {
+            width: 1px;
+            height: 20px;
+            background: #2a2e39;
+            margin: 0 2px;
+        }
+        
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 8px;
+        }
+        
+        .speed-control label {
+            font-size: 11px;
+            color: #787b86;
+        }
+        
+        input[type="range"] {
+            width: 80px;
+            height: 3px;
+            -webkit-appearance: none;
+            background: #2a2e39;
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #2962ff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .speed-value {
+            font-size: 11px;
+            font-family: monospace;
+            min-width: 35px;
+            color: #d1d4dc;
+        }
+        
+        .interval-dropdown {
+            background: #2a2e39;
+            border: none;
+            color: #d1d4dc;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        
+        .replay-progress {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #2a2e39;
+            z-index: 10000;
+        }
+        
+        .replay-progress-fill {
+            height: 100%;
+            background: #2962ff;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2962ff;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 10001;
+            animation: fadeOut 2s forwards;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+        
+        .replay-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1e222d;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-family: monospace;
+            border: 1px solid #2a2e39;
+            z-index: 10000;
+        }
+        
+        .replay-status.active {
+            border-left: 3px solid #00ff00;
+        }
+        
+        .drag-handle {
+            cursor: grab;
+        }
+        
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+        
+        .order-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1e222d;
+            border: 1px solid #2a2e39;
+            border-radius: 12px;
+            padding: 24px;
+            z-index: 10002;
+            min-width: 320px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        
+        .order-dialog h3 {
+            color: #d1d4dc;
+            margin-bottom: 20px;
+        }
+        
+        .order-dialog input, .order-dialog select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 12px;
+            background: #2a2e39;
+            border: 1px solid #3a3e49;
+            border-radius: 6px;
+            color: #d1d4dc;
+            font-size: 14px;
+        }
+        
+        .order-dialog button {
+            padding: 8px 16px;
+            margin-right: 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .buy-btn {
+            background: #089981;
+            color: white;
+        }
+        
+        .sell-btn {
+            background: #f23645;
+            color: white;
+        }
+        
+        .cancel-btn {
+            background: #2a2e39;
+            color: #d1d4dc;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .journal-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 380px;
+            background: #1e222d;
+            border-left: 1px solid #2a2e39;
+            z-index: 10002;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .journal-panel.open {
+            transform: translateX(0);
+        }
+        
+        .journal-panel h3 {
+            color: #d1d4dc;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #2a2e39;
+        }
+        
+        .journal-entry {
+            background: #2a2e39;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #d1d4dc;
+            border-left: 3px solid #2962ff;
+        }
+        
+        .journal-entry.buy {
+            border-left-color: #089981;
+        }
+        
+        .journal-entry.sell {
+            border-left-color: #f23645;
+        }
+        
+        .journal-entry .entry-time {
+            font-size: 10px;
+            color: #787b86;
+            margin-top: 5px;
+        }
+        
+        .close-journal {
+            float: right;
+            cursor: pointer;
+            color: #787b86;
+            font-size: 20px;
+        }
+        
+        .close-journal:hover {
+            color: #d1d4dc;
+        }
+        
+        .positions-panel {
+            position: fixed;
+            left: 20px;
+            top: 80px;
+            background: #1e222d;
+            border: 1px solid #2a2e39;
+            border-radius: 8px;
+            padding: 12px;
+            min-width: 220px;
+            z-index: 10000;
+            font-size: 11px;
+        }
+        
+        .positions-panel h4 {
+            color: #d1d4dc;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        
+        .position-item {
+            background: #2a2e39;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+        
+        .position-item .position-pnl {
+            font-weight: bold;
+        }
+        
+        .close-position-btn {
+            background: #f23645;
+            border: none;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            margin-top: 6px;
+            width: 100%;
+        }
+        
+        .no-positions {
+            color: #787b86;
+            text-align: center;
+            padding: 15px;
+            font-size: 11px;
+        }
+        
+        .current-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #d1d4dc;
+        }
+        
+        .current-date {
+            font-size: 12px;
+            color: #787b86;
+        }
+    </style>
+</head>
+<body>
+
+<!-- TradingView Widget - Gold Price with Watchlist -->
+<iframe
+    src="https://s.tradingview.com/goldprice/widgetembed/?frameElementId=tradingview_032ae&symbol=xauusd&interval=D&hide_side_toolbar=false&hide_top_toolbar=false&hide_legend=false&hide_volume=false&replay_history=true&symboledit=1&saveimage=1&toolbarbg=f5f5f5&watchlist=TVC%3AGOLD%1FTVC%3ASILVER%1FTVC%3APLATINUM%1FTVC%3APALLADIUM%1FTVC%3AGOLDSILVER%1FTVC%3AUSOIL%1FOANDA%3AEURUSD%1FFX_IDC%3AUSDJPY%1FINDEX%3AHUI%1FINDEX%3AXAU%1FCOINBASE%3ABTCUSD&details=1&studies=%5B%5D&hideideas=1&theme=White&style=1&timezone=Europe%2FRome&hideideasbutton=1&withdateranges=1&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=%5B%5D&disabled_features=%5B%5D&locale=en_us&5&theme=dark&allow_symbol_change=true&withdateranges=1&watchlist=TVC%3AGOLD%1FTVC%3ASILVER%1FTVC%3APLATINUM%1FTVC%3APALLADIUM%1FTVC%3AGOLDSILVER%1FTVC%3AUSOIL%1FOANDA%3AEURUSD%1FFX_IDC%3AUSDJPY%1FINDEX%3AHUI%1FINDEX%3ACOINBASE%3ABTCUSD&details=1"
+    style="width: 100%; height: 100%; border: none;"
+    title="TradingView Gold Chart">
+</iframe>
+</div>
+</body>
+</html>
+
