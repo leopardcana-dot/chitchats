@@ -8,9 +8,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-/* Trading Journal CS3 styles
-   Extracted from trading-journal-cs3.html so layout/theme work is easier to find. */
-
 :root{
   --bg:#efe0ce;--surface:#fff7ef;--card:#fff7ef;--card2:#252D43;
 --border-hi:#eadfd5; --border:#eadfd5;
@@ -117,7 +114,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .twrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);}
 table{width:100%;border-collapse:collapse;font-size:12px;}
 thead th{font-size:11px;font-weight:600;color:var(--text-dim);padding:11px 14px;background:var(--surface);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;}
-tbody tr{border-bottom:1px solid var(--border);transition:background .5s; background:var(--surface);}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
 tbody tr:hover{background:rgba(69,120,112,.04);}
 tbody td{padding:10px 14px;font-family:var(--fm);font-size:11px;color:var(--text-dim);white-space:nowrap;}
 .td-w{color:var(--green);font-weight:500;}.td-l{color:var(--red);font-weight:500;}.td-b{color:var(--amber);}.td-hi{color:var(--text);}.td-g{color:var(--purple-bright);}
@@ -601,6 +598,7 @@ tbody td{padding:10px 14px;font-family:var(--fm);font-size:11px;color:var(--text
     border-radius: var(--radius-sm);
     outline: none;
 }
+
 .field-textarea {
     resize: vertical;
 }
@@ -732,7 +730,6 @@ tbody td{padding:10px 14px;font-family:var(--fm);font-size:11px;color:var(--text
         grid-column: span 1;
     }
 }
-
 </style>
 </head>
 <body>
@@ -1574,9 +1571,6 @@ tbody td{padding:10px 14px;font-family:var(--fm);font-size:11px;color:var(--text
 </div></div>
 
 <script>
-// Trading Journal CS3 application logic
-// Extracted from trading-journal-cs3.html so journal behavior is easier to work on.
-
 // ══════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════
@@ -1609,47 +1603,6 @@ function getPnl(t){
 function fmtDollar(v){if(v===null||v===undefined)return '—';return(v>=0?'+$':'-$')+Math.abs(v).toFixed(2);}
 function calcPips(p1,p2){return Math.round(Math.abs(p1-p2)*100);}
 function fmtPips(n){return n+'p';}
-function closedTrades(trades){return trades.filter(function(t){return t.status!=='OPEN';});}
-function tradePipSize(t){return t.pipSize || 0.01;}
-function getPipsValue(trade) {
-  if (trade.pips !== undefined && trade.pips !== null) return parseFloat(trade.pips) || 0;
-  if (trade.entryPrice === undefined || trade.exitPrice === undefined || trade.exitPrice === null || trade.status === 'OPEN') return 0;
-  var diff = (trade.exitPrice - trade.entryPrice) / tradePipSize(trade);
-  return trade.direction === 'SHORT' ? -diff : diff;
-}
-function calcTradeStats(C){
-  var closed = closedTrades(C), wins = closed.filter(function(t){return t.status==='WIN';}), losses = closed.filter(function(t){return t.status==='LOSS';});
-  var hasPnl = closed.some(function(t){return getPnl(t)!==null;});
-  var grossProfit = 0, grossLoss = 0, totalPnl = 0;
-  closed.forEach(function(t){
-    var pnl = getPnl(t);
-    if(pnl === null) return;
-    totalPnl += pnl;
-    if(pnl > 0) grossProfit += pnl;
-    if(pnl < 0) grossLoss += Math.abs(pnl);
-  });
-  var winR = wins.reduce(function(a,t){return a+Math.max(t.rMultiple||0,0);},0);
-  var lossR = Math.abs(losses.reduce(function(a,t){return a+Math.min(t.rMultiple||0,0);},0));
-  var winRate = closed.length ? wins.length / closed.length : 0;
-  var lossRate = closed.length ? losses.length / closed.length : 0;
-  var avgWinPnl = wins.length ? grossProfit / wins.length : 0;
-  var avgLossPnl = losses.length ? grossLoss / losses.length : 0;
-  var avgWinR = wins.length ? wins.reduce(function(a,t){return a+(t.rMultiple||0);},0)/wins.length : 0;
-  var avgLossR = losses.length ? Math.abs(losses.reduce(function(a,t){return a+(t.rMultiple||0);},0)/losses.length) : 0;
-  return {
-    closed: closed, wins: wins, losses: losses, hasPnl: hasPnl,
-    totalPnl: totalPnl, grossProfit: grossProfit, grossLoss: grossLoss,
-    profitFactor: hasPnl ? (grossLoss ? grossProfit/grossLoss : (grossProfit > 0 ? Infinity : 0)) : (lossR ? winR/lossR : (winR > 0 ? Infinity : 0)),
-    expectancy: hasPnl ? (winRate * avgWinPnl) - (lossRate * avgLossPnl) : (winRate * avgWinR) - (lossRate * avgLossR),
-    expectancyUnit: hasPnl ? '$' : 'R',
-    winRate: winRate, lossRate: lossRate,
-    avgWinPnl: avgWinPnl, avgLossPnl: avgLossPnl,
-    avgWinR: avgWinR, avgLossR: avgLossR
-  };
-}
-function fmtFactor(v){return v===Infinity?'∞':Number(v||0).toFixed(2);}
-function fmtExpectancy(v, unit){return unit==='$'?fmtDollar(v):(v>=0?'+':'')+Number(v||0).toFixed(2)+'R';}
-function weekdayIndex(date){return (new Date(date).getUTCDay()+6)%7;}
 
 // ══════════════════════════════════════════════
 // NAVIGATION
@@ -1762,11 +1715,9 @@ var GRID={color:'#eadfd5'},TX={color:'#7b82a0',font:{family:'IBM Plex Mono',size
 
 function renderCmd(){
   var T=S.trades,C=T.filter(function(t){return t.status!=='OPEN';}),W=C.filter(function(t){return t.status==='WIN';}),L=C.filter(function(t){return t.status==='LOSS';});
-  var stats=calcTradeStats(C);
   var wr=C.length?((W.length/C.length)*100).toFixed(1):0;
   var tR=C.reduce(function(a,t){return a+(t.rMultiple||0);},0),aR=C.length?(tR/C.length).toFixed(2):0;
   var ws=W.reduce(function(a,t){return a+Math.max(t.rMultiple||0,0);},0),ls=Math.abs(L.reduce(function(a,t){return a+Math.min(t.rMultiple||0,0);},0)),pf=ls?(ws/ls).toFixed(2):'∞';
-  pf=fmtFactor(stats.profitFactor);
   var totalPnl=C.reduce(function(a,t){var p=getPnl(t);return a+(p||0);},0);
   var winPnl=W.reduce(function(a,t){var p=getPnl(t);return a+(p>0?p:0);},0);
   var lossPnl=L.reduce(function(a,t){var p=getPnl(t);return a+(p<0?p:0);},0);
@@ -1797,10 +1748,10 @@ function drawCrossAnalysis(C){
   var map=Array(7).fill(0).map(function(){return Array(48).fill(0).map(function(){return {sum:0,count:0};});});
   C.forEach(function(t){
     var d=new Date(t.entryTimestamp);
-    var dow=weekdayIndex(t.entryTimestamp),h=d.getUTCHours(),m=d.getUTCMinutes();
+    var dow=d.getUTCDay(),h=d.getUTCHours(),m=d.getUTCMinutes();
     var slotIdx=h*2+(m>=30?1:0);
     var val=hasPnl?(getPnl(t)||0):(t.rMultiple||0);
-    if(dow>=0&&dow<5){map[dow][slotIdx].sum+=val;map[dow][slotIdx].count++;}
+    map[dow][slotIdx].sum+=val;map[dow][slotIdx].count++;
   });
   // Find max abs for color scaling
   var maxAbs=0;
@@ -1829,21 +1780,39 @@ function drawCrossAnalysis(C){
 }
 
 
-function drawCrossAnalysisPip(C){
-  var days=['Mon','Tue','Wed','Thu','Fri'];
-  var hasPnl=C.some(function(t){return getPnl(t)!==null;});
-  // Build 30-min slot labels 00:00 → 23:30
-  var slots=[];
-  for(var h=0;h<24;h++){slots.push(String(h).padStart(2,'0')+':00');slots.push(String(h).padStart(2,'0')+':30');}
-  // Build map: dow → slot → {sum, count}
-  var map=Array(7).fill(0).map(function(){return Array(48).fill(0).map(function(){return {sum:0,count:0};});});
-  C.forEach(function(t){
-    var d=new Date(t.entryTimestamp);
-    var dow=weekdayIndex(t.entryTimestamp),h=d.getUTCHours(),m=d.getUTCMinutes();
-    var slotIdx=h*2+(m>=30?1:0);
-    // Convert to pips instead of dollars or R-multiple
-    var val = getPipsValue(t);  // NEW: Get pips value
-    if(dow>=0&&dow<5){map[dow][slotIdx].sum+=val;map[dow][slotIdx].count++;}
+function drawCrossAnalysisPip(C) {
+  // Index 0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat
+  var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var hasPnl = C.some(function(t) { return getPnl(t) !== null; });
+
+  // Build 15-min slot labels 00:00 → 23:45 (96 slots)
+  var slots = [];
+  for (var h = 0; h < 24; h++) {
+    var hh = String(h).padStart(2, '0');
+    for (var m = 0; m < 60; m += 10) {
+      var mm = String(m).padStart(2, '0');
+      slots.push(hh + ':' + mm);
+    }
+  }
+
+  // Build map: 7 days × 96 slots
+  var map = Array(7).fill(0).map(function() {
+    return Array(144).fill(0).map(function() {
+      return { sum: 0, count: 0 };
+    });
+  });
+
+  C.forEach(function(t) {
+    var d = new Date(t.entryTimestamp);
+    var dow = d.getUTCDay(); // 0 = Sun, 1 = Mon, ...
+    var h = d.getUTCHours();
+    var m = d.getUTCMinutes();
+    
+    var slotIdx = (h * 6) + Math.floor(m / 10);
+    var val = getPipsValue(t);
+    
+    map[dow][slotIdx].sum += val;
+    map[dow][slotIdx].count++;
   });
   // Find max abs for color scaling
   var maxAbs=0;
@@ -1871,6 +1840,27 @@ function drawCrossAnalysisPip(C){
   document.getElementById('tbl-crossPip').innerHTML=html;
 }
 
+// Helper function to get pips value from a trade
+function getPipsValue(trade) {
+  // XAUUSD pip calculation: 1 pip = 0.01 (price moves from 2319.80 to 2319.81)
+  var PIP_SIZE = 0.01;
+  
+  // Option 1: If trade object already has a pips property
+  if (trade.pips !== undefined && trade.pips !== null) return trade.pips;
+  
+  // Option 2: Calculate from entry/exit prices (most reliable)
+  if (trade.entryPrice !== undefined && trade.exitPrice !== undefined && trade.exitPrice !== null && trade.status !== 'OPEN') {
+    var priceDiff = Math.abs(trade.exitPrice - trade.entryPrice);
+    var rawPips = priceDiff / PIP_SIZE;
+    return trade.direction === 'LONG' ? rawPips : -rawPips;
+  }
+  
+  // Option 3: Fallback for open trades
+  return 0;
+}
+
+
+
 function updHdr(){
   var C=S.trades.filter(function(t){return t.status!=='OPEN';}),tR=C.reduce(function(a,t){return a+(t.rMultiple||0);},0),wr=C.length?((C.filter(function(t){return t.status==='WIN';}).length/C.length)*100).toFixed(0):0;
   var td=new Date().toDateString(),sC=C.filter(function(t){return new Date(t.entryTimestamp).toDateString()===td;}),hasPnl=sC.some(function(t){return getPnl(t)!==null;});
@@ -1885,7 +1875,7 @@ function mkCh(id,type,data,opts){if(CH[id])CH[id].destroy();var o=Object.assign(
 function drawRadar(C){
   var W=C.filter(function(t){return t.status==='WIN';}),L=C.filter(function(t){return t.status==='LOSS';});
   var wr=C.length?(W.length/C.length)*100:0,avgWin=W.length?W.reduce(function(a,t){return a+(t.rMultiple||0);},0)/W.length:0,avgLoss=L.length?Math.abs(L.reduce(function(a,t){return a+(t.rMultiple||0);},0)/L.length):0;
-  var stats=calcTradeStats(C), pf=stats.profitFactor===Infinity?3:stats.profitFactor,wR=C.length?W.length/C.length:0,lR=C.length?L.length/C.length:0,exp=stats.expectancyUnit==='$'?(stats.expectancy/Math.max(stats.avgLossPnl||1,1)):stats.expectancy;
+  var pf=avgLoss?avgWin/avgLoss:0,wR=C.length?W.length/C.length:0,lR=C.length?L.length/C.length:0,exp=(wR*avgWin)-(lR*avgLoss);
   var wrN=Math.min(wr,100),pfN=Math.min(pf*33.3,100),aWN=Math.min(avgWin*25,100),expN=Math.min(Math.max(exp*50+50,0),100);
   document.getElementById('nav-score-val').textContent=C.length?Math.round((wrN+pfN+aWN+expN)/4):'—';
   if(CH['ch-radar'])CH['ch-radar'].destroy();
@@ -1965,8 +1955,7 @@ function drawEdge(C, wr, tR, aR, pf){
   var W = C.filter(function(t){ return t.status === 'WIN'; });
   var L = C.filter(function(t){ return t.status === 'LOSS'; });
   var B = C.filter(function(t){ return t.status === 'BREAKEVEN'; });
-  var stats = calcTradeStats(C);
-  var hasPnl = stats.hasPnl;
+  var hasPnl = C.some(function(t){ return getPnl(t) !== null; });
   
   // Calculate P&L values
   var totalPnl = 0;
@@ -2067,8 +2056,11 @@ function drawEdge(C, wr, tR, aR, pf){
   });
   
   // Expectancy
-  var expectancy = stats.expectancy;
-  pf = fmtFactor(stats.profitFactor);
+  var wRate = C.length ? W.length / C.length : 0;
+  var lRate = C.length ? L.length / C.length : 0;
+  var avgWinR = W.length ? W.reduce(function(a,t){ return a + (t.rMultiple || 0); }, 0) / W.length : 0;
+  var avgLossR = L.length ? Math.abs(L.reduce(function(a,t){ return a + (t.rMultiple || 0); }, 0) / L.length) : 0;
+  var expectancy = (wRate * avgWinR) - (lRate * avgLossR);
   
   // Get pips data by day and session
   var pipsByDay = getPipsByDay(C);
@@ -2110,8 +2102,8 @@ function drawEdge(C, wr, tR, aR, pf){
   overviewHtml += '<tr><td style="color:var(--text-dim);">Winning Trades</td><td style="text-align:right;font-family:var(--fm);color:var(--green);">' + W.length + ' (' + wr + '%)</td></tr>';
   overviewHtml += '<tr><td style="color:var(--text-dim);">Losing Trades</td><td style="text-align:right;font-family:var(--fm);color:var(--red);">' + L.length + '</td></tr>';
   overviewHtml += '<tr><td style="color:var(--text-dim);">Breakeven Trades</td><td style="text-align:right;font-family:var(--fm);">' + B.length + '</td></tr>';
-  overviewHtml += '<tr><td style="color:var(--text-dim);">Profit Factor</td><td style="text-align:right;font-family:var(--fm);">' + pf + '</td></tr>';
-  overviewHtml += '<tr><td style="color:var(--text-dim);">Expectancy</td><td style="text-align:right;font-family:var(--fm);color:' + (expectancy >= 0 ? 'var(--green)' : 'var(--red)') + ';">' + fmtExpectancy(expectancy, stats.expectancyUnit) + '</td></tr>';
+  overviewHtml += '<tr><td style="color:var(--text-dim);">Profit Factor</td><td style="text-align:right;font-family:var(--fm);">' + (pf !== '∞' ? pf : '∞') + '</td></tr>';
+  overviewHtml += '<tr><td style="color:var(--text-dim);">Expectancy</td><td style="text-align:right;font-family:var(--fm);color:' + (expectancy >= 0 ? 'var(--green)' : 'var(--red)') + ';">' + fmtPnlSmall(expectancy) + '$</td></tr>';
   document.getElementById('tbl-overview-stats').innerHTML = overviewHtml;
   // SECTION 2: P&L Breakdown
   var pipsHtml = '';
@@ -2178,13 +2170,15 @@ function getPipsByDay(C){
     if(!t.entryPrice || t.exitPrice == null || t.status === 'OPEN') return;
     var js = new Date(t.entryTimestamp).getUTCDay();
     var idx = (js + 6) % 7; // Monday = 0
-    var rawPips = Math.round(getPipsValue(t));
+    var rawPips = t.direction === 'LONG' 
+      ? Math.round((t.exitPrice - t.entryPrice) * 100)
+      : Math.round((t.entryPrice - t.exitPrice) * 100);
     dayMap[idx].sum += rawPips;
     dayMap[idx].count++;
   });
   
   return dayMap.map(function(d, i){ 
-    return { day: days[i], netPips: d.sum, avgPips: d.count ? d.sum / d.count : 0, trades: d.count }; 
+    return { day: days[i], netPips: d.sum, trades: d.count }; 
   });
 }
 
@@ -2200,14 +2194,16 @@ function getPipsBySession(C){
     if(!t.entryPrice || t.exitPrice == null || t.status === 'OPEN') return;
     var session = t.session || 'UNKNOWN';
     if(sessionMap[session]){
-      var rawPips = Math.round(getPipsValue(t));
+      var rawPips = t.direction === 'LONG' 
+        ? Math.round((t.exitPrice - t.entryPrice) * 100)
+        : Math.round((t.entryPrice - t.exitPrice) * 100);
       sessionMap[session].sum += rawPips;
       sessionMap[session].count++;
     }
   });
   
   return sessions.map(function(s){ 
-    return { session: sessionNames[s], netPips: sessionMap[s].sum, avgPips: sessionMap[s].count ? sessionMap[s].sum / sessionMap[s].count : 0, trades: sessionMap[s].count }; 
+    return { session: sessionNames[s], netPips: sessionMap[s].sum, trades: sessionMap[s].count }; 
   });
 }
 
@@ -2219,7 +2215,7 @@ function drawPipDow(C){
   C.forEach(function(t){
     if(!t.entryPrice||t.exitPrice==null||t.status==='OPEN')return;
     var js=new Date(t.entryTimestamp).getUTCDay(),idx=(js+6)%7;
-    var rawPips=Math.round(getPipsValue(t));
+    var rawPips=t.direction==='LONG'?Math.round((t.exitPrice-t.entryPrice)*100):Math.round((t.entryPrice-t.exitPrice)*100);
     dowMap[idx].sum+=rawPips;dowMap[idx].count++;
   });
   var vals=dowMap.map(function(d){return d.count?parseFloat((d.sum/d.count).toFixed(1)):null;});
@@ -2236,7 +2232,7 @@ function drawPipHour(C){
   C.forEach(function(t){
     if(!t.entryPrice||t.exitPrice==null||t.status==='OPEN')return;
     var h=new Date(t.entryTimestamp).getUTCHours();
-    var rawPips=Math.round(getPipsValue(t));
+    var rawPips=t.direction==='LONG'?Math.round((t.exitPrice-t.entryPrice)*100):Math.round((t.entryPrice-t.exitPrice)*100);
     hourMap[h].sum+=rawPips;hourMap[h].count++;
   });
   var vals=hourMap.map(function(h){return h.count?parseFloat((h.sum/h.count).toFixed(1)):null;});
@@ -2290,7 +2286,9 @@ function renderRec(){
     // Pips won/loss
     var tradePips = '—', tradePipsColor = 'var(--text-dim)';
     if (t.entryPrice && t.exitPrice != null && t.status !== 'OPEN') {
-      var rawPips = Math.round(getPipsValue(t));
+      var rawPips = t.direction === 'LONG'
+        ? Math.round((t.exitPrice - t.entryPrice) * 100)
+        : Math.round((t.entryPrice - t.exitPrice) * 100);
       tradePips = (rawPips >= 0 ? '+' : '') + rawPips + 'p';
       tradePipsColor = rawPips >= 0 ? 'var(--green)' : 'var(--red)';
     }
@@ -2354,7 +2352,9 @@ function filteredTrades(){
   if (!isNaN(fpMin) || !isNaN(fpMax)) {
     T = T.filter(t => {
       if (t.status === 'OPEN' || t.exitPrice == null) return false;
-      var rawPips = Math.round(getPipsValue(t));
+      var rawPips = t.direction === 'LONG'
+        ? Math.round((t.exitPrice - t.entryPrice) * 100)
+        : Math.round((t.entryPrice - t.exitPrice) * 100);
       if (!isNaN(fpMin) && rawPips < fpMin) return false;
       if (!isNaN(fpMax) && rawPips > fpMax) return false;
       return true;
@@ -4214,7 +4214,6 @@ if(typeof loadPlans === 'function') {
     l=new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().slice(0,16);
     document.getElementById('f-edt').value=l;
 })();
-
 </script>
 </body>
 </html>
