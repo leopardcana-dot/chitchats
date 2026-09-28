@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kcal Ledger Pro — Balkan Food Calorie Calculator</title>
+<style>
+  :root{
+    --bg:#F8F5EE;
+    --bg-alt:#F1ECE0;
+    --card:#FFFFFF;
+    --ink:#20261F;
+    --ink-soft:#5B6455;
+    --ink-faint:#8B9285;
+    --line:#DED6C2;
+    --line-soft:#EDE7D8;
+    --accent:#B9852B;
+    --accent-deep:#8C6420;
+    --accent-soft:#F3E6C9;
+    --good:#3E6E58;
+    --good-bg:#E7EFEA;
+    --warn:#C77A2E;
+    --danger:#A23E3E;
+    --danger-bg:#F4E6E6;
+    --chip-bg:#EFEADB;
+    --p:#3E6E58;
+    --c:#B9852B;
+    --f:#A23E3E;
+    --s:#8C6FB0;
+    --radius:12px;
+    --radius-sm:8px;
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1320px;margin:0 auto;padding:22px 18px 120px;}
+
+  header.top{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:14px;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+  header.top h1{
+    font-family:var(--serif);
+    font-size:32px;
+    font-weight:700;
+    margin:0;
+    letter-spacing:-0.015em;
+  }
+  header.top h1 .pro{
+    font-size:12px;
+    font-family:var(--sans);
+    font-weight:700;
+    color:var(--accent-deep);
+    background:var(--accent-soft);
+    padding:3px 7px;
+    border-radius:5px;
+    vertical-align:middle;
+    margin-left:8px;
+    letter-spacing:.02em;
+  }
+  header.top p{
+    margin:5px 0 0;
+    color:var(--ink-soft);
+    font-size:14px;
+    max-width:52ch;
+  }
+  .header-stats{
+    display:flex;
+    gap:18px;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .header-stats b{
+    display:block;
+    font-family:var(--serif);
+    font-size:20px;
+    color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+
+  .tabs{
+    display:flex;
+    gap:2px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:18px;
+    overflow-x:auto;
+  }
+  .tab{
+    padding:10px 16px;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    white-space:nowrap;
+    background:none;
+    border-top:none;
+    border-left:none;
+    border-right:none;
+    font-family:var(--sans);
+    transition:color .15s, border-color .15s;
+  }
+  .tab:hover{color:var(--ink);}
+  .tab.active{color:var(--ink);border-bottom-color:var(--accent);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  details.guide{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    margin-bottom:20px;
+    overflow:hidden;
+  }
+  details.guide summary{
+    cursor:pointer;
+    padding:13px 16px;
+    font-family:var(--serif);
+    font-size:16px;
+    font-weight:700;
+    list-style:none;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    user-select:none;
+  }
+  details.guide summary::-webkit-details-marker{display:none;}
+  details.guide summary::after{
+    content:"+";
+    font-size:20px;
+    color:var(--accent-deep);
+    transition:transform .15s ease;
+  }
+  details.guide[open] summary::after{content:"–";}
+  details.guide .guide-body{
+    padding:0 18px 18px;
+    border-top:1px solid var(--line);
+  }
+  details.guide ol{margin:14px 0 0;padding-left:20px;}
+  details.guide li{margin-bottom:9px;}
+  details.guide li b{color:var(--accent-deep);}
+  details.guide .guide-note{
+    margin-top:12px;
+    padding:10px 12px;
+    background:var(--chip-bg);
+    border-radius:var(--radius-sm);
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+
+  .layout{
+    display:grid;
+    grid-template-columns:1.6fr 1fr;
+    gap:20px;
+    align-items:start;
+  }
+  @media(max-width:960px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+  }
+  .panel h2{
+    font-family:var(--serif);
+    font-size:18px;
+    margin:0 0 12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+  }
+  .panel h2 small{
+    font-family:var(--sans);
+    font-size:11.5px;
+    font-weight:500;
+    color:var(--ink-faint);
+  }
+
+  .search-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  input[type="text"], input[type="number"], select{
+    font-family:var(--sans);
+    font-size:14px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    padding:9px 10px;
+    background:#FFFEFB;
+    color:var(--ink);
+  }
+  input:focus, select:focus{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+    border-color:transparent;
+  }
+  #searchInput{flex:1;min-width:0;}
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:14px;
+  }
+  .chip{
+    font-size:12.5px;
+    padding:5px 11px;
+    border-radius:100px;
+    background:var(--chip-bg);
+    color:var(--ink-soft);
+    cursor:pointer;
+    border:1px solid transparent;
+    white-space:nowrap;
+    transition:background .12s, color .12s;
+  }
+  .chip:hover{background:#E5DEC8;}
+  .chip.active{background:var(--ink);color:#fff;}
+
+  .food-list{
+    max-height:600px;
+    overflow-y:auto;
+    border-top:1px solid var(--line);
+  }
+  .food-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 4px;
+    border-bottom:1px solid var(--line-soft);
+    transition:background .1s;
+  }
+  .food-row:hover{background:#FCFAF4;}
+  .food-main{flex:1;min-width:0;}
+  .food-name{
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .food-name .custom-tag{
+    font-size:10px;
+    font-weight:700;
+    color:var(--accent-deep);
+    background:var(--accent-soft);
+    padding:1px 5px;
+    border-radius:4px;
+    margin-left:6px;
+    vertical-align:middle;
+  }
+  .food-meta{
+    font-size:12px;
+    color:var(--ink-faint);
+    margin-top:1px;
+    font-variant-numeric:tabular-nums;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .food-meta .cat{color:var(--good);font-weight:600;}
+  .food-meta .mac{color:var(--ink-faint);}
+  .food-meta .mac b{color:var(--ink-soft);font-weight:600;}
+  .food-meta .sug{color:var(--s);font-weight:600;}
+  .food-add{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-shrink:0;
+  }
+  .food-add input{width:62px;text-align:right;padding:7px 8px;font-variant-numeric:tabular-nums;}
+  .unit-select{
+    font-size:12px;
+    padding:6px 4px;
+    border-radius:6px;
+    max-width:90px;
+    background:#FFFEFB;
+    color:var(--ink-soft);
+  }
+  .add-btn{
+    border:none;
+    background:var(--ink);
+    color:#fff;
+    width:32px;
+    height:32px;
+    border-radius:var(--radius-sm);
+    font-size:18px;
+    cursor:pointer;
+    line-height:1;
+    flex-shrink:0;
+    transition:background .12s;
+  }
+  .add-btn:hover{background:var(--accent-deep);}
+  .empty-state{
+    padding:30px 10px;
+    text-align:center;
+    color:var(--ink-faint);
+    font-size:13.5px;
+  }
+
+  details.custom-form{
+    margin-top:14px;
+    border-top:1px solid var(--line);
+    padding-top:12px;
+  }
+  details.custom-form summary{
+    cursor:pointer;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--accent-deep);
+    list-style:none;
+  }
+  details.custom-form summary::-webkit-details-marker{display:none;}
+  details.custom-form summary::before{content:"＋ ";}
+  .custom-grid{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;
+    gap:8px;
+    margin-top:10px;
+  }
+  .custom-grid label{
+    font-size:10.5px;
+    color:var(--ink-faint);
+    display:block;
+    margin-bottom:3px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+  .custom-grid input{width:100%;}
+  .custom-submit{
+    margin-top:10px;
+    background:var(--good);
+    color:#fff;
+    border:none;
+    padding:9px 14px;
+    border-radius:var(--radius-sm);
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    transition:background .12s;
+  }
+  .custom-submit:hover{background:#2e5443;}
+  @media(max-width:640px){
+    .custom-grid{grid-template-columns:1fr 1fr;}
+  }
+
+  .log-panel{position:sticky; top:16px;}
+  .meal-tabs{
+    display:flex;
+    gap:2px;
+    margin-bottom:10px;
+    border-bottom:1px solid var(--line);
+  }
+  .meal-tab{
+    padding:7px 12px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink-faint);
+    cursor:pointer;
+    border:none;
+    background:none;
+    border-bottom:2px solid transparent;
+    font-family:var(--sans);
+    transition:color .12s, border-color .12s;
+  }
+  .meal-tab:hover{color:var(--ink);}
+  .meal-tab.active{color:var(--ink);border-bottom-color:var(--accent);}
+  .log-items{
+    max-height:340px;
+    overflow-y:auto;
+    margin-bottom:12px;
+  }
+  .log-item{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:8px 2px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .log-item-name{
+    flex:1;
+    min-width:0;
+    font-size:13px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .log-item-name .meal-tag{
+    font-size:9.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    padding:1px 5px;
+    border-radius:3px;
+    margin-left:6px;
+    vertical-align:middle;
+    background:var(--chip-bg);
+    color:var(--ink-soft);
+  }
+  .log-item-g{
+    width:48px;
+    padding:5px 5px;
+    font-size:12.5px;
+    text-align:right;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:#FFFEFB;
+    font-variant-numeric:tabular-nums;
+  }
+  .log-item-kcal{
+    width:52px;
+    text-align:right;
+    font-size:12.5px;
+    font-variant-numeric:tabular-nums;
+    color:var(--ink-soft);
+    font-weight:600;
+  }
+  .rm-btn{
+    border:none;
+    background:none;
+    color:var(--danger);
+    font-size:17px;
+    cursor:pointer;
+    width:20px;
+    flex-shrink:0;
+    transition:color .12s;
+  }
+  .rm-btn:hover{color:#7a2c2c;}
+  .log-empty{
+    padding:24px 6px;
+    color:var(--ink-faint);
+    font-size:13.5px;
+    text-align:center;
+  }
+
+  .goal-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:12px;
+    font-size:13px;
+    color:var(--ink-soft);
+    flex-wrap:wrap;
+  }
+  .goal-row input{width:82px;font-variant-numeric:tabular-nums;}
+  .goal-presets{
+    display:flex;
+    gap:4px;
+    margin-left:auto;
+  }
+  .goal-presets button{
+    font-size:11px;
+    padding:3px 8px;
+    border-radius:100px;
+    border:1px solid var(--line);
+    background:#FFFEFB;
+    color:var(--ink-soft);
+    cursor:pointer;
+    font-family:var(--sans);
+    transition:background .12s, color .12s;
+  }
+  .goal-presets button:hover{background:var(--chip-bg);color:var(--ink);}
+
+  .totals{
+    border-top:2px solid var(--ink);
+    padding-top:12px;
+  }
+  .total-kcal{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:4px;
+  }
+  .total-kcal .num{
+    font-family:var(--serif);
+    font-size:34px;
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:-0.01em;
+  }
+  .total-kcal .lbl{font-size:12px;color:var(--ink-faint);}
+  .remaining{
+    font-size:13px;
+    margin-bottom:12px;
+    color:var(--ink-soft);
+    font-weight:500;
+  }
+  .remaining.over{color:var(--danger);}
+  .remaining.ok{color:var(--good);}
+  .bar{
+    height:8px;
+    background:var(--chip-bg);
+    border-radius:100px;
+    overflow:hidden;
+    margin-bottom:16px;
+  }
+  .bar-fill{
+    height:100%;
+    background:var(--good);
+    border-radius:100px;
+    transition:width .25s ease, background .25s;
+  }
+  .bar-fill.over{background:var(--danger);}
+
+  .macro-rings{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .ring-box{
+    text-align:center;
+    padding:8px 2px;
+    background:var(--bg-alt);
+    border-radius:var(--radius-sm);
+  }
+  .ring{
+    width:56px;
+    height:56px;
+    margin:0 auto 4px;
+    position:relative;
+  }
+  .ring svg{transform:rotate(-90deg);display:block;}
+  .ring .r-bg{fill:none;stroke:var(--line);stroke-width:6;}
+  .ring .r-fill{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .3s;}
+  .ring .r-label{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+  }
+  .ring-box .r-name{
+    font-size:9.5px;
+    color:var(--ink-faint);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    font-weight:600;
+  }
+  .ring-box .r-goal{
+    font-size:9.5px;
+    color:var(--ink-faint);
+    margin-top:2px;
+  }
+  .macro-goals{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:6px;
+    margin-bottom:14px;
+    font-size:11px;
+    color:var(--ink-faint);
+  }
+  .macro-goals label{display:block;margin-bottom:2px;}
+  .macro-goals input{
+    width:100%;
+    padding:5px 4px;
+    font-size:12px;
+    text-align:center;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .clear-btn{
+    width:100%;
+    margin-top:14px;
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:8px;
+    border-radius:var(--radius-sm);
+    font-size:12.5px;
+    cursor:pointer;
+    font-family:var(--sans);
+    transition:border-color .12s, color .12s;
+  }
+  .clear-btn:hover{border-color:var(--danger);color:var(--danger);}
+
+  .export-row{
+    display:flex;
+    gap:6px;
+    margin-top:8px;
+  }
+  .export-row button{
+    flex:1;
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:7px;
+    border-radius:var(--radius-sm);
+    font-size:12px;
+    cursor:pointer;
+    font-family:var(--sans);
+    transition:border-color .12s, color .12s;
+  }
+  .export-row button:hover{border-color:var(--accent);color:var(--accent-deep);}
+
+  .summary-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(160px,1fr));
+    gap:14px;
+    margin-bottom:20px;
+  }
+  .stat-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+  }
+  .stat-card .s-label{
+    font-size:11px;
+    color:var(--ink-faint);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  .stat-card .s-value{
+    font-family:var(--serif);
+    font-size:26px;
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+    line-height:1.1;
+  }
+  .stat-card .s-sub{
+    font-size:12px;
+    color:var(--ink-faint);
+    margin-top:4px;
+  }
+  .macro-bar-stack{
+    display:flex;
+    height:26px;
+    border-radius:6px;
+    overflow:hidden;
+    margin:10px 0;
+    border:1px solid var(--line);
+  }
+  .macro-bar-stack div{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+    font-weight:700;
+    color:#fff;
+    font-variant-numeric:tabular-nums;
+    transition:width .3s;
+  }
+  .mb-p{background:var(--p);}
+  .mb-c{background:var(--c);}
+  .mb-f{background:var(--f);}
+
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%) translateY(80px);
+    background:var(--ink);
+    color:#fff;
+    padding:10px 18px;
+    border-radius:100px;
+    font-size:13.5px;
+    font-weight:500;
+    opacity:0;
+    transition:opacity .2s, transform .2s;
+    pointer-events:none;
+    z-index:100;
+    box-shadow:0 8px 24px rgba(0,0,0,.15);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:100px;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--ink-faint);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Kcal Ledger <span class="pro">PRO</span></h1>
+      <p>Search 500+ foods with Balkan and international values. Track calories, protein, carbs, sugar, and fat.</p>
+    </div>
+    <div class="header-stats">
+      <div><b id="dbCount">0</b>foods</div>
+      <div><b id="logCount">0</b>logged</div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="tracker">Tracker</button>
+    <button class="tab" data-tab="summary">Summary</button>
+    <button class="tab" data-tab="guide">Guide</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-tracker">
+    <div class="layout">
+
+      <section class="panel">
+        <h2>Food database <small id="resultCount"></small></h2>
+        <div class="search-row">
+          <input type="text" id="searchInput" placeholder="Search 500+ foods… e.g. salmon, oats, cheddar, pršut">
+        </div>
+        <div class="chips" id="chipRow"></div>
+        <div class="food-list" id="foodList"></div>
+
+        <details class="custom-form">
+          <summary>Add a custom food</summary>
+          <div class="custom-grid">
+            <div>
+              <label>Food name</label>
+              <input type="text" id="cfName" placeholder="e.g. Mom's lasagna">
+            </div>
+            <div>
+              <label>Kcal /100g</label>
+              <input type="number" id="cfKcal" min="0" step="1">
+            </div>
+            <div>
+              <label>Protein g</label>
+              <input type="number" id="cfProtein" min="0" step="0.1">
+            </div>
+            <div>
+              <label>Carbs g</label>
+              <input type="number" id="cfCarbs" min="0" step="0.1">
+            </div>
+            <div>
+              <label>Sugar g</label>
+              <input type="number" id="cfSugar" min="0" step="0.1">
+            </div>
+            <div>
+              <label>Fat g</label>
+              <input type="number" id="cfFat" min="0" step="0.1">
+            </div>
+          </div>
+          <button class="custom-submit" id="cfSubmit">Add to database</button>
+        </details>
+      </section>
+
+      <section class="panel log-panel">
+        <h2>Today's log <small id="logKcalHeader"></small></h2>
+
+        <div class="meal-tabs" id="mealTabs">
+          <button class="meal-tab active" data-meal="all">All</button>
+          <button class="meal-tab" data-meal="breakfast">Breakfast</button>
+          <button class="meal-tab" data-meal="lunch">Lunch</button>
+          <button class="meal-tab" data-meal="dinner">Dinner</button>
+          <button class="meal-tab" data-meal="snack">Snack</button>
+        </div>
+
+        <div class="log-items" id="logItems"></div>
+
+        <div class="goal-row">
+          <span>Daily goal</span>
+          <input type="number" id="goalInput" placeholder="2200" min="0" step="10">
+          <span>kcal</span>
+          <div class="goal-presets">
+            <button data-goal="1800">1800</button>
+            <button data-goal="2200">2200</button>
+            <button data-goal="2800">2800</button>
+          </div>
+        </div>
+
+        <div class="totals">
+          <div class="total-kcal">
+            <span class="num" id="totalKcal">0</span>
+            <span class="lbl">kcal logged</span>
+          </div>
+          <div class="remaining" id="remainingText"></div>
+          <div class="bar"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
+
+          <div class="macro-rings">
+            <div class="ring-box">
+              <div class="ring" id="ringP">
+                <svg width="56" height="56"><circle class="r-bg" cx="28" cy="28" r="24"></circle><circle class="r-fill" id="ringPFill" cx="28" cy="28" r="24" stroke="var(--p)"></circle></svg>
+                <div class="r-label" id="ringPLabel">0g</div>
+              </div>
+              <div class="r-name">Protein</div>
+              <div class="r-goal" id="ringPGoal">—</div>
+            </div>
+            <div class="ring-box">
+              <div class="ring" id="ringC">
+                <svg width="56" height="56"><circle class="r-bg" cx="28" cy="28" r="24"></circle><circle class="r-fill" id="ringCFill" cx="28" cy="28" r="24" stroke="var(--c)"></circle></svg>
+                <div class="r-label" id="ringCLabel">0g</div>
+              </div>
+              <div class="r-name">Carbs</div>
+              <div class="r-goal" id="ringCGoal">—</div>
+            </div>
+            <div class="ring-box">
+              <div class="ring" id="ringS">
+                <svg width="56" height="56"><circle class="r-bg" cx="28" cy="28" r="24"></circle><circle class="r-fill" id="ringSFill" cx="28" cy="28" r="24" stroke="var(--s)"></circle></svg>
+                <div class="r-label" id="ringSLabel">0g</div>
+              </div>
+              <div class="r-name">Sugar</div>
+              <div class="r-goal" id="ringSGoal">—</div>
+            </div>
+            <div class="ring-box">
+              <div class="ring" id="ringF">
+                <svg width="56" height="56"><circle class="r-bg" cx="28" cy="28" r="24"></circle><circle class="r-fill" id="ringFFill" cx="28" cy="28" r="24" stroke="var(--f)"></circle></svg>
+                <div class="r-label" id="ringFLabel">0g</div>
+              </div>
+              <div class="r-name">Fat</div>
+              <div class="r-goal" id="ringFGoal">—</div>
+            </div>
+          </div>
+
+          <div class="macro-goals">
+            <div><label>P goal (g)</label><input type="number" id="goalP" min="0" step="1" value="120"></div>
+            <div><label>C goal (g)</label><input type="number" id="goalC" min="0" step="1" value="250"></div>
+            <div><label>S goal (g)</label><input type="number" id="goalS" min="0" step="1" value="50"></div>
+            <div><label>F goal (g)</label><input type="number" id="goalF" min="0" step="1" value="70"></div>
+          </div>
+
+          <button class="clear-btn" id="clearBtn">Clear log</button>
+          <div class="export-row">
+            <button id="exportBtn">Copy as text</button>
+            <button id="printBtn">Print</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-summary">
+    <div class="summary-grid">
+      <div class="stat-card">
+        <div class="s-label">Total kcal</div>
+        <div class="s-value" id="sumKcal">0</div>
+        <div class="s-sub" id="sumKcalSub">of goal</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-label">Items logged</div>
+        <div class="s-value" id="sumItems">0</div>
+        <div class="s-sub">across all meals</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-label">Protein</div>
+        <div class="s-value" id="sumP">0g</div>
+        <div class="s-sub" id="sumPSub">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-label">Carbs</div>
+        <div class="s-value" id="sumC">0g</div>
+        <div class="s-sub" id="sumCSub">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-label">Sugar</div>
+        <div class="s-value" id="sumS" style="color:var(--s);">0g</div>
+        <div class="s-sub" id="sumSSub">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-label">Fat</div>
+        <div class="s-value" id="sumF">0g</div>
+        <div class="s-sub" id="sumFSub">—</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Macro distribution</h2>
+      <div class="macro-bar-stack" id="macroStack">
+        <div class="mb-p" id="mbP" style="width:33%">P</div>
+        <div class="mb-c" id="mbC" style="width:33%">C</div>
+        <div class="mb-f" id="mbF" style="width:34%">F</div>
+      </div>
+      <div style="font-size:12.5px;color:var(--ink-soft);" id="macroSplitText">No data yet.</div>
+      <div style="margin-top:10px;font-size:12.5px;color:var(--ink-soft);" id="sugarNote"></div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <h2>Meal breakdown</h2>
+      <div id="mealBreakdown" style="font-size:13.5px;"></div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-guide">
+    <details class="guide" open>
+      <summary>How to use this</summary>
+      <div class="guide-body">
+        <ol>
+          <li><b>Search or filter</b> — type in the box or tap a category chip.</li>
+          <li><b>Set the amount</b> — each food shows kcal, protein, carbs, sugar, and fat per 100g. Type your grams in the small box (a typical serving is pre-filled).</li>
+          <li><b>Pick a meal</b> — Breakfast / Lunch / Dinner / Snack.</li>
+          <li><b>Add it</b> — tap the dark <b>+</b> button. Everything recalculates for your amount.</li>
+          <li><b>Adjust anytime</b> — change grams in the log, or tap <b>×</b> to remove.</li>
+          <li><b>Set goals</b> — enter kcal and macro targets (P/C/S/F) to see progress rings.</li>
+          <li><b>Add your own</b> — enter any item's per-100g values including sugar.</li>
+          <li><b>Summary tab</b> — totals, macro split, sugar note, and meal-by-meal breakdown.</li>
+        </ol>
+        <div class="guide-note">
+          Sugar is listed separately from total carbs (sugar is a subset of carbs). Values run in your browser and persist via localStorage.
+        </div>
+      </div>
+    </details>
+
+    <div class="panel">
+      <h2>Data sources</h2>
+      <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.7;">
+        <ul style="padding-left:20px;">
+          <li><b>USDA FoodData Central</b> — primary reference</li>
+          <li><b>Italian INRAN / CREA</b> — grains and pasta</li>
+          <li><b>Croatian &amp; Serbian food composition data</b> — regional items</li>
+          <li><b>French Ciqual</b> — dairy</li>
+          <li><b>Regional Balkan studies</b> — traditional dishes</li>
+        </ul>
+        <p style="margin-top:12px;color:var(--ink-faint);font-size:12.5px;">
+          Sugar values are total sugars (natural + added). Same food can vary 5–30% between countries. For calorie counting, consistency (raw vs cooked) matters more than country.
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   FOOD DATABASE
+   Format: [name, category, kcal, protein, carbs, sugar, fat, typicalServingG]
+   ============================================================ */
+let FOODS = [
+// ===== FRUIT =====
+["Apple, raw","Fruit",52,0.3,14,10.4,0.2,182],
+["Apple, dried","Fruit",243,2.1,64,57,0.3,40],
+["Banana, raw","Fruit",89,1.1,23,12.2,0.3,118],
+["Orange, raw","Fruit",47,0.9,12,9.4,0.1,131],
+["Mandarin / tangerine","Fruit",53,0.8,13,10.6,0.3,84],
+["Grapefruit","Fruit",42,0.8,11,6.9,0.1,230],
+["Lemon, raw","Fruit",29,1.1,9,2.5,0.3,58],
+["Lime, raw","Fruit",30,0.7,11,1.7,0.2,67],
+["Grapes, red/green","Fruit",69,0.7,18,15.5,0.2,151],
+["Grapes, dried (raisins)","Fruit",299,3.1,79,59,0.5,40],
+["Strawberries, raw","Fruit",32,0.7,8,4.9,0.3,144],
+["Blueberries, raw","Fruit",57,0.7,14,10,0.3,148],
+["Raspberries, raw","Fruit",52,1.2,12,4.4,0.7,123],
+["Blackberries, raw","Fruit",43,1.4,10,4.9,0.5,144],
+["Cranberries, raw","Fruit",46,0.4,12,4,0.1,100],
+["Pineapple, raw","Fruit",50,0.5,13,9.9,0.1,165],
+["Mango, raw","Fruit",60,0.8,15,13.7,0.4,165],
+["Papaya, raw","Fruit",43,0.5,11,7.8,0.3,145],
+["Watermelon, raw","Fruit",30,0.6,8,6.2,0.2,152],
+["Cantaloupe melon","Fruit",34,0.8,8,7.9,0.2,160],
+["Honeydew melon","Fruit",36,0.5,9,8.2,0.1,170],
+["Kiwi fruit","Fruit",61,1.1,15,9,0.5,76],
+["Pear, raw","Fruit",57,0.4,15,9.8,0.1,178],
+["Peach, raw","Fruit",39,0.9,10,8.4,0.3,150],
+["Nectarine, raw","Fruit",44,1.1,11,7.9,0.3,142],
+["Plum, raw","Fruit",46,0.7,11,9.9,0.3,66],
+["Apricot, raw","Fruit",48,1.4,11,9.2,0.4,35],
+["Apricot, dried","Fruit",241,3.4,63,53,0.5,35],
+["Cherries, sweet","Fruit",63,1.1,16,12.8,0.2,138],
+["Pomegranate, arils","Fruit",83,1.7,19,13.7,1.2,87],
+["Fig, raw","Fruit",74,0.8,19,16.3,0.3,50],
+["Fig, dried","Fruit",249,3.3,64,48,0.9,40],
+["Date, dried (Medjool)","Fruit",277,1.8,75,66,0.2,24],
+["Avocado, raw","Fruit",160,2,9,0.7,15,150],
+["Coconut, raw meat","Fruit",354,3.3,15,6.2,33,80],
+["Coconut, dried/shredded","Fruit",660,6.9,24,7.4,65,20],
+["Guava, raw","Fruit",68,2.6,14,8.9,1,55],
+["Passion fruit","Fruit",97,2.2,23,11.2,0.4,18],
+["Persimmon, raw","Fruit",70,0.6,19,12.5,0.2,168],
+["Star fruit (carambola)","Fruit",31,1,7,3.9,0.3,91],
+["Dragon fruit","Fruit",60,1.2,13,8,0.4,227],
+["Lychee, raw","Fruit",66,0.8,17,15.2,0.4,10],
+["Tangelo","Fruit",47,0.8,12,9.4,0.2,100],
+["Prunes, dried","Fruit",240,2.2,64,38,0.4,42],
+["Currants, dried","Fruit",283,3.7,74,67,0.4,10],
+["Blood orange","Fruit",47,0.9,12,9.4,0.1,131],
+["Clementine","Fruit",47,0.8,12,9.2,0.2,74],
+["Rhubarb, raw","Fruit",21,0.9,4.5,1.1,0.2,122],
+["Quince, raw","Fruit",57,0.4,15,11,0.1,92],
+["Mulberry, raw","Fruit",43,1.4,10,8.1,0.4,140],
+["Gooseberry, raw","Fruit",44,0.9,10,6.8,0.6,150],
+["Elderberry, raw","Fruit",73,0.7,18,13.2,0.5,145],
+["Sour cherry","Fruit",50,1,12,8.5,0.3,155],
+["Green apple","Fruit",52,0.3,14,10.4,0.2,182],
+["Red delicious apple","Fruit",59,0.3,15,11.5,0.2,182],
+["Cavendish banana","Fruit",89,1.1,23,12.2,0.3,118],
+["Plantain, raw","Fruit",122,1.3,32,15,0.4,179],
+["Tangerine","Fruit",53,0.8,13,10.6,0.3,84],
+["Kumquat","Fruit",71,1.9,16,9.4,0.9,19],
+["Tamarind","Fruit",239,2.8,63,38.8,0.6,2],
+["Jackfruit, raw","Fruit",95,1.7,23,19.1,0.6,165],
+["Strawberry, frozen","Fruit",35,0.5,9,5.5,0.1,150],
+["Raspberry, frozen","Fruit",52,1.2,12,4.4,0.7,125],
+["Blueberry, frozen","Fruit",57,0.7,14,10,0.3,150],
+["Mango, dried","Fruit",319,2.5,78,66,1.2,30],
+["Apple juice","Fruit",46,0.1,11,9.6,0.1,248],
+["Orange juice","Fruit",45,0.7,10,8.4,0.2,248],
+["Grape juice","Fruit",60,0.4,15,14.2,0.1,253],
+
+// ===== VEGETABLE =====
+["Broccoli, raw","Vegetable",34,2.8,7,1.7,0.4,91],
+["Broccoli, steamed","Vegetable",35,2.4,7,1.4,0.4,91],
+["Cauliflower, raw","Vegetable",25,1.9,5,1.9,0.3,107],
+["Carrot, raw","Vegetable",41,0.9,10,4.7,0.2,61],
+["Carrot, cooked","Vegetable",35,0.8,8,3.5,0.2,72],
+["Celery, raw","Vegetable",16,0.7,3,1.3,0.2,40],
+["Cucumber, raw","Vegetable",15,0.7,4,1.7,0.1,52],
+["Zucchini, raw","Vegetable",17,1.2,3.1,2.5,0.3,124],
+["Bell pepper, red","Vegetable",31,1,6,4.2,0.3,119],
+["Bell pepper, green","Vegetable",20,0.9,4.6,2.4,0.2,119],
+["Tomato, raw","Vegetable",18,0.9,3.9,2.6,0.2,123],
+["Cherry tomatoes","Vegetable",18,0.9,3.9,2.6,0.2,17],
+["Sun-dried tomato","Vegetable",258,14,55,37,3,10],
+["Onion, raw","Vegetable",40,1.1,9,4.2,0.1,110],
+["Garlic, raw","Vegetable",149,6.4,33,1,0.5,3],
+["Spinach, raw","Vegetable",23,2.9,3.6,0.4,0.4,30],
+["Spinach, cooked","Vegetable",23,3,3.8,0.4,0.3,180],
+["Kale, raw","Vegetable",49,4.3,9,2.3,0.9,67],
+["Lettuce, romaine","Vegetable",17,1.2,3.3,1.2,0.3,47],
+["Lettuce, iceberg","Vegetable",14,0.9,3,2,0.1,72],
+["Cabbage, raw","Vegetable",25,1.3,6,3.2,0.1,89],
+["Red cabbage, raw","Vegetable",31,1.4,7.4,3.8,0.2,89],
+["Brussels sprouts, cooked","Vegetable",36,2.6,7,2.2,0.3,78],
+["Asparagus, cooked","Vegetable",22,2.4,4.1,1.3,0.2,90],
+["Green beans, cooked","Vegetable",35,1.9,7,3.3,0.1,125],
+["Peas, green, cooked","Vegetable",84,5.4,14,5.7,0.4,80],
+["Corn, sweet, cooked","Vegetable",96,3.4,21,4.5,1.5,90],
+["Potato, baked","Vegetable",93,2.5,21,1.2,0.1,173],
+["Potato, boiled","Vegetable",87,1.9,20,0.9,0.1,150],
+["Sweet potato, baked","Vegetable",90,2,21,6.5,0.2,114],
+["Sweet potato, boiled","Vegetable",76,1.4,17.7,5.7,0.1,151],
+["Pumpkin, cooked","Vegetable",20,0.7,4.9,2.1,0.1,116],
+["Butternut squash, cooked","Vegetable",40,0.9,10.5,2,0.1,140],
+["Beetroot, cooked","Vegetable",44,1.7,10,7.9,0.2,100],
+["Radish, raw","Vegetable",16,0.7,3.4,1.9,0.1,58],
+["Turnip, cooked","Vegetable",22,0.7,5,3,0.1,78],
+["Mushroom, white, raw","Vegetable",22,3.1,3.3,2,0.3,70],
+["Mushroom, portobello","Vegetable",26,2.5,4.4,2.5,0.4,84],
+["Shiitake mushroom, cooked","Vegetable",55,2.2,12.3,4.5,0.5,72],
+["Eggplant, cooked","Vegetable",35,0.8,8.7,3.2,0.2,99],
+["Okra, cooked","Vegetable",22,1.9,4.5,2.4,0.2,80],
+["Leek, cooked","Vegetable",31,0.8,7.6,2.3,0.1,89],
+["Artichoke, cooked","Vegetable",47,3.3,10.5,1,0.2,120],
+["Bok choy, cooked","Vegetable",13,1.6,1.8,0.8,0.2,170],
+["Fennel bulb, raw","Vegetable",31,1.2,7.3,3.9,0.2,87],
+["Snap peas, raw","Vegetable",42,2.8,7.6,4,0.2,63],
+["Bean sprouts, raw","Vegetable",30,3,6,4.1,0.2,104],
+["Water chestnuts","Vegetable",97,1.4,24,4.8,0.1,60],
+["Jalapeño pepper","Vegetable",29,0.9,6.5,4.1,0.4,14],
+["Chili pepper, red","Vegetable",40,1.9,8.8,5.7,0.4,45],
+["Swiss chard, cooked","Vegetable",20,1.9,4.1,1.1,0.1,175],
+["Arugula, raw","Vegetable",25,2.6,3.7,2.1,0.7,20],
+["Collard greens, cooked","Vegetable",33,2.7,5.4,0.5,0.7,190],
+["Parsnip, cooked","Vegetable",71,1.3,17,4.8,0.3,156],
+["Rutabaga, cooked","Vegetable",30,0.9,7,3.9,0.2,170],
+["Kohlrabi, raw","Vegetable",27,1.7,6.2,2.6,0.1,135],
+["Endive, raw","Vegetable",17,1.3,3.4,0.3,0.2,50],
+["Radicchio, raw","Vegetable",23,1.4,4.5,0.6,0.3,40],
+["Watercress, raw","Vegetable",11,2.3,1.3,0.2,0.1,34],
+["Sauerkraut","Vegetable",19,0.9,4.3,1.8,0.1,142],
+["Pickled cucumber","Vegetable",11,0.5,2.3,1.1,0.2,65],
+["Roasted red pepper","Vegetable",32,1,6,3.5,0.3,100],
+
+// ===== MEAT & POULTRY =====
+["Chicken breast, skinless, raw","Meat & Poultry",110,23,0,0,1.8,172],
+["Chicken breast, cooked","Meat & Poultry",165,31,0,0,3.6,172],
+["Chicken thigh, skinless, raw","Meat & Poultry",145,20,0,0,7,116],
+["Chicken thigh, cooked","Meat & Poultry",209,26,0,0,11,116],
+["Chicken wing, cooked","Meat & Poultry",203,30,0,0,8,50],
+["Chicken, whole, roasted","Meat & Poultry",190,29,0,0,7,140],
+["Turkey breast, raw","Meat & Poultry",109,24,0,0,1,170],
+["Turkey breast, cooked","Meat & Poultry",189,29,0,0,7,170],
+["Turkey mince, cooked","Meat & Poultry",203,27,0,0,10,100],
+["Beef, lean, raw","Meat & Poultry",170,21,0,0,9,150],
+["Beef, rump steak, raw","Meat & Poultry",130,22,0,0,4,200],
+["Beef, minced, cooked","Meat & Poultry",240,25,0,0,15,100],
+["Beef, sirloin, grilled","Meat & Poultry",206,29,0,0,9,180],
+["Beef, ribeye, grilled","Meat & Poultry",291,24,0,0,22,200],
+["Beef, brisket, cooked","Meat & Poultry",246,26,0,0,15,150],
+["Veal, leg, raw","Meat & Poultry",108,20,0,0,3,150],
+["Veal, cutlet, cooked","Meat & Poultry",172,28,0,0,6,150],
+["Pork, loin, defatted","Meat & Poultry",199,29,0,0,9,150],
+["Pork, medallions","Meat & Poultry",112,22,0,0,2.5,120],
+["Pork, neck, raw","Meat & Poultry",267,17,0,0,22,150],
+["Pork, belly, raw","Meat & Poultry",225,15,0,0,18,100],
+["Pork, mince, cooked","Meat & Poultry",297,25,0,0,21,100],
+["Pork, chop, grilled","Meat & Poultry",242,27,0,0,14,150],
+["Lamb, chop, raw","Meat & Poultry",355,25,0,0,28,120],
+["Lamb, mince, cooked","Meat & Poultry",213,24,0,0,13,100],
+["Lamb, leg, roasted","Meat & Poultry",258,26,0,0,17,150],
+["Ham, lean","Meat & Poultry",139,20,0,0.9,6,80],
+["Ham, cooked","Meat & Poultry",111,17,0,1.2,4,80],
+["Bacon, cooked","Meat & Poultry",417,37,0,0,30,20],
+["Prosciutto (pršut)","Meat & Poultry",268,26,0,0,17,30],
+["Pancetta","Meat & Poultry",393,22,0,0,33,30],
+["Salami","Meat & Poultry",336,22,2,1,26,30],
+["Cevapi (grilled)","Balkan Specialties",250,20,2,0.5,18,100],
+["Pljeskavica","Balkan Specialties",270,20,5,0.8,19,150],
+["Sausage, smoked","Meat & Poultry",301,15,2,0.8,26,80],
+["Duck breast, cooked","Meat & Poultry",201,24,0,0,11,150],
+["Duck, roasted","Meat & Poultry",337,19,0,0,28,150],
+["Goose, roasted","Meat & Poultry",305,25,0,0,22,150],
+["Rabbit, cooked","Meat & Poultry",197,29,0,0,8,150],
+["Venison, cooked","Meat & Poultry",158,30,0,0,3,150],
+["Liver, beef, cooked","Meat & Poultry",191,29,5,0,5,100],
+["Liver, chicken, cooked","Meat & Poultry",167,25,1,0,7,100],
+["Chicken liver, raw","Meat & Poultry",119,17,1,0,5,100],
+["Beef tongue, cooked","Meat & Poultry",284,22,0,0,22,100],
+["Beef heart, cooked","Meat & Poultry",165,28,0,0,5,100],
+["Chicken sausage","Meat & Poultry",172,17,2,0.6,10,80],
+["Turkey sausage","Meat & Poultry",155,17,1,0.4,9,80],
+["Pork sausage","Meat & Poultry",339,14,1,0.4,31,80],
+["Mortadella","Meat & Poultry",311,16,3,1,27,30],
+["Kulen (spicy cured)","Balkan Specialties",380,22,2,0.8,32,30],
+["Čajna kobasica","Balkan Specialties",320,18,2,0.6,27,30],
+
+// ===== FISH & SEAFOOD =====
+["Salmon, Atlantic, cooked","Fish & Seafood",206,22,0,0,13,150],
+["Salmon, smoked","Fish & Seafood",117,18,0,0,4,50],
+["Tuna, canned in water","Fish & Seafood",116,26,0,0,1,100],
+["Tuna, canned in oil","Fish & Seafood",198,29,0,0,9,100],
+["Tuna, fresh, cooked","Fish & Seafood",184,30,0,0,6,150],
+["Cod, Atlantic, raw","Fish & Seafood",85,18,0,0,0.7,150],
+["Cod, cooked","Fish & Seafood",105,23,0,0,1,150],
+["Trout, rainbow, cooked","Fish & Seafood",139,24,0,0,4,150],
+["Sardine, canned in oil","Fish & Seafood",208,25,0,0,11,50],
+["Mackerel, cooked","Fish & Seafood",262,24,0,0,18,150],
+["Herring, pickled","Fish & Seafood",262,14,10,6,18,50],
+["Anchovy, canned","Fish & Seafood",210,29,0,0,10,20],
+["Bass, cooked","Fish & Seafood",124,24,0,0,3,150],
+["Sea bream, cooked","Fish & Seafood",121,24,0,0,2.5,150],
+["Halibut, cooked","Fish & Seafood",111,23,0,0,1.5,150],
+["Tilapia, cooked","Fish & Seafood",128,26,0,0,2.7,150],
+["Shrimp, cooked","Fish & Seafood",99,24,0,0,0.3,100],
+["Prawns, cooked","Fish & Seafood",99,22,0,0,1,100],
+["Mussels, cooked","Fish & Seafood",172,24,7,0,4,100],
+["Clams, cooked","Fish & Seafood",148,26,5,0,2,100],
+["Oysters, raw","Fish & Seafood",81,9,5,0,2,50],
+["Squid, cooked","Fish & Seafood",175,18,8,0,8,100],
+["Octopus, cooked","Fish & Seafood",164,30,4,0,2,100],
+["Crab, cooked","Fish & Seafood",97,19,0,0,1.5,100],
+["Lobster, cooked","Fish & Seafood",89,19,0,0,0.9,100],
+["Fish sticks, cooked","Fish & Seafood",249,12,22,1.5,12,100],
+["Smoked trout","Fish & Seafood",158,26,0,0,5,50],
+["Pickled herring","Fish & Seafood",262,14,10,6,18,50],
+
+// ===== DAIRY & EGGS =====
+["Egg, whole, raw","Dairy & Eggs",143,13,0.7,0.4,9.5,50],
+["Egg, whole, boiled","Dairy & Eggs",155,13,1.1,0.6,11,50],
+["Egg, whole, fried","Dairy & Eggs",196,14,1,0.5,15,50],
+["Egg white, raw","Dairy & Eggs",52,11,0.7,0.7,0.2,33],
+["Egg yolk, raw","Dairy & Eggs",322,16,3.6,0.6,27,17],
+["Quail egg, raw","Dairy & Eggs",158,13,0.4,0.4,11,9],
+["Milk, whole (3.5%)","Dairy & Eggs",64,3.3,4.8,5.1,3.5,244],
+["Milk, semi-skimmed (1.5%)","Dairy & Eggs",47,3.4,4.9,5.1,1.5,244],
+["Milk, skimmed","Dairy & Eggs",35,3.4,5,5.1,0.1,244],
+["Yogurt, plain, whole","Dairy & Eggs",61,3.5,4.7,4.7,3.3,170],
+["Yogurt, low-fat (1.5%)","Dairy & Eggs",47,4,5,5,1.5,170],
+["Yogurt, fat-free","Dairy & Eggs",34,4.5,5,5,0.1,170],
+["Greek yogurt, whole","Dairy & Eggs",97,9,3.6,3.2,5,170],
+["Greek yogurt, 2%","Dairy & Eggs",73,10,4,3.5,2,170],
+["Kefir","Dairy & Eggs",61,3.3,4.5,4.5,3.5,250],
+["Sour cream (12%)","Dairy & Eggs",136,2.5,3.5,3.5,12,30],
+["Sour cream (20%)","Dairy & Eggs",204,2.4,2.9,2.9,20,30],
+["Crème fraîche","Dairy & Eggs",292,2.5,3,3,30,30],
+["Cottage cheese, 2%","Dairy & Eggs",81,11,4.3,4.1,2.3,100],
+["Cottage cheese, 4%","Dairy & Eggs",98,11,3.4,3.2,4.3,100],
+["Cream cheese","Dairy & Eggs",342,6,4,3.2,34,30],
+["Feta cheese","Dairy & Eggs",264,14,4,1,21,30],
+["Halloumi","Dairy & Eggs",321,22,2,1,25,30],
+["Mozzarella, fresh","Dairy & Eggs",280,18,3,1.2,22,30],
+["Mozzarella, shredded","Dairy & Eggs",300,22,2,1,22,30],
+["Cheddar cheese","Dairy & Eggs",403,25,1.3,0.5,33,30],
+["Gouda cheese","Dairy & Eggs",356,25,2.2,2.2,27,30],
+["Edam cheese","Dairy & Eggs",357,25,1.4,1.4,28,30],
+["Parmesan, grated","Dairy & Eggs",431,38,4,0.9,29,15],
+["Pecorino","Dairy & Eggs",387,26,0,0,32,30],
+["Brie","Dairy & Eggs",334,21,0.5,0.5,28,30],
+["Camembert","Dairy & Eggs",300,20,0.5,0.5,24,30],
+["Roquefort","Dairy & Eggs",369,22,2,0.5,31,30],
+["Gorgonzola","Dairy & Eggs",330,19,0,0,27,30],
+["Blue cheese","Dairy & Eggs",353,21,2,0.5,29,30],
+["Swiss cheese","Dairy & Eggs",380,27,5,1.5,28,30],
+["Provolone","Dairy & Eggs",351,26,2,0.6,27,30],
+["Ricotta, whole","Dairy & Eggs",174,11,3,0.3,13,60],
+["Ricotta, part-skim","Dairy & Eggs",138,11,5,0.3,8,60],
+["Mascarpone","Dairy & Eggs",429,4,3,3,44,30],
+["Butter, unsalted","Dairy & Eggs",717,0.9,0.1,0.1,81,10],
+["Butter, salted","Dairy & Eggs",717,0.9,0.1,0.1,81,10],
+["Ghee","Dairy & Eggs",900,0,0,0,100,10],
+["Margarine","Dairy & Eggs",717,0.2,0.7,0,80,10],
+["Kajmak (clotted cream)","Balkan Specialties",350,5,3,3,36,30],
+["White cheese (brined)","Balkan Specialties",260,14,2,1,22,30],
+["Urda (ricotta-style)","Balkan Specialties",150,12,4,0.5,10,60],
+["Yogurt drink (ayran)","Dairy & Eggs",38,1.7,3.3,3.3,1.5,250],
+["Buttermilk","Dairy & Eggs",40,3.3,4.8,4.8,0.9,244],
+["Condensed milk, sweetened","Dairy & Eggs",321,8,54,54,9,30],
+["Evaporated milk","Dairy & Eggs",134,6.8,10,10,7.6,30],
+["Milk powder, whole","Dairy & Eggs",496,26,38,38,27,25],
+["Ice cream, vanilla","Dairy & Eggs",207,3.5,24,21,11,100],
+["Ice cream, chocolate","Dairy & Eggs",216,3.8,28,25,11,100],
+
+// ===== GRAINS & CEREALS =====
+["White rice, cooked","Grains & Cereals",130,2.7,28,0.1,0.3,158],
+["Brown rice, cooked","Grains & Cereals",112,2.6,24,0.4,0.9,195],
+["Basmati rice, cooked","Grains & Cereals",121,3.5,25,0.1,0.4,158],
+["Jasmine rice, cooked","Grains & Cereals",129,2.7,28,0.1,0.2,158],
+["Wild rice, cooked","Grains & Cereals",101,4,21,0.7,0.3,164],
+["White rice, raw","Grains & Cereals",365,7,80,0.1,0.7,80],
+["Brown rice, raw","Grains & Cereals",370,7.9,77,0.9,2.9,80],
+["Quinoa, cooked","Grains & Cereals",120,4.4,21,0.9,1.9,185],
+["Quinoa, raw","Grains & Cereals",368,14,64,0,6,80],
+["Oats, rolled, dry","Grains & Cereals",389,17,66,1,7,40],
+["Oatmeal, cooked (water)","Grains & Cereals",71,2.5,12,0.3,1.5,234],
+["Couscous, cooked","Grains & Cereals",112,3.8,23,0.1,0.2,157],
+["Couscous, raw","Grains & Cereals",376,13,77,0.1,0.6,80],
+["Barley, pearled, cooked","Grains & Cereals",123,2.3,28,0.3,0.4,157],
+["Barley, pearled, raw","Grains & Cereals",352,10,78,0.8,1.2,80],
+["Bulgur wheat, cooked","Grains & Cereals",83,3,19,0.1,0.2,182],
+["Bulgur wheat, raw","Grains & Cereals",342,12,76,0.4,1.3,80],
+["Millet, cooked","Grains & Cereals",119,3.5,24,0.1,1,174],
+["Buckwheat, cooked","Grains & Cereals",92,3.4,20,0.9,0.6,168],
+["Buckwheat, raw","Grains & Cereals",343,13,72,0,3.4,80],
+["Polenta / cornmeal, cooked","Grains & Cereals",70,1.6,15,0.1,0.3,220],
+["Cornmeal, raw","Grains & Cereals",370,7,79,0.6,3.9,80],
+["Pasta, white, cooked","Grains & Cereals",131,5,25,0.6,1.1,140],
+["Pasta, whole wheat, cooked","Grains & Cereals",124,5.3,26,0.8,1.1,140],
+["Spaghetti, cooked","Grains & Cereals",158,5.8,31,0.6,0.9,140],
+["Egg noodles, cooked","Grains & Cereals",138,4.5,25,0.4,2.1,160],
+["Rice noodles, cooked","Grains & Cereals",109,0.9,25,0.1,0.2,176],
+["Soba noodles, cooked","Grains & Cereals",99,5.1,21,0.3,0.1,114],
+["Ramen noodles, dry","Grains & Cereals",436,10,58,2,17,85],
+["Cornflakes cereal","Grains & Cereals",357,7.5,84,8,0.9,30],
+["Granola, plain","Grains & Cereals",471,10,64,24,20,50],
+["Muesli","Grains & Cereals",362,10,66,16,6,50],
+["Bran flakes","Grains & Cereals",317,10,80,16,2,30],
+["Puffed rice cereal","Grains & Cereals",383,6,87,0.5,0.5,30],
+["Wheat flour, white","Grains & Cereals",364,10,76,0.3,1,100],
+["Wheat flour, whole","Grains & Cereals",340,13,72,0.4,2.5,100],
+["Rye flour","Grains & Cereals",350,10,76,1,1.7,100],
+["Corn flour","Grains & Cereals",361,7,76,0.6,3.9,100],
+["Oat flour","Grains & Cereals",389,13,66,1,7,100],
+["Semolina","Grains & Cereals",360,13,73,0.1,1.1,100],
+["Tapioca, dry","Grains & Cereals",358,0.2,88,3.3,0,50],
+["Amaranth, cooked","Grains & Cereals",102,3.8,19,0.1,1.6,170],
+["Teff, cooked","Grains & Cereals",101,3.9,20,0.1,0.7,170],
+["Sorghum, cooked","Grains & Cereals",110,3.5,22,0.1,1,170],
+["Spelt, cooked","Grains & Cereals",127,5,26,0.3,0.9,170],
+["Farro, cooked","Grains & Cereals",131,5,26,0.3,1,170],
+["Cream of wheat, cooked","Grains & Cereals",63,2,13,0.1,0.2,240],
+["Grits, cooked","Grains & Cereals",61,1.3,13,0.1,0.2,240],
+["Rice porridge, cooked","Grains & Cereals",50,1,11,0.1,0.2,240],
+
+// ===== BREAD & BAKERY =====
+["White bread","Bread & Bakery",265,9,49,5.7,3.2,30],
+["Whole wheat bread","Bread & Bakery",247,13,41,4.4,3.4,30],
+["Rye bread","Bread & Bakery",259,8.5,48,3.9,3.3,30],
+["Sourdough bread","Bread & Bakery",260,10,51,2.6,1.2,30],
+["Pita bread","Bread & Bakery",275,9,55,2.5,1.2,60],
+["Naan bread","Bread & Bakery",310,8,50,3,6,90],
+["Baguette","Bread & Bakery",274,9,55,3.5,1.3,60],
+["Croissant","Bread & Bakery",406,8,45,11,21,60],
+["Bagel, plain","Bread & Bakery",257,10,50,5,1.5,100],
+["English muffin","Bread & Bakery",235,8,46,2.5,2,60],
+["Tortilla, flour","Bread & Bakery",306,8,51,2.5,8,45],
+["Tortilla, corn","Bread & Bakery",218,5.7,45,0.8,2.8,30],
+["Brioche","Bread & Bakery",346,9,50,14,12,60],
+["Focaccia","Bread & Bakery",290,8,48,2.5,7,60],
+["Ciabatta","Bread & Bakery",270,9,52,2.5,2.5,60],
+["Pretzel","Bread & Bakery",380,10,80,2.5,3,60],
+["Crackers, saltine","Bread & Bakery",421,9,74,2,9,15],
+["Crackers, whole wheat","Bread & Bakery",430,10,68,5,14,15],
+["Rusk / zwieback","Bread & Bakery",390,11,72,6,6,20],
+["Breadsticks","Bread & Bakery",412,12,72,2.5,7,20],
+["Burek (meat pie)","Balkan Specialties",280,10,25,2,16,150],
+["Pita sa sirom (cheese pie)","Balkan Specialties",290,11,26,2,16,150],
+["Pogača","Balkan Specialties",290,8,48,4,8,80],
+["Kifla (roll)","Balkan Specialties",310,9,52,5,7,60],
+["Proja (cornbread)","Balkan Specialties",250,7,40,4,8,80],
+
+// ===== LEGUMES =====
+["Lentils, cooked","Legumes",116,9,20,1.8,0.4,200],
+["Lentils, raw","Legumes",352,25,63,2,1.1,80],
+["Chickpeas, cooked","Legumes",164,8.9,27,4.8,2.6,160],
+["Chickpeas, raw","Legumes",378,20,63,11,6,80],
+["Black beans, cooked","Legumes",132,8.9,24,0.3,0.5,170],
+["Kidney beans, cooked","Legumes",127,8.7,23,0.3,0.5,170],
+["White beans, cooked","Legumes",142,10,26,0.3,0.6,170],
+["Pinto beans, cooked","Legumes",143,9,27,0.4,0.7,170],
+["Navy beans, cooked","Legumes",140,8.2,26,0.3,0.6,170],
+["Soybeans, cooked","Legumes",172,18,8,3,9,170],
+["Edamame, cooked","Legumes",121,12,9,2.2,5,150],
+["Peas, split, cooked","Legumes",118,8.3,21,2.9,0.4,200],
+["Peanuts, raw","Legumes",567,26,16,4.7,49,30],
+["Hummus","Legumes",166,8,14,0.5,10,50],
+["Falafel","Legumes",333,13,32,2,18,60],
+["Tofu, firm","Legumes",144,17,3,0.6,9,100],
+["Tempeh","Legumes",195,19,8,0.5,11,100],
+["Bean stew (grah)","Balkan Specialties",120,6,18,2,3,250],
+["Lentil soup","Legumes",72,4.5,12,1.5,1,250],
+
+// ===== NUTS & SEEDS =====
+["Almonds, raw","Nuts & Seeds",579,21,22,4.4,50,30],
+["Walnuts, raw","Nuts & Seeds",654,15,14,2.6,65,30],
+["Cashews, raw","Nuts & Seeds",553,18,30,5.9,44,30],
+["Pistachios, raw","Nuts & Seeds",562,20,28,7.7,45,30],
+["Hazelnuts, raw","Nuts & Seeds",628,15,17,4.3,61,30],
+["Pecans, raw","Nuts & Seeds",691,9,14,4,72,30],
+["Macadamia, raw","Nuts & Seeds",718,8,14,4.6,76,30],
+["Brazil nuts, raw","Nuts & Seeds",659,14,12,2.3,67,30],
+["Pine nuts, raw","Nuts & Seeds",673,14,13,3.6,68,30],
+["Chestnuts, roasted","Nuts & Seeds",245,3,53,11,2,30],
+["Peanuts, roasted","Nuts & Seeds",587,24,21,4.2,50,30],
+["Sunflower seeds","Nuts & Seeds",584,21,20,2.6,51,30],
+["Pumpkin seeds","Nuts & Seeds",559,30,11,1.4,49,30],
+["Sesame seeds","Nuts & Seeds",573,18,23,0.3,50,30],
+["Flax seeds","Nuts & Seeds",534,18,29,1.5,42,15],
+["Chia seeds","Nuts & Seeds",486,17,42,0,31,15],
+["Hemp seeds","Nuts & Seeds",553,32,9,1.5,49,30],
+["Poppy seeds","Nuts & Seeds",525,18,28,3,42,15],
+["Tahini","Nuts & Seeds",595,17,21,0.5,54,15],
+["Peanut butter","Nuts & Seeds",588,25,20,9,50,15],
+["Almond butter","Nuts & Seeds",614,21,19,4.5,56,15],
+["Nutella","Sweets & Snacks",544,6.3,58,56,31,15],
+
+// ===== FATS & OILS =====
+["Olive oil","Fats & Oils",884,0,0,0,100,10],
+["Sunflower oil","Fats & Oils",884,0,0,0,100,10],
+["Vegetable oil","Fats & Oils",884,0,0,0,100,10],
+["Canola oil","Fats & Oils",884,0,0,0,100,10],
+["Coconut oil","Fats & Oils",892,0,0,0,99,10],
+["Lard","Fats & Oils",902,0,0,0,100,10],
+["Pork fat","Fats & Oils",898,0,0,0,100,10],
+["Beef tallow","Fats & Oils",902,0,0,0,100,10],
+["Duck fat","Fats & Oils",882,0,0,0,100,10],
+["Mayonnaise","Fats & Oils",680,1,0.6,0.6,75,15],
+["Aioli","Fats & Oils",650,1.5,2,1,71,15],
+["Salad dressing, ranch","Fats & Oils",442,1.5,6,4,45,30],
+["Salad dressing, vinaigrette","Fats & Oils",449,0,4,3.5,50,30],
+
+// ===== FAST FOOD =====
+["Hamburger, plain","Fast Food",254,12,30,6,9,110],
+["Cheeseburger","Fast Food",263,13,28,6,11,120],
+["Big burger (quarter pound)","Fast Food",270,15,24,5,13,200],
+["French fries","Fast Food",312,3.4,41,0.3,15,115],
+["Onion rings","Fast Food",411,5,38,3.5,27,90],
+["Chicken nuggets","Fast Food",296,14,16,0.5,19,100],
+["Fried chicken","Fast Food",320,22,12,0.5,21,140],
+["Pizza, cheese","Fast Food",266,11,33,3.5,10,107],
+["Pizza, pepperoni","Fast Food",298,13,34,3.5,13,107],
+["Hot dog","Fast Food",290,10,24,4,17,100],
+["Corn dog","Fast Food",287,8,34,6,13,100],
+["Kebab (doner)","Fast Food",290,18,20,3,16,250],
+["Gyro","Fast Food",280,17,22,3,14,250],
+["Shawarma","Fast Food",280,18,22,3,14,250],
+["Burrito","Fast Food",206,8,32,2,5,200],
+["Taco","Fast Food",226,9,20,1.5,13,100],
+["Nachos with cheese","Fast Food",346,8,36,2.5,20,100],
+["Quesadilla","Fast Food",290,13,26,2.5,15,150],
+["Sandwich, ham & cheese","Fast Food",240,13,28,4,9,200],
+["Sandwich, tuna","Fast Food",230,12,27,3.5,8,200],
+["Sandwich, chicken","Fast Food",250,15,28,3.5,8,200],
+["Wrap, chicken","Fast Food",230,14,25,3,8,220],
+["Spring roll, fried","Fast Food",154,5,20,2,7,80],
+["Sushi roll, salmon","Fast Food",150,6,28,4,2,200],
+["Instant noodles, cooked","Fast Food",138,3,20,0.6,5,200],
+
+// ===== BEVERAGES =====
+["Water","Beverages",0,0,0,0,0,250],
+["Coffee, black","Beverages",2,0.1,0,0,0,240],
+["Espresso","Beverages",2,0.1,0,0,0,30],
+["Tea, unsweetened","Beverages",1,0,0,0,0,240],
+["Green tea","Beverages",1,0,0,0,0,240],
+["Cola","Beverages",42,0,11,10.6,0,330],
+["Diet cola","Beverages",0,0,0,0,0,330],
+["Orange soda","Beverages",48,0,13,12.5,0,330],
+["Lemonade","Beverages",40,0,10,9.5,0,250],
+["Beer, lager","Beverages",43,0.5,3.6,0,0,330],
+["Beer, dark","Beverages",55,0.5,5,0,0,330],
+["Wine, red","Beverages",85,0.1,2.6,0.6,0,150],
+["Wine, white","Beverages",82,0.1,2.6,0.6,0,150],
+["Rakija (brandy)","Balkan Specialties",231,0,0,0,0,30],
+["Whiskey","Beverages",250,0,0,0,0,44],
+["Vodka","Beverages",231,0,0,0,0,44],
+["Gin","Beverages",263,0,0,0,0,44],
+["Rum","Beverages",231,0,0,0,0,44],
+["Cocktail, mojito","Beverages",80,0,10,9,0,200],
+["Smoothie, fruit","Beverages",60,1,14,11,0.3,300],
+["Protein shake (whey)","Beverages",100,20,3,2,1,300],
+["Hot chocolate","Beverages",77,1,10,9,3,250],
+["Milkshake, vanilla","Beverages",112,3.5,18,16,3,300],
+["Energy drink","Beverages",45,0,11,10.5,0,250],
+["Coconut water","Beverages",19,0.7,3.7,2.6,0.2,250],
+
+// ===== SWEETS & SNACKS =====
+["Chocolate, dark (70%)","Sweets & Snacks",598,7.8,46,24,43,30],
+["Chocolate, milk","Sweets & Snacks",535,7.6,59,52,30,30],
+["Chocolate, white","Sweets & Snacks",539,5.9,59,59,32,30],
+["Cookie, chocolate chip","Sweets & Snacks",488,5.7,64,38,24,30],
+["Cookie, oatmeal","Sweets & Snacks",450,6,68,34,18,30],
+["Brownie","Sweets & Snacks",466,6,50,36,28,60],
+["Cake, sponge","Sweets & Snacks",297,5,58,38,6,80],
+["Cheesecake","Sweets & Snacks",321,6,26,22,22,100],
+["Doughnut, glazed","Sweets & Snacks",452,5,51,25,25,60],
+["Muffin, blueberry","Sweets & Snacks",377,5,54,30,16,80],
+["Croissant, chocolate","Sweets & Snacks",414,8,45,18,23,60],
+["Baklava","Balkan Specialties",428,6,48,32,24,60],
+["Tulumba","Balkan Specialties",380,4,50,28,18,60],
+["Krofne (donut)","Balkan Specialties",420,5,50,24,22,60],
+["Palacinke (crepe)","Balkan Specialties",220,6,30,12,8,80],
+["Gibanica (cheese strudel)","Balkan Specialties",300,10,30,8,15,120],
+["Pita sa jabukama (apple pie)","Balkan Specialties",280,3,40,18,12,120],
+["Halva","Sweets & Snacks",469,12,50,45,25,30],
+["Turkish delight","Sweets & Snacks",350,0.5,88,75,0.2,30],
+["Ice cream, vanilla","Sweets & Snacks",207,3.5,24,21,11,100],
+["Ice cream, chocolate","Sweets & Snacks",216,3.8,28,25,11,100],
+["Sorbet","Sweets & Snacks",135,0.5,34,30,0,100],
+["Popcorn, air-popped","Sweets & Snacks",387,13,78,0.9,4.5,30],
+["Popcorn, buttered","Sweets & Snacks",535,7,54,0.5,34,30],
+["Chips, potato","Sweets & Snacks",536,7,53,0.5,34,30],
+["Chips, tortilla","Sweets & Snacks",489,7,65,1,23,30],
+["Pretzels","Sweets & Snacks",380,10,80,2.5,3,30],
+["Trail mix","Sweets & Snacks",462,13,45,22,29,30],
+["Granola bar","Sweets & Snacks",471,10,64,24,20,40],
+["Protein bar","Sweets & Snacks",350,30,35,15,10,60],
+["Honey","Sweets & Snacks",304,0.3,82,82,0,20],
+["Jam / preserve","Sweets & Snacks",278,0.4,69,49,0.1,20],
+["Maple syrup","Sweets & Snacks",260,0,67,60,0.1,20],
+["Sugar, white","Sweets & Snacks",387,0,100,100,0,10],
+["Sugar, brown","Sweets & Snacks",380,0,98,97,0,10],
+
+// ===== BALKAN SPECIALTIES =====
+["Sarma (cabbage rolls)","Balkan Specialties",150,8,12,3,8,250],
+["Goulash","Balkan Specialties",180,14,6,2,11,250],
+["Ćevapi","Balkan Specialties",250,20,2,0.5,18,100],
+["Pljeskavica","Balkan Specialties",270,20,5,0.8,19,150],
+["Raznjići","Balkan Specialties",220,25,0,0,13,150],
+["Burek","Balkan Specialties",280,10,25,2,16,150],
+["Pita sa sirom","Balkan Specialties",290,11,26,2,16,150],
+["Pita sa mesom","Balkan Specialties",300,13,25,2,17,150],
+["Pita sa krompirom","Balkan Specialties",250,6,32,2.5,11,150],
+["Gibanica","Balkan Specialties",300,10,30,8,15,120],
+["Proja","Balkan Specialties",250,7,40,4,8,80],
+["Popara","Balkan Specialties",180,6,28,6,5,250],
+["Kačamak","Balkan Specialties",160,4,30,2,3,250],
+["Pura (polenta)","Balkan Specialties",110,2.5,23,0.2,0.5,250],
+["Grah (bean stew)","Balkan Specialties",120,6,18,2,3,250],
+["Pasulj (white bean soup)","Balkan Specialties",100,5,15,1.5,2,250],
+["Čorba (soup)","Balkan Specialties",60,3,8,1.5,2,250],
+["Riblja čorba (fish soup)","Balkan Specialties",55,5,4,0.8,2,250],
+["Teleća čorba (veal soup)","Balkan Specialties",70,5,5,1,3,250],
+["Sarma (sauerkraut rolls)","Balkan Specialties",150,8,12,3,8,250],
+["Punjene paprike","Balkan Specialties",140,7,14,3.5,6,250],
+["Musaka","Balkan Specialties",180,10,14,3,9,250],
+["Šopska salata","Balkan Specialties",90,4,6,3.5,6,200],
+["Urnebes","Balkan Specialties",280,8,5,1.5,25,50],
+["Ajvar","Balkan Specialties",80,1.5,10,6,4,30],
+["Pinđur","Balkan Specialties",70,1.5,11,7,2.5,30],
+["Ljutenica","Balkan Specialties",75,1.5,10,6,3.5,30],
+["Kajmak","Balkan Specialties",350,5,3,3,36,30],
+["Proja sa sirom","Balkan Specialties",270,10,36,4,10,80],
+["Krofne","Balkan Specialties",420,5,50,24,22,60],
+["Palacinke","Balkan Specialties",220,6,30,12,8,80],
+["Štrudla sa jabukama","Balkan Specialties",280,3,40,18,12,120],
+["Baklava","Balkan Specialties",428,6,48,32,24,60],
+["Tulumba","Balkan Specialties",380,4,50,28,18,60],
+["Halva","Balkan Specialties",469,12,50,45,25,30],
+["Rakija","Balkan Specialties",231,0,0,0,0,30],
+["Boza","Balkan Specialties",60,1,13,11,0.5,250],
+["Salep","Balkan Specialties",100,3,20,14,1.5,250]
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const STORAGE_KEY = 'kcalLedgerPro_v2';
+let state = {
+  log: [],
+  goal: 2200,
+  goalP: 120,
+  goalC: 250,
+  goalS: 50,
+  goalF: 70,
+  customFoods: [],
+  activeMeal: 'all',
+  nextId: 1
+};
+let activeCat = 'All';
+let activeTab = 'tracker';
+
+function save(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const s = JSON.parse(raw);
+      state = Object.assign(state, s);
+      if(state.customFoods && state.customFoods.length){
+        state.customFoods.forEach(f => FOODS.push(f));
+      }
+    }
+  }catch(e){}
+}
+
+function catList(){
+  const set = new Set(FOODS.map(f=>f[1]));
+  return ['All', ...Array.from(set).sort()];
+}
+function catCount(cat){
+  if(cat==='All') return FOODS.length;
+  return FOODS.filter(f=>f[1]===cat).length;
+}
+function kcalFor(food, grams){ return (food[2] * grams) / 100; }
+function macroFor(food, grams, idx){ return (food[idx] * grams) / 100; }
+
+function renderChips(){
+  const row = document.getElementById('chipRow');
+  const cats = catList();
+  row.innerHTML = cats.map(c=>{
+    const n = catCount(c);
+    return `<button class="chip ${c===activeCat?'active':''}" data-cat="${c}">${c} <span style="opacity:.55;font-size:11px;">${n}</span></button>`;
+  }).join('');
+  row.querySelectorAll('.chip').forEach(ch=>{
+    ch.onclick = ()=>{ activeCat = ch.dataset.cat; renderChips(); renderFoods(); };
+  });
+}
+
+function renderFoods(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const list = document.getElementById('foodList');
+  const resCount = document.getElementById('resultCount');
+  let items = FOODS.map((f,i)=>({f,i}));
+  if(activeCat!=='All') items = items.filter(x=>x.f[1]===activeCat);
+  if(q) items = items.filter(x=>x.f[0].toLowerCase().includes(q));
+  items = items.slice(0, 300);
+  resCount.textContent = items.length + (items.length===300?'+':'') + ' shown';
+  if(!items.length){
+    list.innerHTML = `<div class="empty-state">No foods match "${q}". Try a different search or category.</div>`;
+    return;
+  }
+  list.innerHTML = items.map(({f,i})=>`
+    <div class="food-row" data-idx="${i}">
+      <div class="food-main">
+        <div class="food-name">${f[0]}${state.customFoods.some(c=>c[0]===f[0])?'<span class="custom-tag">CUSTOM</span>':''}</div>
+        <div class="food-meta">
+          <span class="cat">${f[1]}</span>
+          <span class="mac"><b>${f[2]}</b> kcal · P <b>${f[3]}</b> · C <b>${f[4]}</b> · <span class="sug">S ${f[5]}</span> · F <b>${f[6]}</b></span>
+        </div>
+      </div>
+      <div class="food-add">
+        <input type="number" min="1" step="1" value="${f[7]}" data-role="grams" aria-label="grams">
+        <span class="g-label">g</span>
+        <select class="unit-select" data-role="meal" aria-label="meal">
+          <option value="breakfast">Breakfast</option>
+          <option value="lunch">Lunch</option>
+          <option value="dinner">Dinner</option>
+          <option value="snack" selected>Snack</option>
+        </select>
+        <button class="add-btn" data-role="add" title="Add to log">+</button>
+      </div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.food-row').forEach(row=>{
+    const idx = +row.dataset.idx;
+    const gramsInp = row.querySelector('[data-role="grams"]');
+    const mealSel = row.querySelector('[data-role="meal"]');
+    row.querySelector('[data-role="add"]').onclick = ()=>{
+      const grams = Math.max(1, +gramsInp.value || 0);
+      addToLog(idx, grams, mealSel.value);
+      gramsInp.value = FOODS[idx][7];
+    };
+    gramsInp.addEventListener('keydown', e=>{
+      if(e.key==='Enter'){ row.querySelector('[data-role="add"]').click(); }
+    });
+  });
+}
+
+function addToLog(foodIdx, grams, meal){
+  const f = FOODS[foodIdx];
+  const entry = {
+    id: state.nextId++,
+    foodIdx,
+    name: f[0],
+    grams,
+    kcal: kcalFor(f, grams),
+    protein: macroFor(f, grams, 3),
+    carbs: macroFor(f, grams, 4),
+    sugar: macroFor(f, grams, 5),
+    fat: macroFor(f, grams, 6),
+    meal: meal || 'snack'
+  };
+  state.log.push(entry);
+  save();
+  renderLog();
+  renderSummary();
+  showToast(`Added ${grams}g ${f[0]} · ${Math.round(entry.kcal)} kcal`);
+}
+function removeFromLog(id){
+  state.log = state.log.filter(e=>e.id!==id);
+  save(); renderLog(); renderSummary();
+}
+function updateLogGrams(id, grams){
+  const e = state.log.find(x=>x.id===id);
+  if(!e) return;
+  const f = FOODS[e.foodIdx];
+  e.grams = Math.max(1, grams);
+  e.kcal = kcalFor(f, e.grams);
+  e.protein = macroFor(f, e.grams, 3);
+  e.carbs = macroFor(f, e.grams, 4);
+  e.sugar = macroFor(f, e.grams, 5);
+  e.fat = macroFor(f, e.grams, 6);
+  save(); renderLog(); renderSummary();
+}
+
+function renderLog(){
+  const box = document.getElementById('logItems');
+  const header = document.getElementById('logKcalHeader');
+  const filtered = state.activeMeal==='all'
+    ? state.log
+    : state.log.filter(e=>e.meal===state.activeMeal);
+  const total = filtered.reduce((s,e)=>s+e.kcal,0);
+  header.textContent = filtered.length ? `${Math.round(total)} kcal` : '';
+  document.getElementById('logCount').textContent = state.log.length;
+  if(!filtered.length){
+    box.innerHTML = `<div class="log-empty">${state.log.length ? 'No items in this meal.' : 'Nothing logged yet. Add foods from the left.'}</div>`;
+  } else {
+    box.innerHTML = filtered.map(e=>`
+      <div class="log-item" data-id="${e.id}">
+        <div class="log-item-name">${e.name}<span class="meal-tag">${e.meal}</span></div>
+        <input class="log-item-g" type="number" min="1" step="1" value="${e.grams}" data-role="editg">
+        <div class="log-item-kcal">${Math.round(e.kcal)}</div>
+        <button class="rm-btn" data-role="rm" title="Remove">×</button>
+      </div>
+    `).join('');
+    box.querySelectorAll('.log-item').forEach(row=>{
+      const id = +row.dataset.id;
+      const gInp = row.querySelector('[data-role="editg"]');
+      gInp.addEventListener('change', ()=> updateLogGrams(id, +gInp.value));
+      gInp.addEventListener('keydown', e=>{ if(e.key==='Enter') gInp.blur(); });
+      row.querySelector('[data-role="rm"]').onclick = ()=> removeFromLog(id);
+    });
+  }
+  renderTotals();
+}
+
+function renderTotals(){
+  const total = state.log.reduce((s,e)=>s+e.kcal,0);
+  const p = state.log.reduce((s,e)=>s+e.protein,0);
+  const c = state.log.reduce((s,e)=>s+e.carbs,0);
+  const s2 = state.log.reduce((s,e)=>s+e.sugar,0);
+  const f = state.log.reduce((s,e)=>s+e.fat,0);
+  document.getElementById('totalKcal').textContent = Math.round(total);
+  document.getElementById('goalInput').value = state.goal;
+
+  const rem = state.goal - total;
+  const remEl = document.getElementById('remainingText');
+  if(state.goal<=0){
+    remEl.textContent = 'Set a daily goal to track progress.';
+    remEl.className = 'remaining';
+  } else if(rem>=0){
+    remEl.textContent = `${Math.round(rem)} kcal remaining of ${state.goal}`;
+    remEl.className = 'remaining ok';
+  } else {
+    remEl.textContent = `${Math.abs(Math.round(rem))} kcal over goal`;
+    remEl.className = 'remaining over';
+  }
+  const pct = state.goal>0 ? Math.min(100, (total/state.goal)*100) : 0;
+  const bar = document.getElementById('barFill');
+  bar.style.width = pct + '%';
+  bar.classList.toggle('over', total>state.goal);
+
+  updateRing('P', p, state.goalP);
+  updateRing('C', c, state.goalC);
+  updateRing('S', s2, state.goalS);
+  updateRing('F', f, state.goalF);
+
+  document.getElementById('goalP').value = state.goalP;
+  document.getElementById('goalC').value = state.goalC;
+  document.getElementById('goalS').value = state.goalS;
+  document.getElementById('goalF').value = state.goalF;
+}
+
+function updateRing(key, val, goal){
+  const r = 24;
+  const circ = 2 * Math.PI * r;
+  const fill = document.getElementById('ring'+key+'Fill');
+  const pct = goal>0 ? Math.min(1, val/goal) : 0;
+  fill.setAttribute('stroke-dasharray', circ);
+  fill.setAttribute('stroke-dashoffset', circ * (1-pct));
+  document.getElementById('ring'+key+'Label').textContent = Math.round(val)+'g';
+  document.getElementById('ring'+key+'Goal').textContent = goal>0 ? `of ${goal}g` : 'no goal';
+}
+
+function renderSummary(){
+  const total = state.log.reduce((s,e)=>s+e.kcal,0);
+  const p = state.log.reduce((s,e)=>s+e.protein,0);
+  const c = state.log.reduce((s,e)=>s+e.carbs,0);
+  const s2 = state.log.reduce((s,e)=>s+e.sugar,0);
+  const f = state.log.reduce((s,e)=>s+e.fat,0);
+  document.getElementById('sumKcal').textContent = Math.round(total);
+  document.getElementById('sumKcalSub').textContent = state.goal>0 ? `of ${state.goal} kcal goal` : 'no goal set';
+  document.getElementById('sumItems').textContent = state.log.length;
+  document.getElementById('sumP').textContent = Math.round(p)+'g';
+  document.getElementById('sumC').textContent = Math.round(c)+'g';
+  document.getElementById('sumS').textContent = Math.round(s2)+'g';
+  document.getElementById('sumF').textContent = Math.round(f)+'g';
+  document.getElementById('sumPSub').textContent = state.goalP>0 ? `${Math.round((p/state.goalP)*100)}% of ${state.goalP}g` : '—';
+  document.getElementById('sumCSub').textContent = state.goalC>0 ? `${Math.round((c/state.goalC)*100)}% of ${state.goalC}g` : '—';
+  document.getElementById('sumSSub').textContent = state.goalS>0 ? `${Math.round((s2/state.goalS)*100)}% of ${state.goalS}g` : '—';
+  document.getElementById('sumFSub').textContent = state.goalF>0 ? `${Math.round((f/state.goalF)*100)}% of ${state.goalF}g` : '—';
+
+  const pk = p*4, ck = c*4, fk = f*9;
+  const totalMac = pk+ck+fk || 1;
+  const pp = (pk/totalMac)*100, cp = (ck/totalMac)*100, fp = (fk/totalMac)*100;
+  document.getElementById('mbP').style.width = pp+'%';
+  document.getElementById('mbC').style.width = cp+'%';
+  document.getElementById('mbF').style.width = fp+'%';
+  document.getElementById('mbP').textContent = pp>8 ? `P ${Math.round(pp)}%` : '';
+  document.getElementById('mbC').textContent = cp>8 ? `C ${Math.round(cp)}%` : '';
+  document.getElementById('mbF').textContent = fp>8 ? `F ${Math.round(fp)}%` : '';
+  document.getElementById('macroSplitText').textContent =
+    state.log.length ? `${Math.round(pk)} kcal from protein · ${Math.round(ck)} from carbs · ${Math.round(fk)} from fat` : 'No data yet.';
+
+  const sugarPctOfCarbs = c>0 ? (s2/c)*100 : 0;
+  const sugarKcal = s2*4;
+  document.getElementById('sugarNote').innerHTML = state.log.length
+    ? `Sugar: <b style="color:var(--s);">${s2.toFixed(1)}g</b> (${sugarPctOfCarbs.toFixed(0)}% of carbs, ${Math.round(sugarKcal)} kcal). ${
+        state.goalS>0 ? (s2>state.goalS ? '<span style="color:var(--danger);">Over sugar goal.</span>' : '<span style="color:var(--good);">Within sugar goal.</span>') : ''
+      }`
+    : '';
+
+  const meals = ['breakfast','lunch','dinner','snack'];
+  const mb = document.getElementById('mealBreakdown');
+  const rows = meals.map(m=>{
+    const items = state.log.filter(e=>e.meal===m);
+    const k = items.reduce((s,e)=>s+e.kcal,0);
+    const p2 = items.reduce((s,e)=>s+e.protein,0);
+    const c2 = items.reduce((s,e)=>s+e.carbs,0);
+    const s3 = items.reduce((s,e)=>s+e.sugar,0);
+    const f2 = items.reduce((s,e)=>s+e.fat,0);
+    return {m, count:items.length, k, p:p2, c:c2, s:s3, f:f2};
+  });
+  const totalK = rows.reduce((s,r)=>s+r.k,0) || 1;
+  mb.innerHTML = rows.map(r=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-soft);">
+      <div style="flex:1;text-transform:capitalize;font-weight:600;">${r.m}</div>
+      <div style="width:80px;text-align:right;font-variant-numeric:tabular-nums;">${Math.round(r.k)} kcal</div>
+      <div style="width:50px;text-align:right;font-size:12px;color:var(--ink-faint);">${Math.round((r.k/totalK)*100)}%</div>
+      <div style="width:150px;font-size:11.5px;color:var(--ink-faint);text-align:right;">${r.count} item${r.count!==1?'s':''} · P${Math.round(r.p)} C${Math.round(r.c)} <span style="color:var(--s);">S${Math.round(r.s)}</span> F${Math.round(r.f)}</div>
+    </div>
+  `).join('') || '<div class="log-empty">No items logged.</div>';
+}
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick = ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('tab-'+t.dataset.tab).classList.add('active');
+    activeTab = t.dataset.tab;
+    if(activeTab==='summary') renderSummary();
+  };
+});
+
+document.querySelectorAll('.meal-tab').forEach(t=>{
+  t.onclick = ()=>{
+    document.querySelectorAll('.meal-tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    state.activeMeal = t.dataset.meal;
+    renderLog();
+  };
+});
+
+document.getElementById('goalInput').addEventListener('input', e=>{
+  state.goal = Math.max(0, +e.target.value || 0);
+  save(); renderTotals(); renderSummary();
+});
+document.querySelectorAll('.goal-presets button').forEach(b=>{
+  b.onclick = ()=>{
+    state.goal = +b.dataset.goal;
+    document.getElementById('goalInput').value = state.goal;
+    save(); renderTotals(); renderSummary();
+  };
+});
+['P','C','S','F'].forEach(k=>{
+  document.getElementById('goal'+k).addEventListener('input', e=>{
+    state['goal'+k] = Math.max(0, +e.target.value || 0);
+    save(); renderTotals(); renderSummary();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input', renderFoods);
+
+document.getElementById('cfSubmit').onclick = ()=>{
+  const name = document.getElementById('cfName').value.trim();
+  const kcal = +document.getElementById('cfKcal').value || 0;
+  const p = +document.getElementById('cfProtein').value || 0;
+  const c = +document.getElementById('cfCarbs').value || 0;
+  const s = +document.getElementById('cfSugar').value || 0;
+  const f = +document.getElementById('cfFat').value || 0;
+  if(!name){ showToast('Enter a food name.'); return; }
+  if(kcal<=0){ showToast('Enter calories per 100g.'); return; }
+  const entry = [name, 'Custom', kcal, p, c, s, f, 100];
+  FOODS.push(entry);
+  state.customFoods.push(entry);
+  save();
+  ['cfName','cfKcal','cfProtein','cfCarbs','cfSugar','cfFat'].forEach(id=>document.getElementById(id).value='');
+  renderChips();
+  renderFoods();
+  showToast(`Added "${name}" to database.`);
+};
+
+document.getElementById('clearBtn').onclick = ()=>{
+  if(!state.log.length) return;
+  if(confirm('Clear the entire log for today?')){
+    state.log = []; save(); renderLog(); renderSummary();
+    showToast('Log cleared.');
+  }
+};
+document.getElementById('exportBtn').onclick = ()=>{
+  if(!state.log.length){ showToast('Nothing to export.'); return; }
+  const total = state.log.reduce((s,e)=>s+e.kcal,0);
+  const p = state.log.reduce((s,e)=>s+e.protein,0);
+  const c = state.log.reduce((s,e)=>s+e.carbs,0);
+  const s = state.log.reduce((s,e)=>s+e.sugar,0);
+  const f = state.log.reduce((s,e)=>s+e.fat,0);
+  const lines = state.log.map(e=>`${e.meal}\t${e.name}\t${e.grams}g\t${Math.round(e.kcal)} kcal\tP ${e.protein.toFixed(1)}g\tC ${e.carbs.toFixed(1)}g\tS ${e.sugar.toFixed(1)}g\tF ${e.fat.toFixed(1)}g`);
+  lines.push('', `TOTAL\t${Math.round(total)} kcal\tP ${p.toFixed(1)}g\tC ${c.toFixed(1)}g\tS ${s.toFixed(1)}g\tF ${f.toFixed(1)}g`);
+  const text = lines.join('\n');
+  navigator.clipboard.writeText(text).then(()=>showToast('Copied to clipboard.')).catch(()=>prompt('Copy your log:', text));
+};
+document.getElementById('printBtn').onclick = ()=>window.print();
+
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+load();
+document.getElementById('dbCount').textContent = FOODS.length;
+renderChips();
+renderFoods();
+renderLog();
+renderSummary();
+</script>
+</body>
+</html>
