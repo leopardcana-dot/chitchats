@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
-<title>TradingPlay v9.7.4</title>
+<title>TradingPlay v10</title>
 <style>
 /* ===== CSS RESET & VARIABLES ===== */
 @import url('https://fonts.googleapis.com/css2?family=roboto+mono:wght@300;400;500;700&family=trebuchet ms:wght@400;500;700;900&display=swap');
@@ -1318,7 +1318,7 @@ body {
 <!-- SPLASH SCREEN -->
 <div id="splash">
   <h1>TradingPlay</h1>
-  <div class="sub">v9.7.4 — Advanced Backtesting Engine</div>
+  <div class="sub">v10 — Advanced Backtesting Engine</div>
   <div class="loader"><div class="loader-bar"></div></div>
 </div>
 <!-- CONTEXT MENU -->
@@ -5582,12 +5582,10 @@ function readCSVFile(file) {
         if (!line) continue;
         
         // Skip header row if it contains text
-        if (!headerSkipped && (line.toLowerCase().includes('date') || 
-            line.toLowerCase().includes('open') || 
-            line.match(/[a-zA-Z]/))) {
-          headerSkipped = true;
-          continue;
-        }
+      if (!headerSkipped) {
+  headerSkipped = true;
+  if (isNaN(parseFloat(line.split(',')[1]))) continue;  // header row
+}
         
         const parts = line.split(',');
         if (parts.length < 5) continue;
