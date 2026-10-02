@@ -1,0 +1,1903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EdgeOS — Prop Firm Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --surface: #ffffff;
+    --surface-alt: #f0efe9;
+    --border: #e8e7e0;
+    --text-primary: #1a1a18;
+    --text-secondary: #6b6b63;
+    --text-muted: #a0a098;
+    --accent: #ff6b1a;
+    --accent-soft: #fff2eb;
+    --accent-2: #1a1a18;
+    --green: #1db87a;
+    --green-soft: #e8f9f1;
+    --red: #e03e3e;
+    --red-soft: #fdf0f0;
+    --blue: #2563eb;
+    --blue-soft: #eff4ff;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-xs: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background: var(--accent-2);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 20px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 40px;
+  }
+
+  .logo-icon {
+    width: 34px; height: 34px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .logo-icon svg { width: 18px; height: 18px; }
+
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 17px;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+
+  .nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: #666;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-left: 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    color: #888;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 2px;
+  }
+
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .nav-item.active { background: var(--accent); color: #fff; }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .nav-section { margin-bottom: 28px; }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+
+  .user-name { font-size: 12.5px; font-weight: 600; color: #ddd; }
+  .user-role { font-size: 11px; color: #666; }
+
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .topbar-left h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .topbar-left p { font-size: 13px; color: var(--text-secondary); margin-top: 1px; }
+
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+  .tab-switcher {
+    display: flex;
+    background: var(--surface-alt);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .tab-btn {
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .tab-btn.active { background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+
+  .run-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(255,107,26,0.3);
+  }
+
+  .run-btn:hover { background: #e05c0f; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,107,26,0.4); }
+  .run-btn svg { width: 14px; height: 14px; }
+
+  /* ── CONTENT ── */
+  .content {
+    padding: 28px 32px;
+    flex: 1;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .card-pad { padding: 22px 24px; }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 18px;
+  }
+
+  /* ── STAT CARDS ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px 22px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+
+  .stat-card:hover { box-shadow: var(--shadow-md); }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 3px 3px 0 0;
+  }
+
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.blue::before { background: var(--blue); }
+  .stat-card.red::before { background: var(--red); }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .stat-value span { font-size: 14px; font-weight: 600; letter-spacing: 0; }
+  .stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+  /* ── GRID LAYOUTS ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-65-35 { display: grid; grid-template-columns: 1.8fr 1fr; gap: 16px; }
+  .grid-35-65 { display: grid; grid-template-columns: 1fr 1.8fr; gap: 16px; }
+
+  .mb-16 { margin-bottom: 16px; }
+  .mb-20 { margin-bottom: 20px; }
+
+  /* ── SLIDERS / INPUTS ── */
+  .param-group { margin-bottom: 20px; }
+
+  .param-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .param-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+  .param-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 9px;
+    border-radius: 6px;
+  }
+
+  .param-value.green { color: var(--green); background: var(--green-soft); }
+  .param-value.blue { color: var(--blue); background: var(--blue-soft); }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(255,107,26,0.4);
+    transition: box-shadow 0.2s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 2px 8px rgba(255,107,26,0.6); }
+
+  input[type="range"].green-track::-webkit-slider-thumb { background: var(--green); box-shadow: 0 1px 4px rgba(29,184,122,0.4); }
+  input[type="range"].blue-track::-webkit-slider-thumb { background: var(--blue); box-shadow: 0 1px 4px rgba(37,99,235,0.4); }
+
+  .number-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .number-input input[type="number"] {
+    width: 80px;
+    padding: 8px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .number-input input[type="number"]:focus { border-color: var(--accent); }
+
+  .number-input .divider { color: var(--text-muted); font-weight: 600; font-size: 16px; }
+
+  /* ── TOGGLE ── */
+  .toggle-group {
+    display: flex;
+    background: var(--surface-alt);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+    margin-bottom: 20px;
+  }
+
+  .toggle-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    text-align: center;
+  }
+
+  .toggle-btn.active { background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+
+  /* ── CANVAS CHARTS ── */
+  .chart-container { position: relative; width: 100%; }
+  .chart-container canvas { width: 100% !important; display: block; border-radius: 8px; }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .chart-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .chart-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .chart-badge.green { background: var(--green-soft); color: var(--green); }
+  .chart-badge.red { background: var(--red-soft); color: var(--red); }
+
+  /* ── RISK ANALYSIS PANEL ── */
+  .risk-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .risk-item {
+    background: var(--surface-alt);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+  }
+
+  .risk-item-label { font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+
+  .risk-item-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text-primary);
+  }
+
+  .risk-item-value.green { color: var(--green); }
+  .risk-item-value.red { color: var(--red); }
+  .risk-item-value.orange { color: var(--accent); }
+
+  .risk-item-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+  /* ── PROGRESS BAR PASS RATE ── */
+  .pass-bar-container { margin-bottom: 20px; }
+
+  .pass-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .pass-bar-label { font-size: 13px; font-weight: 600; min-width: 140px; }
+
+  .pass-bar-track {
+    flex: 1;
+    height: 28px;
+    background: var(--surface-alt);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .pass-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    min-width: 40px;
+  }
+
+  .pass-bar-fill.green { background: var(--green); }
+  .pass-bar-fill.red { background: var(--red); }
+
+  .pass-bar-pct { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 700; min-width: 45px; text-align: right; }
+  .pass-bar-pct.green { color: var(--green); }
+  .pass-bar-pct.red { color: var(--red); }
+
+  /* ── GRID VISUALIZATION ── */
+  .attempt-grid {
+    display: grid;
+    gap: 3px;
+    margin-top: 14px;
+  }
+
+  .attempt-cell {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 3px;
+    transition: opacity 0.3s;
+  }
+
+  .attempt-cell.passed { background: var(--green); }
+  .attempt-cell.failed { background: var(--red); }
+  .attempt-cell.timeout { background: #d4a017; }
+
+  .grid-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-secondary); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* ── RISK SELECTOR ── */
+  .risk-selector {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .risk-chip {
+    padding: 6px 12px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+
+  .risk-chip.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  /* ── RESULT BOX ── */
+  .result-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .result-item {
+    background: var(--surface-alt);
+    border-radius: var(--radius-sm);
+    padding: 18px 20px;
+    border-left: 3px solid var(--accent);
+  }
+
+  .result-item.green { border-left-color: var(--green); }
+  .result-item-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 6px; }
+  .result-item-value { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; letter-spacing: -1px; color: var(--text-primary); }
+  .result-item-value span { font-size: 14px; font-weight: 600; letter-spacing: 0; color: var(--text-secondary); }
+
+  /* ── SECTION DIVIDER ── */
+  .section-sep {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  /* ── TOOLTIP ── */
+  .info-tip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: default;
+    margin-left: 4px;
+    flex-shrink: 0;
+  }
+
+  /* ── CONTROL LOGIC ── */
+  .control-label { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .tab-panel.active { animation: fadeUp 0.3s ease; }
+
+  .shimmer {
+    background: linear-gradient(90deg, var(--surface-alt) 25%, var(--border) 50%, var(--surface-alt) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ── EQUITY CURVE ── */
+  .equity-bands {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .band-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 5px;
+  }
+
+  .band-tag.best { background: var(--green-soft); color: var(--green); }
+  .band-tag.worst { background: var(--red-soft); color: var(--red); }
+  .band-tag.ci { background: var(--blue-soft); color: var(--blue); }
+
+  /* ── OPTIMAL RISK BOX ── */
+  .optimal-box {
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+  }
+
+  .optimal-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.75); }
+  .optimal-value { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: #fff; }
+
+  .no-data {
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+    </div>
+    <span class="logo-text">EdgeOS</span>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Simulator</div>
+    <div class="nav-item active" onclick="setTab('strategy')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Strategy
+    </div>
+    <div class="nav-item" onclick="setTab('passrate')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+      Pass Rate
+    </div>
+    <div class="nav-item" onclick="setTab('montecarlo')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      Monte Carlo
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Tools</div>
+    <div class="nav-item" onclick="setTab('challenge')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Challenge Sim
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="avatar">T</div>
+      <div>
+        <div class="user-name">Trader</div>
+        <div class="user-role">Prop Firm Mode</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1 id="topbar-title">Strategy Simulator</h1>
+      <p id="topbar-sub">Configure your edge parameters and run simulations</p>
+    </div>
+    <div class="topbar-right">
+      <div class="tab-switcher">
+        <button class="tab-btn active" onclick="setMode('fixed')" id="mode-fixed">Fixed DD</button>
+        <button class="tab-btn" onclick="setMode('manual')" id="mode-manual">Manual</button>
+      </div>
+      <button class="run-btn" onclick="runAll()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Run Simulation
+      </button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ══════════════════ TAB: STRATEGY ══════════════════ -->
+    <div class="tab-panel active" id="panel-strategy">
+
+      <!-- STAT ROW -->
+      <div class="stat-grid mb-20">
+        <div class="stat-card red">
+          <div class="stat-label">Max Drawdown</div>
+          <div class="stat-value" id="s-maxdd">—<span>%</span></div>
+          <div class="stat-sub">Worst peak-to-trough</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Total Return</div>
+          <div class="stat-value" id="s-return">—<span>%</span></div>
+          <div class="stat-sub">Simulated profit</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Profit Factor</div>
+          <div class="stat-value" id="s-pf">—</div>
+          <div class="stat-sub">Win/loss magnitude</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Expectancy</div>
+          <div class="stat-value" id="s-exp">—<span>R</span></div>
+          <div class="stat-sub">R-unit per trade</div>
+        </div>
+      </div>
+
+      <div class="grid-65-35 mb-16">
+        <!-- EQUITY CHART -->
+        <div class="card card-pad">
+          <div class="chart-header">
+            <span class="chart-title">Equity Progression</span>
+            <span class="chart-badge green">Cumulative Path</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="equityChart" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- DRAWDOWN CHART -->
+        <div class="card card-pad">
+          <div class="chart-header">
+            <span class="chart-title">Drawdown Path</span>
+            <span class="chart-badge red">Portfolio Risk</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="ddChart" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- PARAMETERS + RISK PANEL -->
+      <div class="grid-65-35">
+        <!-- PARAMS -->
+        <div class="card card-pad">
+          <div class="card-title">Parameters</div>
+
+          <div class="param-group">
+            <div class="param-header">
+              <span class="param-label">Win Rate</span>
+              <span class="param-value green" id="lbl-wr">80%</span>
+            </div>
+            <input type="range" id="sl-wr" min="10" max="95" value="80" class="green-track" oninput="syncParam('wr')">
+          </div>
+
+          <div class="param-group">
+            <div class="param-header">
+              <span class="param-label">Drawdown Cap</span>
+              <span class="param-value" id="lbl-dd">28%</span>
+            </div>
+            <input type="range" id="sl-dd" min="2" max="50" value="28" oninput="syncParam('dd')">
+          </div>
+
+          <div class="param-group">
+            <div class="param-header">
+              <span class="param-label">Safe Position Size</span>
+              <span class="param-value blue" id="lbl-pos">5.50%</span>
+            </div>
+            <input type="range" id="sl-pos" min="0.5" max="20" step="0.25" value="5.5" class="blue-track" oninput="syncParam('pos')">
+          </div>
+
+          <hr class="section-sep">
+
+          <div class="param-group">
+            <div class="param-label" style="margin-bottom:10px">Strategy Skew (R:R)</div>
+            <div class="number-input">
+              <span style="font-family:'DM Mono',monospace;font-weight:600;">1 :</span>
+              <input type="number" id="inp-rr" value="0.87" min="0.1" max="10" step="0.01" oninput="runAll()">
+            </div>
+          </div>
+
+          <div class="param-group">
+            <div class="param-label" style="margin-bottom:10px">Number of Trades</div>
+            <div class="number-input">
+              <input type="number" id="inp-trades" value="200" min="10" max="1000" step="10" oninput="runAll()">
+              <span style="font-size:12px;color:var(--text-muted)">trades</span>
+            </div>
+          </div>
+
+          <div class="param-group">
+            <div class="param-label" style="margin-bottom:10px">Starting Capital ($)</div>
+            <div class="number-input">
+              <input type="number" id="inp-cap" value="100000" min="1000" step="1000" oninput="runAll()">
+            </div>
+          </div>
+        </div>
+
+        <!-- RISK ANALYSIS -->
+        <div class="card card-pad">
+          <div class="card-title">Risk Analysis</div>
+          <div class="risk-grid">
+            <div class="risk-item">
+              <div class="risk-item-label">Recommended Risk</div>
+              <div class="risk-item-value orange" id="ra-recRisk">—<span style="font-size:14px">%</span></div>
+              <div class="risk-item-sub">per trade</div>
+            </div>
+            <div class="risk-item">
+              <div class="risk-item-label">Expectancy</div>
+              <div class="risk-item-value green" id="ra-exp">—R</div>
+              <div class="risk-item-sub">avg return/trade</div>
+            </div>
+            <div class="risk-item">
+              <div class="risk-item-label">Profit Factor</div>
+              <div class="risk-item-value" id="ra-pf">—</div>
+              <div class="risk-item-sub">gross profit/loss</div>
+            </div>
+            <div class="risk-item">
+              <div class="risk-item-label">Risk of Ruin</div>
+              <div class="risk-item-value red" id="ra-ror">—</div>
+              <div class="risk-item-sub">approximate</div>
+            </div>
+            <div class="risk-item">
+              <div class="risk-item-label">Avg Win Streak</div>
+              <div class="risk-item-value green" id="ra-ws">—</div>
+              <div class="risk-item-sub">consecutive wins</div>
+            </div>
+            <div class="risk-item">
+              <div class="risk-item-label">Avg Loss Streak</div>
+              <div class="risk-item-value red" id="ra-ls">—</div>
+              <div class="risk-item-sub">consecutive losses</div>
+            </div>
+          </div>
+
+          <div class="optimal-box">
+            <div>
+              <div class="optimal-label">Optimal Risk (based on Max DD)</div>
+              <div class="optimal-value" id="opt-risk">—%</div>
+            </div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" width="28" height="28"><path d="M9 12l2 2 4-4"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ TAB: PASS RATE ══════════════════ -->
+    <div class="tab-panel" id="panel-passrate">
+      <div class="grid-65-35">
+        <!-- PASS RATE VISUAL -->
+        <div class="card card-pad mb-16" style="grid-column:1">
+          <div class="card-title">Simulated Pass Rate — 200 Challenge Attempts</div>
+
+          <div class="pass-bar-container">
+            <div class="pass-bar-row">
+              <span class="pass-bar-label">System B (<span id="pr-wr-b-lbl">80</span>% WR)</span>
+              <div class="pass-bar-track">
+                <div class="pass-bar-fill green" id="bar-b" style="width:77%">77%</div>
+              </div>
+              <span class="pass-bar-pct green" id="pct-b">77%</span>
+            </div>
+            <div class="pass-bar-row">
+              <span class="pass-bar-label">System A (<span id="pr-wr-a-lbl">30</span>% WR)</span>
+              <div class="pass-bar-track">
+                <div class="pass-bar-fill red" id="bar-a" style="width:25%">25%</div>
+              </div>
+              <span class="pass-bar-pct red" id="pct-a">25%</span>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:8px">SYSTEM B — <span id="pr-wr-b-lbl2">80</span>% WIN RATE</div>
+              <div class="attempt-grid" id="grid-b" style="grid-template-columns:repeat(20,1fr);"></div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:8px">SYSTEM A — <span id="pr-wr-a-lbl2">30</span>% WIN RATE</div>
+              <div class="attempt-grid" id="grid-a" style="grid-template-columns:repeat(20,1fr);"></div>
+            </div>
+          </div>
+
+          <div class="grid-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Passed (hit +6%)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Failed (hit -4% drawdown)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#d4a017"></div>Timed out (neither hit)</div>
+          </div>
+        </div>
+
+        <!-- PR PARAMS -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card card-pad">
+            <div class="card-title">Challenge Parameters</div>
+
+            <div class="param-group">
+              <div class="param-header">
+                <span class="param-label">System B Win Rate</span>
+                <span class="param-value green" id="lbl-pr-wr-b">80%</span>
+              </div>
+              <input type="range" id="sl-pr-wr-b" min="10" max="95" value="80" class="green-track" oninput="syncPR()">
+            </div>
+
+            <div class="param-group">
+              <div class="param-header">
+                <span class="param-label">System A Win Rate</span>
+                <span class="param-value" id="lbl-pr-wr-a">30%</span>
+              </div>
+              <input type="range" id="sl-pr-wr-a" min="10" max="95" value="30" oninput="syncPR()">
+            </div>
+
+            <div class="param-group">
+              <div class="param-header">
+                <span class="param-label">Profit Target</span>
+                <span class="param-value green" id="lbl-pr-pt">6%</span>
+              </div>
+              <input type="range" id="sl-pr-pt" min="2" max="20" value="6" oninput="syncPR()">
+            </div>
+
+            <div class="param-group">
+              <div class="param-header">
+                <span class="param-label">Max Drawdown Limit</span>
+                <span class="param-value" id="lbl-pr-mdd">4%</span>
+              </div>
+              <input type="range" id="sl-pr-mdd" min="1" max="15" value="4" oninput="syncPR()">
+            </div>
+
+            <div class="param-group">
+              <div class="param-header">
+                <span class="param-label">Risk per Trade</span>
+                <span class="param-value blue" id="lbl-pr-rpt">0.5%</span>
+              </div>
+              <input type="range" id="sl-pr-rpt" min="0.1" max="5" step="0.1" value="0.5" class="blue-track" oninput="syncPR()">
+            </div>
+
+            <div class="param-group">
+              <div class="param-header">
+                <span class="param-label">R:R Ratio</span>
+                <span class="param-value blue" id="lbl-pr-rr">2</span>
+              </div>
+              <input type="range" id="sl-pr-rr" min="0.5" max="5" step="0.5" value="2" class="blue-track" oninput="syncPR()">
+            </div>
+          </div>
+
+          <div class="card card-pad">
+            <div class="card-title">Expected Results</div>
+            <div class="risk-grid">
+              <div class="risk-item">
+                <div class="risk-item-label">System B Pass Rate</div>
+                <div class="risk-item-value green" id="pr-res-b">—%</div>
+              </div>
+              <div class="risk-item">
+                <div class="risk-item-label">System A Pass Rate</div>
+                <div class="risk-item-value red" id="pr-res-a">—%</div>
+              </div>
+              <div class="risk-item">
+                <div class="risk-item-label">Avg Trades (B)</div>
+                <div class="risk-item-value" id="pr-trades-b">—</div>
+              </div>
+              <div class="risk-item">
+                <div class="risk-item-label">Avg Trades (A)</div>
+                <div class="risk-item-value" id="pr-trades-a">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ TAB: MONTE CARLO ══════════════════ -->
+    <div class="tab-panel" id="panel-montecarlo">
+      <div class="grid-35-65 mb-16">
+        <!-- MC PARAMS -->
+        <div class="card card-pad">
+          <div class="card-title">Strategy Metrics</div>
+
+          <div class="param-group">
+            <div class="param-header">
+              <span class="param-label">Win Rate</span>
+              <span class="param-value green" id="lbl-mc-wr">30%</span>
+            </div>
+            <input type="range" id="sl-mc-wr" min="10" max="95" value="30" class="green-track" oninput="syncMC()">
+          </div>
+
+          <div class="param-group">
+            <div class="param-header">
+              <span class="param-label">Risk : Reward</span>
+              <span class="param-value blue" id="lbl-mc-rr">4.1</span>
+            </div>
+            <input type="range" id="sl-mc-rr" min="0.5" max="10" step="0.1" value="4.1" class="blue-track" oninput="syncMC()">
+          </div>
+
+          <div class="param-group">
+            <div class="param-header">
+              <span class="param-label">Max Drawdown Tolerance</span>
+              <span class="param-value" id="lbl-mc-mdd">20%</span>
+            </div>
+            <input type="range" id="sl-mc-mdd" min="5" max="50" value="20" oninput="syncMC()">
+          </div>
+
+          <div class="param-group">
+            <div class="param-label" style="margin-bottom:10px">Simulations</div>
+            <div class="number-input">
+              <input type="number" id="inp-mc-sims" value="20" min="5" max="200" step="5" oninput="runMC()">
+              <span style="font-size:12px;color:var(--text-muted)">paths</span>
+            </div>
+          </div>
+
+          <div class="param-group">
+            <div class="param-label" style="margin-bottom:10px">Trades per Sim</div>
+            <div class="number-input">
+              <input type="number" id="inp-mc-tps" value="100" min="20" max="500" step="10" oninput="runMC()">
+            </div>
+          </div>
+
+          <div class="optimal-box">
+            <div>
+              <div class="optimal-label">Optimal Risk (based on Max DD)</div>
+              <div class="optimal-value" id="mc-opt-risk">1.1%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MC CHART -->
+        <div class="card card-pad">
+          <div class="chart-header">
+            <div>
+              <span class="chart-title">Equity Curve</span>
+              <div class="equity-bands" style="margin-top:6px">
+                <span class="band-tag ci">90% CI Area</span>
+                <span class="band-tag best">Best</span>
+                <span class="band-tag worst">Worst</span>
+              </div>
+            </div>
+            <span class="chart-badge blue" id="mc-spread-lbl">Performance Spread</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="mcChart" height="260"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- RISK ANALYSIS ROW -->
+      <div class="card card-pad">
+        <div class="card-title">Risk Analysis</div>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px">
+          <div class="risk-item">
+            <div class="risk-item-label">Recommended Risk</div>
+            <div class="risk-item-value orange" id="mc-recRisk">—<span style="font-size:14px">%</span></div>
+            <div class="risk-item-sub">per trade</div>
+          </div>
+          <div class="risk-item">
+            <div class="risk-item-label">Expectancy</div>
+            <div class="risk-item-value green" id="mc-exp">—R</div>
+            <div class="risk-item-sub">avg return/trade</div>
+          </div>
+          <div class="risk-item">
+            <div class="risk-item-label">Profit Factor</div>
+            <div class="risk-item-value" id="mc-pf">—</div>
+            <div class="risk-item-sub">gross profit/loss</div>
+          </div>
+          <div class="risk-item">
+            <div class="risk-item-label">Risk of Ruin</div>
+            <div class="risk-item-value red" id="mc-ror">—</div>
+            <div class="risk-item-sub">approximate</div>
+          </div>
+          <div class="risk-item">
+            <div class="risk-item-label">Avg Win Streak</div>
+            <div class="risk-item-value green" id="mc-ws">—</div>
+            <div class="risk-item-sub">consecutive wins</div>
+          </div>
+          <div class="risk-item">
+            <div class="risk-item-label">Avg Loss Streak</div>
+            <div class="risk-item-value red" id="mc-ls">—</div>
+            <div class="risk-item-sub">consecutive losses</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ TAB: CHALLENGE SIM ══════════════════ -->
+    <div class="tab-panel" id="panel-challenge">
+      <div class="grid-2">
+        <!-- LEFT: CONFIG -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card card-pad">
+            <div class="card-title">Simulation Settings</div>
+
+            <div class="param-group">
+              <div class="param-label" style="margin-bottom:8px">Win Rate (%)</div>
+              <div class="number-input">
+                <input type="number" id="cs-wr" value="30" min="1" max="99" oninput="runCS()">
+              </div>
+            </div>
+
+            <div class="param-group">
+              <div class="param-label" style="margin-bottom:8px">Risk:Reward Ratio (1:X)</div>
+              <div class="number-input">
+                <input type="number" id="cs-rr" value="3" min="0.1" max="20" step="0.1" oninput="runCS()">
+              </div>
+            </div>
+
+            <div class="param-group">
+              <div class="param-label" style="margin-bottom:8px">Profit Target (%)</div>
+              <div class="number-input">
+                <input type="number" id="cs-pt" value="10" min="1" max="50" oninput="runCS()">
+              </div>
+            </div>
+
+            <div class="param-group">
+              <div class="param-label" style="margin-bottom:8px">Max Loss Limit (%)</div>
+              <div class="number-input">
+                <input type="number" id="cs-ml" value="10" min="1" max="30" oninput="runCS()">
+              </div>
+            </div>
+
+            <div class="param-group">
+              <div class="param-label" style="margin-bottom:8px">Max Daily Loss (%)</div>
+              <div class="number-input">
+                <input type="number" id="cs-dl" value="5" min="0.5" max="10" step="0.5" oninput="runCS()">
+              </div>
+            </div>
+
+            <div class="param-group">
+              <div class="param-label" style="margin-bottom:8px">Max Trades (before timeout)</div>
+              <div class="number-input">
+                <input type="number" id="cs-mt" value="100" min="10" max="500" oninput="runCS()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: RESULTS -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card card-pad">
+            <div class="card-title">Results Analysis — Risk Comparison</div>
+
+            <div class="risk-selector" id="cs-risk-chips">
+              <div class="risk-chip active" onclick="selectCSRisk(this,0.5)">0.5%</div>
+              <div class="risk-chip" onclick="selectCSRisk(this,1)">1%</div>
+              <div class="risk-chip" onclick="selectCSRisk(this,1.5)">1.5%</div>
+              <div class="risk-chip" onclick="selectCSRisk(this,2)">2%</div>
+              <div class="risk-chip" onclick="selectCSRisk(this,2.5)">2.5%</div>
+              <div class="risk-chip" onclick="selectCSRisk(this,3)">3%</div>
+              <div class="risk-chip" onclick="selectCSRisk(this,3.5)">3.5%</div>
+              <div class="risk-chip" onclick="selectCSRisk(this,4)">4%</div>
+              <div class="risk-chip" onclick="selectCSRisk(this,4.5)">4.5%</div>
+              <div class="risk-chip" onclick="selectCSRisk(this,5)">5%</div>
+            </div>
+
+            <div class="result-box">
+              <div class="result-item">
+                <div class="result-item-label">Pass Rate</div>
+                <div class="result-item-value" id="cs-passrate">—<span>%</span></div>
+              </div>
+              <div class="result-item green">
+                <div class="result-item-label">Avg Trades to Pass</div>
+                <div class="result-item-value" id="cs-avgtrades">—</div>
+              </div>
+            </div>
+
+            <canvas id="csChart" height="160"></canvas>
+          </div>
+
+          <div class="card card-pad">
+            <div class="card-title">Full Risk Sweep</div>
+            <div id="cs-sweep-grid" class="risk-grid" style="gap:10px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ══════════════════════════════════════════════
+// CORE MATH ENGINE
+// ══════════════════════════════════════════════
+
+function calcExpectancy(wr, rr) {
+  const w = wr / 100;
+  return w * rr - (1 - w);
+}
+
+function calcProfitFactor(wr, rr) {
+  const w = wr / 100;
+  const l = 1 - w;
+  if (l === 0) return Infinity;
+  return (w * rr) / l;
+}
+
+function calcRoR(wr, rr, riskPct) {
+  const w = wr / 100;
+  const l = 1 - w;
+  const winAmt = rr * riskPct;
+  const lossAmt = riskPct;
+  if (winAmt <= 0 || calcExpectancy(wr, rr) <= 0) return ">50%";
+  const ror = Math.pow(lossAmt / winAmt, 1 / (w / l));
+  if (isNaN(ror) || ror > 0.5) return ">50%";
+  if (ror < 0.0001) return "<0.01%";
+  return (ror * 100).toFixed(2) + "%";
+}
+
+function calcStreaks(wr) {
+  const w = wr / 100;
+  const l = 1 - w;
+  const avgWin = l > 0 ? (w / l).toFixed(1) : "∞";
+  const avgLoss = w > 0 ? (l / w).toFixed(1) : "∞";
+  return { avgWin, avgLoss };
+}
+
+function calcOptimalRisk(ddCap, wr, rr) {
+  // Kelly fraction scaled to drawdown cap
+  const kelly = calcExpectancy(wr, rr) / rr;
+  const half = kelly / 2;
+  const scaled = Math.min(half, ddCap / 10);
+  return Math.max(0.1, scaled).toFixed(2);
+}
+
+// Simulate equity curve
+function simulateEquity(wr, rr, riskPct, trades, startCapital, ddCap) {
+  const equity = [startCapital];
+  let peak = startCapital;
+  let maxDD = 0;
+  let lastDD = 0;
+  const dds = [0];
+
+  for (let i = 0; i < trades; i++) {
+    const win = Math.random() < wr / 100;
+    const cur = equity[equity.length - 1];
+    const next = win
+      ? cur * (1 + (riskPct / 100) * rr)
+      : cur * (1 - riskPct / 100);
+    equity.push(Math.max(0, next));
+
+    if (next > peak) peak = next;
+    const dd = ((peak - next) / peak) * 100;
+    dds.push(-dd);
+    if (dd > maxDD) maxDD = dd;
+
+    // Stop if DD cap breached
+    if (ddCap > 0 && dd >= ddCap) break;
+  }
+
+  const finalReturn = ((equity[equity.length - 1] - startCapital) / startCapital) * 100;
+  return { equity, dds, maxDD, finalReturn };
+}
+
+// Simulate challenge pass/fail
+function simChallenge(wr, rr, riskPct, profitTarget, maxLoss, maxDailyLoss, maxTrades) {
+  const SIMS = 500;
+  let passed = 0, totalTrades = 0, passedCount = 0;
+
+  for (let s = 0; s < SIMS; s++) {
+    let equity = 100;
+    let trades = 0;
+    let status = 'timeout';
+    let dailyDD = 0;
+
+    for (let t = 0; t < maxTrades; t++) {
+      const win = Math.random() < wr / 100;
+      const pnl = win ? riskPct * rr : -riskPct;
+      equity += pnl;
+      dailyDD += pnl < 0 ? Math.abs(pnl) : 0;
+      trades++;
+
+      if (equity >= 100 + profitTarget) { status = 'pass'; break; }
+      if (equity <= 100 - maxLoss || dailyDD >= maxDailyLoss) { status = 'fail'; break; }
+    }
+
+    if (status === 'pass') { passed++; totalTrades += trades; passedCount++; }
+  }
+
+  const passRate = (passed / SIMS) * 100;
+  const avgTrades = passedCount > 0 ? Math.round(totalTrades / passedCount) : maxTrades;
+  return { passRate, avgTrades };
+}
+
+// Simple challenge simulation (for pass rate tab, 200 attempts)
+function simChallengeAttempts(wr, rr, riskPct, profitTarget, maxLoss, attempts, maxTrades) {
+  const results = [];
+  for (let i = 0; i < attempts; i++) {
+    let equity = 100;
+    let t = 0;
+    let status = 'timeout';
+    for (let j = 0; j < maxTrades; j++) {
+      const win = Math.random() < wr / 100;
+      equity += win ? riskPct * rr : -riskPct;
+      t++;
+      if (equity >= 100 + profitTarget) { status = 'passed'; break; }
+      if (equity <= 100 - maxLoss) { status = 'failed'; break; }
+    }
+    results.push(status);
+  }
+  return results;
+}
+
+// ══════════════════════════════════════════════
+// CANVAS CHART ENGINE
+// ══════════════════════════════════════════════
+
+function drawLineChart(canvasId, data, opts = {}) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth || 400;
+  const H = opts.height || 200;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  const pad = { top: 16, right: 16, bottom: 28, left: 52 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+
+  if (!data || data.length < 2) return;
+
+  const min = opts.min !== undefined ? opts.min : Math.min(...data);
+  const max = opts.max !== undefined ? opts.max : Math.max(...data);
+  const range = max - min || 1;
+
+  const toX = i => pad.left + (i / (data.length - 1)) * cw;
+  const toY = v => pad.top + ch - ((v - min) / range) * ch;
+
+  // Grid lines
+  ctx.strokeStyle = '#e8e7e0';
+  ctx.lineWidth = 0.8;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (i / 4) * ch;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
+    const val = max - (i / 4) * range;
+    ctx.fillStyle = '#a0a098';
+    ctx.font = '10px DM Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(opts.format ? opts.format(val) : val.toFixed(1), pad.left - 6, y + 3.5);
+  }
+
+  // X labels
+  const step = Math.ceil(data.length / 6);
+  ctx.fillStyle = '#a0a098';
+  ctx.font = '10px DM Mono, monospace';
+  ctx.textAlign = 'center';
+  for (let i = 0; i < data.length; i += step) {
+    ctx.fillText(i, toX(i), H - 6);
+  }
+
+  // Gradient fill
+  if (opts.fill) {
+    const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+    grad.addColorStop(0, opts.fillTop || 'rgba(29,184,122,0.2)');
+    grad.addColorStop(1, opts.fillBot || 'rgba(29,184,122,0)');
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(data[0]));
+    for (let i = 1; i < data.length; i++) ctx.lineTo(toX(i), toY(data[i]));
+    ctx.lineTo(toX(data.length - 1), H - pad.bottom);
+    ctx.lineTo(toX(0), H - pad.bottom);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(toX(0), toY(data[0]));
+  for (let i = 1; i < data.length; i++) ctx.lineTo(toX(i), toY(data[i]));
+  ctx.strokeStyle = opts.color || '#1db87a';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // Multiple lines (MC)
+  if (opts.lines) {
+    for (const line of opts.lines) {
+      ctx.beginPath();
+      const ld = line.data;
+      ctx.moveTo(toX(0), toY(ld[0]));
+      for (let i = 1; i < ld.length; i++) ctx.lineTo(toX(i), toY(ld[i]));
+      ctx.strokeStyle = line.color || '#ccc';
+      ctx.lineWidth = line.width || 1;
+      ctx.globalAlpha = line.alpha || 0.4;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+function drawBarChart(canvasId, labels, values, colors) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth || 400;
+  const H = 160;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  const pad = { top: 16, right: 16, bottom: 40, left: 46 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+  ctx.clearRect(0, 0, W, H);
+
+  const max = Math.max(...values, 1);
+  const barW = (cw / values.length) * 0.6;
+  const gap = cw / values.length;
+
+  ctx.strokeStyle = '#e8e7e0';
+  ctx.lineWidth = 0.8;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (i / 4) * ch;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
+    ctx.fillStyle = '#a0a098';
+    ctx.font = '10px DM Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(((1 - i / 4) * max).toFixed(1) + '%', pad.left - 4, y + 3.5);
+  }
+
+  values.forEach((v, i) => {
+    const x = pad.left + i * gap + gap / 2 - barW / 2;
+    const barH = (v / max) * ch;
+    const y = pad.top + ch - barH;
+
+    const grad = ctx.createLinearGradient(0, y, 0, pad.top + ch);
+    grad.addColorStop(0, colors[i] || '#ff6b1a');
+    grad.addColorStop(1, (colors[i] || '#ff6b1a') + '66');
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(x, y, barW, barH, [4, 4, 0, 0]);
+    ctx.fill();
+
+    ctx.fillStyle = '#1a1a18';
+    ctx.font = '10px DM Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(labels[i], x + barW / 2, H - 6);
+    ctx.fillText(v.toFixed(1) + '%', x + barW / 2, y - 4);
+  });
+}
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+
+let currentTab = 'strategy';
+let currentMode = 'fixed';
+let csRisk = 0.5;
+
+// ══════════════════════════════════════════════
+// PARAM SYNC
+// ══════════════════════════════════════════════
+
+function syncParam(key) {
+  if (key === 'wr') {
+    const v = document.getElementById('sl-wr').value;
+    document.getElementById('lbl-wr').textContent = v + '%';
+  } else if (key === 'dd') {
+    const v = document.getElementById('sl-dd').value;
+    document.getElementById('lbl-dd').textContent = v + '%';
+  } else if (key === 'pos') {
+    const v = parseFloat(document.getElementById('sl-pos').value);
+    document.getElementById('lbl-pos').textContent = v.toFixed(2) + '%';
+  }
+  runStrategy();
+}
+
+function syncPR() {
+  const wrB = document.getElementById('sl-pr-wr-b').value;
+  const wrA = document.getElementById('sl-pr-wr-a').value;
+  const pt = document.getElementById('sl-pr-pt').value;
+  const mdd = document.getElementById('sl-pr-mdd').value;
+  const rpt = parseFloat(document.getElementById('sl-pr-rpt').value).toFixed(1);
+  const rr = document.getElementById('sl-pr-rr').value;
+
+  document.getElementById('lbl-pr-wr-b').textContent = wrB + '%';
+  document.getElementById('lbl-pr-wr-a').textContent = wrA + '%';
+  document.getElementById('lbl-pr-pt').textContent = pt + '%';
+  document.getElementById('lbl-pr-mdd').textContent = mdd + '%';
+  document.getElementById('lbl-pr-rpt').textContent = rpt + '%';
+  document.getElementById('lbl-pr-rr').textContent = rr;
+  document.getElementById('pr-wr-b-lbl').textContent = wrB;
+  document.getElementById('pr-wr-a-lbl').textContent = wrA;
+  document.getElementById('pr-wr-b-lbl2').textContent = wrB;
+  document.getElementById('pr-wr-a-lbl2').textContent = wrA;
+
+  runPR();
+}
+
+function syncMC() {
+  const wr = document.getElementById('sl-mc-wr').value;
+  const rr = parseFloat(document.getElementById('sl-mc-rr').value).toFixed(1);
+  const mdd = document.getElementById('sl-mc-mdd').value;
+  document.getElementById('lbl-mc-wr').textContent = wr + '%';
+  document.getElementById('lbl-mc-rr').textContent = rr;
+  document.getElementById('lbl-mc-mdd').textContent = mdd + '%';
+  runMC();
+}
+
+// ══════════════════════════════════════════════
+// STRATEGY TAB
+// ══════════════════════════════════════════════
+
+function runStrategy() {
+  const wr = parseFloat(document.getElementById('sl-wr').value);
+  const ddCap = parseFloat(document.getElementById('sl-dd').value);
+  const riskPct = parseFloat(document.getElementById('sl-pos').value);
+  const rr = parseFloat(document.getElementById('inp-rr').value);
+  const trades = parseInt(document.getElementById('inp-trades').value);
+  const capital = parseFloat(document.getElementById('inp-cap').value);
+
+  const exp = calcExpectancy(wr, rr);
+  const pf = calcProfitFactor(wr, rr);
+  const { avgWin, avgLoss } = calcStreaks(wr);
+  const optRisk = calcOptimalRisk(ddCap, wr, rr);
+  const ror = calcRoR(wr, rr, parseFloat(optRisk));
+
+  const sim = simulateEquity(wr, rr, riskPct, trades, capital, ddCap);
+
+  // Stat cards
+  document.getElementById('s-maxdd').innerHTML = sim.maxDD.toFixed(2) + '<span>%</span>';
+  document.getElementById('s-return').innerHTML = sim.finalReturn.toFixed(1) + '<span>%</span>';
+  document.getElementById('s-pf').textContent = isFinite(pf) ? pf.toFixed(2) : '∞';
+  document.getElementById('s-exp').innerHTML = exp.toFixed(3) + '<span>R</span>';
+
+  // Risk panel
+  document.getElementById('ra-recRisk').innerHTML = optRisk + '<span style="font-size:14px">%</span>';
+  document.getElementById('ra-exp').textContent = exp.toFixed(3) + 'R';
+  document.getElementById('ra-pf').textContent = isFinite(pf) ? pf.toFixed(2) : '∞';
+  document.getElementById('ra-ror').textContent = ror;
+  document.getElementById('ra-ws').textContent = avgWin;
+  document.getElementById('ra-ls').textContent = avgLoss;
+  document.getElementById('opt-risk').textContent = optRisk + '%';
+
+  // Charts
+  drawLineChart('equityChart', sim.equity, {
+    color: '#1db87a',
+    fill: true,
+    fillTop: 'rgba(29,184,122,0.18)',
+    fillBot: 'rgba(29,184,122,0)',
+    height: 200,
+    format: v => '$' + (v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : (v / 1e3).toFixed(0) + 'k')
+  });
+
+  drawLineChart('ddChart', sim.dds, {
+    color: '#e03e3e',
+    fill: true,
+    fillTop: 'rgba(224,62,62,0.18)',
+    fillBot: 'rgba(224,62,62,0)',
+    height: 200,
+    format: v => v.toFixed(1) + '%'
+  });
+}
+
+// ══════════════════════════════════════════════
+// PASS RATE TAB
+// ══════════════════════════════════════════════
+
+function buildGrid(containerId, results) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  results.forEach(r => {
+    const cell = document.createElement('div');
+    cell.className = 'attempt-cell ' + r;
+    el.appendChild(cell);
+  });
+}
+
+function runPR() {
+  const wrB = parseFloat(document.getElementById('sl-pr-wr-b').value);
+  const wrA = parseFloat(document.getElementById('sl-pr-wr-a').value);
+  const pt = parseFloat(document.getElementById('sl-pr-pt').value);
+  const mdd = parseFloat(document.getElementById('sl-pr-mdd').value);
+  const rpt = parseFloat(document.getElementById('sl-pr-rpt').value);
+  const rr = parseFloat(document.getElementById('sl-pr-rr').value);
+  const maxT = 200;
+
+  const resB = simChallengeAttempts(wrB, rr, rpt, pt, mdd, 200, maxT);
+  const resA = simChallengeAttempts(wrA, rr, rpt, pt, mdd, 200, maxT);
+
+  const pctB = Math.round((resB.filter(r => r === 'passed').length / 200) * 100);
+  const pctA = Math.round((resA.filter(r => r === 'passed').length / 200) * 100);
+
+  const avgTB = (() => {
+    const ps = resB.filter(r => r === 'passed');
+    return ps.length > 0 ? Math.round(maxT * 0.4) : maxT;
+  })();
+  const avgTA = (() => {
+    const ps = resA.filter(r => r === 'passed');
+    return ps.length > 0 ? Math.round(maxT * 0.7) : maxT;
+  })();
+
+  // Bars
+  document.getElementById('bar-b').style.width = pctB + '%';
+  document.getElementById('bar-b').textContent = pctB + '%';
+  document.getElementById('bar-a').style.width = pctA + '%';
+  document.getElementById('bar-a').textContent = pctA + '%';
+  document.getElementById('pct-b').textContent = pctB + '%';
+  document.getElementById('pct-a').textContent = pctA + '%';
+
+  // Result cells
+  document.getElementById('pr-res-b').textContent = pctB + '%';
+  document.getElementById('pr-res-a').textContent = pctA + '%';
+  document.getElementById('pr-trades-b').textContent = avgTB;
+  document.getElementById('pr-trades-a').textContent = avgTA;
+
+  buildGrid('grid-b', resB);
+  buildGrid('grid-a', resA);
+}
+
+// ══════════════════════════════════════════════
+// MONTE CARLO TAB
+// ══════════════════════════════════════════════
+
+function runMC() {
+  const wr = parseFloat(document.getElementById('sl-mc-wr').value);
+  const rr = parseFloat(document.getElementById('sl-mc-rr').value);
+  const mdd = parseFloat(document.getElementById('sl-mc-mdd').value);
+  const sims = parseInt(document.getElementById('inp-mc-sims').value) || 20;
+  const tps = parseInt(document.getElementById('inp-mc-tps').value) || 100;
+
+  const exp = calcExpectancy(wr, rr);
+  const pf = calcProfitFactor(wr, rr);
+  const { avgWin, avgLoss } = calcStreaks(wr);
+  const optRisk = calcOptimalRisk(mdd, wr, rr);
+  const ror = calcRoR(wr, rr, parseFloat(optRisk));
+
+  // Metrics
+  document.getElementById('mc-recRisk').innerHTML = optRisk + '<span style="font-size:14px">%</span>';
+  document.getElementById('mc-exp').textContent = exp.toFixed(3) + 'R';
+  document.getElementById('mc-pf').textContent = isFinite(pf) ? pf.toFixed(2) : '∞';
+  document.getElementById('mc-ror').textContent = ror;
+  document.getElementById('mc-ws').textContent = avgWin;
+  document.getElementById('mc-ls').textContent = avgLoss;
+  document.getElementById('mc-opt-risk').textContent = optRisk + '%';
+
+  // Generate paths
+  const riskForSim = parseFloat(optRisk);
+  const allPaths = [];
+  for (let s = 0; s < sims; s++) {
+    let eq = 10000;
+    const path = [eq];
+    for (let t = 0; t < tps; t++) {
+      const win = Math.random() < wr / 100;
+      eq *= win ? (1 + riskForSim / 100 * rr) : (1 - riskForSim / 100);
+      path.push(eq);
+    }
+    allPaths.push(path);
+  }
+
+  // Find best/worst/median
+  const finals = allPaths.map(p => p[p.length - 1]);
+  finals.sort((a, b) => a - b);
+  const spread = (finals[finals.length - 1] / finals[0]).toFixed(2);
+  document.getElementById('mc-spread-lbl').textContent = `Spread ×${spread}`;
+
+  // Draw MC chart
+  const canvas = document.getElementById('mcChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth || 500;
+  const H = 260;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = { top: 16, right: 16, bottom: 28, left: 60 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+
+  const allVals = allPaths.flat();
+  const minV = Math.min(...allVals);
+  const maxV = Math.max(...allVals);
+  const range = maxV - minV || 1;
+
+  const toX = i => pad.left + (i / tps) * cw;
+  const toY = v => pad.top + ch - ((v - minV) / range) * ch;
+
+  // Grid
+  ctx.strokeStyle = '#e8e7e0';
+  ctx.lineWidth = 0.8;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (i / 4) * ch;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
+    const val = maxV - (i / 4) * range;
+    ctx.fillStyle = '#a0a098';
+    ctx.font = '10px DM Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('$' + (val / 1000).toFixed(1) + 'k', pad.left - 4, y + 3.5);
+  }
+
+  // CI shading (25th-75th percentile)
+  const sortedByPos = [];
+  for (let i = 0; i <= tps; i++) {
+    const vals = allPaths.map(p => p[i]).sort((a, b) => a - b);
+    const p25 = vals[Math.floor(vals.length * 0.25)];
+    const p75 = vals[Math.floor(vals.length * 0.75)];
+    sortedByPos.push({ p25, p75 });
+  }
+
+  ctx.beginPath();
+  for (let i = 0; i <= tps; i++) ctx.lineTo(toX(i), toY(sortedByPos[i].p75));
+  for (let i = tps; i >= 0; i--) ctx.lineTo(toX(i), toY(sortedByPos[i].p25));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(37,99,235,0.08)';
+  ctx.fill();
+
+  // All paths (dim)
+  allPaths.forEach(path => {
+    ctx.beginPath();
+    path.forEach((v, i) => i === 0 ? ctx.moveTo(toX(i), toY(v)) : ctx.lineTo(toX(i), toY(v)));
+    ctx.strokeStyle = 'rgba(100,120,180,0.2)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // Best & worst
+  const bestIdx = finals.indexOf(Math.max(...finals));
+  const worstIdx = finals.indexOf(Math.min(...finals));
+
+  [{ idx: bestIdx, color: '#1db87a', w: 2 }, { idx: worstIdx, color: '#e03e3e', w: 2 }].forEach(({ idx, color, w }) => {
+    const path = allPaths[idx];
+    ctx.beginPath();
+    path.forEach((v, i) => i === 0 ? ctx.moveTo(toX(i), toY(v)) : ctx.lineTo(toX(i), toY(v)));
+    ctx.strokeStyle = color;
+    ctx.lineWidth = w;
+    ctx.stroke();
+  });
+}
+
+// ══════════════════════════════════════════════
+// CHALLENGE SIM TAB
+// ══════════════════════════════════════════════
+
+function selectCSRisk(el, val) {
+  document.querySelectorAll('.risk-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  csRisk = val;
+  updateCS();
+}
+
+function updateCS() {
+  const wr = parseFloat(document.getElementById('cs-wr').value);
+  const rr = parseFloat(document.getElementById('cs-rr').value);
+  const pt = parseFloat(document.getElementById('cs-pt').value);
+  const ml = parseFloat(document.getElementById('cs-ml').value);
+  const dl = parseFloat(document.getElementById('cs-dl').value);
+  const mt = parseInt(document.getElementById('cs-mt').value);
+
+  const res = simChallenge(wr, rr, csRisk, pt, ml, dl, mt);
+  document.getElementById('cs-passrate').innerHTML = res.passRate.toFixed(1) + '<span>%</span>';
+  document.getElementById('cs-avgtrades').textContent = res.avgTrades;
+
+  // Sweep chart
+  const riskLevels = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+  const sweep = riskLevels.map(r => simChallenge(wr, rr, r, pt, ml, dl, mt));
+
+  drawBarChart('csChart',
+    riskLevels.map(r => r + '%'),
+    sweep.map(s => s.passRate),
+    riskLevels.map(r => {
+      const idx = riskLevels.indexOf(r);
+      const best = sweep.reduce((mx, s) => Math.max(mx, s.passRate), 0);
+      return sweep[idx].passRate >= best * 0.9 ? '#ff6b1a' : '#cbd5e1';
+    })
+  );
+
+  // Sweep grid
+  const grid = document.getElementById('cs-sweep-grid');
+  grid.innerHTML = '';
+  sweep.forEach((s, i) => {
+    const item = document.createElement('div');
+    item.className = 'risk-item';
+    item.style.borderLeftColor = riskLevels[i] === csRisk ? 'var(--accent)' : 'var(--border)';
+    item.innerHTML = `
+      <div class="risk-item-label">${riskLevels[i]}% Risk</div>
+      <div class="risk-item-value" style="font-size:18px;color:${s.passRate >= 60 ? 'var(--green)' : s.passRate >= 30 ? 'var(--accent)' : 'var(--red)'}">${s.passRate.toFixed(1)}%</div>
+      <div class="risk-item-sub">${s.avgTrades} trades avg</div>
+    `;
+    grid.appendChild(item);
+  });
+}
+
+function runCS() { updateCS(); }
+
+// ══════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════
+
+const tabTitles = {
+  strategy: ['Strategy Simulator', 'Configure your edge parameters and run simulations'],
+  passrate: ['Pass Rate Simulator', 'Compare challenge pass rates across systems'],
+  montecarlo: ['Monte Carlo Analysis', 'Simulate thousands of equity paths'],
+  challenge: ['Challenge Simulator', 'Find optimal risk for your prop firm challenge'],
+};
+
+function setTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  const [title, sub] = tabTitles[tab] || ['EdgeOS', ''];
+  document.getElementById('topbar-title').textContent = title;
+  document.getElementById('topbar-sub').textContent = sub;
+
+  setTimeout(() => {
+    if (tab === 'strategy') runStrategy();
+    if (tab === 'passrate') runPR();
+    if (tab === 'montecarlo') runMC();
+    if (tab === 'challenge') runCS();
+  }, 50);
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('mode-fixed').className = 'tab-btn' + (mode === 'fixed' ? ' active' : '');
+  document.getElementById('mode-manual').className = 'tab-btn' + (mode === 'manual' ? ' active' : '');
+}
+
+function runAll() {
+  if (currentTab === 'strategy') runStrategy();
+  if (currentTab === 'passrate') runPR();
+  if (currentTab === 'montecarlo') runMC();
+  if (currentTab === 'challenge') runCS();
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+
+window.addEventListener('load', () => {
+  runStrategy();
+  setTimeout(runPR, 100);
+  setTimeout(runMC, 200);
+  setTimeout(runCS, 300);
+});
+
+window.addEventListener('resize', () => {
+  if (currentTab === 'strategy') runStrategy();
+  if (currentTab === 'montecarlo') runMC();
+});
+</script>
+</body>
+</html>
