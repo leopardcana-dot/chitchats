@@ -524,16 +524,16 @@
 
     function runAdaptiveSimulation(renderCharts = true) {
         // Input parsing
-        let startCapital = parseFloat(startCapitalInput.value) || 1000;
+        let startCapital = parseFloat(startCapitalInput.value) || 100;
         let periodType = periodTypeSelect.value;
         let numPeriods = parseInt(numPeriodsInput.value) || 30;
-        let winRate = (parseFloat(winRateInput.value) || 45) / 100;
-        let riskPips = parseFloat(riskPipsInput.value) || 20;
+        let winRate = (parseFloat(winRateInput.value) || 65) / 100;
+        let riskPips = parseFloat(riskPipsInput.value) || 30;
         let rewardPips = parseFloat(rewardPipsInput.value) || 60;
-        let tradesPerPeriod = parseInt(tradesPerPeriodInput.value) || 1;
-        let vaultPct = (parseFloat(vaultPctInput.value) || 20) / 100;
-        let reinvestPct = (parseFloat(reinvestPctInput.value) || 50) / 100;
-        let familyPct = (parseFloat(familyPctInput.value) || 30) / 100;
+        let tradesPerPeriod = parseInt(tradesPerPeriodInput.value) || 4;
+        let vaultPct = (parseFloat(vaultPctInput.value) || 1) / 100;
+        let reinvestPct = (parseFloat(reinvestPctInput.value) || 98) / 100;
+        let familyPct = (parseFloat(familyPctInput.value) || 1) / 100;
         let commissionPct = (parseFloat(commissionPctInput.value) || 0) / 100;
         let slippagePct = (parseFloat(slippagePctInput.value) || 0) / 100;
         let periodicDeposit = parseFloat(periodicDepositInput.value) || 0;
