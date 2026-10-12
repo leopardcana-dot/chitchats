@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Ultimate Monte Carlo Trader | Win/Loss Stats & Equity Chart</title>
+    <!-- Google Fonts + Font Awesome + Chart.js -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root { --sand:#e8dec7; --paper:#fbf7ef; --ink:#293a36; --muted:#68746d; --teal:#4f766e; --green:#49a978; --red:#d94b43; --line1:#eca900; --line2:#55bd79; --line3:#5594e8; --line4:#e95b48; --line5:#b652ce; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(145deg, #eef2f7 0%, #dfe6ed 100%);
+            font-family: 'Poppins', sans-serif;
+            padding: 2rem 1.5rem;
+            color: #1a2c3e;
+        }
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        .main-card {
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+        .card-header {
+            background: #0f2b3d;
+            padding: 1.6rem 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .card-header h1 {
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: #f6b83e;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .card-header h1 i { font-size: 2rem; color: #ff9f4a; }
+        .card-header p { color: #cbdbe0; margin-top: 8px; font-size: 0.9rem; }
+        .two-col-grid {
+            display: grid;
+            grid-template-columns: 1fr 0.9fr;
+            gap: 1.8rem;
+            padding: 1.8rem 2rem;
+        }
+        .input-panel {
+            background: #ffffff;
+            border-radius: 1.5rem;
+            padding: 1.2rem 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+            border: 1px solid #eef2f8;
+        }
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1e4663;
+            border-left: 5px solid #f39c12;
+            padding-left: 12px;
+            margin: 1rem 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title:first-of-type { margin-top: 0; }
+        .input-group {
+            margin-bottom: 1.1rem;
+        }
+        .input-group label {
+            font-weight: 600;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .input-group label i { color: #f39c12; width: 20px; }
+        .input-field {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1.5px solid #e2e8f0;
+            background: white;
+            font-family: 'Poppins', monospace;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #f39c12;
+            box-shadow: 0 0 0 3px rgba(243,156,18,0.2);
+        }
+        .flex-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .flex-row select, .flex-row input { flex: 1; }
+        .btn-primary {
+            background: linear-gradient(95deg, #f39c12, #e67e22);
+            border: none;
+            padding: 14px;
+            font-weight: 700;
+            font-size: 1rem;
+            border-radius: 40px;
+            color: white;
+            width: 100%;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 5px 12px rgba(230,126,34,0.3);
+        }
+        .btn-secondary {
+            background: #2c3e50;
+            box-shadow: none;
+            margin-top: 8px;
+        }
+        .btn-primary:hover { transform: scale(0.98); opacity: 0.95; }
+        .badge-info {
+            background: #ecfdf5;
+            padding: 10px;
+            border-radius: 14px;
+            font-size: 0.7rem;
+            color: #2c6e49;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .stats-panel {
+            background: #fefefe;
+            border-radius: 1.5rem;
+            padding: 1.2rem 1.5rem;
+            border: 1px solid #eef2f8;
+            position: sticky;
+            top: 1rem;
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+            align-self: start;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #f8fafc;
+            border-radius: 1.2rem;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ecf3fa;
+        }
+        .stat-card .stat-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            color: #5a6e7c;
+        }
+        .stat-card .stat-value {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #1f3b4c;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 1.2rem;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ecf3fa;
+        }
+        .stats-extra { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:12px; }
+        .dashboard-actions {
+            position: sticky;
+            top: -1.2rem;
+            z-index: 5;
+            background: rgba(254,254,254,.97);
+            padding: .35rem 0 .5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .dashboard-actions .btn-primary { margin-top: 0; }
+        .winloss-badge {
+            min-width:0;
+            background: #f8fafc;
+            border-radius: 1rem;
+            padding: 8px;
+            text-align: center;
+        }
+        .win-badge { border-left: 4px solid #00b37e; }
+        .loss-badge { border-left: 4px solid #e53e3e; }
+        .table-wrapper {
+            padding: 0 2rem 2rem 2rem;
+            overflow-x: auto;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        .data-table th {
+            background: #1e4663;
+            color: white;
+            padding: 10px 6px;
+            font-weight: 600;
+            text-align: right;
+        }
+        .data-table th:first-child { text-align: left; }
+        .data-table td {
+            padding: 8px 6px;
+            border-bottom: 1px solid #eef2f5;
+            text-align: right;
+        }
+        .data-table td:first-child { text-align: left; font-weight: 600; background: #fefaf5; }
+        .scrollable-table { max-height: 420px; overflow-y: auto; border-radius: 1rem; border: 1px solid #edf2f7; }
+        .tooltip-icon { cursor: help; color: #f39c12; font-size: 0.7rem; }
+        @media (max-width: 1000px) {
+            .two-col-grid { grid-template-columns: 1fr; }
+            body { padding: 1rem; }
+            .stats-panel { order: -1; }
+        }
+        footer {
+            text-align: center;
+            padding: 1rem 2rem;
+            font-size: 0.7rem;
+            color: #4a627a;
+            border-top: 1px solid #eef2f8;
+        }
+        .highlight-orange { color: #d35400; }
+        .dynamic-badge {
+            background: #fff3e0;
+            border-left: 3px solid #f39c12;
+        }
+        .winloss-mini-chart {
+            background: #1f2a3a;
+            border-radius: 12px;
+            padding: 8px;
+            margin-top: 12px;
+        }
+        /* Warm sand, paper and teal palette from the dashboard reference */
+        body { background:var(--sand); color:var(--ink); }
+        .main-card,.stats-panel { background:var(--sand); }
+        .input-panel,.chart-container { background:var(--paper); border-color:rgba(79,118,110,.16); }
+        .section-title,.metric-heading { color:var(--teal); }
+        .section-title { border-left-color:var(--teal); }
+        .stat-card,.winloss-badge { background:var(--paper); border-color:rgba(79,118,110,.14); }
+        .stat-card .stat-label,.winloss-badge .stat-label { color:var(--muted); }
+        .stat-card .stat-value,.winloss-badge .stat-value { color:var(--ink); }
+        .btn-primary { background:var(--teal); box-shadow:none; }
+        .btn-secondary { background:#33433f; }
+        .dashboard-actions { background:rgba(232,222,199,.97); }
+        .data-table th { background:var(--teal); }
+        .data-table td:first-child { background:#f1ead9; }
+        .dynamic-badge,.badge-info { background:#f1ead9; border-left-color:var(--teal); color:#425e57; }
+        .chart-controls { display:flex; gap:10px; align-items:center; margin-top:10px; padding:10px; background:var(--paper); border-radius:10px; font-size:.7rem; }
+        .chart-controls label { flex:1; color:var(--muted); }
+        .chart-controls input { max-width:90px; padding:7px 9px; border:1px solid #d9cba9; border-radius:8px; background:#fff; }
+        .chart-controls button { border:0; border-radius:8px; padding:8px 12px; background:var(--teal); color:#fff; font-weight:700; cursor:pointer; }
+        @media(max-width:520px) { .dashboard-actions { grid-template-columns:1fr; } .chart-controls { flex-wrap:wrap; } }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <div class="main-card">
+        <div class="card-header">
+            <h1><i class="fas fa-chart-line"></i> Adaptive Monte Carlo Trader</h1>
+            <p>Dynamic pip sizing | Win/Loss analytics | Equity curve + Trade outcome distribution chart</p>
+        </div>
+
+        <div class="two-col-grid">
+            <!-- LEFT: All inputs integrated -->
+            <div class="input-panel">
+                <div class="section-title"><i class="fas fa-coins"></i> Capital & Simulation Core</div>
+                <div class="input-group">
+                    <label><i class="fas fa-dollar-sign"></i> Starting Capital ($)</label>
+                    <input type="number" id="startCapital" class="input-field" value="1000" step="100">
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-calendar-week"></i> Period Type & Duration</label>
+                    <div class="flex-row">
+                        <select id="periodType" class="input-field" style="flex:1">
+                            <option value="daily">Daily periods</option>
+                            <option value="weekly">Weekly periods</option>
+                            <option value="biweekly">Biweekly periods</option>
+                            <option value="monthly">Monthly periods</option>
+                            <option value="quarterly">Quarterly periods</option>
+                        </select>
+                        <input type="number" id="numPeriods" class="input-field" value="30" step="1" style="flex:1" placeholder="Periods">
+                    </div>
+                </div>
+
+                <div class="section-title"><i class="fas fa-dice-d6"></i> Monte Carlo & Position Sizing</div>
+                <div class="input-group">
+                    <label><i class="fas fa-percent"></i> Win Rate (%)</label>
+                    <input type="number" id="winRate" class="input-field" value="45" step="1" min="0" max="100">
+                </div>
+                <div class="flex-row">
+                    <div class="input-group" style="flex:1"><label><i class="fas fa-skull-crosswalk"></i> Risk per Trade (pips)</label><input type="number" id="riskPips" class="input-field" value="20" step="1"></div>
+                    <div class="input-group" style="flex:1"><label><i class="fas fa-rocket"></i> Reward per Trade (pips)</label><input type="number" id="rewardPips" class="input-field" value="60" step="1"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label><i class="fas fa-chart-line"></i> Position Sizing Mode</label>
+                    <select id="sizingMode" class="input-field">
+                        <option value="dynamic">🔥 Dynamic: % of Capital (Adaptive)</option>
+                        <option value="static">📌 Static: Fixed $ per pip</option>
+                        <option value="riskPercent">🛡️ Fixed Risk: % of Capital per Trade</option>
+                        <option value="riskDollar">💵 Fixed Risk: $ per Trade</option>
+                        <option value="kelly">🧮 Fractional Kelly Sizing</option>
+                    </select>
+                </div>
+                <div class="flex-row" id="dynamicSizingGroup">
+                    <div class="input-group" style="flex:1">
+                        <label><i class="fas fa-percent"></i> Pip Value as % of Capital</label>
+                        <input type="number" id="dynamicPipPercent" class="input-field" value="0.01" step="0.001">
+                        <small style="display:block; font-size:0.65rem;">0.01 = 1% of capital = $10/pip on $1000</small>
+                    </div>
+                </div>
+                <div class="flex-row" id="riskPercentGroup" style="display:none;"><div class="input-group" style="flex:1"><label><i class="fas fa-shield-alt"></i> Risk per Trade (% of Capital)</label><input type="number" id="riskPercent" class="input-field" value="1" step="0.1" min="0.01"></div></div>
+                <div class="flex-row" id="riskDollarGroup" style="display:none;"><div class="input-group" style="flex:1"><label><i class="fas fa-dollar-sign"></i> Risk per Trade ($)</label><input type="number" id="riskDollar" class="input-field" value="10" step="1" min="0.01"></div></div>
+                <div class="flex-row" id="kellySizingGroup" style="display:none;"><div class="input-group" style="flex:1"><label><i class="fas fa-brain"></i> Kelly Fraction (0.25 = quarter Kelly)</label><input type="number" id="kellyFraction" class="input-field" value="0.25" step="0.05" min="0.01" max="1"></div></div>
+                <div class="flex-row" id="staticSizingGroup" style="display:none;">
+                    <div class="input-group" style="flex:1"><label><i class="fas fa-dollar-sign"></i> Fixed Pip Value ($)</label><input type="number" id="fixedPipValue" class="input-field" value="0.10" step="0.01"></div>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-exchange-alt"></i> Trades per Period</label>
+                    <input type="number" id="tradesPerPeriod" class="input-field" value="1" step="1" min="1">
+                </div>
+
+                <div class="section-title"><i class="fas fa-hand-holding-usd"></i> Vault & Allocation</div>
+                <div class="flex-row">
+                    <div class="input-group" style="flex:1"><label><i class="fas fa-database"></i> Vault % (from Gross)</label><input type="number" id="vaultPct" class="input-field" value="20" step="1"></div>
+                    <div class="input-group" style="flex:1"><label><i class="fas fa-chart-line"></i> Reinvest % (from Net)</label><input type="number" id="reinvestPct" class="input-field" value="50" step="1"></div>
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-glass-cheers"></i> Family/Fun % (from Net)</label>
+                    <input type="number" id="familyPct" class="input-field" value="30" step="1">
+                </div>
+
+                <div class="section-title"><i class="fas fa-sliders-h"></i> Costs & Add-ons</div>
+                <div class="flex-row">
+                    <div class="input-group" style="flex:1"><label><i class="fas fa-percent"></i> Commission (% of Gross)</label><input type="number" id="commissionPct" class="input-field" value="0" step="0.1"></div>
+                    <div class="input-group" style="flex:1"><label><i class="fas fa-tachometer-alt"></i> Slippage (% of Gross)</label><input type="number" id="slippagePct" class="input-field" value="0" step="0.1"></div>
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-piggy-bank"></i> Periodic Deposit (each period)</label>
+                    <input type="number" id="periodicDeposit" class="input-field" value="0" step="50">
+                </div>
+
+                <div class="badge-info dynamic-badge"><i class="fas fa-chart-line"></i> Compare adaptive, fixed, percent-risk, fixed-dollar, and fractional Kelly sizing. Each chart line represents an independent randomized path.</div>
+            </div>
+
+            <!-- RIGHT: stats + double charts -->
+            <div class="stats-panel">
+                <div class="section-title"><i class="fas fa-chart-pie"></i> Performance Dashboard <span style="font-size:.65rem;font-weight:500;margin-left:auto;">(Last Run)</span></div>
+                <div class="metric-heading">Capital &amp; Allocation</div>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card"><div class="stat-label">Final Balance</div><div class="stat-value" id="finalBalance">—</div></div>
+                    <div class="stat-card"><div class="stat-label">Total Net Profit</div><div class="stat-value highlight-orange" id="totalNetProfit">—</div></div>
+                    <div class="stat-card"><div class="stat-label">Total Vault (Saved)</div><div class="stat-value" id="totalVault">$0</div></div>
+                    <div class="stat-card"><div class="stat-label">Total Family/Fun</div><div class="stat-value" id="totalFamily">$0</div></div>
+                    <div class="stat-card"><div class="stat-label">Total Fees</div><div class="stat-value" id="totalFees">$0</div></div>
+                    <div class="stat-card"><div class="stat-label">Total Deposits</div><div class="stat-value" id="totalDeposits">$0</div></div>
+                </div>
+                <div class="dashboard-actions">
+                    <button class="btn-primary" id="runSimBtn"><i class="fas fa-chart-simple"></i> RUN SIMULATION</button>
+                    <button class="btn-primary btn-secondary" id="resetSimBtn"><i class="fas fa-undo-alt"></i> Reset Defaults</button>
+                </div>
+                
+                <div class="metric-heading">Trade Quality &amp; Risk</div>
+                <!-- Win/Loss Statistics Card -->
+                <div class="stats-extra" id="winlossStats">
+                    <div class="winloss-badge win-badge"><div class="stat-label">🏆 Total Wins</div><div class="stat-value" id="totalWins">—</div></div>
+                    <div class="winloss-badge loss-badge"><div class="stat-label">📉 Total Losses</div><div class="stat-value" id="totalLosses">—</div></div>
+                    <div class="winloss-badge"><div class="stat-label">📊 Actual Win Rate</div><div class="stat-value" id="actualWinRate">—</div></div>
+                    <div class="winloss-badge"><div class="stat-label">💰 Avg Win ($)</div><div class="stat-value" id="avgWin">—</div></div>
+                    <div class="winloss-badge"><div class="stat-label">💸 Avg Loss ($)</div><div class="stat-value" id="avgLoss">—</div></div>
+                    <div class="winloss-badge"><div class="stat-label">⚡ Profit Factor</div><div class="stat-value" id="profitFactor">—</div></div>
+                    <div class="winloss-badge loss-badge"><div class="stat-label">📉 Max Drawdown</div><div class="stat-value" id="maxDrawdown">—</div></div>
+                    <div class="winloss-badge"><div class="stat-label">🎯 Expectancy / Trade</div><div class="stat-value" id="expectancy">—</div></div>
+                    <div class="winloss-badge"><div class="stat-label">📊 Pips Won / Lost</div><div class="stat-value" id="pipsWonLost">—</div></div>
+                </div>
+
+                <!-- Equity Chart -->
+                <div class="chart-container">
+                    <div style="font-size:.75rem;font-weight:700;margin-bottom:6px;"><i class="fas fa-chart-line"></i> Equity Chart Iterations</div>
+                    <canvas id="equityChart" width="400" height="180" style="max-height: 180px; width: 100%;"></canvas>
+                    <div class="chart-controls"><label for="iterationCount">Monte Carlo paths to overlay <small style="display:block;">Each line is one randomized simulation path</small></label><input type="number" id="iterationCount" value="5" min="1" max="20" step="1"><button type="button" id="applyIterations"><i class="fas fa-chart-column"></i> Apply</button></div>
+                </div>
+                
+                <!-- Win/Loss Distribution Chart (Bar) -->
+                <div class="chart-container" style="margin-top: 12px;">
+                    <div style="font-size:0.75rem; font-weight:600; margin-bottom:6px;"><i class="fas fa-chart-bar"></i> Trade Outcome Distribution (Wins vs Losses $)</div>
+                    <canvas id="winLossChart" width="400" height="130" style="max-height: 130px; width: 100%;"></canvas>
+                </div>
+                <div class="badge-info" style="margin-top: 12px;"><i class="fas fa-chart-line"></i> Equity curve + trade outcome histogram. Win/Loss stats based on all individual trades.</div>
+            </div>
+        </div>
+
+        <!-- Detailed Breakdown Table -->
+        <div class="table-wrapper">
+            <div class="section-title"><i class="fas fa-table-list"></i> Period-by-Period Monte Carlo Breakdown</div>
+            <div style="font-size:.72rem;color:#5a6e7c;margin:-.5rem 0 .8rem 0;">Daily and monthly P&amp;L are trading-day equivalents (5 days/week, 21 days/month, 63 days/quarter). Percentage change excludes deposits.</div>
+            <div class="scrollable-table">
+                <table class="data-table" id="detailTable">
+                    <thead>
+                        <tr><th>Period</th><th>Gross P&L ($)</th><th>Change (%)</th><th>Avg / Trade</th><th>Daily Eq. P&L</th><th>Monthly Eq. P&L</th><th>Pip Value</th><th>Wins/Losses</th><th>Commission</th><th>Slippage</th><th>Vault</th><th>Reinvested</th><th>Family</th><th>Deposit</th><th>End Balance</th></tr>
+                    </thead>
+                    <tbody id="tableBody"><tr><td colspan="15" style="text-align:center;">Press "RUN ADAPTIVE SIMULATION"</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+        <footer><i class="fas fa-chart-line"></i> Trades are randomized per period using win-rate. Win/Loss stats aggregated across all trades. Profit Factor = Total Gross Wins / Total Gross Losses.</footer>
+    </div>
+</div>
+
+<script>
+    // DOM elements
+    const startCapitalInput = document.getElementById('startCapital');
+    const periodTypeSelect = document.getElementById('periodType');
+    const numPeriodsInput = document.getElementById('numPeriods');
+    const winRateInput = document.getElementById('winRate');
+    const riskPipsInput = document.getElementById('riskPips');
+    const rewardPipsInput = document.getElementById('rewardPips');
+    const sizingModeSelect = document.getElementById('sizingMode');
+    const dynamicPipPercentInput = document.getElementById('dynamicPipPercent');
+    const fixedPipValueInput = document.getElementById('fixedPipValue');
+    const tradesPerPeriodInput = document.getElementById('tradesPerPeriod');
+    const vaultPctInput = document.getElementById('vaultPct');
+    const reinvestPctInput = document.getElementById('reinvestPct');
+    const familyPctInput = document.getElementById('familyPct');
+    const commissionPctInput = document.getElementById('commissionPct');
+    const slippagePctInput = document.getElementById('slippagePct');
+    const periodicDepositInput = document.getElementById('periodicDeposit');
+    const runBtn = document.getElementById('runSimBtn');
+    const resetBtn = document.getElementById('resetSimBtn');
+    const dynamicGroup = document.getElementById('dynamicSizingGroup');
+    const staticGroup = document.getElementById('staticSizingGroup');
+    const riskPercentGroup = document.getElementById('riskPercentGroup');
+    const riskDollarGroup = document.getElementById('riskDollarGroup');
+    const kellySizingGroup = document.getElementById('kellySizingGroup');
+    const riskPercentInput = document.getElementById('riskPercent');
+    const riskDollarInput = document.getElementById('riskDollar');
+    const kellyFractionInput = document.getElementById('kellyFraction');
+    const iterationCountInput = document.getElementById('iterationCount');
+    const applyIterationsBtn = document.getElementById('applyIterations');
+
+    // display refs
+    const finalBalanceSpan = document.getElementById('finalBalance');
+    const totalNetProfitSpan = document.getElementById('totalNetProfit');
+    const totalVaultSpan = document.getElementById('totalVault');
+    const totalFamilySpan = document.getElementById('totalFamily');
+    const totalFeesSpan = document.getElementById('totalFees');
+    const totalDepositsSpan = document.getElementById('totalDeposits');
+    const totalWinsSpan = document.getElementById('totalWins');
+    const totalLossesSpan = document.getElementById('totalLosses');
+    const actualWinRateSpan = document.getElementById('actualWinRate');
+    const avgWinSpan = document.getElementById('avgWin');
+    const avgLossSpan = document.getElementById('avgLoss');
+    const profitFactorSpan = document.getElementById('profitFactor');
+    const maxDrawdownSpan = document.getElementById('maxDrawdown');
+    const expectancySpan = document.getElementById('expectancy');
+    const pipsWonLostSpan = document.getElementById('pipsWonLost');
+    const tableBody = document.getElementById('tableBody');
+    let equityChart = null;
+    let winLossChart = null;
+    let lastPathLabels = [];
+    let lastPathBalances = [];
+
+    function formatUSD(value) { return '$' + value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+    function toggleSizingMode() {
+        const mode = sizingModeSelect.value;
+        dynamicGroup.style.display = mode === 'dynamic' ? 'flex' : 'none';
+        staticGroup.style.display = mode === 'static' ? 'flex' : 'none';
+        riskPercentGroup.style.display = mode === 'riskPercent' ? 'flex' : 'none';
+        riskDollarGroup.style.display = mode === 'riskDollar' ? 'flex' : 'none';
+        kellySizingGroup.style.display = mode === 'kelly' ? 'flex' : 'none';
+    }
+    sizingModeSelect.addEventListener('change', toggleSizingMode);
+    toggleSizingMode();
+
+    function getPipValueForPeriod(currentCapital, riskPips, rewardPips, winRate) {
+        const mode = sizingModeSelect.value;
+        if (mode === 'dynamic') {
+            let percent = parseFloat(dynamicPipPercentInput.value);
+            if (isNaN(percent) || percent <= 0) percent = 0.01;
+            return currentCapital * percent;
+        } else if (mode === 'static') {
+            let fixed = parseFloat(fixedPipValueInput.value);
+            if (isNaN(fixed) || fixed < 0) fixed = 0.10;
+            return fixed;
+        } else if (mode === 'riskPercent') {
+            const pct = Math.max(0, parseFloat(riskPercentInput.value) || 1) / 100;
+            return currentCapital * pct / Math.max(riskPips, 0.0001);
+        } else if (mode === 'riskDollar') {
+            const dollars = Math.max(0, parseFloat(riskDollarInput.value) || 10);
+            return dollars / Math.max(riskPips, 0.0001);
+        } else {
+            const rewardRisk = rewardPips / Math.max(riskPips, 0.0001);
+            const edge = Math.max(0, winRate - (1 - winRate) / Math.max(rewardRisk, 0.0001));
+            const fraction = Math.min(1, Math.max(0, parseFloat(kellyFractionInput.value) || 0.25));
+            return currentCapital * edge * fraction / Math.max(riskPips, 0.0001);
+        }
+    }
+
+    function runAdaptiveSimulation(renderCharts = true) {
+        // Input parsing
+        let startCapital = parseFloat(startCapitalInput.value) || 1000;
+        let periodType = periodTypeSelect.value;
+        let numPeriods = parseInt(numPeriodsInput.value) || 30;
+        let winRate = (parseFloat(winRateInput.value) || 45) / 100;
+        let riskPips = parseFloat(riskPipsInput.value) || 20;
+        let rewardPips = parseFloat(rewardPipsInput.value) || 60;
+        let tradesPerPeriod = parseInt(tradesPerPeriodInput.value) || 1;
+        let vaultPct = (parseFloat(vaultPctInput.value) || 20) / 100;
+        let reinvestPct = (parseFloat(reinvestPctInput.value) || 50) / 100;
+        let familyPct = (parseFloat(familyPctInput.value) || 30) / 100;
+        let commissionPct = (parseFloat(commissionPctInput.value) || 0) / 100;
+        let slippagePct = (parseFloat(slippagePctInput.value) || 0) / 100;
+        let periodicDeposit = parseFloat(periodicDepositInput.value) || 0;
+
+        if (startCapital < 0) startCapital = 1000;
+        if (numPeriods < 1) numPeriods = 1;
+        if (tradesPerPeriod < 1) tradesPerPeriod = 1;
+
+        let currentBalance = startCapital;
+        let totalVaultAcc = 0, totalFamilyAcc = 0, totalFeesAcc = 0, totalDepositsAcc = 0;
+        let rowsData = [];
+        let chartLabels = [], chartBalances = [];
+
+        // Win/Loss tracking
+        let allTradeOutcomes = []; // each { win: bool, pnlDollars: number }
+        
+        for (let period = 1; period <= numPeriods; period++) {
+            let currentPipValue = getPipValueForPeriod(currentBalance, riskPips, rewardPips, winRate);
+            let periodGrossPL = 0;
+            let periodTrades = [];
+            for (let t = 0; t < tradesPerPeriod; t++) {
+                const isWin = Math.random() < winRate;
+                const pips = isWin ? rewardPips : -riskPips;
+                const grossDollars = pips * currentPipValue;
+                periodGrossPL += grossDollars;
+                periodTrades.push({ win: isWin, pnl: grossDollars });
+                allTradeOutcomes.push({ win: isWin, pnl: grossDollars, pips });
+            }
+            
+            let commissionCost = Math.abs(periodGrossPL) * commissionPct;
+            let slippageCost = Math.abs(periodGrossPL) * slippagePct;
+            let afterCostsPL = periodGrossPL - commissionCost - slippageCost;
+            totalFeesAcc += (commissionCost + slippageCost);
+            
+            let vaultAmount = 0, afterVaultPL = afterCostsPL;
+            if (afterCostsPL > 0) {
+                vaultAmount = afterCostsPL * vaultPct;
+                afterVaultPL = afterCostsPL - vaultAmount;
+                totalVaultAcc += vaultAmount;
+            }
+            
+            let reinvestAmount = 0, familyAmount = 0;
+            let netProfitForSplit = afterVaultPL;
+            if (netProfitForSplit > 0) {
+                reinvestAmount = netProfitForSplit * reinvestPct;
+                familyAmount = netProfitForSplit * familyPct;
+            }
+            totalFamilyAcc += familyAmount;
+            
+            let deposit = periodicDeposit;
+            totalDepositsAcc += deposit;
+            let balanceChange = netProfitForSplit - familyAmount + deposit;
+            let newBalance = currentBalance + balanceChange;
+            if (newBalance < 0) newBalance = 0;
+            
+            let winsInPeriod = periodTrades.filter(t => t.win).length;
+            let lossesInPeriod = periodTrades.length - winsInPeriod;
+            const periodDays = { daily: 1, weekly: 5, biweekly: 10, monthly: 21, quarterly: 63 }[periodType] || 1;
+            const periodChangePct = currentBalance > 0 ? ((balanceChange - deposit) / currentBalance) * 100 : 0;
+            rowsData.push({
+                period: ({ daily: 'Day', weekly: 'Week', biweekly: '2 Weeks', monthly: 'Month', quarterly: 'Quarter' }[periodType] || 'Period') + ' ' + period,
+                grossPL: periodGrossPL,
+                changePct: periodChangePct,
+                avgTrade: periodGrossPL / tradesPerPeriod,
+                dailyPL: periodGrossPL / periodDays,
+                monthlyPL: (periodGrossPL / periodDays) * 21,
+                pipValueUsed: currentPipValue,
+                winsLosses: `W:${winsInPeriod} L:${lossesInPeriod}`,
+                commission: commissionCost,
+                slippage: slippageCost,
+                vault: vaultAmount,
+                reinvest: reinvestAmount,
+                family: familyAmount,
+                deposit: deposit,
+                endBalance: newBalance
+            });
+            chartLabels.push(({ daily: 'D', weekly: 'W', biweekly: '2W', monthly: 'M', quarterly: 'Q' }[periodType] || 'P') + period);
+            chartBalances.push(newBalance);
+            currentBalance = newBalance;
+        }
+        
+        // Aggregate Win/Loss statistics
+        const wins = allTradeOutcomes.filter(t => t.win === true);
+        const losses = allTradeOutcomes.filter(t => t.win === false);
+        const totalWinsCount = wins.length;
+        const totalLossesCount = losses.length;
+        const totalTrades = allTradeOutcomes.length;
+        const actualWinRate = totalTrades > 0 ? (totalWinsCount / totalTrades) * 100 : 0;
+        const sumWins = wins.reduce((sum, w) => sum + w.pnl, 0);
+        const sumLosses = Math.abs(losses.reduce((sum, l) => sum + l.pnl, 0));
+        const avgWinValue = totalWinsCount > 0 ? sumWins / totalWinsCount : 0;
+        const avgLossValue = totalLossesCount > 0 ? Math.abs(sumLosses) / totalLossesCount : 0;
+        const profitFactor = sumLosses > 0 ? sumWins / sumLosses : (sumWins > 0 ? 999 : 0);
+        let peakBalance = startCapital, maxDrawdownPct = 0;
+        for (const balance of chartBalances) {
+            peakBalance = Math.max(peakBalance, balance);
+            if (peakBalance > 0) maxDrawdownPct = Math.max(maxDrawdownPct, ((peakBalance - balance) / peakBalance) * 100);
+        }
+        const expectancy = totalTrades > 0 ? (sumWins - sumLosses) / totalTrades : 0;
+        const pipsWon = wins.reduce((sum, trade) => sum + trade.pips, 0);
+        const pipsLost = Math.abs(losses.reduce((sum, trade) => sum + trade.pips, 0));
+        
+        // Update UI stats
+        const finalBalance = currentBalance;
+        const totalNetProfit = finalBalance - startCapital - totalDepositsAcc;
+        finalBalanceSpan.innerText = formatUSD(finalBalance);
+        totalNetProfitSpan.innerText = formatUSD(totalNetProfit);
+        totalVaultSpan.innerText = formatUSD(totalVaultAcc);
+        totalFamilySpan.innerText = formatUSD(totalFamilyAcc);
+        totalFeesSpan.innerText = formatUSD(totalFeesAcc);
+        totalDepositsSpan.innerText = formatUSD(totalDepositsAcc);
+        totalWinsSpan.innerText = totalWinsCount;
+        totalLossesSpan.innerText = totalLossesCount;
+        actualWinRateSpan.innerText = actualWinRate.toFixed(2) + '%';
+        avgWinSpan.innerText = formatUSD(avgWinValue);
+        avgLossSpan.innerText = formatUSD(avgLossValue);
+        profitFactorSpan.innerText = profitFactor.toFixed(2);
+        maxDrawdownSpan.innerText = maxDrawdownPct.toFixed(2) + '%';
+        expectancySpan.innerText = formatUSD(expectancy);
+        pipsWonLostSpan.innerText = `${pipsWon.toLocaleString()} / ${pipsLost.toLocaleString()}`;
+        
+        // Render Table
+        tableBody.innerHTML = '';
+        for (let row of rowsData) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${row.period}</td><td>${formatUSD(row.grossPL)}</td><td>${row.changePct.toFixed(2)}%</td><td>${formatUSD(row.avgTrade)}</td><td>${formatUSD(row.dailyPL)}</td><td>${formatUSD(row.monthlyPL)}</td><td>${formatUSD(row.pipValueUsed)}</td><td>${row.winsLosses}</td><td>${formatUSD(row.commission)}</td><td>${formatUSD(row.slippage)}</td><td>${formatUSD(row.vault)}</td><td>${formatUSD(row.reinvest)}</td><td>${formatUSD(row.family)}</td><td>${formatUSD(row.deposit)}</td><td style="font-weight:700;">${formatUSD(row.endBalance)}</td>`;
+            tableBody.appendChild(tr);
+        }
+        
+        // Equity Chart
+        lastPathLabels = chartLabels.slice();
+        lastPathBalances = chartBalances.slice();
+        if (!renderCharts) return;
+        const ctxEq = document.getElementById('equityChart').getContext('2d');
+        if (equityChart) equityChart.destroy();
+        equityChart = new Chart(ctxEq, {
+            type: 'line', data: { labels: chartLabels, datasets: [{ label: 'Iteration 1', data: chartBalances, borderColor: '#eca900', backgroundColor: 'transparent', borderWidth: 2, fill: false, tension: 0.2, pointRadius: 0 }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (ctx) => `Balance: ${formatUSD(ctx.raw)}` } } }, scales: { y: { ticks: { callback: (val) => '$' + val.toFixed(0) } } } }
+        });
+        
+        // Win/Loss Distribution Chart: show total $ wins vs total $ losses
+        const ctxWL = document.getElementById('winLossChart').getContext('2d');
+        if (winLossChart) winLossChart.destroy();
+        winLossChart = new Chart(ctxWL, {
+            type: 'bar',
+            data: {
+                labels: ['🏆 Total Wins $', '📉 Total Losses $'],
+                datasets: [{
+                    label: 'Aggregated P&L',
+                    data: [sumWins, -sumLosses],
+                    backgroundColor: ['#49a978', '#d94b43'],
+                    borderRadius: 8,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatUSD(Math.abs(ctx.raw))}` } }, legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { callback: (val) => formatUSD(val) }, title: { display: true, text: 'Dollars', color: '#5a6e7c' } } }
+            }
+        });
+    }
+    
+    function runSimulationIterations() {
+        const count = Math.min(20, Math.max(1, parseInt(iterationCountInput.value, 10) || 5));
+        iterationCountInput.value = count;
+        const colors = ['#eca900', '#55bd79', '#5594e8', '#e95b48', '#b652ce'];
+        const paths = [];
+        for (let i = 0; i < count; i++) {
+            runAdaptiveSimulation(i === count - 1);
+            paths.push({ labels: lastPathLabels.slice(), balances: lastPathBalances.slice() });
+        }
+        if (equityChart) {
+            equityChart.data.labels = paths[paths.length - 1].labels;
+            equityChart.data.datasets = paths.map((path, index) => ({
+                label: `Iteration ${index + 1}`,
+                data: path.balances,
+                borderColor: colors[index % colors.length],
+                backgroundColor: 'transparent',
+                borderWidth: index === paths.length - 1 ? 2.5 : 1.6,
+                pointRadius: 0,
+                tension: .2,
+                fill: false
+            }));
+            equityChart.update();
+        }
+    }
+
+    function resetToDefaults() {
+        startCapitalInput.value = '1000';
+        periodTypeSelect.value = 'daily';
+        numPeriodsInput.value = '30';
+        winRateInput.value = '45';
+        riskPipsInput.value = '20';
+        rewardPipsInput.value = '60';
+        sizingModeSelect.value = 'dynamic';
+        dynamicPipPercentInput.value = '0.01';
+        fixedPipValueInput.value = '0.10';
+        riskPercentInput.value = '1';
+        riskDollarInput.value = '10';
+        kellyFractionInput.value = '0.25';
+        tradesPerPeriodInput.value = '1';
+        vaultPctInput.value = '20';
+        reinvestPctInput.value = '50';
+        familyPctInput.value = '30';
+        commissionPctInput.value = '0';
+        slippagePctInput.value = '0';
+        periodicDepositInput.value = '0';
+        iterationCountInput.value = '5';
+        toggleSizingMode();
+        runSimulationIterations();
+    }
+    
+    runBtn.addEventListener('click', runSimulationIterations);
+    applyIterationsBtn.addEventListener('click', runSimulationIterations);
+    resetBtn.addEventListener('click', resetToDefaults);
+    runSimulationIterations();
+</script>
+</body>
+</html>
