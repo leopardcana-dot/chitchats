@@ -659,7 +659,7 @@
         tableBody.innerHTML = '';
         for (let row of rowsData) {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${row.period}</td><td>${formatUSD(row.grossPL)}</td><td>${row.changePct.toFixed(2)}%</td><td>${formatUSD(row.avgTrade)}</td><td>${formatUSD(row.dailyPL)}</td><td>${formatUSD(row.monthlyPL)}</td><td>${formatUSD(row.pipValueUsed)}</td><td>${row.winsLosses}</td><td>${formatUSD(row.commission)}</td><td>${formatUSD(row.slippage)}</td><td>${formatUSD(row.vault)}</td><td>${formatUSD(row.reinvest)}</td><td>${formatUSD(row.family)}</td><td>${formatUSD(row.deposit)}</td><td style="font-weight:700;">${formatUSD(row.endBalance)}</td>`;
+            tr.innerHTML = `<td>${row.period}</td><td>${formatUSD(row.grossPL)}</td><td>${formatUSD(row.pipValueUsed)}</td><td>${row.winsLosses}</td><td>${row.changePct.toFixed(2)}%</td><td>${formatUSD(row.avgTrade)}</td><td>${formatUSD(row.dailyPL)}</td><td>${formatUSD(row.monthlyPL)}</td><td>${formatUSD(row.commission)}</td><td>${formatUSD(row.slippage)}</td><td>${formatUSD(row.vault)}</td><td>${formatUSD(row.reinvest)}</td><td>${formatUSD(row.family)}</td><td>${formatUSD(row.deposit)}</td><td style="font-weight:700;">${formatUSD(row.endBalance)}</td>`;
             tableBody.appendChild(tr);
         }
         
