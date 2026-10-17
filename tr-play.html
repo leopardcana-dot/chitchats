@@ -2175,19 +2175,25 @@ function updateVWAPForReplay() {
   const vwapIndicator = state.indicators.find(ind => ind.id === 'vwap');
   if (!vwapIndicator) return;
   
-  // Get data up to current replay position
-  const currentData = state.replayMode 
-    ? state.data.slice(0, state.replayIndex)
-    : state.data;
-  
-  // Recalculate VWAP only up to current index
-  const vwapData = calcVWAP(state.data, state.replayMode ? state.replayIndex : null);
-  
-  // Update stored indicator data
-  state.indicatorData[vwapIndicator.uid] = vwapData;
-  
-  // Refresh the series on chart
-  refreshIndicatorSeries(vwapIndicator.uid);
+  const end = Math.min(state.data.length, state.replayMode ? state.replayIndex : state.data.length);
+  const index = end - 1;
+  if (index < 0) return;
+  const bars = state.data, day = bars[index].date;
+  let start = index;
+  while (start > 0) {
+    const previous = bars[start - 1].date;
+    if (previous.getFullYear() !== day.getFullYear() || previous.getMonth() !== day.getMonth() || previous.getDate() !== day.getDate()) break;
+    start--;
+  }
+  let volume = 0, priceVolume = 0;
+  for (let i = start; i <= index; i++) {
+    const bar = bars[i], typical = (bar.high + bar.low + bar.close) / 3, barVolume = bar.volume || 1;
+    volume += barVolume;
+    priceVolume += typical * barVolume;
+  }
+  const values = state.indicatorData[vwapIndicator.uid] || [];
+  values[index] = volume ? priceVolume / volume : null;
+  state.indicatorData[vwapIndicator.uid] = values;
 }
 function calcSupertrend(d, p, m) { const atr = calcATR(d, p), r = Array(d.length).fill(null), dir = Array(d.length).fill(1), ub = Array(d.length).fill(null), lb = Array(d.length).fill(null); for (let i = 0; i < d.length; i++) { if (atr[i] == null) continue; const hl2 = (d[i].high + d[i].low) / 2; ub[i] = hl2 + m * atr[i]; lb[i] = hl2 - m * atr[i]; if (i > 0 && lb[i - 1] != null) { if (lb[i] < lb[i - 1] && d[i - 1].close > lb[i - 1]) lb[i] = lb[i - 1]; if (ub[i] > ub[i - 1] && d[i - 1].close < ub[i - 1]) ub[i] = ub[i - 1]; if (d[i].close > ub[i]) dir[i] = 1; else if (d[i].close < lb[i]) dir[i] = -1; else dir[i] = dir[i - 1]; } r[i] = dir[i] === 1 ? lb[i] : ub[i]; } return { values: r, direction: dir }; }
 function calcADX(d, p) { const r = Array(d.length).fill(null); if (d.length < p * 2) return r; const pdm = [], mdm = [], tr = []; for (let i = 0; i < d.length; i++) { if (i === 0) { pdm.push(0); mdm.push(0); tr.push(d[i].high - d[i].low); continue; } const um = d[i].high - d[i - 1].high, dm = d[i - 1].low - d[i].low; pdm.push(um > dm && um > 0 ? um : 0); mdm.push(dm > um && dm > 0 ? dm : 0); tr.push(Math.max(d[i].high - d[i].low, Math.abs(d[i].high - d[i - 1].close), Math.abs(d[i].low - d[i - 1].close))); } let sp = 0, sm = 0, st = 0; for (let i = 0; i < p; i++) { sp += pdm[i]; sm += mdm[i]; st += tr[i]; } const dx = []; for (let i = p; i < d.length; i++) { sp = sp - sp / p + pdm[i]; sm = sm - sm / p + mdm[i]; st = st - st / p + tr[i]; const pdi = st > 0 ? (sp / st) * 100 : 0, mdi = st > 0 ? (sm / st) * 100 : 0, ds = pdi + mdi; dx.push(ds > 0 ? Math.abs(pdi - mdi) / ds * 100 : 0); } for (let i = p - 1; i < dx.length; i++) { let s = 0; for (let j = i - p + 1; j <= i; j++) s += dx[j]; r[i + p] = s / p; } return r; }
@@ -2751,14 +2757,14 @@ function recalculateIndicators() {
 	
   });state.indicators.forEach(ind => renderIndicatorSeries(ind.uid));
 }
-function updateVolumeProfile() {
+function updateVolumeProfile(redraw = true) {
   if (!state.data.length) return;
   
   // Find Volume Profile indicator
   const volProfileInd = state.indicators.find(ind => ind.id === 'volprofile');
   if (!volProfileInd) {
     state._volProfileData = null;
-    redrawDrawingsOverlay();
+    if (redraw) redrawDrawingsOverlay();
     return;
   }
   
@@ -2771,8 +2777,7 @@ function updateVolumeProfile() {
   state._volProfileData = vpData;
   state.volProfileParams = volProfileInd.params;
   
-  // Force redraw
-  redrawDrawingsOverlay();
+  if (redraw) redrawDrawingsOverlay();
 }
 function refreshIndicatorSeries() {
   if (!state.data.length || !state.indicators.length) return;
@@ -5229,11 +5234,18 @@ function withLwTime(bars) {
   }));
 }
 
+let _sourceBarsCacheRef = null;
+let _sourceBarsCacheLength = -1;
+let _sourceBarsCache = [];
 function getSourceBars() {
-  const source = state._originalRawData && state._originalRawData.length
-    ? state._originalRawData
-    : state.rawData;
-  return [...(source || [])].sort((a, b) => a.date - b.date);
+  const source = state._originalRawData && state._originalRawData.length ? state._originalRawData : state.rawData;
+  const length = source ? source.length : 0;
+  if (source !== _sourceBarsCacheRef || length !== _sourceBarsCacheLength) {
+    _sourceBarsCacheRef = source;
+    _sourceBarsCacheLength = length;
+    _sourceBarsCache = [...(source || [])].sort((a, b) => a.date - b.date);
+  }
+  return _sourceBarsCache;
 }
 
 function getReplaySourceIndex() {
@@ -5284,19 +5296,44 @@ function setReplaySourceIndex(index) {
 }
 
 function getVisibleChartData() {
-  if (!state.replayMode) {
-    return state.data;
-  }
-  
-  const source = getSourceBars();
-  const sourceIndex = Math.max(1, Math.min(source.length, state._replaySourceIndex || 1));
-  const sourceSlice = source.slice(0, sourceIndex);
-  const aggregated = aggregateBars(sourceSlice, state.timeframe);
-  return aggregated.map(b => ({
-    ...b,
-    lwTime: Math.floor(b.date.getTime() / 1000)
-  }));
+  if (!state.replayMode) return state.data;
+  return state.data.slice(0, Math.min(state.data.length, state.replayIndex || state.data.length));
 }
+
+function advanceReplaySourceIndex(index) {
+  const source = getSourceBars();
+  const oldIndex = Math.max(0, Math.min(source.length, state._replaySourceIndex || 0));
+  const newIndex = Math.max(oldIndex, Math.min(source.length, index));
+  const oldLength = state.data.length;
+  if (newIndex <= oldIndex) return { renderFrom: Math.max(0, oldLength - 1), checkFrom: oldLength };
+  const tf = Number(state.timeframe) || 1;
+  const bucketMs = tf * 60 * 1000;
+  let renderFrom = oldLength, checkFrom = oldLength;
+  for (let i = oldIndex; i < newIndex; i++) {
+    const bar = source[i];
+    if (tf <= 1) {
+      state.data.push({ ...bar, lwTime: Math.floor(bar.date.getTime() / 1000) });
+      continue;
+    }
+    const bucketKey = Math.floor(bar.date.getTime() / bucketMs) * bucketMs;
+    const last = state.data[state.data.length - 1];
+    if (last && last.date.getTime() === bucketKey) {
+      if (i === oldIndex) { renderFrom = state.data.length - 1; checkFrom = state.data.length - 1; }
+      last.high = Math.max(last.high, bar.high);
+      last.low = Math.min(last.low, bar.low);
+      last.close = bar.close;
+      last.volume = (last.volume || 0) + (bar.volume || 0);
+    } else {
+      if (i === oldIndex) { renderFrom = state.data.length; checkFrom = state.data.length; }
+      state.data.push({ date: new Date(bucketKey), open: bar.open, high: bar.high, low: bar.low, close: bar.close, volume: bar.volume || 0, lwTime: Math.floor(bucketKey / 1000) });
+    }
+  }
+  state._replaySourceIndex = newIndex;
+  state.replayIndex = state.data.length;
+  return { renderFrom: Math.min(renderFrom, Math.max(0, state.data.length - 1)), checkFrom };
+}
+
+
 
 function findBarIndexByDate(timestamp) {
   if (!timestamp || !state.data.length) return -1;
@@ -5699,8 +5736,10 @@ function setTimeframe(tf) {
   state.timeframe = tf;
   
   if (state.replayMode && state.allData.length > 0) {
-    state._replaySourceIndex = sourceIndex;
-    state.replayIndex = getVisibleChartData().length;
+    const source = getSourceBars();
+    state._replaySourceIndex = Math.max(1, Math.min(source.length, sourceIndex));
+    state.data = withLwTime(aggregateBars(source.slice(0, state._replaySourceIndex), tf));
+    state.replayIndex = state.data.length;
   } else {
     state.replayIndex = state.allData.length;
     state._replaySourceIndex = getSourceBars().length;
@@ -5726,7 +5765,6 @@ function setTimeframe(tf) {
   updatePriceDisplay();
   updateTradeInfo();
   updateReplayInfo();
-  updateVolumeProfile();
   
   // Force chart to redraw with new data
   renderChart();
@@ -5807,13 +5845,16 @@ function updateVolumeSeries() {
 // ===== 05 RENDER =====
 const _priceLines = { entry: [], sl: [], tp: [], current: null };
 const _indicatorSeries = {}; // uid -> array of LW series objects
-function renderChart(){
+function renderChart(incrementalFromIndex){
   if(!state.data.length){
     try{candleSeries.setData([]);volumeSeries.setData([]);}catch(e){}
     return;
   }
   
   const visible = getVisibleChartData();
+  const canIncrement = Number.isInteger(incrementalFromIndex) && state.replayMode && state.chartType !== 'heikinashi' && candleSeries && typeof candleSeries.update === 'function';
+  const renderStart = canIncrement ? Math.max(0, Math.min(incrementalFromIndex, Math.max(0, visible.length - 1))) : 0;
+  const chartSource = canIncrement ? visible.slice(renderStart) : visible;
 const container = document.getElementById('lwChart');
   if (container && lwChart) {
     const rect = container.getBoundingClientRect();
@@ -5821,7 +5862,7 @@ const container = document.getElementById('lwChart');
     state.chartHeight = rect.height;
   }
   // Prepare chart data
-  let chartData = visible.map(b => ({
+  let chartData = chartSource.map(b => ({
     time: Math.floor(b.date.getTime() / 1000),
     open: b.open,
     high: b.high,
@@ -5840,31 +5881,22 @@ const container = document.getElementById('lwChart');
   }
 
   try{
-    if(state.chartType === 'line'){
-      candleSeries.setData(chartData.map(d => ({time: d.time, value: d.close})));
-    } else if(state.chartType === 'area'){
-      candleSeries.setData(chartData.map(d => ({time: d.time, value: d.close})));
-    } else {
-      candleSeries.applyOptions({
-        upColor: state.colorUp,
-        downColor: state.colorDown,
-        borderUpColor: state.colorUp,
-        borderDownColor: state.colorDown,
-        wickUpColor: state.colorUp,
-        wickDownColor: state.colorDown
-      });
-      candleSeries.setData(chartData);
-    }
-    
-    if(state.showVolume){
-      volumeSeries.setData(visible.map(b => ({
-        time: Math.floor(b.date.getTime() / 1000),
-        value: b.volume || 0,
-        color: b.close >= b.open ? 'rgba(38,166,154,0.3)' : 'rgba(239,83,80,0.3)'
-      })));
-    } else {
-      volumeSeries.setData([]);
-    }
+    const lineChart = state.chartType === 'line' || state.chartType === 'area';
+    const seriesData = lineChart ? chartData.map(d => ({ time: d.time, value: d.close })) : chartData;
+    if (!lineChart) candleSeries.applyOptions({ upColor: state.colorUp, downColor: state.colorDown, borderUpColor: state.colorUp, borderDownColor: state.colorDown, wickUpColor: state.colorUp, wickDownColor: state.colorDown });
+    const fullPriceData = () => visible.map(b => lineChart ? ({ time: Math.floor(b.date.getTime() / 1000), value: b.close }) : ({ time: Math.floor(b.date.getTime() / 1000), open: b.open, high: b.high, low: b.low, close: b.close }));
+    if (canIncrement && seriesData.length) {
+      try { seriesData.forEach(point => candleSeries.update(point)); }
+      catch (updateError) { candleSeries.setData(fullPriceData()); }
+    } else candleSeries.setData(fullPriceData());
+
+    if (state.showVolume) {
+      const volumeData = (canIncrement ? chartSource : visible).map(b => ({ time: Math.floor(b.date.getTime() / 1000), value: b.volume || 0, color: b.close >= b.open ? 'rgba(38,166,154,0.3)' : 'rgba(239,83,80,0.3)' }));
+      if (canIncrement && volumeSeries && typeof volumeSeries.update === 'function') {
+        try { volumeData.forEach(point => volumeSeries.update(point)); }
+        catch (updateError) { volumeSeries.setData(visible.map(b => ({ time: Math.floor(b.date.getTime() / 1000), value: b.volume || 0, color: b.close >= b.open ? 'rgba(38,166,154,0.3)' : 'rgba(239,83,80,0.3)' }))); }
+      } else volumeSeries.setData(visible.map(b => ({ time: Math.floor(b.date.getTime() / 1000), value: b.volume || 0, color: b.close >= b.open ? 'rgba(38,166,154,0.3)' : 'rgba(239,83,80,0.3)' })));
+    } else volumeSeries.setData([]);
     
     // Set visible range to show current position
     if (state.replayMode && state.replayIndex > 0) {
@@ -5880,12 +5912,12 @@ const container = document.getElementById('lwChart');
   }
 updateChartDimensions();
   redrawAllTradeLines();
+  updateVolumeProfile(false);
   redrawDrawingsOverlay();
   updatePriceDisplay();
   updateReplayInfo();
   updateBalanceDisplay();
   updateProgressBar();
-  updateVolumeProfile();
   if (state.indicators.length) refreshIndicatorSeries();
 }
 function updateChartDimensions() {
@@ -5895,15 +5927,6 @@ function updateChartDimensions() {
     state.chartWidth = rect.width;
     state.chartHeight = rect.height;
   }
-}
-function computeHeikinAshi(bars){
-  const ha=[];
-  for(let i=0;i<bars.length;i++){
-    const c=(bars[i].open+bars[i].high+bars[i].low+bars[i].close)/4;
-    const o=i===0?bars[i].open:(ha[i-1].open+ha[i-1].close)/2;
-    ha.push({open:o,close:c,high:Math.max(bars[i].high,o,c),low:Math.min(bars[i].low,o,c),volume:bars[i].volume,date:bars[i].date});
-  }
-  return ha;
 }
 function redrawAllTradeLines() {
   if (!candleSeries) return;
@@ -7184,6 +7207,9 @@ function enterTrade() {
     entry: price, 
     sl: slPrice, 
     tp: tpPrice, 
+    initialSL: slPrice,
+    initialTP: tpPrice,
+    pipValue: state.pipValue,
     lots: lots, 
     openBar: state.replayMode ? state.replayIndex : state.data.length - 1, 
     openDate: state.data[state.replayMode ? state.replayIndex - 1 : state.data.length - 1]?.date, 
@@ -7243,11 +7269,11 @@ function closeLastPosition() {
 function closeAllPositions() { 
   while (state.positions.length) closePosition(state.positions[state.positions.length - 1].id); 
 }
-function updateOpenPositions() { 
+function updateOpenPositions(skipLineRedraw = false) { 
   const container = document.getElementById('openPositions'); 
   if (!state.positions.length) { 
     container.innerHTML = '<div style="color:var(--text-muted);font-size:11px;text-align:center;padding:12px;">No open positions</div>'; 
-    redrawAllTradeLines();
+    if (!skipLineRedraw) redrawAllTradeLines();
     return; 
   } 
   const dl = state.replayMode ? state.replayIndex : state.data.length; 
@@ -7292,7 +7318,7 @@ function updateOpenPositions() {
       </div>
     </div>`; 
   }).join(''); 
-  redrawAllTradeLines();
+  if (!skipLineRedraw) redrawAllTradeLines();
 }
 function jumpToPositionBar(positionId) {
   const pos = state.positions.find(p => p.id === positionId);
@@ -7429,7 +7455,8 @@ function placePendingOrder(type) {
     lots: parseFloat(document.getElementById('lotSize').value) || 1, 
     slPips: parseInt(document.getElementById('slPips').value) || 50, 
     tpPips: parseInt(document.getElementById('tpPips').value) || 100,
-    pipSize: actualPipSize
+    pipSize: actualPipSize,
+    pipValue: state.pipValue
   }); 
   updatePendingOrdersDisplay(); 
   renderChart(); 
@@ -7834,7 +7861,22 @@ function jumpToTrade(tradeNumber) {
   }
 }
 // ===== 08.6 EXPORT =====
-function exportTradesCSV() { if (!state.closedTrades.length) { alert('No trades to export'); return; } let csv = 'Trade#,Direction,Entry,Close,Lots,Pips,P&L,Result,Note\n'; state.closedTrades.forEach((t, i) => { csv += `${i + 1},${t.direction},${t.entry},${t.closePrice},${t.lots},${t.pips},${t.pnl},${t.result},${t.note || ''}\n`; }); const b = new Blob([csv], { type: 'text/csv' }), u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = `tradingplay_trades_${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(u); }
+function csvEscape(value) { const s = value == null ? '' : String(value); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+function tradeIso(value) { if (!value) return ''; const d = value instanceof Date ? value : new Date(value); return Number.isNaN(d.getTime()) ? '' : d.toISOString(); }
+function tradeUtcParts(value) { const iso = tradeIso(value); if (!iso) return { date: '', time: '', weekday: '' }; const d = new Date(iso); return { date: iso.slice(0, 10), time: iso.slice(11, 19), weekday: new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: 'UTC' }).format(d) }; }
+function exportTradesCSV() {
+  if (!state.closedTrades.length) { alert('No trades to export'); return; }
+  const headers = ['Trade#','Direction','Entry','Close','Lots','Pips','P&L','Result','Note','Entry Timestamp UTC','Close Timestamp UTC','Entry Date UTC','Entry Time UTC','Entry Weekday UTC','Close Date UTC','Close Time UTC','Close Weekday UTC','Initial Stop Loss','Initial Take Profit','Initial Risk Amount','Symbol'];
+  const rows = [headers];
+  state.closedTrades.forEach((t, i) => {
+    const entryIso = tradeIso(t.openDate), closeIso = tradeIso(t.closeDate), entry = tradeUtcParts(entryIso), close = tradeUtcParts(closeIso);
+    const initialSL = t.initialSL != null ? t.initialSL : (t.sl != null ? t.sl : ''), initialTP = t.initialTP != null ? t.initialTP : (t.tp != null ? t.tp : ''), riskAmount = initialSL !== '' && t.pipSize ? Math.abs(t.entry - initialSL) / t.pipSize * (t.pipValue || state.pipValue) * (t.lots || 0) : '';
+    rows.push([i + 1, t.direction, t.entry, t.closePrice, t.lots, t.pips, t.pnl, t.result, t.note || '', entryIso, closeIso, entry.date, entry.time, entry.weekday, close.date, close.time, close.weekday, initialSL, initialTP, Number.isFinite(riskAmount) ? Number(riskAmount.toFixed(2)) : '', state.symbol || '']);
+  });
+  const csv = rows.map(row => row.map(csvEscape).join(',')).join('\r\n');
+  const b = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }), u = URL.createObjectURL(b), a = document.createElement('a');
+  a.href = u; a.download = `tradingplay_trades_${new Date().toISOString().slice(0, 10)}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(u), 1000);
+}
 function exportReport() { let r = `TradingPlay Pro v9.7.4 — Backtest Report\n${'='.repeat(50)}\n\n`; r += `Symbol: ${state.symbol}\nDate: ${new Date().toLocaleDateString()}\nStarting: $${state.startingBalance.toLocaleString()}\nFinal: $${state.balance.toFixed(2)}\n\n`; r += `Trades: ${state.closedTrades.length}\nWins: ${state.closedTrades.filter(t => t.result === 'win').length}\nNet P&L: $${state.closedTrades.reduce((s, t) => s + t.pnl, 0).toFixed(2)}\n`; state.closedTrades.forEach((t, i) => { r += `#${i + 1} ${t.direction.toUpperCase()} | ${t.entry.toFixed(2)} → ${t.closePrice.toFixed(2)} | ${t.pips} pips | $${t.pnl.toFixed(2)} | ${t.result}\n`; }); const b = new Blob([r], { type: 'text/plain' }), u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = `tradingplay_report_${new Date().toISOString().slice(0, 10)}.txt`; a.click(); URL.revokeObjectURL(u); }
 function takeScreenshot() {
   try {
@@ -7908,35 +7950,6 @@ document.getElementById('screenshotBtn').addEventListener('click', function(e) {
 function resetAll() { if (!confirm('Reset all?')) return; state.positions = []; state.pendingOrders = []; state.closedTrades = []; state.balance = state.startingBalance; state.equity = state.startingBalance; state.drawings = []; state.undoStack = []; state.redoStack = []; state.alerts = []; updateOpenPositions(); updatePendingOrdersDisplay(); updateStats(); updateTradeLog(); updateBalanceDisplay(); updateAlertList(); renderChart(); }
 
 // ===== 09 REPLAY =====
-function setReplaySourceIndex(index) {
-  const source = getSourceBars();
-  if (!source.length) return;
-
-  const newIndex = Math.max(1, Math.min(source.length, index));
-  state._replaySourceIndex = newIndex;
-
-  // CRITICAL: Rebuild state.data from scratch up to this source index
-  const sourceSlice = source.slice(0, newIndex);
-  const aggregated = aggregateBars(sourceSlice, state.timeframe);
-  state.data = aggregated.map(b => ({
-    ...b,
-    lwTime: Math.floor(b.date.getTime() / 1000)
-  }));
-  state.replayIndex = state.data.length;
-}
-
-function getReplaySourceIndex() {
-  if (!state.replayMode) return getSourceBars().length;
-  return state._replaySourceIndex || 1;
-}
-
-function getSourceBars() {
-  // Use original raw data as the source of truth
-  const source = state._originalRawData && state._originalRawData.length
-    ? state._originalRawData
-    : state.rawData;
-  return [...(source || [])].sort((a, b) => a.date - b.date);
-}
 function toggleReplayMode() {
   state.replayMode = !state.replayMode;
   const btn = document.getElementById('replayToggleBtn');
@@ -8002,28 +8015,20 @@ function stepForward(n) {
   }
 
   // Step source index forward by n
-  const newSourceIndex = Math.min(source.length, state._replaySourceIndex + n);
-  setReplaySourceIndex(newSourceIndex); // Rebuilds state.data and state.replayIndex
-
-  // Now check exits on the newly visible bars
-  // state.replayIndex is now the new length; check the last n bars
-  const checkFrom = Math.max(0, state.replayIndex - n);
+  const newSourceIndex = Math.min(source.length, getReplaySourceIndex() + n);
+  const changed = advanceReplaySourceIndex(newSourceIndex);
+  const checkFrom = changed.checkFrom;
   for (let i = checkFrom; i < state.replayIndex; i++) {
     checkPositionExits(i);
     checkPendingOrders(i);
   }
 
   checkAlerts();
-  updateTrailingStops();
-  updateReplayInfo();
-  updateOpenPositions();
-  updatePriceDisplay();
-  updateBalanceDisplay();
+  updateTrailingStops(true);
+  updateOpenPositions(true);
   updateTradeInfo();
-  updateVolumeProfile();
-  renderChart();
-  updateProgressBar();
   updateVWAPForReplay();
+  renderChart(changed.renderFrom);
 
   if (state._replaySourceIndex >= source.length) {
     stopPlay();
@@ -8036,13 +8041,8 @@ function stepBackward(n) {
   const newSourceIndex = Math.max(1, state._replaySourceIndex - n);
   setReplaySourceIndex(newSourceIndex);
 
-  updateReplayInfo();
-  updatePriceDisplay();
-  updateBalanceDisplay();
-  renderChart();
-  updateProgressBar();
-  updateVolumeProfile();
   updateVWAPForReplay();
+  renderChart();
 }
 function goToDate() {
   const ds = document.getElementById('replayDate').value;
@@ -8159,6 +8159,8 @@ function checkPendingOrders(bi) {
     state.positions.push({
       id: Date.now() + Math.random(),
       direction: dir, entry, sl, tp,
+      initialSL: sl, initialTP: tp,
+      pipValue: o.pipValue || state.pipValue,
       lots: o.lots,
       openBar: bi,
       openDate: b.date,
@@ -8170,7 +8172,7 @@ function checkPendingOrders(bi) {
     updateOpenPositions();
   });
 }
-function updateTrailingStops() {
+function updateTrailingStops(skipLineRedraw = false) {
   const cp = getCurrentPrice(); // Already correct after Issue 2 fix
   if (!cp) return;
 
@@ -8200,7 +8202,7 @@ function updateTrailingStops() {
         showToastNotification(`Breakeven triggered`, false);
       }
     }
-    if (updated) redrawAllTradeLines();
+    if (updated && !skipLineRedraw) redrawAllTradeLines();
   });
 }
 function seekProgress(e) { 
@@ -8938,28 +8940,17 @@ function stepForwardMobile(n) {
     return;
   }
   
-  const pi = state.replayIndex;
-  setReplaySourceIndex(getReplaySourceIndex() + n);
-  
-  // Process each bar
-  for (let i = pi; i < state.replayIndex; i++) {
+  const changed = advanceReplaySourceIndex(getReplaySourceIndex() + n);
+  for (let i = changed.checkFrom; i < state.replayIndex; i++) {
     checkPositionExits(i);
     checkPendingOrders(i);
   }
-  checkPositionExits(state.replayIndex - 1);
-  checkPendingOrders(state.replayIndex - 1);
   checkAlerts();
-  updateTrailingStops();
-  
-  // Update displays
-  updateReplayInfo();
-  updateMobileReplayInfo();
-  updateOpenPositions();
-  updatePriceDisplay();
-  updateBalanceDisplay();
+  updateTrailingStops(true);
+  updateOpenPositions(true);
   updateTradeInfo();
-  
-  renderChart();
+  updateVWAPForReplay();
+  renderChart(changed.renderFrom);
   updateProgressBar();
   updateMobileProgressBar();
   
