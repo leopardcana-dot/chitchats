@@ -746,12 +746,9 @@ tbody td{padding:10px 14px;font-family:var(--fm);font-size:11px;color:var(--text
 
 <nav class="nav">
   <div class="ntab active" onclick="go('cmd')"   id="tab-cmd">◈ Command</div>
-  <div class="ntab"        onclick="go('log')"   id="tab-log">⊕ Log Trade</div>
   <div class="ntab"        onclick="go('rec')"   id="tab-rec">≡ Record</div>
   <div class="ntab"        onclick="go('pb')"    id="tab-pb">⬡ Trading Plan</div>
-  <div class="ntab"        onclick="go('brief')" id="tab-brief">◎ Session Brief</div>
-  <div class="ntab"        onclick="go('imp')"   id="tab-imp">⇣ Broker Import</div>
-  <div class="ntab"        onclick="go('cal')"   id="tab-cal">⊞ Calendar</div>
+  <div class="ntab"        onclick="go('imp')"   id="tab-imp">⇣ CSV Import</div>
   <div class="ntab"        onclick="go('risk')"  id="tab-risk">⚖ Risk Calc</div>
 </nav>
 
@@ -1062,7 +1059,7 @@ tbody td{padding:10px 14px;font-family:var(--fm);font-size:11px;color:var(--text
 
   <div class="twrap"><table>
     <thead><tr><th style="width:36px;"><input type="checkbox" id="sel-all" onchange="toggleSelAll(this)" style="cursor:pointer;accent-color:var(--purple);"></th>	<th>Caro Stamp</th><th>Dir</th><th>Session</th><th>Score</th><th>Entry</th><th>Exit</th><th>SL</th><th>TP</th><th>Pips W/L</th><th>R</th><th>P&L ($)</th><th>Status</th><th>News</th><th>B-Loop</th><th>Src</th><th>Actions</th></tr></thead>
-    <tbody id="rec-tbody"><th style="width:36px;"><input type="checkbox" id="sel-all" onchange="toggleSelAll(this)" style="cursor:pointer;accent-color:var(--purple);"></th></tbody>
+    <tbody id="rec-tbody"></tbody>
   </table></div>
 </div>
 
@@ -1180,14 +1177,21 @@ tbody td{padding:10px 14px;font-family:var(--fm);font-size:11px;color:var(--text
 
 <!-- ══ BROKER IMPORT ══ -->
 <div class="panel" id="panel-imp">
-  <div class="sec-hdr"><div><div class="sec-title">Broker <em>Import</em></div><div class="sec-sub">MT4/MT5 History · Parse → Stage → Enrich → Confirm</div></div><button class="btn btn-o btn-sm" onclick="dlTemplate()">↓ JSON Template</button></div>
+  <div class="sec-hdr"><div><div class="sec-title">Trade <em>Import</em></div><div class="sec-sub">Trading Play CSV or broker history · Parse → Stage → Enrich → Confirm</div></div><button class="btn btn-o btn-sm" onclick="dlTemplate()">↓ JSON Template</button></div>
   <div id="imp-alert" class="alert"></div>
   <div class="mtabs">
-    <div class="mtab active" id="mt-paste" onclick="setMethod('paste')">Paste Raw Data</div>
+    <div class="mtab active" id="mt-csv" onclick="setMethod('csv')">Trading Play CSV</div>
+    <div class="mtab" id="mt-paste" onclick="setMethod('paste')">Paste Broker Data</div>
     <div class="mtab" id="mt-json" onclick="setMethod('json')">Upload JSON</div>
     <div class="mtab" id="mt-guide" onclick="setMethod('guide')">Format Guide</div>
   </div>
-  <div id="mp-paste">
+  <div id="mp-csv">
+    <div class="psec"><div class="psec-title">Upload Trading Play Backtest CSV</div>
+      <p style="font-size:12px;color:var(--text-dim);margin-bottom:16px;line-height:1.7;">Upload the CSV exported from Trading Play. Entry and close times are imported as UTC, with weekday and hour derived from those timestamps.</p>
+      <label class="imp-zone" for="backtest-csv-file">↑ Click to select Trading Play .csv file<input type="file" id="backtest-csv-file" accept=".csv,text/csv" onchange="parseBacktestCSV(event)" style="display:none;"></label>
+    </div>
+  </div>
+  <div id="mp-paste" style="display:none;">
     <div class="psec"><div class="psec-title">Paste MT4 / MT5 History Table</div>
       <div class="field" style="margin-bottom:14px;"><label>Copy full trade history from MT4/MT5 (include header row) and paste below</label>
         <textarea id="paste-area" rows="10" style="font-size:11px;line-height:1.8;" placeholder="Ticket	Open Time	Type	Size	Item	Price	S / L	T / P	Close Time	Price	Commission	R/O Swap	Trade P/L&#10;238864029	 2026.03.13 09:50:25	sell	0.10	xauusd	5084.73	5086.00	5056.00	 2026.03.13 10:06:51	5070.43	0.00	0.00	143.00"></textarea>
@@ -1622,10 +1626,7 @@ function go(tab){
     renderPB(); // fallback
   }
 }
-  if(tab==='brief')renderBriefs();
-  if(tab==='log')fillPBSelect();
   if(tab==='imp')refreshBatchPB();
-  if(tab==='cal')renderCalendar();
   if(tab==='risk'){}
 }
 function startClock() {
@@ -2170,9 +2171,7 @@ function getPipsByDay(C){
     if(!t.entryPrice || t.exitPrice == null || t.status === 'OPEN') return;
     var js = new Date(t.entryTimestamp).getUTCDay();
     var idx = (js + 6) % 7; // Monday = 0
-    var rawPips = t.direction === 'LONG' 
-      ? Math.round((t.exitPrice - t.entryPrice) * 100)
-      : Math.round((t.entryPrice - t.exitPrice) * 100);
+    var rawPips = getPipsValue(t);
     dayMap[idx].sum += rawPips;
     dayMap[idx].count++;
   });
@@ -2194,9 +2193,7 @@ function getPipsBySession(C){
     if(!t.entryPrice || t.exitPrice == null || t.status === 'OPEN') return;
     var session = t.session || 'UNKNOWN';
     if(sessionMap[session]){
-      var rawPips = t.direction === 'LONG' 
-        ? Math.round((t.exitPrice - t.entryPrice) * 100)
-        : Math.round((t.entryPrice - t.exitPrice) * 100);
+      var rawPips = getPipsValue(t);
       sessionMap[session].sum += rawPips;
       sessionMap[session].count++;
     }
@@ -2215,7 +2212,7 @@ function drawPipDow(C){
   C.forEach(function(t){
     if(!t.entryPrice||t.exitPrice==null||t.status==='OPEN')return;
     var js=new Date(t.entryTimestamp).getUTCDay(),idx=(js+6)%7;
-    var rawPips=t.direction==='LONG'?Math.round((t.exitPrice-t.entryPrice)*100):Math.round((t.entryPrice-t.exitPrice)*100);
+    var rawPips = getPipsValue(t);
     dowMap[idx].sum+=rawPips;dowMap[idx].count++;
   });
   var vals=dowMap.map(function(d){return d.count?parseFloat((d.sum/d.count).toFixed(1)):null;});
@@ -2232,7 +2229,7 @@ function drawPipHour(C){
   C.forEach(function(t){
     if(!t.entryPrice||t.exitPrice==null||t.status==='OPEN')return;
     var h=new Date(t.entryTimestamp).getUTCHours();
-    var rawPips=t.direction==='LONG'?Math.round((t.exitPrice-t.entryPrice)*100):Math.round((t.entryPrice-t.exitPrice)*100);
+    var rawPips = getPipsValue(t);
     hourMap[h].sum+=rawPips;hourMap[h].count++;
   });
   var vals=hourMap.map(function(h){return h.count?parseFloat((h.sum/h.count).toFixed(1)):null;});
@@ -2286,14 +2283,12 @@ function renderRec(){
     // Pips won/loss
     var tradePips = '—', tradePipsColor = 'var(--text-dim)';
     if (t.entryPrice && t.exitPrice != null && t.status !== 'OPEN') {
-      var rawPips = t.direction === 'LONG'
-        ? Math.round((t.exitPrice - t.entryPrice) * 100)
-        : Math.round((t.entryPrice - t.exitPrice) * 100);
+      var rawPips = getPipsValue(t);
       tradePips = (rawPips >= 0 ? '+' : '') + rawPips + 'p';
       tradePipsColor = rawPips >= 0 ? 'var(--green)' : 'var(--red)';
     }
 
-    var src = t.source === 'BROKER' ? '<span style="font-size:8px;padding:1px 5px;border:1px solid var(--blue);color:var(--blue);border-radius:10px;">MT4</span>' : '—';
+    var src = t.source === 'BROKER' ? '<span style="font-size:8px;padding:1px 5px;border:1px solid var(--blue);color:var(--blue);border-radius:10px;">MT4</span>' : t.source === 'BACKTEST' ? '<span style="font-size:8px;padding:1px 5px;border:1px solid var(--green);color:var(--green);border-radius:10px;">PLAY</span>' : '—';
     var newsStr = t.newsEvent ? '<span class="news-badge">' + t.newsEvent + '</span>' : '—';
     var isChecked = selectedIds[t.id] ? 'checked' : '';
 
@@ -2352,9 +2347,7 @@ function filteredTrades(){
   if (!isNaN(fpMin) || !isNaN(fpMax)) {
     T = T.filter(t => {
       if (t.status === 'OPEN' || t.exitPrice == null) return false;
-      var rawPips = t.direction === 'LONG'
-        ? Math.round((t.exitPrice - t.entryPrice) * 100)
-        : Math.round((t.entryPrice - t.exitPrice) * 100);
+      var rawPips = getPipsValue(t);
       if (!isNaN(fpMin) && rawPips < fpMin) return false;
       if (!isNaN(fpMax) && rawPips > fpMax) return false;
       return true;
@@ -3305,7 +3298,38 @@ function importData(ev){var f=ev.target.files[0];if(!f)return;var r=new FileRead
 // ══════════════════════════════════════════════
 // BROKER IMPORT
 // ══════════════════════════════════════════════
-function setMethod(m){['paste','json','guide'].forEach(function(x){document.getElementById('mp-'+x).style.display=x===m?'block':'none';document.getElementById('mt-'+x).classList.toggle('active',x===m);});}
+function setMethod(m){['csv','paste','json','guide'].forEach(function(x){document.getElementById('mp-'+x).style.display=x===m?'block':'none';document.getElementById('mt-'+x).classList.toggle('active',x===m);});}
+function parseCSVRows(text){
+  var rows=[],row=[],field='',quoted=false;
+  for(var i=0;i<text.length;i++){var ch=text[i];
+    if(quoted){if(ch==='"'&&text[i+1]==='"'){field+='"';i++;}else if(ch==='"'){quoted=false;}else{field+=ch;}}
+    else if(ch==='"'){quoted=true;}else if(ch===','){row.push(field);field='';}
+    else if(ch==='\n'){row.push(field.replace(/\r$/, ''));rows.push(row);row=[];field='';}else{field+=ch;}}
+  if(field.length||row.length){row.push(field.replace(/\r$/, ''));rows.push(row);}return rows;
+}
+function parseBacktestCSV(ev){
+  var f=ev.target.files[0];if(!f)return;var reader=new FileReader();
+  reader.onload=function(e){try{
+    var rows=parseCSVRows(String(e.target.result||'').replace(/^\ufeff/,''));if(rows.length<2)throw new Error('CSV has no trade rows.');
+    var headers=rows.shift().map(function(h){return h.trim().toLowerCase().replace(/[^a-z0-9]/g,'');});
+    function val(row,names){for(var j=0;j<names.length;j++){var ix=headers.indexOf(names[j]);if(ix>=0&&row[ix]!=null&&String(row[ix]).trim()!=='')return String(row[ix]).trim();}return '';}
+    var parsed=rows.filter(function(r){return r.some(function(v){return String(v).trim()!=='';});}).map(function(r){
+      var open=val(r,['entrytimestamputc','entrytimestamp','opentimestamp']),close=val(r,['closetimestamputc','closetimestamp','exittimestamp']);
+      var entry=parseFloat(val(r,['entry'])),exit=parseFloat(val(r,['close','closeprice','exit'])),lots=parseFloat(val(r,['lots'])),pips=parseFloat(val(r,['pips'])),pnl=parseFloat(val(r,['p&l','pnl','pl'])),sl=parseFloat(val(r,['initialstoploss','stoploss','sl'])),tp=parseFloat(val(r,['initialtakeprofit','takeprofit','tp'])),risk=parseFloat(val(r,['initialriskamount','riskamount']));
+      if(!open||!close||!isFinite(entry)||!isFinite(exit)||!isFinite(pnl))return null;
+      var dt=new Date(open),xd=new Date(close);if(isNaN(dt.getTime())||isNaN(xd.getTime()))return null;
+      return buildBacktestTrade({number:val(r,['trade#','tradenumber','trade']),direction:val(r,['direction']),openTime:dt.toISOString(),closeTime:xd.toISOString(),entry:entry,exit:exit,lots:isFinite(lots)?lots:0,pips:isFinite(pips)?pips:0,pnl:pnl,result:val(r,['result']),note:val(r,['note']),symbol:val(r,['symbol']),stopLoss:isFinite(sl)?sl:null,takeProfit:isFinite(tp)?tp:null,riskAmount:isFinite(risk)?risk:0});
+    }).filter(Boolean);
+    if(!parsed.length)throw new Error('No valid Trading Play rows found. Make sure the CSV has Entry, Close, P&L, and timestamp columns.');
+    stageDedup(parsed);showImpAlert('Trading Play CSV: '+parsed.length+' valid trade(s) staged with UTC date and time.','ok');
+  }catch(err){showImpAlert('CSV import error: '+err.message,'err');}finally{ev.target.value='';}};reader.readAsText(f);
+}
+function buildBacktestTrade(o){
+  var dir=String(o.direction).toLowerCase()==='buy'?'LONG':'SHORT',eTs=new Date(o.openTime),xTs=new Date(o.closeTime),status=o.pnl>0?'WIN':o.pnl<0?'LOSS':'BREAKEVEN';
+  var ticket='TRPLAY-'+(o.number||'')+'-'+eTs.toISOString();
+  var riskAmount=o.riskAmount>0?o.riskAmount:0,rMultiple=riskAmount>0?parseFloat((o.pnl/riskAmount).toFixed(2)):null;
+  return {id:uid(),source:'BACKTEST',brokerTicket:ticket,brokerLotSize:o.lots,brokerItem:o.symbol||'backtest',brokerPnl:o.pnl,brokerCommission:0,brokerSwap:0,caroTimestamp:xTs.toISOString(),entryTimestamp:eTs.toISOString(),exitTimestamp:xTs.toISOString(),direction:dir,session:detSes(eTs),amdPhase:'UNKNOWN',cotContext:'',holdType:'INTRADAY',confluenceScore:5,confluenceTier:2,entryPrice:o.entry,stopLoss:o.stopLoss,takeProfit:o.takeProfit,riskAmount:riskAmount,exitPrice:o.exit,status:status,rMultiple:rMultiple,pips:o.pips,preTradThesis:'[Imported from Trading Play backtest]',postTradeNotes:o.note||'',bLoopFlagged:false,newsEvent:null,newsBias:null,playbook:'',tags:['TRADING PLAY',o.symbol||'BACKTEST'],_enriched:false};
+}
 function parsePaste(){
   var raw=document.getElementById('paste-area').value.trim();if(!raw)return showImpAlert('Paste your MT4 history table first.','err');
   var lines=raw.split('\n').map(function(l){return l.trim();}).filter(Boolean);
@@ -3572,7 +3596,7 @@ function showEmbedDay(d){
     var pnl=getPnl(t),pnlStr=pnl!==null?fmtDollar(pnl):'—',pnlC=pnl===null?'var(--text-dim)':pnl>=0?'var(--green)':'var(--red)';
     var tradePips='—',pipsColor='var(--text-dim)';
     if(t.entryPrice&&t.exitPrice!=null&&t.status!=='OPEN'){
-      var rawPips=t.direction==='LONG'?Math.round((t.exitPrice-t.entryPrice)*100):Math.round((t.entryPrice-t.exitPrice)*100);
+      var rawPips = getPipsValue(t);
       tradePips=(rawPips>=0?'+':'')+rawPips+'p';
       pipsColor=rawPips>=0?'var(--green)':'var(--red)';
     }
