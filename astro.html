@@ -806,6 +806,7 @@ body{padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
             <option value="ph">Planet in House (natal)</option>
             <option value="na">Natal Aspect</option>
             <option value="tn">Transit to Natal Aspect</option>
+			<option value="tt">Transit to Transit Aspect</option>
             <option value="ts">Transit Planet in Sign</option>
             <option value="th">Transit Planet in House</option>
             <option value="di">Dignity / Debility</option>
@@ -907,7 +908,32 @@ body{padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
             </select>
           </div>
         </div>
-
+<!-- Transit to Transit -->
+<div id="ie-tt-row" class="interp-cat-row" style="display:none;grid-template-columns:1fr 1fr 1fr;gap:8px">
+  <div class="input-group">
+    <label>Transit Planet 1</label>
+    <select id="ie-tt-tp1">
+      <option>Sun</option><option>Moon</option><option>Mercury</option><option>Venus</option>
+      <option>Mars</option><option>Jupiter</option><option>Saturn</option><option>Uranus</option>
+      <option>Neptune</option><option>Pluto</option>
+    </select>
+  </div>
+  <div class="input-group">
+    <label>Aspect</label>
+    <select id="ie-tt-asp">
+      <option>Conjunction</option><option>Opposition</option><option>Square</option>
+      <option>Trine</option><option>Sextile</option><option>Quincunx</option>
+    </select>
+  </div>
+  <div class="input-group">
+    <label>Transit Planet 2</label>
+    <select id="ie-tt-tp2">
+      <option>Sun</option><option>Moon</option><option>Mercury</option><option>Venus</option>
+      <option>Mars</option><option>Jupiter</option><option>Saturn</option><option>Uranus</option>
+      <option>Neptune</option><option>Pluto</option>
+    </select>
+  </div>
+</div>
         <!-- Transit Planet in Sign -->
         <div id="ie-ts-row" class="interp-cat-row" style="display:none;grid-template-columns:1fr 1fr;gap:8px">
           <div class="input-group">
@@ -1799,6 +1825,7 @@ function buildCurrentInterpKey() {
     if (cat === 'ph') return interpKey('ph', document.getElementById('ie-ph-planet').value, document.getElementById('ie-ph-house').value);
     if (cat === 'na') return interpKey('na', document.getElementById('ie-na-p1').value, document.getElementById('ie-na-asp').value, document.getElementById('ie-na-p2').value);
     if (cat === 'tn') return interpKey('tn', document.getElementById('ie-tn-tp').value, document.getElementById('ie-tn-asp').value, document.getElementById('ie-tn-np').value);
+	if (cat === 'tt') return interpKey('tt', document.getElementById('ie-tt-tp1').value, document.getElementById('ie-tt-asp').value, document.getElementById('ie-tt-tp2').value);
     if (cat === 'ts') return interpKey('ts', document.getElementById('ie-ts-planet').value, document.getElementById('ie-ts-sign').value);
     if (cat === 'th') return interpKey('th', document.getElementById('ie-th-planet').value, document.getElementById('ie-th-house').value);
     if (cat === 'di') return interpKey('di', document.getElementById('ie-di-planet').value, document.getElementById('ie-di-type').value);
@@ -1895,6 +1922,7 @@ function jumpToInterpEntry(key) {
     else if (cat === 'ph') { document.getElementById('ie-ph-planet').value = parts[1]; document.getElementById('ie-ph-house').value = parts[2].replace('H',''); }
     else if (cat === 'na') { document.getElementById('ie-na-p1').value = parts[1]; document.getElementById('ie-na-asp').value = parts[2]; document.getElementById('ie-na-p2').value = parts[3]; }
     else if (cat === 'tn') { document.getElementById('ie-tn-tp').value = parts[1]; document.getElementById('ie-tn-asp').value = parts[2]; document.getElementById('ie-tn-np').value = parts[3]; }
+	else if (cat === 'tt') { document.getElementById('ie-tt-tp1').value = parts[1]; document.getElementById('ie-tt-asp').value = parts[2]; document.getElementById('ie-tt-tp2').value = parts[3]; }
     else if (cat === 'ts') { document.getElementById('ie-ts-planet').value = parts[1]; document.getElementById('ie-ts-sign').value = parts[2]; }
     else if (cat === 'th') { document.getElementById('ie-th-planet').value = parts[1]; document.getElementById('ie-th-house').value = parts[2].replace('H',''); }
     else if (cat === 'di') { document.getElementById('ie-di-planet').value = parts[1]; document.getElementById('ie-di-type').value = parts[2]; }
@@ -2841,19 +2869,22 @@ function renderAspects() {
   function aspHtml(list, aspType) {
     if (!list.length) return '<div class="empty-state">No aspects</div>';
     return list.sort((a, b) => a.a.actualOrb - b.a.actualOrb).slice(0, 25).map(x => {
-      let interpText = '';
       if (aspType === 'tn') {
-        interpText = getInterp(interpKey('tn', x.p1.id, x.a.name, x.p2.id));
-      } else if (aspType === 'nn') {
-        interpText = getInterp(interpKey('na', x.p1.id, x.a.name, x.p2.id)) ||
-                     getInterp(interpKey('na', x.p2.id, x.a.name, x.p1.id));
-      }
+  interpText = getInterp(interpKey('tn', x.p1.id, x.a.name, x.p2.id));
+} else if (aspType === 'nn') {
+  interpText = getInterp(interpKey('na', x.p1.id, x.a.name, x.p2.id)) ||
+               getInterp(interpKey('na', x.p2.id, x.a.name, x.p1.id));
+} else if (aspType === 'tt') {
+  interpText = getInterp(interpKey('tt', x.p1.id, x.a.name, x.p2.id)) ||
+               getInterp(interpKey('tt', x.p2.id, x.a.name, x.p1.id));
+}
       const snippet = interpText
         ? interpText.replace(/\*\*(.+?)\*\*/g, '$1').replace(/_(.+?)_/g, '$1').slice(0, 110) + (interpText.length > 110 ? '…' : '')
         : '';
-      const editKey = aspType === 'tn'
-        ? interpKey('tn', x.p1.id, x.a.name, x.p2.id)
-        : interpKey('na', x.p1.id, x.a.name, x.p2.id);
+     const editKey =
+  aspType === 'tn' ? interpKey('tn', x.p1.id, x.a.name, x.p2.id) :
+  aspType === 'tt' ? interpKey('tt', x.p1.id, x.a.name, x.p2.id) :
+                     interpKey('na', x.p1.id, x.a.name, x.p2.id);
       return `<div class="aspect-item" style="flex-direction:column;align-items:flex-start;gap:3px;padding:8px 12px">
         <div style="display:flex;align-items:center;gap:8px;width:100%">
           <div class="aspect-dot" style="background:${x.a.col};flex-shrink:0"></div>
@@ -2877,10 +2908,17 @@ function renderAspects() {
 
   const all = [...tn, ...nn, ...tt].sort((a, b) => a.a.actualOrb - b.a.actualOrb);
   document.getElementById('adtbl').innerHTML = all.slice(0, 25).map(x => {
-    const isTN = tn.includes(x);
-    const adKey    = isTN ? interpKey('tn', x.p1.id, x.a.name, x.p2.id) : interpKey('na', x.p1.id, x.a.name, x.p2.id);
-    const adKeyRev = isTN ? adKey : interpKey('na', x.p2.id, x.a.name, x.p1.id);
-    const adText   = getInterp(adKey) || getInterp(adKeyRev);
+   const isTN = tn.includes(x);
+const isTT = tt.includes(x);
+const adKey =
+  isTN ? interpKey('tn', x.p1.id, x.a.name, x.p2.id) :
+  isTT ? interpKey('tt', x.p1.id, x.a.name, x.p2.id) :
+         interpKey('na', x.p1.id, x.a.name, x.p2.id);
+const adKeyRev =
+  isTN ? adKey :
+  isTT ? interpKey('tt', x.p2.id, x.a.name, x.p1.id) :
+         interpKey('na', x.p2.id, x.a.name, x.p1.id);
+const adText = getInterp(adKey) || getInterp(adKeyRev);
     const adSnippet = adText
       ? adText.replace(/\*\*(.+?)\*\*/g, '$1').replace(/_(.+?)_/g, '$1').slice(0, 140) + (adText.length > 140 ? '…' : '')
       : '';
@@ -3027,11 +3065,36 @@ function renderInterpretPane() {
       labelFn: e => `<span style="color:${e.p.col}">${e.p.g}</span> ${e.p.name} — ${e.p.dig.label}`
     });
   }
-
+// ── Transit to Transit ────────────────────────────────
+const ttEntries = [];
+if (TD) {
+  for (let i = 0; i < TD.length; i++) {
+    for (let j = i + 1; j < TD.length; j++) {
+      const asp = findAspect(TD[i].lon, TD[j].lon, parseFloat(document.getElementById('orbm').value) || 1);
+      if (!asp) continue;
+      const key    = interpKey('tt', TD[i].id, asp.name, TD[j].id);
+      const keyRev = interpKey('tt', TD[j].id, asp.name, TD[i].id);
+      const text   = getInterp(key) || getInterp(keyRev);
+      ttEntries.push({ t1: TD[i], t2: TD[j], asp, key, text });
+    }
+  }
+  ttEntries.sort((a, b) => a.asp.actualOrb - b.asp.actualOrb);
+}
+sections.push({
+  title: 'Transits to Transits',
+  cat: 'tt',
+  entries: ttEntries,
+  labelFn: e =>
+    `<span style="color:${e.t1.col}">${e.t1.g}</span>
+     <span style="color:${e.asp.col}">${e.asp.sym}</span>
+     <span style="color:${e.t2.col}">${e.t2.g}</span>
+     <span style="font-size:9px;color:var(--text-dim)">tr.${e.t1.name} ${e.asp.name} tr.${e.t2.name} · ${e.asp.actualOrb.toFixed(2)}°</span>`
+});
   // ── Render ────────────────────────────────────────────
   const catColors = {
     ps: 'var(--accent-purple)', ph: 'var(--accent-purple)',
-    na: 'var(--accent-blue)',   tn: 'var(--accent-red)',
+    na: 'var(--accent-blue)',   tn: 'var(--accent-red)', 
+	tt: 'var(--accent-green)', 
     di: 'var(--gold-primary)'
   };
 
