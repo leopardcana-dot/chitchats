@@ -174,7 +174,7 @@ body {
   background: var(--bg-panel); border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg); padding: 12px; box-shadow: var(--shadow-card);
 }
-#svg { width: 100%; display: block; background: radial-gradient(circle at 50% 50%, #fffcf4 0%, #f5eed9 100%); border-radius: var(--radius-md); }
+#classic { display: block; width: 100%; max-width: 900px; height: auto; margin: 0 auto; background: radial-gradient(circle at 50% 50%, #fffcf4 0%, #f5eed9 100%); border-radius: var(--radius-md); padding: 6px; }
 .chart-legend { display: flex; gap: 14px; padding: 10px 14px; border-top: 1px solid var(--border-soft); font-size: 10px; color: var(--text-secondary); flex-wrap: wrap; }
 
 .side-col {     padding: 16px;
@@ -353,7 +353,7 @@ display: none; min-width: 260px; max-width: 340px; box-shadow: var(--shadow-lg);
 .section-divider { height: 1px; background: var(--border-soft); margin: 10px 0; }
 
 @media (max-width: 1200px) { .main-layout { grid-template-columns: 1fr; } .aspects-grid { grid-template-columns: 1fr; } .bottom-panels { grid-template-columns: 1fr; } .inputs { grid-template-columns: 1fr; } .db-layout { grid-template-columns: 1fr; } .synastry-layout { grid-template-columns: 1fr; } }
-@media (max-width: 700px) { .stats-grid { grid-template-columns: repeat(2,1fr); } #svg { height: 400px; } .planet-profile { grid-template-columns: repeat(2,1fr); } .pattern-grid { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .stats-grid { grid-template-columns: repeat(2,1fr); } #classic { max-width: 100%; } .planet-profile { grid-template-columns: repeat(2,1fr); } .pattern-grid { grid-template-columns: 1fr; } }
 /* ── TAB BAR ───────────────────────────────────────── */
 .tab-bar {
   display: flex;
@@ -435,6 +435,23 @@ display: none; min-width: 260px; max-width: 340px; box-shadow: var(--shadow-lg);
   body { background: white !important; }
 }
 </style>
+<style>
+/* ===== COPY THIS BLOCK into astro.html ===== */
+:root{
+  --page:#fffde9;
+  --face:#fdf8e6;
+  --ring:#f8dc9a;
+  --ring-house:#f6e1ac;
+  --line:#6f5208;
+  --ink:#000000;
+  --rx:#d01010;
+  --glyph-font:"Segoe UI Symbol","Noto Sans Symbols","Apple Symbols","DejaVu Sans",sans-serif;
+}
+html,body{margin:0;background:var(--page);color:var(--ink)}
+body{padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+#classic{display:block;width:100%;max-width:900px;height:auto;margin:0 auto}
+/* ===== END CSS BLOCK ===== */
+</style>
 </head>
 <body>
 <div class="app">
@@ -477,7 +494,8 @@ display: none; min-width: 260px; max-width: 340px; box-shadow: var(--shadow-lg);
       <button class="mode-btn" id="mb-transit" onclick="setMode('transit')">Transit</button>
     </div>
     <button class="btn primary" onclick="calc()">&#9654; Calculate</button>
-    <button class="btn" onclick="exportChart()">&#8659; Export</button>
+    <button class="btn" onclick="exportChart()">&#8659; Export SVG</button>
+	<button class="btn" onclick="exportChartPNG()">&#8659; Export PNG</button>
     <button class="btn success" onclick="saveCurrentAsProfile()">&#43; Save to Database</button>
     <span style="font-size:10px;color:var(--text-dim);margin-left:auto">
       Orb: <input type="number" id="orbm" value="1.0" step="0.1" min="0.1" max="3.0" style="width:46px;background:var(--bg-elevated);border:1px solid var(--border-soft);color:var(--text-primary);padding:2px 4px;border-radius:3px;margin:0 4px;font-family:var(--font-mono);font-size:11px">×
@@ -529,7 +547,7 @@ display: none; min-width: 260px; max-width: 340px; box-shadow: var(--shadow-lg);
 
   <div class="main-layout">
     <div class="chart-wrapper">
-      <svg id="svg" viewBox="0 0 700 700"></svg>
+      <svg id="classic" viewBox="0 0 1300 1300" role="img" aria-label="Natal and transit bi-wheel"></svg>
       <div class="chart-legend">
         <div><span style="width:10px;height:10px;background:#D4AF37;border:1px solid #B8860B;border-radius:50%;display:inline-block;margin-right:4px"></span>Natal</div>
         <div><span style="width:10px;height:10px;border:2px dashed #3e6fa8;border-radius:50%;display:inline-block;margin-right:4px"></span>Transit</div>
@@ -769,8 +787,7 @@ display: none; min-width: 260px; max-width: 340px; box-shadow: var(--shadow-lg);
     <div style="margin-left:auto;display:flex;gap:8px">
       <button class="btn" onclick="exportInterpCSV()">&#8659; Export CSV</button>
       <button class="btn" onclick="exportInterpJSON()">&#8659; Export JSON</button>
-      <button class="btn" onclick="document.getElementById('interp-import-file').click()">&#8679; Import CSV/JSON</button>
-      <input type="file" id="interp-import-file" accept=".csv,.json" style="display:none" onchange="handleInterpImport(event)">
+     
       <button class="btn primary" onclick="buildReport()">&#9654; Build Report</button>
     </div>
   </div>
@@ -1100,6 +1117,7 @@ display: none; min-width: 260px; max-width: 340px; box-shadow: var(--shadow-lg);
 
 <script src="ephemeris-browser.min.js"></script>
 <script src="astro-ephemeris.js"></script>
+<script src="interpretations.js"></script> 
 <script>
 // ═══════════════════════════════════════════════════════════
 // CORE DATA
@@ -1114,7 +1132,7 @@ let editingPersonId = null;
 let INTERP = {};
 
 function loadInterp() {
-  try { INTERP = JSON.parse(localStorage.getItem('astro_interp') || '{}'); } catch { INTERP = {}; }
+  INTERP = { ...(window.__EMBEDDED_INTERP__ || {}) };
 }
 
 function saveInterp() {
@@ -1918,37 +1936,7 @@ function exportInterpJSON() {
   showToast('Exported ' + countInterp() + ' entries as JSON');
 }
 
-function handleInterpImport(e) {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const content = ev.target.result;
-    let imported = 0;
-    try {
-      if (file.name.endsWith('.json')) {
-        const data = JSON.parse(content);
-        for (const [k, v] of Object.entries(data)) { if (typeof v === 'string') { INTERP[k] = v; imported++; } }
-      } else {
-        // CSV parse
-        const lines = content.split('\n').slice(1); // skip header
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          const match = line.match(/^([^,]+),([^,]+),"?([\s\S]*?)"?$/);
-          if (match) {
-            const key = match[2].trim();
-            const text = match[3].replace(/""/g, '"').replace(/\\n/g, '\n');
-            if (key && text) { INTERP[key] = text; imported++; }
-          }
-        }
-      }
-      saveInterp();
-      refreshInterpUI();
-      showToast('Imported ' + imported + ' entries');
-    } catch(err) { showToast('Import failed: ' + err.message); }
-    e.target.value = '';
-  };
-  reader.readAsText(file);
-}
+
 
 // ═══════════════════════════════════════════════════════════
 // REPORT BUILDER
@@ -2635,151 +2623,171 @@ function renderCusps() {
   tbody.innerHTML = html;
 }
 // ═══════════════════════════════════════════════════════════
-// CHART SVG
+// CLASSIC BI-WHEEL CHART
 // ═══════════════════════════════════════════════════════════
-const CX=350,CY=350,RO=298,RZ=268,RT=233,RN=188,RA=153,RC=78;
-function svgAngle(lon) { return (180-nm(lon-ASC_))*Math.PI/180; }
-function pt(lon,r) { const a=svgAngle(lon); return {x:CX+r*Math.cos(a),y:CY+r*Math.sin(a)}; }
-function secPath(lon1,lon2,ro,ri) {
-  const a1=svgAngle(lon1),a2=svgAngle(lon2);
-  const p1={x:CX+ro*Math.cos(a1),y:CY+ro*Math.sin(a1)};
-  const p2={x:CX+ro*Math.cos(a2),y:CY+ro*Math.sin(a2)};
-  const p3={x:CX+ri*Math.cos(a2),y:CY+ri*Math.sin(a2)};
-  const p4={x:CX+ri*Math.cos(a1),y:CY+ri*Math.sin(a1)};
-  return `M${p1.x},${p1.y} A${ro},${ro} 0 0,0 ${p2.x},${p2.y} L${p3.x},${p3.y} A${ri},${ri} 0 0,1 ${p4.x},${p4.y} Z`;
+const NS = 'http://www.w3.org/2000/svg', C = 650;
+const R = { outer: 630, ringIn: 585, circ: 380, house: 195, hub: 130 };
+const SG = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
+const SC = ['#d62010','#d9760a','#a89400','#4fa012','#1a9e1a','#1f9e5a','#12a0b0','#1f5fd0','#0a14d0','#6a10c0','#c010c0','#d0185a'];
+const PG = { Sun:'☉', Moon:'☽', Mercury:'☿', Venus:'♀', Mars:'♂', Jupiter:'♃', Saturn:'♄', Uranus:'♅', Neptune:'♆', Pluto:'♇', NNode:'☊', SNode:'☋', Chiron:'⚷' };
+const PC = {
+  Sun:'#0a1fd0', Moon:'#9a8600', Mercury:'#7a7a00', Venus:'#d9660a', Mars:'#0f8f9e',
+  Jupiter:'#0a14d0', Saturn:'#8a7a00', Uranus:'#b01cc0', Neptune:'#0a8fa8',
+  Pluto:'#b0153f', NNode:'#000000', SNode:'#000000', Chiron:'#0a14d0', Mc:'#5b1a8a', As:'#5b1a8a'
+};
+
+let CHART = null;             // built fresh on every drawChart() call
+let _svg = null;
+
+const _norm = a => ((a % 360) + 360) % 360;
+const _ang  = lon => (180 + _norm(lon - CHART.asc)) * Math.PI / 180;
+const _pt   = (lon, r) => { const t = _ang(lon); return [C + r * Math.cos(t), C - r * Math.sin(t)]; };
+const _el   = (t, a, txt) => {
+  const e = document.createElementNS(NS, t);
+  for (const k in a) e.setAttribute(k, a[k]);
+  if (txt != null) e.textContent = txt;
+  _svg.appendChild(e);
+  return e;
+};
+const _line = (l, r1, r2, a) => { const p = _pt(l, r1), q = _pt(l, r2); return _el('line', { x1: p[0], y1: p[1], x2: q[0], y2: q[1], ...a }); };
+const _txt  = (x, y, s, a) => _el('text', { x, y, 'text-anchor': 'middle', 'dominant-baseline': 'central', ...a }, s);
+const _dm   = lon => { const w = _norm(lon) % 30, d = Math.floor(w + 1e-9), m = Math.floor((w - d) * 60 + 1e-6); return { sign: Math.floor(_norm(lon) / 30), d, m }; };
+const _D2   = n => String(n).padStart(2, '0');
+
+function _frame() {
+  _el('circle', { cx: C, cy: C, r: R.outer, fill: 'var(--ring)', stroke: 'var(--line)', 'stroke-width': 3 });
+  _el('circle', { cx: C, cy: C, r: R.ringIn, fill: 'var(--face)', stroke: 'var(--line)', 'stroke-width': 3 });
+  _el('circle', { cx: C, cy: C, r: R.circ, fill: 'none', stroke: 'var(--line)', 'stroke-width': 2 });
+  _el('circle', { cx: C, cy: C, r: R.house, fill: 'var(--ring-house)', stroke: 'var(--line)', 'stroke-width': 3 });
+}
+
+function _houses() {
+  const cusps = [...Array(12)].map((_, i) => _norm(CHART.asc + 30 * i));
+  cusps.forEach((l, i) => {
+    const axis = i % 3 === 0;
+    _line(l, R.house, R.ringIn, { stroke: 'var(--line)', 'stroke-width': axis ? 3 : 1.6 });
+    const mid = _pt(l + 15, (R.house + R.hub) / 2);
+    _txt(mid[0], mid[1], i + 1, { 'font-size': 30, 'font-family': 'Georgia,serif', 'font-weight': 700, fill: 'var(--ink)' });
+    _line(l, R.hub, R.house, { stroke: 'var(--line)', 'stroke-width': 2.4 });
+    const t = _dm(l), p = _pt(l, 607), th = _ang(l);
+    let tx = -Math.sin(th), ty = -Math.cos(th);
+    if (Math.abs(tx) < 0.2) { if (ty > 0) { tx = -tx; ty = -ty; } } else if (tx > 0) { tx = -tx; ty = -ty; }
+    _txt(p[0], p[1], SG[t.sign] + '\uFE0E', { 'font-size': 40, 'font-family': 'var(--glyph-font)', fill: SC[t.sign], stroke: SC[t.sign], 'stroke-width': 1.4 });
+    _txt(p[0] + tx * 50, p[1] + ty * 50, _D2(t.d) + '°', { 'font-size': 26, 'font-family': 'Arial,sans-serif', 'font-weight': 600, fill: 'var(--ink)' });
+    _txt(p[0] - tx * 50, p[1] - ty * 50, _D2(t.m) + "'", { 'font-size': 22, 'font-family': 'Arial,sans-serif', fill: 'var(--ink)' });
+  });
+  _hub();
+  [CHART.asc, _norm(CHART.asc + 270)].forEach(l => {
+    _line(l, R.house, 568, { stroke: 'var(--line)', 'stroke-width': 4 });
+    const tip = _pt(l, 598), b = _pt(l, 566), n = _ang(l), ox = -Math.sin(n) * 13, oy = -Math.cos(n) * 13;
+    _el('polygon', { points: `${tip} ${b[0] + ox},${b[1] + oy} ${b[0] - ox},${b[1] - oy}`, fill: 'var(--line)' });
+  });
+}
+
+function _hub() { _el('circle', { cx: C, cy: C, r: R.hub, fill: '#ffffff', stroke: 'var(--line)', 'stroke-width': 3 }); }
+
+function _spread(list, minSep) {
+  const L = list.map(p => ({ ...p, a: _norm(p.lon) })).sort((x, y) => x.a - y.a);
+  for (let it = 0; it < 120; it++) {
+    let moved = false;
+    for (let i = 0; i < L.length; i++) {
+      const j = (i + 1) % L.length, gap = _norm(L[j].a - L[i].a);
+      if (L.length > 1 && gap < minSep) { const push = (minSep - gap) / 2 + 0.01; L[i].a = _norm(L[i].a - push); L[j].a = _norm(L[j].a + push); moved = true; }
+    }
+    if (!moved) break;
+  }
+  return L;
+}
+
+function _ring(list, kind) {
+  const rows = kind === 'n' ? { g: -44, d: -88, s: -126, m: -162 } : { m: 32, s: 68, d: 104, g: 148 };
+  _spread(list, kind === 'n' ? 10 : 7.5).forEach(p => {
+    const col = PC[p.k] || '#000', t = _dm(p.lon), th = _ang(p.a), ux = Math.cos(th), uy = -Math.sin(th);
+    const at = o => [C + (R.circ + o) * ux, C + (R.circ + o) * uy];
+    _line(p.lon, R.circ - 9, R.circ + 9, { stroke: col, 'stroke-width': 4 });
+    const tc = p.rx ? 'var(--rx)' : 'var(--ink)';
+    const g = at(rows.g);
+    if (PG[p.k]) _txt(g[0], g[1], PG[p.k] + '\uFE0E', { 'font-size': 50, 'font-family': 'var(--glyph-font)', fill: col, stroke: col, 'stroke-width': 1.6 });
+    else _txt(g[0], g[1], p.k, { 'font-size': 46, 'font-family': 'Georgia,serif', 'font-weight': 800, fill: col, stroke: col, 'stroke-width': 0.8 });
+    const d = at(rows.d), s = at(rows.s), m = at(rows.m);
+    _txt(d[0], d[1], _D2(t.d) + '°', { 'font-size': 29, 'font-family': 'Arial,sans-serif', 'font-weight': 600, fill: tc });
+    _txt(s[0], s[1], SG[t.sign] + '\uFE0E', { 'font-size': 28, 'font-family': 'var(--glyph-font)', fill: SC[t.sign], stroke: SC[t.sign], 'stroke-width': 1.2 });
+    _txt(m[0], m[1], _D2(t.m) + "'", { 'font-size': 23, 'font-family': 'Arial,sans-serif', fill: tc });
+  });
+}
+
+function _header(showNatal = true, showTransit = true) {
+  const a = (x, anchor, arr) => arr.forEach((s, i) =>
+    _el('text', {
+      x, y: 30 + i * 32,
+      'text-anchor': anchor,
+      'font-size': 25,
+      'font-family': 'Arial,sans-serif',
+      'font-style': i >= 3 ? 'italic' : 'normal',
+      fill: 'var(--ink)'
+    }, s)
+  );
+  if (showNatal)   a(14,   'start', CHART.meta.natal);
+  if (showTransit) a(1286, 'end',   CHART.meta.transit);
+}
+
+// ── Adapter: ASTROLOGJIA state → classic bi-wheel CHART ──
+function buildClassicChart() {
+  // Map our internal planet ids to the classic PC/PG keys
+  const KEY = { Sun:'Sun', Moon:'Moon', Mercury:'Mercury', Venus:'Venus', Mars:'Mars',
+                Jupiter:'Jupiter', Saturn:'Saturn', Uranus:'Uranus', Neptune:'Neptune',
+                Pluto:'Pluto', NNode:'NNode', SNode:'SNode', Chiron:'Chiron' };
+
+  const pick = (dataset) => (dataset || []).map(p => ({
+    k: KEY[p.id] || p.id,
+    lon: p.lon,
+    rx: p.rx ? 1 : 0
+  }));
+
+  const name  = document.getElementById('nname')?.value.trim() || 'Unknown';
+  const ndate = document.getElementById('ndate')?.value || '';
+  const ntime = document.getElementById('ntime')?.value || '';
+  const nloc  = document.getElementById('nloc')?.value  || '';
+  const tdate = document.getElementById('tdate')?.value || '';
+  const ttime = document.getElementById('ttime')?.value || '';
+
+  CHART = {
+    meta: {
+      natal:   [name, `${ndate} ${ntime}`.trim(), nloc, 'Tropical', 'Placidus'],
+      transit: ['Transit', `${tdate} ${ttime}`.trim(), nloc, 'Tropical', 'Placidus']
+    },
+    asc: ASC_,                              // same ASC the ASTROLOGJIA math already computed
+    natal:   pick(ND),
+    transit: pick(TD)
+  };
 }
 
 function drawChart() {
-   if (!ND) { showToast('No natal data — click Calculate first'); return; }
-  if (!HS || !HS.length) { showToast('Houses not computed — recalculate'); return; }
-  const elColor = {fire:'#f2c9b5',earth:'#c9dfc3',air:'#f5ebb8',water:'#bfd4ec'};
-  const elStroke = {fire:'#c0392b',earth:'#3d7a3d',air:'#b08810',water:'#2d5aa8'};
-  let h = `<defs>
-    <radialGradient id="wbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#f3ecd7"/></radialGradient>
-    <filter id="ss"><feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="#5a4a20" flood-opacity="0.22"/></filter>
-  </defs>`;
-  h += `<circle cx="${CX}" cy="${CY}" r="${RO}" fill="url(#wbg)" stroke="#bf9016" stroke-width="1.5"/>`;
+  if (!ND) { showToast('No natal data — click Calculate first'); return; }
 
-  for (const s of SIGNS) {
-    const p = secPath(s.start, s.start+30, RO, RZ);
-    h += `<path d="${p}" fill="${elColor[s.el]}" fill-opacity="0.5" stroke="${elStroke[s.el]}" stroke-width="0.4" stroke-opacity="0.4"/>`;
-    const sp = pt(s.start + 15, (RO + RZ) / 2);
-    // Force 18×18 so the inner <svg> doesn't default to 150×150
-    const symSized = s.sym.replace('<svg ', '<svg width="18" height="18" ');
-    h += `<g transform="translate(${sp.x - 9}, ${sp.y - 9})" opacity="0.8">${symSized}</g>`;
-  }
+  _svg = document.getElementById('classic');
+  if (!_svg) { console.warn('drawChart: #classic SVG not found'); return; }
+  _svg.innerHTML = '';
 
-  h += `<circle cx="${CX}" cy="${CY}" r="${RO}" fill="none" stroke="#b8860b" stroke-width="1.3" stroke-opacity="0.5"/>`;
-  h += `<circle cx="${CX}" cy="${CY}" r="${RZ}" fill="none" stroke="#bf9016" stroke-width="1.5" stroke-opacity="0.6"/>`;
-  h += `<circle cx="${CX}" cy="${CY}" r="${RT}" fill="none" stroke="#3e6fa8" stroke-width="0.5" stroke-opacity="0.25" stroke-dasharray="3,4"/>`;
-  h += `<circle cx="${CX}" cy="${CY}" r="${RN}" fill="none" stroke="#b8860b" stroke-width="0.5" stroke-opacity="0.2"/>`;
-  h += `<circle cx="${CX}" cy="${CY}" r="${RC}" fill="#fff" fill-opacity="0.7" stroke="#d9c98a" stroke-width="0.8"/>`;
+  buildClassicChart();
 
-  for (let d = 0; d < 360; d++) {
-    const tl = d%10===0?9:d%5===0?5:2.5;
-    const a = svgAngle(d);
-    const x1=CX+RO*Math.cos(a),y1=CY+RO*Math.sin(a),x2=CX+(RO-tl)*Math.cos(a),y2=CY+(RO-tl)*Math.sin(a);
-    h += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#010101" stroke-width="${d%10===0?0.8:0.35}" stroke-opacity="${d%10===0?0.5:0.25}"/>`;
-  }
+  // Respect the mode toggle:
+  //   'both'    → both rings (classic bi-wheel)
+  //   'natal'   → natal ring only
+  //   'transit' → transit ring only
+  const showNatal   = MODE !== 'transit';
+  const showTransit = MODE !== 'natal';
 
-  for (let i = 0; i < 12; i++) {
-    const cu = HS[i].cusp, isA = [0,3,6,9].includes(i);
-    const a = svgAngle(cu);
-    const x1=CX+RZ*Math.cos(a),y1=CY+RZ*Math.sin(a),x2=CX+RC*Math.cos(a),y2=CY+RC*Math.sin(a);
-    h += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isA?'#010101':'#8a8578'}" stroke-width="${isA?1.4:0.5}" stroke-opacity="${isA?0.75:1}"}/>`;
-    const hp = pt(nm(cu+15), RA);
-    h += `<text x="${hp.x}" y="${hp.y}" text-anchor="middle" dominant-baseline="central" font-size="9" fill="#8a8578" font-family="'Cinzel',serif" font-weight="600">${i+1}</text>`;
-  }
+  _frame();
+  _houses();
+  if (showNatal)   _ring(CHART.natal,   'n');
+  if (showTransit) _ring(CHART.transit, 't');
+  _header(showNatal, showTransit);
 
-  if (MODE==='both' && TD && ND) {
-    const orbM = parseFloat(document.getElementById('orbm').value)||1;
-    for (const t of TD) for (const n of ND) {
-      const asp = findAspect(t.lon, n.lon, orbM);
-      if (asp && asp.actualOrb < 2.5) {
-        const pp1 = pt(t.lon, RN-12), pp2 = pt(n.lon, RN-12);
-        const alpha = Math.max(0.15, 0.65 - asp.actualOrb/asp.orb*0.45);
-        h += `<line x1="${pp1.x}" y1="${pp1.y}" x2="${pp2.x}" y2="${pp2.y}" stroke="${asp.col}" stroke-width="${asp.type==='major'?1.1:0.8}" stroke-opacity="${alpha}" stroke-dasharray="${asp.type==='hard'?'5,3':'8,3'}"/>`;
-      }
-    }
-  }
-  if (MODE !== 'transit' && ND) {
-    for (let i = 0; i < ND.length; i++) for (let j = i+1; j < ND.length; j++) {
-      const asp = findAspect(ND[i].lon, ND[j].lon, 1.1);
-      if (asp && asp.actualOrb < 1.8) {
-        const pp1 = pt(ND[i].lon, RN-12), pp2 = pt(ND[j].lon, RN-12);
-        h += `<line x1="${pp1.x}" y1="${pp1.y}" x2="${pp2.x}" y2="${pp2.y}" stroke="${asp.col}" stroke-width="0.6" stroke-opacity="0.28"/>`;
-      }
-    }
-  }
-
- if (MODE !== 'natal' && TD) {
-  const used = [];
-  for (const p of TD) {
-    const a = svgAngle(p.lon);
-    let offset = 0;
-    for (const u of used) if (Math.abs(nm(p.lon-u.lon)) < 8) offset += 13;
-    used.push({lon:p.lon});
-    const x=CX+(RT+offset)*Math.cos(a), y=CY+(RT+offset)*Math.sin(a);
-    const xr=CX+RZ*Math.cos(a), yr=CY+RZ*Math.sin(a);
-    h += `<line x1="${xr}" y1="${yr}" x2="${x}" y2="${y}" stroke="${p.col}" stroke-width="3" stroke-opacity="0.35"/>`;
-    h += `<circle cx="${x}" cy="${y}" r="15" fill="#fff" stroke="${p.col}" stroke-width="0.4" stroke-dasharray="3,2" data-pid="${p.id}" data-type="transit" style="cursor:pointer" filter="url(#ss)"/>`;
-    
-    // p.g already contains the SVG string from PLANET_SYMS
-    if (p.g && p.g.includes('svg')) {
-      h += `<g transform="translate(${x-9}, ${y-9})" fill="${p.col}" pointer-events="none">${p.g}</g>`;
-    } else {
-      // Fallback to text
-      h += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="13" fill="${p.col}" pointer-events="none" font-weight="600">${p.id}</text>`;
-    }
-    
-    if (p.rx) h += `<text x="${x+9}" y="${y-9}" font-size="8" fill="#c0392b" pointer-events="none" font-weight="700">Rx</text>`;
-  }
+  // Optional: re-attach tooltips ...
 }
 
-if (MODE !== 'transit' && ND) {
-  const used = [];
-  for (const p of ND) {
-    const a = svgAngle(p.lon);
-    let offset = 0;
-    for (const u of used) if (Math.abs(nm(p.lon-u.lon)) < 8) offset += 13;
-    used.push({lon:p.lon});
-    const x = CX + (RN - offset) * Math.cos(a);
-    const y = CY + (RN - offset) * Math.sin(a);
-    const xr = CX + (RN + 16) * Math.cos(a);
-    const yr = CY + (RN + 16) * Math.sin(a);
-    h += `<line x1="${xr}" y1="${yr}" x2="${CX + (RN + 5) * Math.cos(a)}" y2="${CY + (RN + 5) * Math.sin(a)}" stroke="${p.col}" stroke-width="0.9" stroke-opacity="0.5"/>`;
-    h += `<circle cx="${x}" cy="${y}" r="15" fill="#fff" stroke="${p.col}" stroke-width="0.4" data-pid="${p.id}" data-type="natal" style="cursor:pointer" filter="url(#ss)"/>`;
-    
-    // p.g already contains the SVG string from PLANET_SYMS
-    if (p.g && p.g.includes('svg')) {
-      h += `<g transform="translate(${x-9}, ${y-9})" fill="${p.col}" pointer-events="none">${p.g}</g>`;
-    } else {
-      // Fallback to text using p.id (planet name)
-      h += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="14" fill="${p.col}" pointer-events="none" font-weight="700">${p.id}</text>`;
-    }
-    
-    if (p.rx) h += `<text x="${x+10}" y="${y-10}" font-size="7" fill="#c0392b" pointer-events="none" font-weight="700">Rx</text>`;
-  }
-}
-
-  function axisLabel(lon, text, col) {
-    const a = svgAngle(lon);
-    const lx=CX+(RO+18)*Math.cos(a), ly=CY+(RO+18)*Math.sin(a);
-    return `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central" font-size="9" fill="${col}" font-family="'Cinzel',serif" font-weight="700">${text}</text>`;
-  }
-  h += axisLabel(ASC_,'ASC','#b8860b');
-  h += axisLabel(nm(ASC_+180),'DSC','#8a6508');
-  h += axisLabel(MCC_,'MC','#3e6fa8');
-  h += axisLabel(nm(MCC_+180),'IC','#2d5aa8');
-  h += `<circle cx="${CX}" cy="${CY}" r="4" fill="#b8860b"/>`;
-
-  document.getElementById('svg').innerHTML = h;
-  document.getElementById('svg').querySelectorAll('[data-pid]').forEach(el => {
-    el.addEventListener('mouseenter', ev => showTip(ev, el.getAttribute('data-pid'), el.getAttribute('data-type')));
-    el.addEventListener('mousemove', moveTip);
-    el.addEventListener('mouseleave', hideTip);
-  });
-}
+// Compatibility stub — ASTROLOGJIA calls exportChart()
 
 // ═══════════════════════════════════════════════════════════
 // RENDER TABLES
@@ -2851,12 +2859,12 @@ function renderAspects() {
           <div class="aspect-dot" style="background:${x.a.col};flex-shrink:0"></div>
           <span style="color:${x.p1.col}">${x.p1.g}</span>
           <span style="color:${x.a.col};font-size:14px">${x.a.sym}</span>
-          <span style="font-size:9px;color:var(--text-dim)">${x.a.name}</span>
+          <span style="font-size:12px;color:var(--text-dim)">${x.a.name}</span>
           <span style="color:${x.p2.col}">${x.p2.g}</span>
           <span class="aspect-orb" style="margin-left:auto">${x.a.actualOrb.toFixed(2)}°</span>
         </div>
         ${snippet
-          ? `<div style="font-family:var(--font-serif);font-size:11px;color:var(--text-secondary);line-height:1.5;padding-left:16px;padding-top:2px">${snippet}</div>`
+          ? `<div style="font-family:var(--font-serif);font-size:13px;color:var(--text-primary);line-height:1.5;padding-left:16px;padding-top:2px">${snippet}</div>`
           : `<div style="font-size:9px;color:var(--text-muted);padding-left:16px;font-style:italic"><span onclick="jumpToInterpEditorKey('${editKey}')" style="cursor:pointer;color:var(--gold-primary);text-decoration:underline">+ add interp</span></div>`
         }
       </div>`;
@@ -3036,10 +3044,10 @@ function renderInterpretPane() {
       const editKey = e.key;
 
       const textHtml = hasText
-        ? `<div style="font-family:var(--font-serif);font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:4px;padding-top:4px;border-top:1px solid rgba(217,209,191,.4)">${
+        ? `<div style="font-family:var(--font-serif);font-size:14px;color:var(--text-secondary);line-height:1.6;margin-top:4px;padding-top:4px;border-top:1px solid rgba(217,209,191,.4)">${
             e.text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/_(.+?)_/g,'<em>$1</em>').replace(/\n/g,'<br>')
           }</div>`
-        : `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;font-style:italic">No interpretation saved —
+        : `<div style="font-size:14px;color:var(--text-muted);margin-top:3px;font-style:italic">No interpretation saved —
             <span onclick="jumpToInterpEditorKey('${editKey}')" style="color:var(--gold-primary);cursor:pointer;text-decoration:underline">add one</span>
           </div>`;
 
@@ -3053,7 +3061,7 @@ function renderInterpretPane() {
 
     return `<div style="margin-bottom:14px;border:1px solid var(--border-soft);border-radius:var(--radius-md);overflow:hidden">
       <div style="padding:8px 12px;background:linear-gradient(90deg,#fbf7ec,#f5efde);border-bottom:1px solid var(--border-soft);display:flex;align-items:center;gap:8px">
-        <span style="font-family:var(--font-display);font-size:10px;color:${catColors[sec.cat]||'var(--gold-primary)'};letter-spacing:1.5px;font-weight:600">${sec.title.toUpperCase()}</span>
+        <span style="font-family:var(--font-display);font-size:14px;color:${catColors[sec.cat]||'var(--gold-primary)'};letter-spacing:1.5px;font-weight:600">${sec.title.toUpperCase()}</span>
         <span style="margin-left:auto;font-size:9px;color:var(--text-dim)">${filled}/${total} interpreted</span>
       </div>
       ${rows}
@@ -3206,15 +3214,104 @@ function applyTransitTime() {
 }
 
 function exportChart() {
-  const svgEl = document.getElementById('svg');
-  const serializer = new XMLSerializer();
-  const svgStr = serializer.serializeToString(svgEl);
-  const blob = new Blob([svgStr], {type:'image/svg+xml'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'astrologjia_chart.svg'; a.click();
+  const svgEl = document.getElementById('classic');
+  if (!svgEl) { showToast('No chart to export — click Calculate first'); return; }
+
+  // Clone so we don't mutate the live SVG
+  const clone = svgEl.cloneNode(true);
+
+  // Resolve CSS custom properties to concrete values
+  const cs = getComputedStyle(document.documentElement);
+  const vars = {
+    '--ring':       cs.getPropertyValue('--ring').trim()       || '#f8dc9a',
+    '--ring-house': cs.getPropertyValue('--ring-house').trim() || '#f6e1ac',
+    '--face':       cs.getPropertyValue('--face').trim()       || '#fdf8e6',
+    '--line':       cs.getPropertyValue('--line').trim()       || '#6f5208',
+    '--ink':        cs.getPropertyValue('--ink').trim()        || '#000000',
+    '--rx':         cs.getPropertyValue('--rx').trim()         || '#d01010',
+    '--glyph-font': cs.getPropertyValue('--glyph-font').trim() || 'sans-serif',
+  };
+
+  // Walk all elements; replace var(--x) in any attribute that might contain it
+  const attrs = ['fill', 'stroke', 'font-family', 'style'];
+  clone.querySelectorAll('*').forEach(el => {
+    for (const a of attrs) {
+      const v = el.getAttribute(a);
+      if (!v) continue;
+      let nv = v;
+      for (const [k, real] of Object.entries(vars)) {
+        nv = nv.split(`var(${k})`).join(real);
+      }
+      if (nv !== v) el.setAttribute(a, nv);
+    }
+  });
+
+  // Make the root standalone
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+
+  const svgStr = new XMLSerializer().serializeToString(clone);
+  const header = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  const blob = new Blob([header + svgStr], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'astrologjia_chart_' + Date.now() + '.svg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+
   showToast('Chart exported as SVG');
 }
+function exportChartPNG() {
+  const svgEl = document.getElementById('classic');
+  if (!svgEl) { showToast('No chart to export'); return; }
 
+  // Reuse the SVG export logic to get a self-contained string
+  const clone = svgEl.cloneNode(true);
+  const cs = getComputedStyle(document.documentElement);
+  const vars = ['--ring','--ring-house','--face','--line','--ink','--rx','--glyph-font'];
+  clone.querySelectorAll('*').forEach(el => {
+    for (const a of ['fill','stroke','font-family','style']) {
+      const v = el.getAttribute(a);
+      if (!v || !v.includes('var(')) continue;
+      let nv = v;
+      for (const k of vars) nv = nv.split(`var(${k})`).join(cs.getPropertyValue(k).trim() || '#000');
+      el.setAttribute(a, nv);
+    }
+  });
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+  const svgStr = new XMLSerializer().serializeToString(clone);
+  const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1300;
+    canvas.height = 1300;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fffde9';
+    ctx.fillRect(0, 0, 1300, 1300);
+    ctx.drawImage(img, 0, 0, 1300, 1300);
+    URL.revokeObjectURL(url);
+
+    canvas.toBlob(pngBlob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(pngBlob);
+      a.download = 'astrologjia_chart_' + Date.now() + '.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('Chart exported as PNG');
+    }, 'image/png');
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); showToast('PNG export failed'); };
+  img.src = url;
+}
 function showToast(msg) {
   const t = document.getElementById('toastMsg');
   t.textContent = msg; t.classList.add('show');
