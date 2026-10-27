@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aspect Card Studio</title>
+<style>
+:root{--bg:#f3f1f7;--fg:#1b1830;--pn:#fff;--bd:#d9d4ea;--ac:#7b5cff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d0b1a;--fg:#ece8ff;--pn:#171430;--bd:#2c2757}}
+:root[data-theme="dark"]{--bg:#0d0b1a;--fg:#ece8ff;--pn:#171430;--bd:#2c2757}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{display:grid;gap:14px;padding:14px;max-width:1100px;margin:auto;grid-template-columns:minmax(0,1fr)}
+@media(min-width:860px){.wrap{grid-template-columns:370px minmax(0,1fr)}}
+.pn{background:var(--pn);border:1px solid var(--bd);border-radius:14px;padding:12px;display:grid;gap:10px}
+h3{margin:0;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.65}
+.tabs,.row,.sw{display:flex;gap:6px;flex-wrap:wrap}
+button,select,input,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--bd);border-radius:9px;padding:8px 10px}
+button{cursor:pointer}button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.tabs button{flex:1}
+select{flex:1;min-width:0}textarea,input[type=text],input[type=date]{width:100%;box-sizing:border-box}
+#cust{display:none}.sw button{width:38px;height:38px;padding:0}
+#rec{background:#ff4d6d;border-color:#ff4d6d;color:#fff;font-weight:600}
+.pv{display:grid;justify-items:center;gap:10px}
+canvas{width:100%;max-width:420px;aspect-ratio:9/16;border-radius:14px;touch-action:none;background:#000}
+video{width:100%;max-width:420px;border-radius:12px;display:none}
+small{opacity:.65}
+</style></head><body>
+<div class="wrap">
+<div style="display:grid;gap:14px;align-content:start">
+ <div class="pn"><h3>Card</h3>
+  <div class="tabs" id="tabs"><button data-m="daily" class="on">Daily</button><button data-m="weekly">Weekly</button><button data-m="custom">My aspects</button></div>
+  <input type="date" id="date"><input type="text" id="head" placeholder="Headline (optional)">
+  <div id="cust"></div>
+ </div>
+ <div class="pn"><h3>Background</h3>
+  <input type="file" id="file" accept="image/*">
+  <div class="sw" id="sw"></div>
+  <label>Dim <input type="range" id="dim" min="0" max="80" value="30"></label>
+ </div>
+ <div class="pn"><h3>Export</h3>
+  <div class="row"><select id="dur"><option value="8">8 s loop</option><option value="16">16 s loop</option></select><button id="rec">● Record video</button></div>
+  <small id="st">Records the 9:16 preview exactly as you see it.</small>
+  <video id="vid" controls playsinline></video><a id="dl" style="display:none" download>Download</a>
+ </div>
+</div>
+<div class="pv"><canvas id="cv" width="1080" height="1920"></canvas><small>Drag the card to tilt it · positions are approximate (≈1°)</small></div>
+</div>
+<script>
+const $=i=>document.getElementById(i),R=Math.PI/180,TAU=Math.PI*2,rev=x=>((x%360)+360)%360,PER=8;
+const GF='"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols","Noto Sans Symbols 2","DejaVu Sans",serif',TF='system-ui,-apple-system,"Segoe UI",sans-serif';
+const V='\uFE0E';
+const PL=[["Sun","☉","identity and vitality","#ffd36e"],["Moon","☽","mood and needs","#bcd4ff"],["Mercury","☿","mind and speech","#7dffd0"],["Venus","♀","love and value","#ff8fc7"],["Mars","♂","drive and action","#ff6b4a"],["Jupiter","♃","growth and luck","#ffb86b"],["Saturn","♄","discipline and limits","#b9a6ff"],["Uranus","♅","disruption and freedom","#5fe3ff"],["Neptune","♆","dreams and illusion","#8fa8ff"],["Pluto","♇","power and transformation","#e05cff"]];
+const AS=[["Conjunction","☌",0,8,"fuses with","The two themes act as one: lean into it and use the combined force deliberately.","#ffd36e"],["Sextile","⚹",60,5,"supports","An open door that needs a small push: take one concrete step and it pays off.","#6ee7ff"],["Square","□",90,7,"pressures","Friction that demands a decision: stop avoiding the tension and act on it.","#ff7a59"],["Trine","△",120,7,"flows with","Natural ease: use it for work that usually feels hard, before it goes unnoticed.","#7dffb0"],["Opposition","☍",180,8,"pulls against","Two pulls need balancing: look for the middle path, not a winner.","#ff5fa2"]];
+const ZO="♈♉♊♋♌♍♎♏♐♑♒♓".split("");
+const E={Sun:[0,0,0,0,282.9404,4.70935e-5,1,0,.016709,-1.151e-9,356.047,.9856002585],
+Moon:[125.1228,-.0529538083,5.1454,0,318.0634,.1643573223,60.2666,0,.0549,0,115.3654,13.0649929509],
+Mercury:[48.3313,3.24587e-5,7.0047,5e-8,29.1241,1.01444e-5,.387098,0,.205635,5.59e-10,168.6562,4.0923344368],
+Venus:[76.6799,2.4659e-5,3.3946,2.75e-8,54.891,1.38374e-5,.72333,0,.006773,-1.302e-9,48.0052,1.6021302244],
+Mars:[49.5574,2.11081e-5,1.8497,-1.78e-8,286.5016,2.92961e-5,1.523688,0,.093405,2.516e-9,18.6021,.5240207766],
+Jupiter:[100.4542,2.76854e-5,1.303,-1.557e-7,273.8777,1.64505e-5,5.20256,0,.048498,4.469e-9,19.895,.0830853001],
+Saturn:[113.6634,2.3898e-5,2.4886,-1.081e-7,339.3939,2.97661e-5,9.55475,0,.055546,-9.499e-9,316.967,.0334442282],
+Uranus:[74.0005,1.3978e-5,.7733,1.9e-8,96.6612,3.0565e-5,19.18171,-1.55e-8,.047318,7.45e-9,142.5905,.011725806],
+Neptune:[131.7806,3.0173e-5,1.77,-2.55e-7,272.8461,-6.027e-6,30.05826,3.313e-8,.008606,2.15e-9,260.2471,.005995147]};
+function el(n,d){const e=E[n];return{N:e[0]+e[1]*d,i:e[2]+e[3]*d,w:e[4]+e[5]*d,a:e[6]+e[7]*d,e:e[8]+e[9]*d,M:e[10]+e[11]*d}}
+function kep(M,e){M*=R;let x=M+e*Math.sin(M)*(1+e*Math.cos(M));for(let k=0;k<7;k++)x-=(x-e*Math.sin(x)-M)/(1-e*Math.cos(x));return x}
+function orbit(o){const x=kep(o.M,o.e),xv=o.a*(Math.cos(x)-o.e),yv=o.a*Math.sqrt(1-o.e*o.e)*Math.sin(x),v=Math.atan2(yv,xv),r=Math.hypot(xv,yv),vw=v+o.w*R,N=o.N*R,i=o.i*R;
+return{r,v,x:r*(Math.cos(N)*Math.cos(vw)-Math.sin(N)*Math.sin(vw)*Math.cos(i)),y:r*(Math.sin(N)*Math.cos(vw)+Math.cos(N)*Math.sin(vw)*Math.cos(i))}}
+function sun(d){const o=el("Sun",d),b=orbit(o),l=b.v+o.w*R;return{l:rev(l/R),x:b.r*Math.cos(l),y:b.r*Math.sin(l),M:o.M,w:o.w}}
+function sky(d){const s=sun(d),out=[s.l];
+const mo=el("Moon",d),mb=orbit(mo),Mm=mo.M,Ms=s.M,D=(Mm+mo.w+mo.N)-(Ms+s.w);
+let ml=Math.atan2(mb.y,mb.x)/R;
+ml+=-1.274*Math.sin((Mm-2*D)*R)+.658*Math.sin(2*D*R)-.186*Math.sin(Ms*R)-.059*Math.sin((2*Mm-2*D)*R)-.057*Math.sin((Mm-2*D+Ms)*R)+.053*Math.sin((Mm+2*D)*R);
+out.push(rev(ml));
+["Mercury","Venus","Mars","Jupiter","Saturn","Uranus","Neptune"].forEach(n=>{const b=orbit(el(n,d));out.push(rev(Math.atan2(b.y+s.y,b.x+s.x)/R))});
+out.push(rev(251.5+.0052*d));return out}
+const jd=ms=>ms/864e5+2440587.5-2451543.5;
+function find(d,noMoon){const L=sky(d),o=[];for(let i=0;i<10;i++)for(let j=i+1;j<10;j++){if(noMoon&&i==1)continue;let df=Math.abs(L[i]-L[j])%360;if(df>180)df=360-df;AS.forEach((a,k)=>{const orb=Math.abs(df-a[2]);if(orb<=a[3])o.push({a:i,b:j,k,orb,sc:orb/a[3]})})}return o}
+function mean(a,b,k){return PL[a][0]+" ("+PL[a][2]+") "+AS[k][4]+" "+PL[b][0]+" ("+PL[b][2]+"). "+AS[k][5]}
+const S={mode:"daily",date:null,head:"",bg:0,img:null,dim:.3,rows:[],label:"",cust:[{a:0,k:0,b:6,t:""},{a:3,k:3,b:5,t:""},{a:4,k:2,b:8,t:""}]};
+const BG=[["#1a0b3d","#4b1d7a","#0b1a3a"],["#ff9a76","#c9456d","#2b1055"],["#0f2027","#203a43","#2c5364"]];
+function compute(){
+ const [y,m,dd]=S.date.split("-").map(Number),base=Date.UTC(y,m-1,dd,12);
+ if(S.mode=="daily"){S.rows=find(jd(base)).sort((a,b)=>a.sc-b.sc).slice(0,3);S.label=new Date(base).toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",timeZone:"UTC"})}
+ else if(S.mode=="weekly"){const best={};for(let h=0;h<=168;h+=3)find(jd(base+h*36e5),1).forEach(r=>{const key=r.a+"-"+r.b+"-"+r.k;if(!best[key]||r.orb<best[key].orb)best[key]={...r,h}});
+  S.rows=Object.values(best).sort((a,b)=>a.sc-b.sc).slice(0,3);
+  S.rows.forEach(r=>r.when="exact "+new Date(base+r.h*36e5).toLocaleDateString(undefined,{weekday:"short",timeZone:"UTC"}));
+  const e=new Date(base+6*864e5),o={day:"numeric",month:"short",timeZone:"UTC"};S.label=new Date(base).toLocaleDateString(undefined,o)+" – "+e.toLocaleDateString(undefined,o)}
+ else{S.rows=S.cust.filter(c=>c.a!=c.b).map(c=>({a:c.a,b:c.b,k:c.k,t:c.t}));S.label="My aspects"}
+ build()}
+const CW=760,CH=1240,cs=document.createElement("canvas"),cc=document.createElement("canvas");cs.width=cc.width=CW;cs.height=cc.height=CH;
+function wrap(c,t,w,n){const ws=t.split(" ");let l="",o=[];for(const x of ws){const z=l?l+" "+x:x;if(c.measureText(z).width>w&&l){o.push(l);l=x}else l=z}o.push(l);if(o.length>n){o=o.slice(0,n);o[n-1]=o[n-1].replace(/\s*\S*$/,"")+"…"}return o}
+const RY=290,RH=316;
+function build(){const c=cs.getContext("2d");c.clearRect(0,0,CW,CH);
+ const g=c.createLinearGradient(0,0,CW,CH);g.addColorStop(0,"rgba(30,20,70,.82)");g.addColorStop(1,"rgba(8,6,25,.88)");
+ c.fillStyle=g;c.beginPath();c.roundRect(0,0,CW,CH,44);c.fill();c.strokeStyle="rgba(255,255,255,.28)";c.lineWidth=3;c.stroke();
+ c.textAlign="center";c.fillStyle="#fff";c.font="700 44px "+TF;
+ const def={daily:"TODAY’S SKY",weekly:"THIS WEEK’S SKY",custom:"SKY CARD"}[S.mode];
+ c.fillText((S.head||def).toUpperCase().split("").join("\u200A"),CW/2,222);
+ c.font="400 24px "+TF;c.fillStyle="rgba(255,255,255,.7)";c.fillText(S.label,CW/2,258);
+ S.rows.forEach((r,i)=>{const y=RY+i*RH,A=PL[r.a],B=PL[r.b],K=AS[r.k];
+  c.fillStyle="rgba(255,255,255,.12)";c.fillRect(60,y-6,CW-120,1.5);
+  c.font="600 30px "+TF;c.fillStyle=K[6];
+  c.fillText(A[0]+" "+K[1]+V+" "+B[0],CW/2,y+150);
+  c.font="400 21px "+TF;c.fillStyle="rgba(255,255,255,.6)";
+  c.fillText(K[0]+(r.orb!=null?" · orb "+r.orb.toFixed(1)+"°":"")+(r.when?" · "+r.when:""),CW/2,y+178);
+  c.font="400 25px "+TF;c.fillStyle="#f1ecff";
+  wrap(c,r.t||mean(r.a,r.b,r.k),660,3).forEach((l,j)=>c.fillText(l,CW/2,y+214+j*32))})}
+function anim(t){const c=cc.getContext("2d"),p=t/PER;c.globalCompositeOperation="source-over";c.clearRect(0,0,CW,CH);c.drawImage(cs,0,0);
+ c.save();c.translate(CW/2,112);
+ const gl=c.createRadialGradient(0,0,0,0,0,90);gl.addColorStop(0,"rgba(255,211,110,"+(.5+.25*Math.sin(TAU*p))+")");gl.addColorStop(1,"rgba(255,211,110,0)");c.fillStyle=gl;c.fillRect(-90,-90,180,180);
+ c.rotate(TAU*p);c.strokeStyle="rgba(255,255,255,.35)";c.lineWidth=2;c.beginPath();c.arc(0,0,82,0,TAU);c.stroke();c.setLineDash([3,9]);c.beginPath();c.arc(0,0,54,0,TAU);c.stroke();c.setLineDash([]);
+ c.font="24px "+GF;c.textAlign="center";c.textBaseline="middle";c.fillStyle="#fff";
+ ZO.forEach((z,i)=>{c.save();c.rotate(i*TAU/12);c.translate(0,-68);c.fillText(z+V,0,0);c.restore()});c.restore();
+ c.textBaseline="middle";
+ S.rows.forEach((r,i)=>{const y=RY+i*RH+62,K=AS[r.k],xs=[170,380,590],ph=p*TAU+i*2.1;
+  [[r.a,xs[0]],[r.b,xs[2]]].forEach(([n,x],q)=>{const col=PL[n][3],pu=.5+.5*Math.sin(ph+q*1.7),h=c.createRadialGradient(x,y,6,x,y,74);
+   h.addColorStop(0,col+"cc");h.addColorStop(1,col+"00");c.globalAlpha=.35+.45*pu;c.fillStyle=h;c.fillRect(x-80,y-80,160,160);c.globalAlpha=1;
+   c.shadowColor=col;c.shadowBlur=20+18*pu;c.fillStyle="#fff";c.font=(84+6*pu)+"px "+GF;c.fillText(PL[n][1]+V,x,y+2);c.shadowBlur=0;
+   const oa=TAU*p*(q?-1:1)+i;c.fillStyle=col;c.beginPath();c.arc(x+Math.cos(oa)*66,y+Math.sin(oa)*66,4.5,0,TAU);c.fill()});
+  c.lineWidth=3;c.strokeStyle=K[6];c.globalAlpha=.7;c.setLineDash([10,10]);c.lineDashOffset=-p*20*8;
+  [[xs[0]+62,xs[1]-48],[xs[1]+48,xs[2]-62]].forEach(([a,b])=>{c.beginPath();c.moveTo(a,y);c.lineTo(b,y);c.stroke()});c.setLineDash([]);c.globalAlpha=1;
+  [[xs[0]+62,xs[1]-48],[xs[1]+48,xs[2]-62]].forEach(([a,b],s)=>{for(let k=0;k<3;k++){const f=(p*2+k/3)%1,x=s?a+(b-a)*f:b-(b-a)*f;c.fillStyle="#fff";c.shadowColor=K[6];c.shadowBlur=14;c.beginPath();c.arc(x,y,4,0,TAU);c.fill()}});c.shadowBlur=0;
+  c.save();c.translate(xs[1],y);c.rotate(.18*Math.sin(TAU*p+i));const pu=.5+.5*Math.sin(ph*2);c.shadowColor=K[6];c.shadowBlur=18+22*pu;c.fillStyle=K[6];c.font=(66+8*pu)+"px "+GF;c.fillText(K[1]+V,0,2);c.restore();c.shadowBlur=0});
+ c.globalCompositeOperation="source-atop";const sx=(p%1)*(CW+500)-250,sg=c.createLinearGradient(sx-120,0,sx+120,CH*.5);
+ sg.addColorStop(0,"rgba(255,255,255,0)");sg.addColorStop(.5,"rgba(255,255,255,.16)");sg.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=sg;c.fillRect(0,0,CW,CH);c.globalCompositeOperation="source-over"}
+const cv=$("cv"),x=cv.getContext("2d"),W=1080,H=1920;
+const ST=Array.from({length:80},(_,i)=>({x:(i*7919%1000)/1000*W,y:(i*104729%1000)/1000*H,r:1+(i%3),k:1+i%3,f:i*.37}));
+let T0=performance.now(),ua=0,drag=null;
+function frame(now){const t=(now-T0)/1000,p=t/PER;
+ if(S.img){const sc=Math.max(W/S.img.width,H/S.img.height)*(1.04+.04*(.5-.5*Math.cos(TAU*p)));const w=S.img.width*sc,h=S.img.height*sc;x.drawImage(S.img,(W-w)/2,(H-h)/2,w,h)}
+ else{const b=BG[S.bg],g=x.createLinearGradient(0,0,W*(.5+.5*Math.sin(TAU*p)),H);g.addColorStop(0,b[0]);g.addColorStop(.5,b[1]);g.addColorStop(1,b[2]);x.fillStyle=g;x.fillRect(0,0,W,H)}
+ x.fillStyle="rgba(0,0,0,"+S.dim+")";x.fillRect(0,0,W,H);
+ ST.forEach(s=>{x.globalAlpha=.25+.6*(.5+.5*Math.sin(TAU*(p*s.k)+s.f));x.fillStyle="#fff";x.beginPath();x.arc(s.x,s.y,s.r,0,TAU);x.fill()});x.globalAlpha=1;
+ anim(t);ua*=.96;const a=Math.sin(TAU*p)*.34+ua,bob=Math.sin(TAU*p*2)*14,cy=H/2+bob,f=1900;
+ const sh=x.createRadialGradient(W/2,H-150,10,W/2,H-150,330);sh.addColorStop(0,"rgba(0,0,0,.45)");sh.addColorStop(1,"rgba(0,0,0,0)");x.save();x.translate(0,0);x.fillStyle=sh;x.fillRect(0,H-300,W,300);x.restore();
+ const ca=Math.cos(a),sa=Math.sin(a),step=4;
+ for(let sx=0;sx<CW;sx+=step){const u=sx+step/2-CW/2,Z=u*sa,s=f/(f+Z),dx=W/2+u*ca*s,hh=CH*s;x.drawImage(cc,sx,0,step,CH,dx-step*ca*s/2-.5,cy-hh/2,step*ca*s+1,hh)}
+ requestAnimationFrame(frame)}
+cv.addEventListener("pointerdown",e=>{drag=e.clientX;cv.setPointerCapture(e.pointerId)});
+cv.addEventListener("pointermove",e=>{if(drag!=null){ua=Math.max(-.7,Math.min(.7,ua+(e.clientX-drag)*.006));drag=e.clientX}});
+cv.addEventListener("pointerup",()=>drag=null);
+// UI
+const iso=new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);S.date=iso;$("date").value=iso;
+$("tabs").onclick=e=>{const m=e.target.dataset.m;if(!m)return;S.mode=m;[...$("tabs").children].forEach(b=>b.classList.toggle("on",b.dataset.m==m));$("cust").style.display=m=="custom"?"grid":"none";$("date").style.display=m=="custom"?"none":"";compute()};
+$("date").onchange=e=>{S.date=e.target.value||iso;compute()};
+$("head").oninput=e=>{S.head=e.target.value;build()};
+const opt=(arr,f)=>arr.map((v,i)=>"<option value="+i+">"+f(v)+"</option>").join("");
+$("cust").style.gap="8px";
+$("cust").innerHTML=S.cust.map((c,i)=>"<div class=row data-i="+i+"><select data-f=a>"+opt(PL,p=>p[1]+" "+p[0])+"</select><select data-f=k>"+opt(AS,a=>a[1]+" "+a[0])+"</select><select data-f=b>"+opt(PL,p=>p[1]+" "+p[0])+"</select></div><textarea rows=2 data-i="+i+" data-f=t placeholder='Your meaning for aspect "+(i+1)+" (optional, otherwise auto)'></textarea>").join("");
+document.querySelectorAll("#cust [data-i]").forEach(el=>{const c=S.cust[el.dataset.i];if(el.tagName=="DIV")el.querySelectorAll("select").forEach(s=>s.value=c[s.dataset.f])});
+$("cust").oninput=e=>{const f=e.target.dataset.f;if(!f)return;const i=e.target.closest("[data-i]").dataset.i;S.cust[i][f]=f=="t"?e.target.value:+e.target.value;compute()};
+$("sw").innerHTML=BG.map((b,i)=>"<button data-b="+i+" style='background:linear-gradient(135deg,"+b.join(",")+")' aria-label='Preset "+(i+1)+"'></button>").join("")+"<button id=clr>✕</button>";
+$("sw").onclick=e=>{const b=e.target.dataset.b;if(b!=null){S.bg=+b;S.img=null}if(e.target.id=="clr"){S.img=null}};
+$("dim").oninput=e=>S.dim=e.target.value/100;
+$("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>S.img=im;im.src=URL.createObjectURL(f)};
+const st=m=>$("st").textContent=m;
+$("rec").onclick=()=>{if(!window.MediaRecorder){st("Recording isn’t supported here — try Chrome, Edge or Safari 17+.");return}
+ const mt=["video/mp4;codecs=avc1.42E01E","video/mp4","video/webm;codecs=vp9","video/webm"].find(t=>MediaRecorder.isTypeSupported(t));if(!mt){st("No supported video format in this browser.");return}
+ const dur=+$("dur").value,ch=[],mr=new MediaRecorder(cv.captureStream(30),{mimeType:mt,videoBitsPerSecond:8e6});
+ mr.ondataavailable=e=>e.data.size&&ch.push(e.data);
+ mr.onstop=()=>{const ext=mt.includes("mp4")?"mp4":"webm",u=URL.createObjectURL(new Blob(ch,{type:mt.split(";")[0]}));$("vid").src=u;$("vid").style.display="block";const a=$("dl");a.href=u;a.download="aspect-card."+ext;a.style.display="inline";a.textContent="Download "+ext;
+  st(ext=="mp4"?"Done. Press and hold the video to save it, then upload to Instagram.":"Done (WebM). Instagram usually needs MP4 — convert it first, or record in Safari/Chrome with MP4 support.");$("rec").disabled=false};
+ T0=performance.now();ua=0;$("rec").disabled=true;mr.start();let s=dur;st("Recording… "+s+"s");const iv=setInterval(()=>{s--;st("Recording… "+s+"s");if(s<=0)clearInterval(iv)},1000);setTimeout(()=>mr.stop(),dur*1000)};
+compute();requestAnimationFrame(frame);
+</script></body></html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Three Card Reveal Studio</title>
+<style>
+:root{--bg:#0d0b14;--panel:#17132299;--line:#3a3150;--tx:#ece6f5;--mut:#9a90b0;--gold:#e0b862;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Georgia,'Times New Roman',serif}
+.wrap{max-width:720px;margin:0 auto;padding:14px}
+h1{font-size:20px;margin:6px 0 12px;letter-spacing:.08em;color:var(--gold);font-weight:normal;text-transform:uppercase}
+#stageBox{display:flex;justify-content:center}
+canvas{height:min(72vh,820px);aspect-ratio:9/16;max-width:100%;border-radius:12px;border:1px solid var(--line);background:#000}
+.row{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap}
+button{flex:1;padding:13px;border-radius:10px;border:1px solid var(--gold);background:transparent;color:var(--gold);font:inherit;font-size:15px;cursor:pointer}
+button.p{background:var(--gold);color:#1a1226}
+button:disabled{opacity:.5}
+#status{font-size:13px;color:var(--mut);min-height:18px}
+section{border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;background:var(--panel)}
+h2{font-size:14px;margin:0 0 8px;color:var(--gold);font-weight:normal;letter-spacing:.06em;text-transform:uppercase}
+.hint{font-size:12px;color:var(--mut);margin:4px 0 8px;line-height:1.4}
+label{display:block;font-size:13px;color:var(--mut);margin:8px 0 3px}
+input[type=text],textarea{width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);background:#0d0b14;color:var(--tx);font:inherit;font-size:14px}
+textarea{min-height:64px;resize:vertical}
+input[type=file]{width:100%;font-size:13px;color:var(--mut)}
+.chk{display:flex;align-items:center;gap:8px;color:var(--tx);font-size:14px;margin:6px 0}
+.chk input{width:18px;height:18px;accent-color:var(--gold)}
+.sizes td{padding:3px 10px 3px 0;font-size:13px}
+.sizes td:first-child{color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Three Card Reveal Studio</h1>
+<div id="stageBox"><canvas id="cv" width="1080" height="1920"></canvas></div>
+<div class="row"><button id="replay">↻ Replay</button><button class="p" id="exp">⬇ Export video</button></div>
+<div id="status">Preview loops. Export records one 12-second take (9:16, 1080×1920). Keep this tab open while recording.</div>
+
+<section>
+<h2>Image sizes to upload</h2>
+<table class="sizes">
+<tr><td>Card front (each)</td><td>600 × 1000 px · ratio 3:5 · PNG/JPG</td></tr>
+<tr><td>Card back</td><td>600 × 1000 px · ratio 3:5</td></tr>
+<tr><td>Background</td><td>1080 × 1920 px · ratio 9:16</td></tr>
+</table>
+<div class="hint">Other sizes are cropped to fill (centered), never stretched. Keep the lower half of the background calm and dark — the meanings are written there.</div>
+</section>
+
+<section>
+<h2>Scene</h2>
+<label>Title (top of video)</label><input type="text" id="title" value="Your Reading">
+<label>Background image</label><input type="file" id="bg" accept="image/*">
+<label>Card back image (shared by all three)</label><input type="file" id="back" accept="image/*">
+<label class="chk"><input type="checkbox" id="revOn" checked> Allow reversed cards &amp; reversed meanings</label>
+<div class="hint">Off = every card stays upright and only the upright meaning is shown.</div>
+</section>
+
+<div id="cardsUI"></div>
+</div>
+
+<script>
+const W=1080,H=1920,DUR=12,CW=300,CH=500,CY=660,XS=[210,540,870];
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const $=id=>document.getElementById(id);
+const S={title:'Your Reading',bg:null,back:null,revOn:true,
+ cards:[0,1,2].map(i=>({img:null,name:['The Fool','The Magician','The Star'][i],label:['Past','Present','Future'][i],up:['New beginnings, trust, a leap taken with an open heart.','Focused will and skill — you have what you need.','Hope, renewal and quiet guidance after hardship.'][i],rev:['Recklessness or hesitation at the edge of change.','Manipulation, scattered energy, untapped talent.','Doubt, disconnection, hope that feels far away.'][i],isRev:false}))};
+
+// ---------- UI ----------
+const cui=$('cardsUI');
+S.cards.forEach((c,i)=>{
+ const s=document.createElement('section');
+ s.innerHTML=`<h2>Card ${i+1}</h2>
+ <label>Front image</label><input type="file" accept="image/*" data-f="img">
+ <label>Position label</label><input type="text" data-f="label" value="${c.label}">
+ <label>Card name</label><input type="text" data-f="name" value="${c.name}">
+ <label>Upright meaning</label><textarea data-f="up">${c.up}</textarea>
+ <div class="rv"><label>Reversed meaning</label><textarea data-f="rev">${c.rev}</textarea>
+ <label class="chk"><input type="checkbox" data-f="isRev"> Draw this card reversed</label></div>`;
+ s.querySelectorAll('[data-f]').forEach(el=>{
+  const f=el.dataset.f;
+  el.addEventListener(el.type==='file'?'change':el.type==='checkbox'?'change':'input',()=>{
+   if(f==='img'){loadImg(el.files[0],im=>c.img=im)}
+   else c[f]=el.type==='checkbox'?el.checked:el.value;
+  });
+ });
+ cui.appendChild(s);
+});
+function loadImg(file,cb){if(!file)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>cb(im);im.src=r.result};r.readAsDataURL(file)}
+$('bg').onchange=e=>loadImg(e.target.files[0],im=>S.bg=im);
+$('back').onchange=e=>loadImg(e.target.files[0],im=>S.back=im);
+$('title').oninput=e=>S.title=e.target.value;
+$('revOn').onchange=e=>{S.revOn=e.target.checked;document.querySelectorAll('.rv').forEach(x=>x.style.display=S.revOn?'':'none')};
+
+// ---------- helpers ----------
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const eOutBack=x=>{const c=1.70158;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+const eIO=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+function cover(im,x,y,w,h){const r=Math.max(w/im.width,h/im.height),dw=im.width*r,dh=im.height*r;ctx.drawImage(im,x+(w-dw)/2,y+(h-dh)/2,dw,dh)}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
+function wrap(t,maxW){const out=[];String(t||'').split('\n').forEach(p=>{let line='';p.split(/\s+/).forEach(w=>{const test=line?line+' '+w:w;if(ctx.measureText(test).width>maxW&&line){out.push(line);line=w}else line=test});out.push(line)});return out}
+
+// ---------- drawing ----------
+function drawBg(t){
+ if(S.bg)cover(S.bg,0,0,W,H);
+ else{const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#2a1747');g.addColorStop(.55,'#120b22');g.addColorStop(1,'#07050d');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  for(let k=0;k<70;k++){const x=(k*397)%W,y=(k*911)%H,a=.3+.5*Math.abs(Math.sin(t*1.2+k));ctx.fillStyle=`rgba(255,240,200,${a*.7})`;ctx.fillRect(x,y,2+k%3,2+k%3)}}
+ const g2=ctx.createLinearGradient(0,880,0,H);g2.addColorStop(0,'rgba(5,3,10,0)');g2.addColorStop(.25,'rgba(5,3,10,.62)');g2.addColorStop(1,'rgba(5,3,10,.8)');ctx.fillStyle=g2;ctx.fillRect(0,880,W,H-880);
+ const g3=ctx.createLinearGradient(0,0,0,300);g3.addColorStop(0,'rgba(5,3,10,.55)');g3.addColorStop(1,'rgba(5,3,10,0)');ctx.fillStyle=g3;ctx.fillRect(0,0,W,300);
+}
+function faceBack(){
+ rr(-CW/2,-CH/2,CW,CH,18);ctx.save();ctx.clip();
+ if(S.back)cover(S.back,-CW/2,-CH/2,CW,CH);
+ else{const g=ctx.createLinearGradient(0,-CH/2,0,CH/2);g.addColorStop(0,'#3b2368');g.addColorStop(1,'#1b0f38');ctx.fillStyle=g;ctx.fillRect(-CW/2,-CH/2,CW,CH);
+  ctx.strokeStyle='#e0b862';ctx.lineWidth=2;for(let r=30;r<=110;r+=26){ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.stroke()}
+  ctx.strokeStyle='rgba(224,184,98,.5)';rr(-CW/2+14,-CH/2+14,CW-28,CH-28,10);ctx.stroke();
+  ctx.fillStyle='#e0b862';ctx.font='54px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('✦',0,2)}
+ ctx.restore();
+}
+function faceFront(c,i){
+ rr(-CW/2,-CH/2,CW,CH,18);ctx.save();ctx.clip();
+ if(S.revOn&&c.isRev)ctx.rotate(Math.PI);
+ if(c.img)cover(c.img,-CW/2,-CH/2,CW,CH);
+ else{const g=ctx.createLinearGradient(0,-CH/2,0,CH/2);g.addColorStop(0,'#f1e6c9');g.addColorStop(1,'#cdb98a');ctx.fillStyle=g;ctx.fillRect(-CW/2,-CH/2,CW,CH);
+  ctx.fillStyle='#3a2a14';ctx.font='bold 26px Georgia';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Upload',0,-14);ctx.fillText('card '+(i+1),0,20)}
+ ctx.restore();
+}
+function drawCard(c,i,t){
+ const e0=.3+.35*i,F=3+1.6*i;
+ const pe=clamp((t-e0)/1.1);if(pe<=0)return;
+ const ep=eOutBack(pe);
+ const pf=clamp((t-F)/1);const a=eIO(pf)*Math.PI;const s=Math.sin(a);
+ let cx=XS[i],cy=CY+(1-ep)*1500;
+ const fl=t>e0+1.1?Math.sin(t*1.5+i*1.3)*9:0;
+ cy+=fl-60*s;
+ const rot=(1-ep)*.7*(i-1)+(t>F+1?Math.sin(t*1.2+i)*.03:0);
+ const sc=(.6+.4*Math.min(1,ep))*(1+.14*s);
+ const sx=Math.cos(a);
+ // glow
+ const glow=pf>=1?clamp((t-F-1)/.8):0;
+ ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);ctx.scale(sc*Math.abs(sx),sc*(1+.05*s));
+ ctx.shadowColor=glow>0?`rgba(224,184,98,${.75*glow})`:'rgba(0,0,0,.6)';ctx.shadowBlur=glow>0?50:30;ctx.shadowOffsetY=glow>0?0:14;
+ rr(-CW/2,-CH/2,CW,CH,18);ctx.fillStyle='#000';ctx.fill();ctx.shadowColor='transparent';
+ if(a<Math.PI/2)faceBack();else faceFront(c,i);
+ // sheen on flip
+ if(s>.02){const g=ctx.createLinearGradient(-CW/2,0,CW/2,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,`rgba(255,255,255,${.3*s})`);g.addColorStop(1,'rgba(255,255,255,0)');rr(-CW/2,-CH/2,CW,CH,18);ctx.fillStyle=g;ctx.fill()}
+ ctx.lineWidth=3/Math.max(.2,sc*Math.abs(sx))*sc;ctx.strokeStyle='rgba(224,184,98,.9)';rr(-CW/2,-CH/2,CW,CH,18);ctx.stroke();
+ ctx.restore();
+ // sparkles
+ const d=t-(F+.5);
+ if(d>0&&d<1.4){for(let k=0;k<26;k++){const ang=k*2.399,sp=160+((k*37)%100)*3.2,r=sp*d*(1-d/3);const al=clamp(1-d/1.4);ctx.fillStyle=`rgba(255,226,150,${al})`;ctx.beginPath();ctx.arc(cx+Math.cos(ang)*r,CY-60*0+Math.sin(ang)*r*1.2,2+(k%3),0,7);ctx.fill()}}
+ // label above
+ const la=clamp((t-e0-.5)/.6);
+ if(la>0){ctx.globalAlpha=la;ctx.fillStyle='#e0b862';ctx.font='28px Georgia';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.letterSpacing='5px';ctx.fillText((c.label||'').toUpperCase(),cx,CY-CH/2-50);ctx.letterSpacing='0px';ctx.globalAlpha=1}
+ // text
+ const ta=clamp((t-F-.8)/.9);
+ if(ta>0)drawText(c,i,cx,ta);
+}
+function drawText(c,i,cx,al){
+ const rev=S.revOn&&c.isRev;
+ const name=(c.name||'')+(rev?' (Reversed)':'');
+ const body=rev?c.rev:c.up;
+ const colW=312,top=CY+CH/2+90,maxH=520;
+ ctx.save();ctx.globalAlpha=al;ctx.translate(0,(1-al)*24);
+ ctx.textAlign='center';ctx.textBaseline='alphabetic';
+ let fs=30,lines,nl;
+ for(;fs>=18;fs-=2){ctx.font=`bold ${fs+4}px Georgia`;nl=wrap(name,colW);ctx.font=`${fs}px Georgia`;lines=wrap(body,colW);if((nl.length+lines.length)*(fs*1.3)<=maxH)break}
+ let y=top;ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=8;
+ ctx.fillStyle='#f0cd7a';ctx.font=`bold ${fs+4}px Georgia`;nl.forEach(l=>{ctx.fillText(l,cx,y);y+=(fs+4)*1.25});
+ y+=6;ctx.fillStyle='rgba(224,184,98,.8)';ctx.fillRect(cx-30,y-fs*.6,60,2);y+=fs*.7;
+ ctx.fillStyle='#f4eefb';ctx.font=`${fs}px Georgia`;lines.forEach(l=>{ctx.fillText(l,cx,y);y+=fs*1.3});
+ ctx.restore();
+}
+function render(t){
+ ctx.clearRect(0,0,W,H);drawBg(t);
+ const ta=clamp(t/1);ctx.save();ctx.globalAlpha=ta;ctx.fillStyle='#f0cd7a';ctx.font='bold 64px Georgia';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.shadowColor='rgba(0,0,0,.8)';ctx.shadowBlur=12;ctx.fillText(S.title||'',W/2,200);ctx.restore();
+ S.cards.forEach((c,i)=>drawCard(c,i,t));
+ // closing fade for export
+ if(t>DUR-.5){ctx.fillStyle=`rgba(0,0,0,${clamp((t-(DUR-.5))/.5)*.0})`;ctx.fillRect(0,0,W,H)}
+}
+
+// ---------- loop / export ----------
+let start=performance.now(),exporting=false,rec=null;
+function frame(now){
+ let t=(now-start)/1000;
+ if(exporting){if(t>=DUR){exporting=false;try{rec.stop()}catch(e){};t=DUR}}
+ else t=t%(DUR+1.5);
+ render(Math.min(t,DUR));
+ requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+$('replay').onclick=()=>{start=performance.now()};
+
+$('exp').onclick=()=>{
+ const st=$('status'),btn=$('exp');
+ if(typeof MediaRecorder==='undefined'||!cv.captureStream){st.textContent='This browser cannot record video from a canvas. Try Chrome or Safari 16+.';return}
+ const types=['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm'];
+ const mime=types.find(t=>MediaRecorder.isTypeSupported(t))||'';
+ const chunks=[];
+ rec=new MediaRecorder(cv.captureStream(30),mime?{mimeType:mime,videoBitsPerSecond:8000000}:{});
+ rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+ rec.onstop=async()=>{
+  btn.disabled=false;
+  const type=rec.mimeType||mime||'video/webm',ext=type.includes('mp4')?'mp4':'webm';
+  const blob=new Blob(chunks,{type});
+  st.textContent=ext==='mp4'?'Done — save the MP4 and upload it to Instagram.':'Done — your browser made WebM. Instagram needs MP4: convert it (e.g. CloudConvert) before posting, or export from Safari/recent Chrome.';
+  let d=null;try{d=window.claude&&await claude.use('downloads')}catch(e){}
+  if(d){d.save({filename:'three-card-reveal.'+ext,data:blob}).catch(err=>{if(err.code!=='declined')st.textContent='Save failed: '+(err.message||err.code)})}
+  else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='three-card-reveal.'+ext;a.click()}
+ };
+ btn.disabled=true;st.textContent='Recording 12 seconds… keep this tab open.';
+ start=performance.now();exporting=true;rec.start();
+};
+</script>
+</body>
+</html>
