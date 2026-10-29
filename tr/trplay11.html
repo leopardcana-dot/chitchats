@@ -489,8 +489,8 @@ body {
 #floatHandle { display: none; }
 #floatHandle button { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 0 6px; }
 #floatHandle button:hover { color: var(--text-primary); }
-@media (max-width: 900px) { #panelPopBtn { display: none; } }
-@media (min-width: 901px) {
+@media (max-width: 1080px) { #panelPopBtn { display: none; } }
+@media (min-width: 1080px) {
   body.panel-floating #app { grid-template-columns: 48px 1fr 0px !important; }
   body.panel-floating #rightPanel {
     position: fixed; z-index: 500;
@@ -1036,7 +1036,7 @@ body {
   text-align: center;
 }
 /* ===== RESPONSIVE ===== */
-@media (max-width: 1200px) {
+@media (max-width: 1080px) {
   #app { grid-template-columns: 40px 1fr 280px; }
 }
 @media (max-width: 800px) {
@@ -1071,7 +1071,7 @@ body {
 .pip-info-badge{display:inline-block;padding:2px 6px;background:rgba(33,150,243,0.15);border:1px solid rgba(33,150,243,0.3);border-radius:3px;font-size:10px;color:var(--accent-blue);font-family:var(--font-mono);margin-top:4px;}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
 @keyframes slideOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(100%);opacity:0;}}
-@media(max-width:900px){#app{grid-template-columns:40px 1fr;}#rightPanel{display:none;}}
+@media(max-width:1080px){#app{grid-template-columns:40px 1fr;}#rightPanel{display:none;}}
 /* ===== MOBILE FLOATING ACTION BUTTON ===== */
 .fab {
   position: fixed;
@@ -1154,7 +1154,7 @@ body {
 }
 
 /* Mobile replay bar improvements */
-@media (max-width: 768px) {
+@media (max-width: 1080px) {
   #replayBar {
     flex-wrap: wrap;
     height: auto;
