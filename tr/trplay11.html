@@ -1036,6 +1036,22 @@ body {
   text-align: center;
 }
 
+/* Touch optimizations */
+@media (hover: none) and (pointer: coarse) {
+  button, .tool-btn, .tf-btn, .replay-btn {
+    min-height: 44px;
+  }
+  
+  .form-input, .form-select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .position-actions .btn {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+}
+
 #lwChart {
   cursor: default;
 }
