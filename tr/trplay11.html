@@ -1077,6 +1077,98 @@ body {
   white-space: nowrap;
 }
 
+/* ===== RESPONSIVE / TOUCH (paste at the very end of <style>) ===== */
+html, body { overscroll-behavior: none; }
+@supports (height: 100dvh) { body, #app { height: 100dvh; } }
+.fab { display: none; }
+.mobile-panel-overlay,
+.mobile-replay-bar,
+body > div:has(> #mobileReplaySpeed) { display: none !important; }
+#floatHandle .fp-close { display: none; }
+#topbar, #replayBar { overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+#topbar > *, #replayBar > * { flex-shrink: 0; }
+#progress-bar { flex: 1 0 200px !important; min-width: 200px; }
+@media (hover: none) { .tool-btn[title]:hover::after { display: none; } }
+
+@media (max-width: 1079px) {
+  :root { --replay-h: calc(52px + env(safe-area-inset-bottom, 0px)); }
+  #app { grid-template-columns: 44px minmax(0, 1fr); }
+  #topbar, #replayBar { scrollbar-width: none; }
+  #topbar::-webkit-scrollbar, #replayBar::-webkit-scrollbar { display: none; }
+  #topbar { height: 48px; padding: 0 8px; gap: 6px; }
+  #topbar .tb-btn svg { width: 20px; height: 20px; }
+  .logo { font-size: 16px; margin-right: 4px; }
+  #indicatorBar { height: 40px; }
+  #indicatorBar button, #indicatorBar .ind-tag { min-height: 0; height: 28px; }
+  #leftToolbar { padding: 4px 0; touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+  .tool-btn { width: 38px; height: 40px; min-height: 0; }
+  .tool-btn svg { width: 22px; height: 22px; }
+  .tool-sep { width: 22px; margin: 3px 0; }
+  #replayBar {
+    height: auto !important; min-height: var(--replay-h);
+    flex-wrap: nowrap !important; gap: 6px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+    touch-action: pan-x;
+  }
+  #replayBar > span:first-child { display: none; }
+  #replayBar button { min-height: 40px; }
+  #replayBar .tb-btn svg, #replayBar .replay-btn svg { width: 22px; height: 22px; }
+  #progress-bar { margin: 0 6px !important; height: 8px !important; }
+  .replay-info { white-space: nowrap; }
+  .mobile-quick-trade { display: flex !important; gap: 6px; margin-left: 0; }
+  .mobile-quick-trade .btn { min-height: 40px; padding: 6px 14px; font-size: 13px; }
+  .fab {
+    display: flex; position: fixed; z-index: 1400; right: 12px; bottom: calc(var(--replay-h) + 12px);
+    width: 54px; height: 54px; border-radius: 50%; align-items: center; justify-content: center;
+    font-size: 22px; background: var(--accent-blue); color: #fff; border: none; box-shadow: var(--shadow-lg);
+  }
+  .fab:active { transform: scale(0.94); }
+  body.panel-open .fab { display: none; }
+  #rightPanel {
+    display: none; position: fixed; z-index: 1500;
+    left: max(8px, calc(100vw - 352px)); top: 100px; width: 344px; height: min(68dvh, 620px);
+    border: 1px solid var(--border-color); border-radius: 10px; box-shadow: var(--shadow-lg); resize: none;
+  }
+  body.panel-open #rightPanel { display: flex; }
+  body.panel-open #floatHandle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; font-size: 12px; font-weight: 600; color: var(--text-secondary);
+    background: var(--bg-panel); border-bottom: 1px solid var(--border-color);
+    cursor: grab; user-select: none; touch-action: none; flex-shrink: 0;
+  }
+  #floatHandle button[title="Collapse"], #floatHandle button[title="Dock"] { display: none; }
+  #floatHandle .fp-close { display: block; font-size: 18px; padding: 0 8px; }
+  .panel-content { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+}
+@media (max-width: 767px) {
+  .logo, .symbol-exchange { display: none; }
+  .price-info { margin-left: 0; gap: 6px; }
+  .price-current { font-size: 13px; }
+  .chart-watermark { font-size: 28px; }
+  #ohlcDisplay { font-size: 10px; gap: 6px; top: 4px; left: 6px; }
+  #ohlcDisplay .ohlc-item:nth-child(n+5) { display: none; }
+  #indicatorValues { top: 20px; }
+  #chartNav { display: none; }
+  #rightPanel {
+    left: 0 !important; right: 0 !important; top: auto !important; bottom: var(--replay-h) !important;
+    width: 100% !important; height: min(56dvh, 520px) !important;
+    border-radius: 14px 14px 0 0; border-left: 0; border-right: 0;
+  }
+  .modal { min-width: 0 !important; width: calc(100vw - 20px); max-width: none; max-height: 88dvh; padding: 14px; }
+}
+@media (max-width: 767px) and (orientation: portrait) {
+  #chartArea.layout-h #lwChart { width: 100% !important; height: 50% !important; }
+  #chartArea.layout-h #lwChart2 { left: 0; right: auto; top: auto; bottom: 0; width: 100%; height: 50%; border-left: 0; border-top: 1px solid var(--border-color); }
+  #chartArea.layout-h #tf2Select { top: calc(50% + 8px); }
+}
+@media (max-width: 1079px) and (max-height: 520px) {
+  #topbar { height: 44px; }
+  #indicatorBar { height: 32px; }
+  #rightPanel {
+    left: auto !important; right: 0 !important; top: 44px !important; bottom: var(--replay-h) !important;
+    width: min(380px, 55vw) !important; height: auto !important; border-radius: 0;
+  }
+}
 
 </style>
 </head>
@@ -1640,9 +1732,8 @@ body {
     <span style="font-size:10px;color:var(--text-muted);">REPLAY</span>
 	
 <div class="mobile-quick-trade" style="display: none;">
-  <button class="tb-btn" id="mobilePanelToggle" onclick="toggleMobilePanel()" style="display: none;" title="Stats">
-  📊
-</button>
+
+<button class="fab" id="mobileFab" onclick="toggleMobilePanel()" title="Open trade panel">📊</button>
 <button class="btn btn-buy" onclick="quickBuyMobile()" style="padding: 8px 16px; font-weight: bold;">▲ BUY</button>
   <button class="btn btn-sell" onclick="quickSellMobile()" style="padding: 8px 16px; font-weight: bold;">▼ SELL</button>
 </div>
@@ -1678,56 +1769,7 @@ body {
     <span class="replay-info" id="replayDateInfo">—</span>
   </div>
 </div>
-<!-- Floating Action Button for Mobile -->
-<button class="fab" id="mobileFab" onclick="toggleMobilePanel()">
-  📊
-</button>
 
-<!-- Mobile Panel Overlay -->
-<div class="mobile-panel-overlay" id="mobilePanel">
-  <div class="mobile-panel-header">
-    <h3>TradingPlay Stats</h3>
-    <button class="mobile-panel-close" onclick="toggleMobilePanel()">&times;</button>
-  </div>
-  <div class="mobile-panel-content" id="mobilePanelContent">
-    <!-- Content will be cloned from right panel -->
-  </div>
-</div>
-<!-- Mobile Replay Controls -->
-<div class="mobile-replay-bar" id="mobileReplayBar">
-  <div class="replay-btn-group">
-    <button class="replay-btn danger" onclick="resetReplayPosition()" title="Reset to start">
-      🔄 Reset
-    </button>
-    <button class="replay-btn" onclick="stepBackwardMobile(10)" title="Back 10 bars">
-      ◀◀ -10
-    </button>
-    <button class="replay-btn" onclick="stepBackwardMobile(1)" title="Back 1 bar">
-      ◀ -1
-    </button>
-    <button class="replay-btn primary" id="mobilePlayBtn" onclick="togglePlayMobile()" title="Play/Pause">
-      ▶ Play
-    </button>
-    <button class="replay-btn" onclick="stepForwardMobile(1)" title="Forward 1 bar">
-      +1 ▶
-    </button>
-    <button class="replay-btn" onclick="stepForwardMobile(10)" title="Forward 10 bars">
-      +10 ▶▶
-    </button>
-  </div>
-  <div class="replay-info-mobile">
-    <span id="mobileReplayInfo">Bar 0 / 0</span>
-    <span id="mobileReplayDate">—</span>
-  </div>
-  <div id="mobile-progress-bar" onclick="seekProgressMobile(event)" style="width:100%;height:6px;background:var(--border-color);border-radius:3px;cursor:pointer;margin-top:4px;">
-    <div id="mobile-progress-fill" style="height:100%;background:var(--accent-blue);border-radius:3px;width:0%;transition:width 0.1s ease;"></div>
-  </div>
-</div>
-<div style="display: flex; gap: 8px; align-items: center; width: 100%; margin-top: 4px;">
-  <span style="font-size: 10px; color: var(--text-muted);">⚡</span>
-  <input type="range" id="mobileReplaySpeed" min="100" max="2000" value="500" step="100" style="flex: 1; height: 4px;">
-  <span id="mobileSpeedDisplay" style="font-size: 10px; color: var(--text-muted);">500ms</span>
-</div>
 <script>
 // ===== 01 STATE =====
 const state = {
@@ -8558,6 +8600,109 @@ function jumpToSessionType() {
   const sessionDisplay = targetSession === 'asian' ? 'Asian' : (targetSession === 'london' ? 'London' : 'NY');
   showToastNotification(`Jumped to ${sessionDisplay} session`, false);
 }
+
+/* ============================================================
+   MOBILE / RESPONSIVE HOOKS
+   (CSS in the @media (max-width:1079px) block depends on these)
+   ============================================================ */
+
+let isMobilePanelOpen = false;
+
+/**
+ * Toggle the right panel on mobile.
+ * Adds/removes `panel-open` on <body>, which the CSS uses to
+ * show #rightPanel and hide the FAB.
+ * @param {boolean} [force] - true = open, false = close, undefined = toggle
+ */
+function toggleMobilePanel(force) {
+  const open = typeof force === 'boolean'
+    ? force
+    : !document.body.classList.contains('panel-open');
+
+  document.body.classList.toggle('panel-open', open);
+  isMobilePanelOpen = open;
+
+  const fab = document.getElementById('mobileFab');
+  if (fab) fab.classList.toggle('active', open);
+
+  // Refresh dynamic content when the panel opens
+  if (open) {
+    try { updateTradeInfo(); } catch (e) {}
+    try { updateOpenPositions(true); } catch (e) {}
+  }
+}
+
+/* Quick-trade buttons used by .mobile-quick-trade in the replay bar */
+function quickBuyMobile() {
+  setDirection('buy');
+  enterTrade();
+}
+
+function quickSellMobile() {
+  setDirection('sell');
+  enterTrade();
+}
+
+/* ---- Mobile replay info / progress stubs ----
+   These are called by updateReplayInfo(), stepForward(), stepBackward(),
+   and the session-jump functions. Without them those calls throw
+   ReferenceError on mobile. They just mirror the desktop UI elements. */
+function updateMobileReplayInfo() {
+  const infoEl = document.getElementById('mobileReplayInfo');
+  const dateEl = document.getElementById('mobileReplayDate');
+  if (!infoEl && !dateEl) return;
+
+  const source = getSourceBars();
+  const sourceIndex = getReplaySourceIndex();
+
+  if (infoEl) {
+    infoEl.textContent = state.replayMode
+      ? `Bar ${sourceIndex} / ${source.length}`
+      : `Bar ${state.replayIndex} / ${state.data.length}`;
+  }
+
+  if (dateEl && sourceIndex > 0 && source[sourceIndex - 1]?.date) {
+    const d = new Date(source[sourceIndex - 1].date);
+    const shortDays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    dateEl.textContent = `${shortDays[d.getDay()]} ${d.toLocaleDateString()}`;
+    dateEl.title = d.toLocaleString();
+  }
+}
+
+function updateMobileProgressBar() {
+  const fill = document.getElementById('mobile-progress-fill');
+  if (!fill) return;
+
+  const source = getSourceBars();
+  const sourceIndex = getReplaySourceIndex();
+
+  if (state.replayMode && source.length > 0 && sourceIndex > 0) {
+    fill.style.width = (sourceIndex / source.length) * 100 + '%';
+  } else if (state.data.length > 0) {
+    fill.style.width = '100%';
+  }
+}
+function togglePlayMobile() {
+  if (!state.replayMode) toggleReplayMode();
+  if (state.playing) stopPlay(); else startPlay();
+}
+
+function stepForwardMobile(n) { stepForward(n); updateMobileReplayInfo(); updateMobileProgressBar(); }
+function stepBackwardMobile(n) { stepBackward(n); updateMobileReplayInfo(); updateMobileProgressBar(); }
+
+function seekProgressMobile(e) {
+  if (!state.replayMode) return;
+  const bar = document.getElementById('mobile-progress-bar');
+  if (!bar) return;
+  const rect = bar.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const source = getSourceBars();
+  setReplaySourceIndex(Math.max(1, Math.floor(pct * source.length)));
+  renderChart();
+  updateReplayInfo();
+  updateProgressBar();
+  updateMobileProgressBar();
+}
 // ===== 09.1 TOAST =====
 function showToast(msg,borderColor='var(--accent-green)'){
   const t=document.createElement('div');
@@ -8799,401 +8944,6 @@ style.textContent = `
   }
 `;
 document.head.appendChild(style);
-
-// ===== 11 MOBILE PANEL FUNCTIONS =====
-let isMobilePanelOpen = false;
-
-function toggleMobilePanel() {
-  const panel = document.getElementById('mobilePanel');
-  const fab = document.getElementById('mobileFab');
-  
-  if (!panel) return;
-  
-  isMobilePanelOpen = !isMobilePanelOpen;
-  
-  if (isMobilePanelOpen) {
-    panel.classList.add('show');
-    fab.classList.add('active');
-    // Populate mobile panel with current right panel content
-    updateMobilePanelContent();
-  } else {
-    panel.classList.remove('show');
-    fab.classList.remove('active');
-  }
-}
-
-function updateMobilePanelContent() {
-  const mobileContent = document.getElementById('mobilePanelContent');
-  const rightPanel = document.getElementById('rightPanel');
-  
-  if (!mobileContent || !rightPanel) return;
-  
-  // Clone the active panel section
-  const activeSection = rightPanel.querySelector('.panel-section.active');
-  if (activeSection) {
-    mobileContent.innerHTML = activeSection.innerHTML;
-    
-    // Re-attach any event listeners for buttons in mobile panel
-    attachMobilePanelEvents();
-  }
-}
-
-function attachMobilePanelEvents() {
-  // Re-attach trade panel buttons
-  const buyBtn = document.querySelector('#mobilePanelContent .btn-full');
-  if (buyBtn && buyBtn.id === 'enterTradeBtn') {
-    buyBtn.onclick = () => {
-      enterTrade();
-      toggleMobilePanel(); // Close panel after action
-    };
-  }
-  
-  // Re-attach close position buttons
-  document.querySelectorAll('#mobilePanelContent .btn-danger').forEach(btn => {
-    if (btn.textContent.includes('Close')) {
-      const originalOnclick = btn.getAttribute('onclick');
-      if (originalOnclick) {
-        btn.setAttribute('onclick', originalOnclick + '; toggleMobilePanel()');
-      }
-    }
-  });
-  
-  // Re-attach panel tabs in mobile view
-  document.querySelectorAll('#mobilePanelContent .panel-tab').forEach(tab => {
-    tab.onclick = (e) => {
-      const panelName = tab.dataset.panel;
-      if (panelName) {
-        switchPanel(panelName);
-        updateMobilePanelContent(); // Refresh content after tab switch
-      }
-    };
-  });
-}
-
-// Auto-detect mobile and adjust UI
-function detectMobileAndAdjust() {
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  
-  if (isMobile) {
-    document.body.classList.add('mobile-view');
-    
-    // Add touch-friendly meta if not present
-    const viewport = document.querySelector('meta[name="viewport"]');
-    if (viewport) {
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
-    }
-    
-    // Hide right panel initially on mobile
-    const rightPanel = document.getElementById('rightPanel');
-    if (rightPanel) {
-      rightPanel.style.display = 'show';
-    }
-    
-    // Make replay controls more compact
-    const replayBar = document.getElementById('replayBar');
-    if (replayBar) {
-      replayBar.style.flexWrap = 'wrap';
-      replayBar.style.height = 'auto';
-      replayBar.style.padding = '6px 12px';
-    }
-  }
-}
-
-// Call on load
-setTimeout(detectMobileAndAdjust, 100);
-function quickBuyMobile() {
-  setDirection('buy');
-  enterTrade();
-  showToastNotification('BUY order placed', false);
-}
-
-function quickSellMobile() {
-  setDirection('sell');
-  enterTrade();
-  showToastNotification('SELL order placed', false);
-}
-// Add swipe to close for mobile panel
-let touchStartX = 0;
-let touchEndX = 0;
-
-function setupMobileGestures() {
-  const panel = document.getElementById('mobilePanel');
-  if (!panel) return;
-  
-  panel.addEventListener('touchstart', (e) => {
-    touchStartX = e.changedTouches[0].screenX;
-  }, false);
-  
-  panel.addEventListener('touchend', (e) => {
-    touchEndX = e.changedTouches[0].screenX;
-    handleSwipe();
-  }, false);
-}
-
-function handleSwipe() {
-  const swipeDistance = touchEndX - touchStartX;
-  // If swiped right (closing the panel)
-  if (swipeDistance > 50 && isMobilePanelOpen) {
-    toggleMobilePanel();
-  }
-}
-
-// Call setup
-setTimeout(setupMobileGestures, 100);
-
-// ===== 29 MOBILE REPLAY FUNCTIONS =====
-let mobilePlaying = false;
-let mobilePlayInterval = null;
-
-function togglePlayMobile() {
-  if (!state.replayMode) {
-    // Auto-enable replay mode
-    toggleReplayMode();
-  }
-  
-  if (mobilePlaying) {
-    stopPlayMobile();
-  } else {
-    startPlayMobile();
-  }
-}
-
-function startPlayMobile() {
-  if (!state.replayMode || getReplaySourceIndex() >= getSourceBars().length) {
-    if (getReplaySourceIndex() >= getSourceBars().length) {
-      resetReplayPosition();
-    }
-    if (!state.replayMode) {
-      toggleReplayMode();
-    }
-    return;
-  }
-  
-  mobilePlaying = true;
-  const playBtn = document.getElementById('mobilePlayBtn');
-  if (playBtn) {
-    playBtn.innerHTML = '⏸ Pause';
-    playBtn.style.background = 'var(--accent-orange)';
-  }
-  
-  const speed = state.playSpeed || 500;
-  mobilePlayInterval = setInterval(() => {
-    stepForwardMobile(1);
-    if (getReplaySourceIndex() >= getSourceBars().length) {
-      stopPlayMobile();
-      showToastNotification('Replay finished!', false);
-    }
-  }, speed);
-}
-
-function stopPlayMobile() {
-  mobilePlaying = false;
-  if (mobilePlayInterval) {
-    clearInterval(mobilePlayInterval);
-    mobilePlayInterval = null;
-  }
-  const playBtn = document.getElementById('mobilePlayBtn');
-  if (playBtn) {
-    playBtn.innerHTML = '▶ Play';
-    playBtn.style.background = '';
-  }
-}
-
-function stepForwardMobile(n) {
-  if (!state.replayMode) {
-    toggleReplayMode();
-  }
-  
-  if (getReplaySourceIndex() >= getSourceBars().length) {
-    stopPlayMobile();
-    showToastNotification('End of data reached', true);
-    return;
-  }
-  
-  const changed = advanceReplaySourceIndex(getReplaySourceIndex() + n);
-  for (let i = changed.checkFrom; i < state.replayIndex; i++) {
-    checkPositionExits(i);
-    checkPendingOrders(i);
-  }
-  checkAlerts();
-  updateTrailingStops(true);
-  updateOpenPositions(true);
-  updateTradeInfo();
-  updateVWAPForReplay();
-  renderChart(changed.renderFrom);
-  updateProgressBar();
-  updateMobileProgressBar();
-  
-  if (getReplaySourceIndex() >= getSourceBars().length) {
-    stopPlayMobile();
-    showToastNotification('End of data', false);
-  }
-}
-
-function stepBackwardMobile(n) {
-  if (!state.replayMode) {
-    toggleReplayMode();
-  }
-  
-  setReplaySourceIndex(getReplaySourceIndex() - n);
-  
-  // Update displays
-  updateReplayInfo();
-  updateMobileReplayInfo();
-  updatePriceDisplay();
-  updateBalanceDisplay();
-  
-  renderChart();
-  updateProgressBar();
-  updateMobileProgressBar();
-}
-
-function resetReplayPosition() {
-  if (!state.replayMode) {
-    toggleReplayMode();
-  }
-  
-  setReplaySourceIndex(1);
-  state.offset = 0;
-  stopPlayMobile();
-  
-  renderChart();
-  updateReplayInfo();
-  updateMobileReplayInfo();
-  updateProgressBar();
-  updateMobileProgressBar();
-  
-  showToastNotification('Reset to beginning', false);
-}
-
-function updateMobileReplayInfo() {
-  const infoEl = document.getElementById('mobileReplayInfo');
-  const dateEl = document.getElementById('mobileReplayDate');
-  
-  // Helper function to get day name
-  const getDayName = (date) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const shortDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    return { full: days[date.getDay()], short: shortDays[date.getDay()] };
-  };
-  
-  const source = getSourceBars();
-  const sourceIndex = getReplaySourceIndex();
-  
-  if (infoEl) {
-    infoEl.textContent = state.replayMode
-      ? `Bar ${sourceIndex} / ${source.length}`
-      : `Bar ${state.replayIndex} / ${state.data.length}`;
-  }
-  
-  if (dateEl && sourceIndex > 0 && source[sourceIndex - 1]) {
-    const b = source[sourceIndex - 1];
-    if (b.date) {
-      const d = new Date(b.date);
-      const dayName = getDayName(d);
-      dateEl.textContent = `${dayName.short} ${d.toLocaleDateString()}`;
-      dateEl.title = `${dayName.full} - ${d.toLocaleString()}`;
-    }
-  }
-}
-
-function seekProgressMobile(e) {
-  if (!state.replayMode) {
-    toggleReplayMode();
-  }
-  
-  const bar = document.getElementById('mobile-progress-bar');
-  const source = getSourceBars();
-  if (!bar || !source.length) return;
-  
-  const rect = bar.getBoundingClientRect();
-  let pct = (e.clientX - rect.left) / rect.width;
-  pct = Math.max(0, Math.min(1, pct));
-  
-  const newIndex = Math.max(1, Math.min(source.length, Math.floor(pct * source.length)));
-  
-  setReplaySourceIndex(newIndex);
-  
-  const visibleBars = getVisibleBars();
-  state.offset = Math.max(0, state.replayIndex - Math.floor(visibleBars / 2));
-  
-  renderChart();
-  updateReplayInfo();
-  updateMobileReplayInfo();
-  updateProgressBar();
-  updateMobileProgressBar();
-  
-  // Update OHLC display
-  if (getReplaySourceIndex() > 0) {
-    const visible = getVisibleChartData();
-    const currentBar = visible[visible.length - 1];
-    if (currentBar) {
-      document.getElementById('ohlcO').textContent = currentBar.open.toFixed(2);
-      document.getElementById('ohlcH').textContent = currentBar.high.toFixed(2);
-      document.getElementById('ohlcL').textContent = currentBar.low.toFixed(2);
-      document.getElementById('ohlcC').textContent = currentBar.close.toFixed(2);
-    }
-  }
-  
-  showToastNotification(`Jumped to bar ${state.replayIndex}`, false);
-}
-
-function updateMobileProgressBar() {
-  const fill = document.getElementById('mobile-progress-fill');
-  if (!fill) return;
-  
-  const source = getSourceBars();
-  const sourceIndex = getReplaySourceIndex();
-  if (state.replayMode && source.length > 0 && sourceIndex > 0) {
-    const percent = (sourceIndex / source.length) * 100;
-    fill.style.width = percent + '%';
-  } else if (state.data.length > 0) {
-    fill.style.width = '100%';
-  }
-}
-
-
-
-// Also update the original togglePlay to sync with mobile
-const originalTogglePlay = togglePlay;
-togglePlay = function() {
-  if (window.innerWidth <= 768) {
-    togglePlayMobile();
-  } else {
-    originalTogglePlay();
-  }
-};
-
-// Update stepForward/stepBackward to update mobile info
-const originalStepForward = stepForward;
-stepForward = function(n) {
-  originalStepForward(n);
-  updateMobileReplayInfo();
-  updateMobileProgressBar();
-};
-
-const originalStepBackward = stepBackward;
-stepBackward = function(n) {
-  originalStepBackward(n);
-  updateMobileReplayInfo();
-  updateMobileProgressBar();
-};
-// Mobile speed control
-document.addEventListener('DOMContentLoaded', () => {
-  const mobileSpeed = document.getElementById('mobileReplaySpeed');
-  if (mobileSpeed) {
-    mobileSpeed.addEventListener('input', (e) => {
-      state.playSpeed = parseInt(e.target.value);
-      document.getElementById('mobileSpeedDisplay').textContent = state.playSpeed + 'ms';
-      if (mobilePlaying) {
-        // Restart playback with new speed
-        stopPlayMobile();
-        startPlayMobile();
-      }
-    });
-  }
-});
-
 </script>
 </body>
 </html>
