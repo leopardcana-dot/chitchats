@@ -1220,8 +1220,27 @@ body > div:has(> #mobileReplaySpeed) { display: none !important; }
       <div class="drop-zone" id="dropZone" onclick="document.getElementById('csvFile').click()">
         Drop CSV here or click to browse
       </div>
+	      <!-- ===== NEW: LOAD CSV FROM URL ===== -->
+    <div class="data-loader-section">
+      <div class="data-loader-title">🔗 Load CSV from URL</div>
+      <p style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">
+        Paste a direct link to a raw CSV (e.g. a GitHub "raw" URL). Same format: date,open,high,low,close,volume
+      </p>
+      <div class="form-group">
+        <input type="text" class="form-input" id="csvUrlInput"
+               placeholder="https://raw.githubusercontent.com/user/repo/main/data.csv"
+               style="font-size:11px;">
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('csvUrlInput').value=''">Clear</button>
+        <button class="btn btn-primary btn-sm" id="csvUrlLoadBtn" onclick="loadCSVFromURL()">Load URL</button>
+      </div>
+      <div id="csvUrlStatus" style="font-size:10px;color:var(--text-muted);margin-top:6px;min-height:14px;"></div>
+    </div>
+    <!-- ===== END NEW ===== -->
       <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="loadCSV(event)">
     </div>
+	
     <div class="data-loader-section">
       <div class="data-loader-title">🎲 Generate Demo Data</div>
       <div class="form-row">
@@ -3490,7 +3509,12 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEvents();
   populateIndicatorModal();
   renderChart();
-  document.getElementById('replaySpeed').addEventListener('input', e => {
+ document.getElementById('csvUrlInput')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    loadCSVFromURL();
+  }
+}); document.getElementById('replaySpeed').addEventListener('input', e => {
     state.playSpeed = parseInt(e.target.value);
     document.getElementById('speedDisplay').textContent = state.playSpeed + 'ms';
     if (state.playing) {
@@ -5494,107 +5518,170 @@ state.allData = data; state.symbol = 'DEMO'; state.exchange = 'Synthetic';
 }
 function loadCSV(event) { const f = event.target.files[0]; if (f) readCSVFile(f); }
 // Replace readCSVFile with:
+// Shared CSV text parser — used by both file upload and URL fetch
+function parseCSVText(content, label) {
+  try {
+    content = content.trim();
+    // Remove BOM if present
+    if (content.charCodeAt(0) === 0xFEFF) content = content.slice(1);
+
+    const lines = content.split(/\r?\n/);
+    const data = [];
+    let headerSkipped = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      if (!headerSkipped) {
+        headerSkipped = true;
+        if (isNaN(parseFloat(line.split(',')[1]))) continue; // header row
+      }
+
+      const parts = line.split(',');
+      if (parts.length < 5) continue;
+
+      // Parse date - support multiple formats
+      let date = new Date(parts[0].trim());
+      if (isNaN(date.getTime())) {
+        const dateStr = parts[0].trim();
+        if (dateStr.match(/^\d{8}$/)) {
+          date = new Date(
+            dateStr.slice(0, 4),
+            parseInt(dateStr.slice(4, 6)) - 1,
+            dateStr.slice(6, 8)
+          );
+        }
+      }
+      if (isNaN(date.getTime())) {
+        console.warn(`Skipping row ${i + 1}: invalid date "${parts[0]}"`);
+        continue;
+      }
+
+      const open   = parseFloat(parts[1]);
+      const high   = parseFloat(parts[2]);
+      const low    = parseFloat(parts[3]);
+      const close  = parseFloat(parts[4]);
+      const volume = parts[5] ? parseFloat(parts[5]) : 0;
+
+      if (isNaN(open) || isNaN(high) || isNaN(low) || isNaN(close)) {
+        console.warn(`Skipping row ${i + 1}: invalid OHLC values`);
+        continue;
+      }
+      if (high < low || high < open || high < close || low > open || low > close) {
+        console.warn(`Skipping row ${i + 1}: invalid OHLC relationship`);
+        continue;
+      }
+
+      data.push({ date, open, high, low, close, volume });
+    }
+
+    if (data.length === 0) {
+      throw new Error('No valid data found. Expected format: date,open,high,low,close,volume');
+    }
+
+    data.sort((a, b) => a.date - b.date);
+
+    const uniqueData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (i === 0 || data[i].date.getTime() !== data[i - 1].date.getTime()) {
+        uniqueData.push(data[i]);
+      }
+    }
+
+    console.log(`Loaded ${uniqueData.length} bars from ${uniqueData[0].date} to ${uniqueData[uniqueData.length - 1].date}`);
+
+    state.rawData = uniqueData;
+    state._originalRawData = [...uniqueData];
+    state.symbol = label;
+    state.exchange = 'CSV';
+
+    initializeAfterDataLoad();
+    closeDataModal();
+    showToastNotification(`Loaded ${uniqueData.length} bars successfully`, false);
+  } catch (err) {
+    console.error('CSV Parse Error:', err);
+    alert('CSV Error: ' + err.message +
+      '\n\nExpected format:\ndate,open,high,low,close,volume\n2024-01-01,1.0925,1.0938,1.0920,1.0932,125000');
+  }
+}
+
+// File-upload wrapper (keeps your existing call site working)
 function readCSVFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
-    try {
-      const content = e.target.result.trim();
-      const lines = content.split('\n');
-      const data = [];
-      let headerSkipped = false;
-      
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        
-        // Skip header row if it contains text
-      if (!headerSkipped) {
-  headerSkipped = true;
-  if (isNaN(parseFloat(line.split(',')[1]))) continue;  // header row
-}
-        
-        const parts = line.split(',');
-        if (parts.length < 5) continue;
-        
-        // Parse date - support multiple formats
-        let date = new Date(parts[0].trim());
-        if (isNaN(date.getTime())) {
-          // Try alternative date format (YYYYMMDD)
-          const dateStr = parts[0].trim();
-          if (dateStr.match(/^\d{8}$/)) {
-            date = new Date(
-              dateStr.slice(0, 4),
-              parseInt(dateStr.slice(4, 6)) - 1,
-              dateStr.slice(6, 8)
-            );
-          }
-        }
-        
-        if (isNaN(date.getTime())) {
-          console.warn(`Skipping row ${i + 1}: invalid date "${parts[0]}"`);
-          continue;
-        }
-        
-        const open = parseFloat(parts[1]);
-        const high = parseFloat(parts[2]);
-        const low = parseFloat(parts[3]);
-        const close = parseFloat(parts[4]);
-        const volume = parts[5] ? parseFloat(parts[5]) : 0;
-        
-        // Validate OHLC data integrity
-        if (isNaN(open) || isNaN(high) || isNaN(low) || isNaN(close)) {
-          console.warn(`Skipping row ${i + 1}: invalid OHLC values`);
-          continue;
-        }
-        
-        if (high < low || high < open || high < close || low > open || low > close) {
-          console.warn(`Skipping row ${i + 1}: invalid OHLC relationship (H:${high} L:${low} O:${open} C:${close})`);
-          continue;
-        }
-        
-        data.push({
-          date: date,
-          open: open,
-          high: high,
-          low: low,
-          close: close,
-          volume: volume
-        });
-      }
-      
-      if (data.length === 0) {
-        throw new Error('No valid data found. Expected format: date,open,high,low,close,volume');
-      }
-      
-      // Sort by date
-      data.sort((a, b) => a.date - b.date);
-      
-      // Remove duplicates by date
-      const uniqueData = [];
-      for (let i = 0; i < data.length; i++) {
-        if (i === 0 || data[i].date.getTime() !== data[i-1].date.getTime()) {
-          uniqueData.push(data[i]);
-        }
-      }
-      
-      console.log(`Loaded ${uniqueData.length} bars from ${uniqueData[0].date} to ${uniqueData[uniqueData.length-1].date}`);
-      
-      state.rawData = uniqueData;
-      state._originalRawData = [...uniqueData];
-      state.symbol = file.name.replace(/\.csv$/i, '').toUpperCase();
-      state.exchange = 'CSV';
-      
-      initializeAfterDataLoad();
-      closeDataModal();
-      
-      showToastNotification(`Loaded ${uniqueData.length} bars successfully`, false);
-      
-    } catch (err) {
-      console.error('CSV Error:', err);
-      alert('CSV Error: ' + err.message + '\n\nExpected format:\ndate,open,high,low,close,volume\n2024-01-01,1.0925,1.0938,1.0920,1.0932,125000');
-    }
+    const label = file.name.replace(/\.csv$/i, '').toUpperCase();
+    parseCSVText(e.target.result, label);
   };
+  reader.onerror = () => alert('Failed to read the file');
   reader.readAsText(file);
+}
+async function loadCSVFromURL() {
+  const input  = document.getElementById('csvUrlInput');
+  const status = document.getElementById('csvUrlStatus');
+  const btn    = document.getElementById('csvUrlLoadBtn');
+  let url = (input.value || '').trim();
+
+  if (!url) {
+    status.textContent = '❌ Please paste a URL first.';
+    status.style.color = 'var(--accent-red)';
+    return;
+  }
+
+  // Friendly hint: convert GitHub blob URL to raw URL
+  if (url.includes('github.com') && url.includes('/blob/')) {
+    url = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+    input.value = url;
+    status.textContent = 'ℹ️ Auto-converted GitHub "blob" link to "raw" link.';
+    status.style.color = 'var(--accent-blue)';
+  }
+
+  // Basic sanity check
+  if (!/^https?:\/\//i.test(url)) {
+    status.textContent = '❌ URL must start with http:// or https://';
+    status.style.color = 'var(--accent-red)';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Loading…';
+  status.textContent = '⏳ Downloading…';
+  status.style.color = 'var(--text-muted)';
+
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    }
+
+    const text = await res.text();
+
+    // Detect HTML responses (e.g. you pasted a github.com/blob URL or got a login page)
+    const head = text.slice(0, 200).toLowerCase();
+    if (head.includes('<!doctype html') || head.includes('<html')) {
+      throw new Error('The URL returned an HTML page, not a CSV. On GitHub use the "Raw" button URL (raw.githubusercontent.com).');
+    }
+
+    status.textContent = `✅ Downloaded ${(text.length / 1024).toFixed(1)} KB — parsing…`;
+    status.style.color = 'var(--accent-green)';
+
+    // Derive a symbol name from the URL path
+    let label = 'CSV';
+    try {
+      const pathName = new URL(url).pathname;
+      const base = pathName.split('/').pop() || '';
+      label = base.replace(/\.csv$/i, '').toUpperCase() || 'CSV';
+    } catch (_) { /* keep default */ }
+
+    parseCSVText(text, label);
+  } catch (err) {
+    console.error('URL load error:', err);
+    status.textContent = '❌ ' + err.message;
+    status.style.color = 'var(--accent-red)';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Load URL';
+  }
 }
 // ===== 03.5 SET TIMEFRAME =====
 function setTimeframe(tf) {
