@@ -1076,6 +1076,8 @@ body {
   pointer-events: none;
   white-space: nowrap;
 }
+
+
 </style>
 </head>
 <body>
@@ -1269,6 +1271,9 @@ body {
     <button class="tb-btn" onclick="openIndicatorModal()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28" fill="none"><path stroke="currentColor" d="M6 12l4.8-4.8a1 1 0 0 1 1.4 0l2.7 2.7a1 1 0 0 0 1.3.1L23 5"></path><path fill="currentColor" fill-rule="evenodd" d="M19 12a1 1 0 0 0-1 1v4h-3v-1a1 1 0 0 0-1-1h-3a1 1 0 0 0-1 1v2H7a1 1 0 0 0-1 1v4h17V13a1 1 0 0 0-1-1h-3zm0 10h3v-9h-3v9zm-1 0v-4h-3v4h3zm-4-4.5V22h-3v-6h3v1.5zM10 22v-3H7v3h3z"></path></svg></button>
     <button class="tb-btn" onclick="openSettingsModal()"title="Settings"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28" fill="currentColor"><path fill-rule="evenodd" d="M18 14a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm-1 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path><path fill-rule="evenodd" d="M8.5 5h11l5 9-5 9h-11l-5-9 5-9Zm-3.86 9L9.1 6h9.82l4.45 8-4.45 8H9.1l-4.45-8Z"></path></svg></button>
     <button class="tb-btn" onclick="openDataModal()" title="Open Data"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28" fill="currentColor"><path d="M10.88,4.1H3.34c-.28,0-.48-.16-.5-.3-.02-.2.18-.37.51-.37h7.5c.29,0,.49.15.51.32.01.15-.14.36-.47.36Z"/><path d="M10.84,5.93H3.34c-.3,0-.5-.16-.5-.33,0-.19.19-.34.5-.34h7.51c.31,0,.5.16.5.34,0,.17-.21.33-.51.33Z"/><path d="M13.35,0c.49.21.87.55.88,1.13v1.84s1.57,0,1.57,0c.44,0,1.13.31,1.13.87l.02,5.72h-.93s0-5.6,0-5.6l-1.77-.02v5.62s-.97,0-.97,0V.98s-12.35,0-12.35,0v13.96s6.5,0,6.5,0v.97s-3.76,0-3.76,0l.02,2h3.73s.02.97.02.97h-3.68c-.6,0-1.04-.58-1.04-1.13v-1.84s-1.68-.01-1.68-.01C.61,15.89,0,15.54,0,15.02V.85C0,.37.53.2.83,0h12.52Z"/><path d="M7.14,7.74h-3.81c-.3,0-.5-.16-.5-.34,0-.17.21-.32.5-.32h3.69c.26,0,.47.12.51.26s-.08.4-.38.4Z"/><path d="M15.37,23.34h-2.28c-.43-.05-3.5-.57-3.51-1.26l-.02-1.98c2.56,1.26,6.94,1.26,9.41-.02v2.05c-.86.95-2.62.97-3.6,1.21Z"/><path d="M18.96,15.95c-.26.26-.63.54-1.01.66-2.44.78-5.01.77-7.46,0-.33-.1-.79-.39-.96-.65l-.03-2.18c2.47,1.29,6.98,1.3,9.44,0l.02,2.19Z"/><path d="M18.96,17.03c-.11,1.43.44,2.2-.89,2.64-2.41.8-5.1.83-7.52.04-.35-.12-.82-.38-1-.65v-2.02c2.56,1.31,6.98,1.25,9.42-.01Z"/><path d="M17.99,13.34c-2.48.79-5.07.79-7.49,0-.37-.12-.91-.39-.92-.78,0-.35.55-.65.9-.76,2.4-.77,4.96-.78,7.37-.07.43.13,1.05.38,1.08.87,0,.29-.57.62-.93.74Z"/></g></svg></button>
+	<button class="tb-btn" onclick="saveSession()" title="Save session">💾</button>
+<button class="tb-btn" onclick="document.getElementById('sessionFile').click()" title="Load session">📂</button>
+<input type="file" id="sessionFile" accept=".json,application/json" style="display:none" onchange="loadSessionFile(event)">
     <button class="tb-btn" id="screenshotBtn" title="Right-click chart for screenshot"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.118 6a.5.5 0 0 0-.447.276L9.809 8H5.5A1.5 1.5 0 0 0 4 9.5v10A1.5 1.5 0 0 0 5.5 21h16a1.5 1.5 0 0 0 1.5-1.5v-10A1.5 1.5 0 0 0 21.5 8h-4.309l-.862-1.724A.5.5 0 0 0 15.882 6h-4.764zm-1.342-.17A1.5 1.5 0 0 1 11.118 5h4.764a1.5 1.5 0 0 1 1.342.83L17.809 7H21.5A2.5 2.5 0 0 1 24 9.5v10a2.5 2.5 0 0 1-2.5 2.5h-16A2.5 2.5 0 0 1 3 19.5v-10A2.5 2.5 0 0 1 5.5 7h3.691l.585-1.17z"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M13.5 18a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zm0 1a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9z"></path></svg></button>
     <button class="tb-btn" onclick="document.getElementById('hotkeyModal').classList.add('show')"title="Hot Keys"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28"><path fill="currentColor" fill-rule="evenodd" d="M18 4.5v-1h-1v1a.5.5 0 0 1-.5.5h-2c-.83 0-1.5.67-1.5 1.5V8H4.5C3.67 8 3 8.67 3 9.5v10c0 .83.67 1.5 1.5 1.5h19c.83 0 1.5-.67 1.5-1.5v-10c0-.83-.67-1.5-1.5-1.5H14V6.5c0-.28.22-.5.5-.5h2c.83 0 1.5-.67 1.5-1.5Zm-14 5c0-.28.22-.5.5-.5h19c.28 0 .5.22.5.5v10a.5.5 0 0 1-.5.5h-19a.5.5 0 0 1-.5-.5v-10ZM7 17v-1h14v1H7Zm-1-1.5c0-.28.22-.5.5-.5h15c.28 0 .5.22.5.5v2a.5.5 0 0 1-.5.5h-15a.5.5 0 0 1-.5-.5v-2ZM7 12v1h1v-1H7Zm-.5-1a.5.5 0 0 0-.5.5v2c0 .28.22.5.5.5h2a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-2Zm4.5 2v-1h1v1h-1Zm-1-1.5c0-.28.22-.5.5-.5h2c.28 0 .5.22.5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2Zm5 .5v1h1v-1h-1Zm-.5-1a.5.5 0 0 0-.5.5v2c0 .28.22.5.5.5h2a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-2Zm4.5 2v-1h2v1h-2Zm-1-1.5c0-.28.22-.5.5-.5h3c.28 0 .5.22.5.5v2a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-2Z"></path></svg></button>
   
@@ -5260,6 +5265,7 @@ function initializeAfterDataLoad(){
   updatePriceDisplay();
   updateTradeInfo();
   updateReplayInfo();
+  tryApplyPendingSession();
   // Initialize sessions indicator after data load
 setTimeout(() => {
   state.indicators.forEach(ind => {
@@ -7855,6 +7861,164 @@ document.getElementById('screenshotBtn').addEventListener('click', function(e) {
 });
 function resetAll() { if (!confirm('Reset all?')) return; state.positions = []; state.pendingOrders = []; state.closedTrades = []; state.balance = state.startingBalance; state.equity = state.startingBalance; state.drawings = []; state.undoStack = []; state.redoStack = []; state.alerts = []; updateOpenPositions(); updatePendingOrdersDisplay(); updateStats(); updateTradeLog(); updateBalanceDisplay(); updateAlertList(); renderChart(); }
 
+// ===== SESSION SAVE / LOAD =====
+const SESSION_VERSION = 1;
+const SESSION_INPUT_IDS = ['lotSize','riskPct','riskDollar','slPips','tpPips','trailPips','bePips','beOffset','pendingDist'];
+
+function fingerprintOf(src) {
+  if (!src || !src.length) return null;
+  return { count: src.length, firstTs: src[0].date.getTime(), lastTs: src[src.length - 1].date.getTime(),
+           firstOpen: src[0].open, lastClose: src[src.length - 1].close };
+}
+function fingerprintMatches(fp) {
+  const cur = fingerprintOf(getSourceBars());
+  return !!(fp && cur && fp.count === cur.count && fp.firstOpen === cur.firstOpen && fp.lastClose === cur.lastClose);
+}
+const reviveDates = o => { ['openDate', 'closeDate'].forEach(k => { if (o[k]) o[k] = new Date(o[k]); }); return o; };
+
+function collectSession(embedData) {
+  const src = getSourceBars(), inputs = {};
+  SESSION_INPUT_IDS.forEach(id => { const el = document.getElementById(id); if (el) inputs[id] = el.value; });
+  const s = {
+    app: 'TradingPlay', version: SESSION_VERSION, savedAt: new Date().toISOString(),
+    symbol: state.symbol, exchange: state.exchange,
+    dataFingerprint: fingerprintOf(src),
+    progress: { replayMode: state.replayMode, replaySourceIndex: getReplaySourceIndex() },
+    view: { timeframe: state.timeframe, chartType: state.chartType, layout: state.layout, tf2: state.tf2 },
+    settings: { colorUp: state.colorUp, colorDown: state.colorDown, colorBg: state.colorBg, gridOpacity: state.gridOpacity,
+                showVolume: state.showVolume, pipSize: state.pipSize, pipValue: state.pipValue },
+    account: { balance: state.balance, startingBalance: state.startingBalance },
+    trading: { positions: state.positions, pendingOrders: state.pendingOrders, closedTrades: state.closedTrades, alerts: state.alerts },
+    tradePanel: { direction: state.direction, orderType: state.orderType, sizingMode: state.sizingMode,
+                  trailEnabled: state.trailEnabled, beEnabled: state.beEnabled, inputs },
+    drawings: state.drawings,
+    indicators: state.indicators
+  };
+  if (embedData) s.bars = src.map(b => [b.date.getTime(), b.open, b.high, b.low, b.close, b.volume || 0]);
+  return s;
+}
+
+function saveSession() {
+  if (!getSourceBars().length) { showToastNotification('Load data first', true); return; }
+  const embed = confirm('Include price data inside the session file?\n\nOK = one self-contained file (larger)\nCancel = progress only (reload the same CSV next time)');
+  const json = JSON.stringify(collectSession(embed));
+  const u = URL.createObjectURL(new Blob([json], { type: 'application/json' })), a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+  a.href = u; a.download = `tradingplay_${(state.symbol || 'session').replace(/[^\w.-]/g, '_')}_${stamp}.json`; a.click();
+  setTimeout(() => URL.revokeObjectURL(u), 1000);
+  showToastNotification(`Session saved (${(json.length / 1024).toFixed(0)} KB)`, false);
+}
+
+function loadSessionFile(event) {
+  const f = event.target.files[0];
+  event.target.value = '';
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try { openSession(JSON.parse(e.target.result)); }
+    catch (err) { console.error('Session error:', err); showToastNotification('Not a valid session file', true); }
+  };
+  r.readAsText(f);
+}
+
+function openSession(s) {
+  if (!s || s.app !== 'TradingPlay') throw new Error('Not a TradingPlay session');
+  state._pendingSession = null;
+  if (s.bars && s.bars.length) {                              // self-contained file
+    state.rawData = s.bars.map(a => ({ date: new Date(a[0]), open: a[1], high: a[2], low: a[3], close: a[4], volume: a[5] }));
+    state._originalRawData = [...state.rawData];
+    state.symbol = s.symbol || 'SESSION';
+    state.exchange = 'Session';
+    initializeAfterDataLoad();
+    applySession(s);
+  } else if (fingerprintMatches(s.dataFingerprint)) {         // right data already loaded
+    applySession(s);
+  } else {                                                    // wait for the matching CSV
+    state._pendingSession = s;
+    showToastNotification(`Session loaded. Now load the same CSV (${s.symbol}, ${s.dataFingerprint.count} bars) and it restores automatically.`, false);
+    openDataModal();
+  }
+}
+
+function tryApplyPendingSession() {
+  const s = state._pendingSession;
+  if (!s) return;
+  if (!fingerprintMatches(s.dataFingerprint)) {
+    showToastNotification(`This data does not match the saved session (expected ${s.dataFingerprint.count} bars, got ${getSourceBars().length}). Load the original CSV.`, true);
+    return;
+  }
+  state._pendingSession = null;
+  applySession(s);
+}
+
+function applySession(s) {
+  stopPlay();
+  const $ = id => document.getElementById(id);
+
+  // 1) chart settings (reuses applySettings, which reads the settings inputs)
+  const st = s.settings || {};
+  $('colorUp').value = st.colorUp ?? state.colorUp;
+  $('colorDown').value = st.colorDown ?? state.colorDown;
+  $('colorBg').value = st.colorBg ?? state.colorBg;
+  $('gridOpacity').value = (st.gridOpacity ?? state.gridOpacity) * 100;
+  $('showVolume').value = (st.showVolume ?? state.showVolume) ? '1' : '0';
+  $('pipSize').value = st.pipSize ?? state.pipSize;
+  $('pipValue').value = st.pipValue ?? state.pipValue;
+  applySettings();
+
+  // 2) indicators
+  [...state.indicators].forEach(i => removeIndicator(i.uid));
+  state.indicators = (s.indicators || []).map(i => ({ ...i }));
+  updateActiveIndicators();
+
+  // 3) progress + timeframe (setTimeframe rebuilds state.data and recalculates indicators)
+  const src = getSourceBars(), p = s.progress || {};
+  state.replayMode = !!p.replayMode;
+  state._replaySourceIndex = state.replayMode ? Math.max(1, Math.min(src.length, p.replaySourceIndex || 1)) : src.length;
+  $('replayToggleBtn').classList.toggle('active', state.replayMode);
+  setTimeframe((s.view && s.view.timeframe) || state.timeframe);
+
+  // 4) account + trading
+  const tr = s.trading || {}, ac = s.account || {};
+  state.startingBalance = ac.startingBalance ?? state.startingBalance;
+  state.balance = ac.balance ?? state.startingBalance;
+  state.positions = (tr.positions || []).map(reviveDates);
+  state.pendingOrders = tr.pendingOrders || [];
+  state.closedTrades = (tr.closedTrades || []).map(reviveDates);
+  state.alerts = tr.alerts || [];
+  state.drawings = s.drawings || [];
+  state.equityHistory = [];
+  state.undoStack = []; state.redoStack = [];
+  state.selectedDrawing = null; state.drawingInProgress = null;
+
+  // 5) trade panel
+  const tp = s.tradePanel || {};
+  Object.entries(tp.inputs || {}).forEach(([id, v]) => { if ($(id)) $(id).value = v; });
+  state.trailEnabled = !!tp.trailEnabled;
+  state.beEnabled = !!tp.beEnabled;
+  [['trailBtn', state.trailEnabled], ['beBtn', state.beEnabled]].forEach(([id, on]) => {
+    const b = $(id); if (!b) return;
+    b.textContent = on ? 'On' : 'Off';
+    b.style.backgroundColor = on ? 'rgba(38,166,154,0.2)' : '';
+    b.style.color = on ? state.colorUp : '';
+  });
+  setSizing(tp.sizingMode || 'lots');
+  setOrderType(tp.orderType || 'market');
+  setDirection(tp.direction || 'buy');
+
+  // 6) second pane + chart type
+  state.tf2 = (s.view && s.view.tf2) || 60;
+  $('tf2Select').value = state.tf2;
+  setLayout((s.view && s.view.layout) || '1');
+  if (s.view && s.view.chartType && s.view.chartType !== state.chartType) setChartType(s.view.chartType);
+
+  // 7) refresh everything
+  updateOpenPositions(); updatePendingOrdersDisplay(); updateTradeLog(); updateStats(); updateAlertList();
+  renderChart(); updateReplayInfo(); updateProgressBar(); updateBalanceDisplay();
+  if (!state.replayMode) setTimeout(() => lwChart.timeScale().fitContent(), 50);
+  showToastNotification(`Session restored: ${state.symbol}, bar ${getReplaySourceIndex()} / ${src.length}`, false);
+}
+
 // ===== 09 REPLAY =====
 function toggleReplayMode() {
   state.replayMode = !state.replayMode;
@@ -8987,6 +9151,8 @@ function updateMobileProgressBar() {
     fill.style.width = '100%';
   }
 }
+
+
 
 // Also update the original togglePlay to sync with mobile
 const originalTogglePlay = togglePlay;
