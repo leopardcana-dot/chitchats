@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#11100f">
+<title>Surreal Biomorphic Baroque — Prompt Studio</title>
+<style>
+:root{--bg:#11100f;--panel:#1b1918;--panel2:#22201e;--ink:#f2eee7;--muted:#aaa198;--line:#39332e;--gold:#c8a66a;--teal:#5eaaa4;--red:#bd6556;--radius:15px}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0%,#30251e 0,transparent 34%),var(--bg);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:30px max(20px,calc((100vw - 1440px)/2));border-bottom:1px solid var(--line);background:#11100fe8;position:sticky;top:0;z-index:5;backdrop-filter:blur(14px)}
+.kicker{color:var(--gold);text-transform:uppercase;letter-spacing:.18em;font-size:11px;font-weight:750}
+h1{font-size:clamp(24px,3vw,38px);line-height:1.1;margin:7px 0}.sub{color:var(--muted);max-width:850px;margin:8px 0 0}
+main{max-width:1440px;margin:auto;padding:24px 20px 70px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(340px,.75fr);gap:22px;align-items:start}
+section,.output{background:linear-gradient(145deg,#201e1b,#181716);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:0 10px 30px #0002}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:15px}
+h2{font-size:17px;margin:0}h3{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;margin:20px 0 10px}
+p.help{font-size:12px;color:var(--muted);margin:5px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.field{min-width:0}.field.full{grid-column:1/-1}
+label{display:block;color:#d8d0c6;font-size:12px;font-weight:700;margin-bottom:6px}
+select,input[type=text],textarea{width:100%;background:#100f0e;color:var(--ink);border:1px solid #49413a;border-radius:9px;padding:10px 11px;font:inherit;font-size:13px;outline:none}
+select:focus,input:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 2px #c8a66a22}
+textarea{min-height:74px;resize:vertical}
+.checkline{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin-top:8px}.checkline input{accent-color:var(--gold)}
+.swatches{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.swatch{width:24px;height:24px;border-radius:50%;border:2px solid #ffffff55;box-shadow:0 0 0 1px #000}.swatch-label{font-size:11px;color:var(--muted);margin-top:5px}
+button{border:1px solid #51473d;background:#2a2622;color:var(--ink);border-radius:9px;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
+button:hover{border-color:var(--gold);background:#383027}button.primary{background:var(--gold);color:#17130e;border-color:var(--gold)}button.ghost{background:transparent}button.small{padding:6px 9px;font-size:11px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.preset-row{display:flex;gap:7px;flex-wrap:wrap}
+aside{position:sticky;top:130px}.output{padding:20px}
+.output h2{margin-bottom:5px}.output .help{margin-bottom:13px}
+.prompt{white-space:pre-wrap;min-height:300px;max-height:58vh;overflow:auto;background:#100f0e;border:1px solid #49413a;border-radius:10px;padding:15px;font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;color:#e9dfd0}
+.brief{white-space:pre-wrap;color:#bdb3a7;font-size:12px;line-height:1.6;margin-top:12px}
+details{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}summary{cursor:pointer;color:var(--gold);font-size:12px;font-weight:700}
+.status{font-size:11px;color:var(--teal);min-height:18px;margin-top:8px}
+.tag{display:inline-block;padding:3px 7px;border-radius:20px;background:#393027;color:#dfc28c;font-size:10px;margin:3px 3px 0 0}
+hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+@media(max-width:950px){main{grid-template-columns:1fr}aside{position:static}.prompt{max-height:none}}
+@media(max-width:580px){header{position:static;padding:22px 16px}main{padding:15px 12px}.grid{grid-template-columns:1fr}section,.output{padding:15px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="kicker">Leopard Media · Visual system</div>
+ <h1>Surreal Biomorphic Baroque — Prompt Studio</h1>
+ <p class="sub">Build a deliberate visual direction by choosing each layer independently. Keep your signature style, then vary linework, palette, materials, ornament, character, and composition without rewriting the whole prompt.</p>
+</header>
+<main>
+<div>
+<section>
+ <div class="section-head"><h2>01 · Style foundation</h2><button class="small ghost" onclick="resetGroup('foundation')">Reset section</button></div>
+ <p class="help">The stable identity of the image. Use this as the anchor; the other controls create controlled variation.</p>
+ <div class="grid">
+  <div class="field"><label for="artLanguage">Artistic language</label><select id="artLanguage" data-group="foundation">
+   <option>Surreal Biomorphic Baroque</option><option>Dark fantasy graphic novel</option><option>Psychological surrealist portraiture</option><option>Organic-mechanical gothic</option><option>Neo-baroque dream architecture</option><option>Biomorphic editorial illustration</option><option>Classical surrealist painting</option><option>Custom / mixed media</option>
+  </select></div>
+  <div class="field"><label for="styleBlend">Style balance</label><select id="styleBlend" data-group="foundation"><option>Painterly illustration with graphic-novel clarity</option><option>Fine-art painting dominant</option><option>Graphic novel dominant</option><option>Dark fantasy concept art</option><option>Elegant ornamental illustration</option><option>Mechanical-organic hybrid</option></select></div>
+  <div class="field full"><label for="styleExtra">Additional style notes</label><input id="styleExtra" data-group="foundation" type="text" value="seamless integration of organic anatomy and mechanical architecture"></div>
+ </div>
+</section>
+<section>
+ <div class="section-head"><h2>02 · Linework & contour</h2><button class="small ghost" onclick="resetGroup('line')">Reset section</button></div>
+ <p class="help">This is one of the strongest variation controls: switch from ink-defined to painterly edges while retaining detail.</p>
+ <div class="grid">
+  <div class="field"><label for="lineStyle">Linework character</label><select id="lineStyle" data-group="line"><option>Crisp variable-weight ink outlines</option><option>Fine etched engraving lines</option><option>Calligraphic expressive contours</option><option>Soft painterly edges, minimal outlines</option><option>Graphic black contour lines</option><option>Technical cross-contour drawing</option><option>Broken sketch-like linework</option><option>Clean digital contour with selective ink</option><option>Contourless tonal painting</option></select></div>
+  <div class="field"><label for="lineWeight">Line weight</label><select id="lineWeight" data-group="line"><option>Variable: bold focal lines, delicate secondary lines</option><option>Fine and delicate throughout</option><option>Bold and graphic</option><option>Medium, controlled contours</option><option>Hairline engraving precision</option><option>Loose and gestural</option></select></div>
+  <div class="field"><label for="edgeTreatment">Edge treatment</label><select id="edgeTreatment" data-group="line"><option>Sharp focal features, dissolving painterly edges</option><option>Consistently crisp edges</option><option>Soft transitions between forms</option><option>Hard silhouettes against atmospheric background</option><option>Selective lost-and-found edges</option><option>Layered etched edges and soft gradients</option></select></div>
+  <div class="field"><label for="lineColor">Contour color</label><select id="lineColor" data-group="line"><option>Deep umber / near-black</option><option>Obsidian black</option><option>Dark sepia</option><option>Colored contours sampled from shadows</option><option>Burnished bronze</option><option>Minimal contour contrast</option></select></div>
+ </div>
+</section>
+<section>
+ <div class="section-head"><h2>03 · Hatching & micro-detail</h2><button class="small ghost" onclick="resetGroup('detail')">Reset section</button></div>
+ <div class="grid">
+  <div class="field"><label for="detailDensity">Detail density</label><select id="detailDensity" data-group="detail"><option>Dense intricate micro-detail</option><option>Very dense, obsessive ornamental detail</option><option>Moderate detail with breathing space</option><option>Selective detail concentrated at focal areas</option><option>Minimal, broad painterly forms</option></select></div>
+  <div class="field"><label for="detailMethod">Detail language</label><select id="detailMethod" data-group="detail"><option>Concentric linework, stippling, halftone dots</option><option>Cross-hatching and engraved strokes</option><option>Ribbed skeletal segments and cellular grooves</option><option>Filigree, fine etching and ornamental tracery</option><option>Dotwork, pores and organic grain</option><option>Geometric circuitry and mechanical seams</option><option>Painterly texture with selective etched detail</option><option>Mixed: hatching, stippling, grooves and filigree</option></select></div>
+  <div class="field"><label for="detailPlacement">Where detail concentrates</label><select id="detailPlacement" data-group="detail"><option>Face, headdress, garments and nearby architecture</option><option>Face and eyes primarily</option><option>Headdress and silhouette</option><option>Organic-mechanical transitions</option><option>Distributed evenly across the image</option><option>Background structures and atmosphere</option></select></div>
+  <div class="field"><label for="detailContrast">Detail contrast</label><select id="detailContrast" data-group="detail"><option>Fine detail visible within deep shadows</option><option>Subtle tonal detail</option><option>High-contrast etched detail</option><option>Bright metallic micro-highlights</option><option>Low-contrast, integrated surface detail</option></select></div>
+ </div>
+</section>
+<section>
+ <div class="section-head"><h2>04 · Color system</h2><button class="small ghost" onclick="resetGroup('color')">Reset section</button></div>
+ <p class="help">Choose a palette family, then control saturation, contrast, and accent behavior separately.</p>
+ <div class="grid">
+  <div class="field"><label for="palette">Palette family</label><select id="palette" data-group="color">
+   <option value="Jewel-toned baroque">Jewel-toned baroque — obsidian, midnight blue, regal purple, burnished gold, vermilion, turquoise</option>
+   <option value="Antique gold and oxidized teal">Antique gold and oxidized teal — bronze, aged gold, petrol blue, muted cyan</option>
+   <option value="Obsidian monochrome">Obsidian monochrome — black, charcoal, graphite, silver</option>
+   <option value="Nocturnal violet">Nocturnal violet — aubergine, plum, indigo, pale gold</option>
+   <option value="Ember and bronze">Ember and bronze — umber, copper, amber, vermilion, soot</option>
+   <option value="Cold mineral">Cold mineral — slate, ice blue, bone white, oxidized silver</option>
+   <option value="Botanical alchemy">Botanical alchemy — deep green, jade, muted ochre, ivory, bronze</option>
+   <option value="Muted antique">Muted antique — faded pigments, parchment, dusty rose, tarnished gold</option>
+   <option value="Custom palette">Custom palette</option>
+  </select><div class="swatches" id="swatches"></div><div class="swatch-label" id="swatchLabel"></div></div>
+  <div class="field"><label for="paletteBehavior">Color distribution</label><select id="paletteBehavior" data-group="color"><option>Dominant dark values with selective luminous accents</option><option>Balanced distribution of jewel tones</option><option>Mostly monochrome with one accent color</option><option>Warm-dominant with cool counterpoints</option><option>Cool-dominant with warm metallic accents</option><option>Restrained, desaturated and atmospheric</option><option>Vivid saturated color throughout</option></select></div>
+  <div class="field"><label for="saturation">Saturation</label><select id="saturation" data-group="color"><option>Rich but controlled saturation</option><option>Deep, muted saturation</option><option>Highly saturated jewel tones</option><option>Low saturation, near-monochrome</option><option>Selective saturated accents only</option></select></div>
+  <div class="field"><label for="contrast">Color contrast</label><select id="contrast" data-group="color"><option>High contrast, deep shadows and luminous highlights</option><option>Moderate painterly contrast</option><option>Extreme chiaroscuro</option><option>Soft tonal transitions</option><option>Graphic complementary contrast</option></select></div>
+  <div class="field full"><label for="customPalette">Custom colors / exclusions</label><input id="customPalette" data-group="color" type="text" placeholder="e.g. antique gold, petrol teal, ivory; avoid pink and neon green"></div>
+ </div>
+</section>
+<section>
+ <div class="section-head"><h2>05 · Shading & lighting</h2><button class="small ghost" onclick="resetGroup('light')">Reset section</button></div>
+ <div class="grid">
+  <div class="field"><label for="shading">Shading method</label><select id="shading" data-group="light"><option>Dramatic painterly gradient shading</option><option>Painterly chiaroscuro with sculptural shadows</option><option>Cel-shaded graphic-novel rendering</option><option>Soft atmospheric tonal painting</option><option>Etched shadow masses and cross-hatching</option><option>Hybrid painterly and graphic shading</option></select></div>
+  <div class="field"><label for="lightDirection">Light direction</label><select id="lightDirection" data-group="light"><option>Directional side light with deep core shadows</option><option>Low-angle underlighting</option><option>Soft frontal portrait light</option><option>Strong rim light from behind</option><option>Top-down theatrical spotlight</option><option>Multiple colored light sources</option><option>Diffuse ambient light</option></select></div>
+  <div class="field"><label for="highlight">Highlights</label><select id="highlight" data-group="light"><option>Crisp glossy specular highlights</option><option>Soft luminous painterly highlights</option><option>Metallic glints and sharp reflected light</option><option>Matte, restrained highlights</option><option>Glowing edge highlights</option></select></div>
+  <div class="field"><label for="atmosphere">Atmospheric treatment</label><select id="atmosphere" data-group="light"><option>Textured atmospheric gradient and subtle haze</option><option>Dark, velvety background with floating particles</option><option>Distressed pigment wash</option><option>Architectural mist and volumetric rays</option><option>Clean studio-like dark backdrop</option><option>Surreal cosmic atmosphere</option></select></div>
+ </div>
+</section>
+<section>
+ <div class="section-head"><h2>06 · Materials & surface finish</h2><button class="small ghost" onclick="resetGroup('material')">Reset section</button></div>
+ <div class="grid">
+  <div class="field"><label for="materials">Material combination</label><select id="materials" data-group="material"><option>Polished lacquer, ceramic enamel, chrome, matte skin, carved bone and satin</option><option>Antique bronze, aged gold, velvet, skin and carved wood</option><option>Porcelain, ivory, shell, pearl and silk</option><option>Blackened steel, dark glass, chitin and leather</option><option>Organic skin, translucent membrane, bone and mineral</option><option>Stone, oxidized metal, moss and weathered fabric</option><option>Minimal material variety: skin, ink and matte pigment</option></select></div>
+  <div class="field"><label for="finish">Overall finish</label><select id="finish" data-group="material"><option>Satin-smooth tactile finish with fine micro-grain</option><option>Glossy resin and polished enamel</option><option>Matte fine-art illustration board</option><option>Velvety painterly surface</option><option>Metallic and reflective surfaces</option><option>Mixed tactile surfaces, clearly differentiated</option></select></div>
+  <div class="field"><label for="textureLevel">Texture intensity</label><select id="textureLevel" data-group="material"><option>Subtle, controlled micro-texture</option><option>Very smooth, almost porcelain-like</option><option>Visible tactile surface variation</option><option>Rough, distressed and weathered</option><option>Texture only at material transitions</option></select></div>
+  <div class="field"><label for="surfaceAvoid">Avoid</label><select id="surfaceAvoid" data-group="material"><option>No noisy photographic texture</option><option>No plastic-looking skin</option><option>No excessive grain or grunge</option><option>No uniform glossy finish</option><option>No visible texture restrictions</option></select></div>
+ </div>
+</section>
+<section>
+ <div class="section-head"><h2>07 · Ornament & motifs</h2><button class="small ghost" onclick="resetGroup('ornament')">Reset section</button></div>
+ <div class="grid">
+  <div class="field"><label for="ornamentLevel">Ornament density</label><select id="ornamentLevel" data-group="ornament"><option>Elaborate biomorphic ornamentation</option><option>Opulent, densely layered ornament</option><option>Moderate ornament, clear silhouette</option><option>Minimal ornament, strong form</option><option>Ornament concentrated in headdress and shoulders</option></select></div>
+  <div class="field"><label for="motifs">Motif vocabulary</label><select id="motifs" data-group="ornament"><option>Horns, shells, spinal motifs, scrolls and Fibonacci spirals</option><option>Shell fans, botanical tendrils, seed pods and roots</option><option>Spines, ribs, vertebrae, bone arches and chitin</option><option>Baroque scrolls, filigree, crowns and architectural flourishes</option><option>Gears, conduits, hinges and biomechanical apparatus</option><option>Celestial geometry, orbit rings and ritual symbols</option><option>Abstract biomorphic growth, no literal motifs</option><option>Mixed organic, anatomical and mechanical motifs</option></select></div>
+  <div class="field"><label for="headdress">Headdress / silhouette</label><select id="headdress" data-group="ornament"><option>Monumental organic headdress, 50–70% of frame height</option><option>Wide shell-like fan framing the head</option><option>Horned crown with asymmetrical extensions</option><option>Spinal-column and rib structures flowing upward</option><option>Mechanical-organic crown integrated with hair</option><option>Compact head ornament, face remains dominant</option><option>No headdress; natural hair silhouette</option></select></div>
+  <div class="field"><label for="ornamentIntegration">Integration</label><select id="ornamentIntegration" data-group="ornament"><option>Ornament grows naturally from anatomy and garments</option><option>Ornament worn as ceremonial objects</option><option>Architectural structures frame the figure</option><option>Mechanical elements attach to the body</option><option>Ornament floats as a separate symbolic halo</option></select></div>
+ </div>
+</section>
+<section>
+ <div class="section-head"><h2>08 · Character & narrative</h2><button class="small ghost" onclick="resetGroup('character')">Reset section</button></div>
+ <div class="grid">
+  <div class="field"><label for="subject">Subject</label><input id="subject" data-group="character" type="text" value="a sovereign, introspective figure"></div>
+  <div class="field"><label for="expression">Expression / gaze</label><select id="expression" data-group="character"><option>Piercing, introspective gaze; emotionally restrained</option><option>Eyes looking downward, distant and contemplative</option><option>Three-quarter gaze beyond the viewer</option><option>Direct, confrontational eye contact</option><option>Serene, enigmatic expression</option><option>Melancholic, psychologically burdened</option><option>Eyes closed, inward ritual focus</option></select></div>
+  <div class="field"><label for="proportions">Character proportions</label><select id="proportions" data-group="character"><option>Elegant stylized proportions, elongated neck and refined jawline</option><option>Classical figurative proportions</option><option>Elongated, statuesque and dreamlike</option><option>Graphic-novel heroic proportions</option><option>Distorted surreal proportions, intentionally uncanny</option><option>Close-up portrait with minimal body visible</option></select></div>
+  <div class="field"><label for="transformation">Metamorphosis</label><select id="transformation" data-group="character"><option>Human anatomy mutates into architecture, machinery, flora and fauna</option><option>Hair evolves into shells, fans and tendrils</option><option>Spine and ribs transform into cape-like structures</option><option>Skin merges with ceramic, bone and mechanical forms</option><option>Subtle symbolic transformation only</option><option>No anatomical transformation; preserve human form</option></select></div>
+  <div class="field"><label for="theme">Psychological theme</label><select id="theme" data-group="character"><option>Ritual, introspection, alter-egos and silent psychological weight</option><option>Identity, memory and transformation</option><option>Power, isolation and inner conflict</option><option>Myth, ancestry and sacred ceremony</option><option>Fragility, resilience and rebirth</option><option>Dream logic, subconscious and ambiguity</option><option>Beauty, decay and impermanence</option></select></div>
+  <div class="field"><label for="mood">Emotional mood</label><select id="mood" data-group="character"><option>Majestic, mysterious and introspective</option><option>Ominous and monumental</option><option>Melancholic and poetic</option><option>Regal and serene</option><option>Unsettling and uncanny</option><option>Mythic and transcendent</option><option>Fierce and defiant</option></select></div>
+  <div class="field full"><label for="story">Specific scene / concept</label><textarea id="story" data-group="character" placeholder="Describe what this particular image is about. Keep this different from the permanent style."></textarea></div>
+ </div>
+</section>
+<section>
+ <div class="section-head"><h2>09 · Composition & camera</h2><button class="small ghost" onclick="resetGroup('composition')">Reset section</button></div>
+ <div class="grid">
+  <div class="field"><label for="aspect">Frame</label><select id="aspect" data-group="composition"><option>Vertical portrait, 2:3</option><option>Square, 1:1</option><option>Vertical, 4:5</option><option>Wide cinematic, 16:9</option><option>Landscape, 3:2</option><option>Poster, tall 9:16</option></select></div>
+  <div class="field"><label for="view">View / perspective</label><select id="view" data-group="composition"><option>Dramatic low-angle portrait</option><option>Three-quarter profile, looking away</option><option>Frontal symmetrical portrait</option><option>High-angle introspective view</option><option>Side profile, sculptural silhouette</option><option>Eye-level cinematic portrait</option><option>Extreme close-up of face and headdress</option></select></div>
+  <div class="field"><label for="framing">Framing distance</label><select id="framing" data-group="composition"><option>Head and shoulders, monumental headdress</option><option>Close-up portrait</option><option>Half-body figure</option><option>Full figure within surreal environment</option><option>Wide environmental portrait</option><option>Abstract detail crop</option></select></div>
+  <div class="field"><label for="hierarchy">Visual hierarchy</label><select id="hierarchy" data-group="composition"><option>Face and eyes first, then headdress and background apparatus</option><option>Silhouette and headdress dominate, face secondary</option><option>Face, hands and symbolic object share focus</option><option>Organic-mechanical transformation is the focal point</option><option>Balanced figure and environment</option></select></div>
+  <div class="field"><label for="flow">Compositional movement</label><select id="flow" data-group="composition"><option>Sweeping diagonal and spiral vectors radiating from the face</option><option>Vertical upward movement through the headdress</option><option>Concentric framing around the head</option><option>Asymmetrical organic flow</option><option>Static monumental symmetry</option><option>Dynamic S-curve through the figure</option></select></div>
+  <div class="field"><label for="background">Environment</label><select id="background" data-group="composition"><option>Surreal mutating environment, secondary to the figure</option><option>Dark abstract atmospheric background</option><option>Ornate baroque architectural space</option><option>Biomechanical chamber or apparatus</option><option>Dreamlike botanical / organic environment</option><option>Minimal flat background with halo structure</option><option>Cosmic symbolic environment</option></select></div>
+ </div>
+</section>
+<section>
+ <div class="section-head"><h2>10 · Negative prompt & finishing notes</h2><button class="small ghost" onclick="resetGroup('negative')">Reset section</button></div>
+ <div class="grid">
+  <div class="field full"><label for="negative">Avoid / negative prompt</label><textarea id="negative" data-group="negative">generic fantasy art, generic AI gloss, plastic skin, noisy photographic texture, cluttered focal area, weak facial expression, flat lighting, muddy colors, random mechanical parts, excessive background detail, text, watermark, logo</textarea></div>
+  <div class="field full"><label for="technical">Technical / output notes</label><input id="technical" data-group="negative" type="text" value="highly resolved digital illustration, coherent anatomy, intentional silhouette, strong focal hierarchy"></div>
+ </div>
+</section>
+<div class="actions"><button class="primary" onclick="copyPrompt()">Copy master prompt</button><button onclick="downloadPrompt()">Download prompt .txt</button><button class="ghost" onclick="downloadSettings()">Export settings .json</button><button class="ghost" onclick="resetAll()">Reset all</button></div>
+</div>
+<aside>
+<div class="output">
+ <div class="kicker">Live output</div><h2>Master prompt</h2><p class="help">Updates as you change the controls. Copy this into your image generator, then adapt wording to the model.</p>
+ <div id="prompt" class="prompt"></div>
+ <div class="actions" style="margin-top:12px"><button class="primary" onclick="copyPrompt()">Copy prompt</button><button onclick="downloadPrompt()">Download .txt</button></div>
+ <div class="status" id="status" aria-live="polite"></div>
+ <details><summary>View compact concept brief</summary><div id="brief" class="brief"></div></details>
+ <details><summary>How to use this studio</summary><div class="brief">1. Keep the style foundation stable as your visual signature.<br>2. Change one or two visual systems at a time (for example linework + palette) so you can compare results.<br>3. Use the scene field for the image idea, not for repeating the style.<br>4. Save/export settings when you find a combination worth reusing.<br>5. Treat the generated prompt as a structured starting point; remove contradictory phrases before sending it to a model.</div></details>
+</div>
+<div class="output">
+ <h2>Quick visual directions</h2><p class="help">Load a complete starting combination, then customize any field.</p>
+ <div class="preset-row">
+  <button onclick="preset('signature')">Signature DNA</button>
+  <button onclick="preset('etched')">Etched engraving</button>
+  <button onclick="preset('painterly')">Painterly dream</button>
+  <button onclick="preset('monochrome')">Obsidian monochrome</button>
+  <button onclick="preset('ceremonial')">Ceremonial gold</button>
+ </div>
+ <hr><label class="checkline"><input type="checkbox" id="includeNegative" checked onchange="render()"> Append negative prompt to output</label>
+ <label class="checkline"><input type="checkbox" id="autoSave" checked> Remember settings in this browser</label>
+</div>
+</aside>
+</main>
+<script>
+const defaults={};
+document.querySelectorAll('[data-group]').forEach(el=>{defaults[el.id]=el.value});
+const palettes={
+"Jewel-toned baroque":["#111018","#171d39","#51305e","#b68a42","#b84938","#3b9c9a"],
+"Antique gold and oxidized teal":["#171715","#40362b","#a78349","#6e928b","#3f6f73","#c1b18b"],
+"Obsidian monochrome":["#090909","#292929","#555555","#888888","#c7c7c7","#eeeeee"],
+"Nocturnal violet":["#100d1b","#332044","#674b79","#9a789e","#c1a66a","#d8c8e0"],
+"Ember and bronze":["#17100e","#48251d","#88452d","#bd713b","#d6a34e","#e0c18c"],
+"Cold mineral":["#111820","#344958","#607986","#9ab3bc","#d0d8d7","#b6a98f"],
+"Botanical alchemy":["#111a15","#263f32","#55765b","#9b8750","#c3b98b","#7da59a"],
+"Muted antique":["#28201d","#66534a","#9d8170","#b7a48b","#c3a77a","#9b777b"]
+};
+function val(id){return document.getElementById(id)?.value?.trim()||""}
+function sentence(label,ids){return label+": "+ids.map(val).filter(Boolean).join("; ")+ "."}
+function render(){
+ const p=[];
+ p.push(val('artLanguage')+", "+val('styleBlend')+". "+val('styleExtra')+".");
+ p.push("LINEWORK: "+[val('lineStyle'),val('lineWeight'),val('edgeTreatment'),val('lineColor')].filter(Boolean).join("; ")+".");
+ p.push("HATCHING AND MICRO-DETAIL: "+[val('detailDensity'),val('detailMethod'),val('detailPlacement'),val('detailContrast')].filter(Boolean).join("; ")+".");
+ let color="COLOR SYSTEM: "+[val('palette'),val('paletteBehavior'),val('saturation'),val('contrast'),val('customPalette')].filter(Boolean).join("; ")+".";
+ p.push(color);
+ p.push("SHADING AND LIGHTING: "+[val('shading'),val('lightDirection'),val('highlight'),val('atmosphere')].filter(Boolean).join("; ")+".");
+ p.push("MATERIALS AND SURFACE: "+[val('materials'),val('finish'),val('textureLevel'),val('surfaceAvoid')].filter(Boolean).join("; ")+".");
+ p.push("ORNAMENT AND MOTIFS: "+[val('ornamentLevel'),val('motifs'),val('headdress'),val('ornamentIntegration')].filter(Boolean).join("; ")+".");
+ p.push("CHARACTER AND NARRATIVE: "+[val('subject'),val('expression'),val('proportions'),val('transformation'),val('theme'),val('mood'),val('story')].filter(Boolean).join("; ")+".");
+ p.push("COMPOSITION AND CAMERA: "+[val('aspect'),val('view'),val('framing'),val('hierarchy'),val('flow'),val('background')].filter(Boolean).join("; ")+".");
+ p.push("TECHNICAL FINISH: "+val('technical')+".");
+ if(document.getElementById('includeNegative').checked&&val('negative'))p.push("NEGATIVE PROMPT: "+val('negative')+".");
+ document.getElementById('prompt').textContent=p.join("\n\n");
+ document.getElementById('brief').textContent=[val('subject'),val('story'),val('mood'),val('aspect'),val('view'),val('palette'),val('lineStyle')].filter(Boolean).join(" · ");
+ const pal=palettes[val('palette')];document.getElementById('swatches').innerHTML=pal?pal.map(c=>`<span class="swatch" style="background:${c}" title="${c}"></span>`).join(""):"";
+ document.getElementById('swatchLabel').textContent=pal?pal.join("  ·  "):"Add your own palette in the custom colors field.";
+ if(document.getElementById('autoSave').checked){try{localStorage.setItem('sbb-prompt-studio',JSON.stringify(getSettings()))}catch(e){}}
+}
+function getSettings(){let s={};document.querySelectorAll('[data-group]').forEach(el=>s[el.id]=el.value);s.includeNegative=document.getElementById('includeNegative').checked;return s}
+function applySettings(s){Object.keys(s||{}).forEach(k=>{let el=document.getElementById(k);if(el&&('value'in el))el.value=s[k];if(el&&el.type==='checkbox')el.checked=!!s[k]});render()}
+function preset(name){
+ const sets={
+ signature:{lineStyle:"Crisp variable-weight ink outlines",palette:"Antique gold and oxidized teal",detailDensity:"Dense intricate micro-detail",shading:"Dramatic painterly gradient shading",ornamentLevel:"Elaborate biomorphic ornamentation",mood:"Majestic, mysterious and introspective"},
+ etched:{lineStyle:"Fine etched engraving lines",lineWeight:"Hairline engraving precision",edgeTreatment:"Layered etched edges and soft gradients",detailMethod:"Cross-hatching and engraved strokes",detailContrast:"High-contrast etched detail",shading:"Etched shadow masses and cross-hatching",finish:"Matte fine-art illustration board",palette:"Muted antique"},
+ painterly:{lineStyle:"Soft painterly edges, minimal outlines",lineWeight:"Loose and gestural",edgeTreatment:"Selective lost-and-found edges",detailDensity:"Selective detail concentrated at focal areas",detailMethod:"Painterly texture with selective etched detail",shading:"Painterly chiaroscuro with sculptural shadows",finish:"Velvety painterly surface",palette:"Nocturnal violet"},
+ monochrome:{palette:"Obsidian monochrome",paletteBehavior:"Mostly monochrome with one accent color",saturation:"Low saturation, near-monochrome",contrast:"Extreme chiaroscuro",lineColor:"Obsidian black",mood:"Ominous and monumental"},
+ ceremonial:{palette:"Ember and bronze",paletteBehavior:"Warm-dominant with cool counterpoints",ornamentLevel:"Opulent, densely layered ornament",motifs:"Baroque scrolls, filigree, crowns and architectural flourishes",headdress:"Monumental organic headdress, 50–70% of frame height",theme:"Myth, ancestry and sacred ceremony"}
+ };
+ applySettings({...sets[name]});
+}
+function resetGroup(group){document.querySelectorAll(`[data-group="${group}"]`).forEach(el=>{if(el.type==='checkbox')el.checked=true;else if(defaults[el.id]!==undefined)el.value=defaults[el.id]});render()}
+function resetAll(){applySettings(defaults);document.getElementById('includeNegative').checked=true}
+function copyPrompt(){navigator.clipboard.writeText(document.getElementById('prompt').textContent).then(()=>status("Master prompt copied."),()=>status("Copy was blocked by the browser. Select the prompt text and copy manually."))}
+function status(t){document.getElementById('status').textContent=t}
+function saveFile(name,content,type){let a=document.createElement('a'),url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
+function downloadPrompt(){saveFile("surreal-biomorphic-baroque-prompt.txt",document.getElementById('prompt').textContent,"text/plain")}
+function downloadSettings(){saveFile("surreal-biomorphic-baroque-settings.json",JSON.stringify(getSettings(),null,2),"application/json")}
+document.querySelectorAll('select,input,textarea').forEach(el=>el.addEventListener('input',render));
+try{let saved=localStorage.getItem('sbb-prompt-studio');if(saved)applySettings(JSON.parse(saved));else render()}catch(e){render()}
+</script>
+</body>
+</html>
