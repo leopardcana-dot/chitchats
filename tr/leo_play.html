@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
-<title>TradingPlay v11</title>
+<title>TradingPlay v11.1</title>
 <style>
 /* ===== CSS RESET & VARIABLES ===== */
 @import url('https://fonts.googleapis.com/css2?family=roboto+mono:wght@300;400;500;700&family=trebuchet ms:wght@400;500;700;900&display=swap');
@@ -1177,7 +1177,7 @@ body > div:has(> #mobileReplaySpeed) { display: none !important; }
 <!-- SPLASH SCREEN -->
 <div id="splash">
   <h1>TradingPlay</h1>
-  <div class="sub">v11 — Advanced Backtesting Engine</div>
+  <div class="sub">v11.1 — Advanced Backtesting Engine</div>
   <div class="loader"><div class="loader-bar"></div></div>
 </div>
 <!-- CONTEXT MENU -->
@@ -1962,6 +1962,22 @@ const INDICATORS = [
   }, 
   overlay: true 
 },
+{ 
+  id: 'londonvol', 
+  name: 'London Volatility', 
+  category: 'Session Stats', 
+  desc: 'London session ATR and Hourly ATR stats', 
+  params: { 
+    sessionStartHour: 8,     // London open (UTC)
+    sessionEndHour: 13,      // London close
+    atrLength: 14,           // 5m ATR length
+    lookback: 20,            // rolling sessions
+    pipSize: 0.10,           // broker pip for gold
+    dashboardX: 12,          // px from left
+    dashboardY: 60           // px from top
+  }, 
+  overlay: true 
+},
 ];
 // ===== 02.1 INDICATOR CALCS =====
 function calcSMA(d, p) { const r = Array(d.length).fill(null); for (let i = p - 1; i < d.length; i++) { let s = 0; for (let j = i - p + 1; j <= i; j++) s += d[j].close; r[i] = s / p; } return r; }
@@ -2453,6 +2469,122 @@ const NEWS_EVENTS_DB = {
     { date: '2025-12-18', title: 'GDP', importance: 'high' },   // Q3 Final
   ]
 };
+
+// ===== LONDON VOLATILITY CALCULATION =====
+function calcLondonVolatility(data, params) {
+  if (!data || data.length === 0) return null;
+
+  const { sessionStartHour, sessionEndHour, atrLength, lookback, pipSize } = params;
+
+  const isInSession = (d) => {
+    const h = new Date(d).getUTCHours();
+    return h >= sessionStartHour && h < sessionEndHour;
+  };
+
+  // Compute 5m ATR
+  const computeATR = (bars, len) => {
+    const tr = [];
+    for (let i = 0; i < bars.length; i++) {
+      if (i === 0) { tr.push(bars[i].high - bars[i].low); continue; }
+      tr.push(Math.max(
+        bars[i].high - bars[i].low,
+        Math.abs(bars[i].high - bars[i-1].close),
+        Math.abs(bars[i].low  - bars[i-1].close)
+      ));
+    }
+    const out = Array(bars.length).fill(null);
+    if (bars.length < len) return out;
+    let sum = 0;
+    for (let i = 0; i < len; i++) sum += tr[i];
+    out[len - 1] = sum / len;
+    for (let i = len; i < bars.length; i++) out[i] = (out[i-1]*(len-1) + tr[i]) / len;
+    return out;
+  };
+
+  const atr = computeATR(data, atrLength);
+
+  // Group into sessions
+  const sessions = []; 
+  let cur = null;
+
+  for (let i = 0; i < data.length; i++) {
+    const bar = data[i];
+    const inS = isInSession(bar.date);
+    const prevIn = i > 0 ? isInSession(data[i-1].date) : false;
+
+    if (inS && !prevIn) {
+      cur = {
+        start: i, end: i,
+        atrSum: 0, atrSamples: 0,
+        hourlyAtrs: {} // Will store first bar ATR of each hour
+      };
+    }
+
+    if (inS && cur) {
+      cur.end = i;
+      if (atr[i] != null) { 
+        cur.atrSum += atr[i]; 
+        cur.atrSamples++; 
+      }
+
+      const h = new Date(bar.date).getUTCHours();
+      const m = new Date(bar.date).getUTCMinutes();
+      
+      // Record ATR at the start of each hour (08:00, 09:00, etc.)
+      if (m === 0 && atr[i] != null) {
+        if (!cur.hourlyAtrs[h]) {
+          cur.hourlyAtrs[h] = atr[i];
+        }
+      }
+    }
+
+    if (!inS && prevIn && cur) {
+      cur.avgAtr = cur.atrSamples > 0 ? cur.atrSum / cur.atrSamples : null;
+      sessions.push(cur);
+      cur = null;
+    }
+  }
+
+  // Only use completed sessions for averages
+  const completed = sessions.slice(0, -1); 
+  const rolling = completed.slice(-lookback); 
+
+  const atrs = rolling.map(s => s.avgAtr).filter(v => v != null);
+  const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
+  const avgLondonAtr = avg(atrs);
+
+  // Hourly averages (08:00 to 12:00)
+  const hourlyAvg = {};
+  [8, 9, 10, 11, 12].forEach(hour => {
+    const vals = rolling.map(s => s.hourlyAtrs[hour]).filter(v => v != null);
+    hourlyAvg[hour] = vals.length > 0 ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  });
+
+  // Current live stats
+  const live = sessions[sessions.length - 1];
+  const liveInSession = live && live.end === data.length - 1 && isInSession(data[data.length-1].date);
+  const currentAtr = atr[atr.length - 1];
+  
+  const atrRatio = (avgLondonAtr && currentAtr) ? currentAtr / avgLondonAtr : null;
+  const atrDiffPct = atrRatio != null ? (atrRatio - 1) * 100 : null;
+
+  return {
+    params,
+    avgLondonAtr,
+    avgLondonAtrPips: avgLondonAtr ? avgLondonAtr / pipSize : null,
+    currentAtr,
+    currentAtrPips: currentAtr ? currentAtr / pipSize : null,
+    atrDiffPct,
+    hourlyAvg,
+    hourlyAvgPips: {
+      8: hourlyAvg[8] ? hourlyAvg[8] / pipSize : null,
+      9: hourlyAvg[9] ? hourlyAvg[9] / pipSize : null,
+      10: hourlyAvg[10] ? hourlyAvg[10] / pipSize : null,
+      11: hourlyAvg[11] ? hourlyAvg[11] / pipSize : null,
+      12: hourlyAvg[12] ? hourlyAvg[12] / pipSize : null
+    }
+  };
+}
 // ===== VOLUME PROFILE CALCULATION =====
 function calcVolumeProfile(data, params) {
   const { rows, period, valueAreaVol } = params;
@@ -2602,6 +2734,13 @@ function recalculateIndicators() {
 		case 'newsevents':
   state.indicatorData[ind.uid] = calcNewsEvents(state.data, ind.params);
   break;
+  case 'londonvol': {
+  const fiveMin = state._originalRawData && state._originalRawData.length
+    ? aggregateBars(state._originalRawData, 5)
+    : state.data;
+  state.indicatorData[ind.uid] = calcLondonVolatility(fiveMin, ind.params);
+  break;
+}
     }
 	
   });state.indicators.forEach(ind => renderIndicatorSeries(ind.uid));
@@ -2939,7 +3078,7 @@ function updateActiveIndicators() {
   const container = document.getElementById('activeIndicators');
   if (!container) return;
   container.innerHTML = state.indicators.map(ind => {
-    const hasSettings = ind.id === 'sessions' || ind.id === 'volprofile' || ind.id === 'newsevents';
+   const hasSettings = ind.id === 'sessions' || ind.id === 'volprofile' || ind.id === 'newsevents' || ind.id === 'londonvol'; onclick="open${ind.id === 'newsevents' ? 'NewsEvents' : ind.id === 'sessions' ? 'Sessions' : ind.id === 'volprofile' ? 'VolProfile' : 'LondonVol'}Settings('${ind.uid}')"
     return `<span class="ind-tag">
       <span class="ind-name">${ind.name}</span>
       ${hasSettings ? `<span class="ind-settings" onclick="open${ind.id === 'newsevents' ? 'NewsEvents' : ind.id === 'sessions' ? 'Sessions' : 'VolProfile'}Settings('${ind.uid}')" title="Settings">⚙</span>` : ''}
@@ -4744,7 +4883,90 @@ function redrawDrawingsOverlay() {
             ctx.restore();
         }
     }
+// ===== LONDON VOLATILITY DASHBOARD =====
+if (state.indicators) {
+  state.indicators.forEach(ind => {
+    if (ind.id !== 'londonvol') return;
+    const d = state.indicatorData[ind.uid];
+    if (!d) return;
 
+    const p = ind.params;
+    const X = p.dashboardX || 12;
+    const Y = p.dashboardY || 60;
+    
+    // Grid setup
+    const rowH = 16;
+    const labelW = 170;
+    const usdW = 70;
+    const pipW = 60;
+    const totalW = labelW + usdW + pipW;
+
+    // Data rows to render
+    const rows = [
+      { text: 'LONDON VOLATILITY', usd: 'USD', pip: 'PIPS', header: true },
+      { text: '20-Session Average', usd: fmt(d.avgLondonAtr, 3), pip: fmt(d.avgLondonAtrPips, 0) },
+      { text: 'Current ATR(14)', usd: fmt(d.currentAtr, 3), pip: fmt(d.currentAtrPips, 0) },
+      { text: '20-Session Avg ATR', usd: fmt(d.avgLondonAtr, 3), pip: fmt(d.avgLondonAtrPips, 0) },
+      { text: 'ATR vs Average', usd: d.atrDiffPct != null ? d.atrDiffPct.toFixed(1) + '%' : '—', pip: '' },
+      { text: 'HOURLY ATR', usd: 'USD', pip: 'PIPS', header: true },
+      { text: '08:00 ATR', usd: fmt(d.hourlyAvg[8], 3), pip: fmt(d.hourlyAvgPips[8], 0) },
+      { text: '09:00 ATR', usd: fmt(d.hourlyAvg[9], 3), pip: fmt(d.hourlyAvgPips[9], 0) },
+      { text: '10:00 ATR', usd: fmt(d.hourlyAvg[10], 3), pip: fmt(d.hourlyAvgPips[10], 0) },
+      { text: '11:00 ATR', usd: fmt(d.hourlyAvg[11], 3), pip: fmt(d.hourlyAvgPips[11], 0) },
+      { text: '12:00 ATR', usd: fmt(d.hourlyAvg[12], 3), pip: fmt(d.hourlyAvgPips[12], 0) }
+    ];
+
+    const totalH = rowH * rows.length + 8;
+
+    ctx.save();
+    
+    // Background
+    ctx.fillStyle = 'rgba(10,14,23,0.92)';
+    ctx.strokeStyle = '#1e2d3d';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.rect(X, Y, totalW, totalH);
+    ctx.fill();
+    ctx.stroke();
+
+    // Render rows
+    let cy = Y + 4;
+    rows.forEach((r) => {
+      if (r.header) {
+        // Blue header band
+        ctx.fillStyle = 'rgba(33,150,243,0.2)';
+        ctx.fillRect(X + 1, cy, totalW - 2, rowH);
+        
+        ctx.fillStyle = '#2196F3';
+        ctx.font = 'bold 11px monospace';
+        ctx.fillText(r.text, X + 6, cy + 11);
+        
+        ctx.fillText(r.usd, X + labelW, cy + 11);
+        ctx.fillText(r.pip, X + labelW + usdW, cy + 11);
+      } else {
+        // Standard row
+        ctx.fillStyle = '#e1e5ea'; // White labels
+        ctx.font = '11px monospace';
+        ctx.fillText(r.text, X + 6, cy + 11);
+
+        ctx.fillStyle = '#26a69a'; // Green USD values
+        ctx.fillText(String(r.usd || ''), X + labelW, cy + 11);
+
+        ctx.fillStyle = '#26a69a'; // Green Pips values
+        ctx.fillText(String(r.pip || ''), X + labelW + usdW, cy + 11);
+      }
+      cy += rowH;
+    });
+
+    ctx.restore();
+  });
+}
+
+// Formatting helper (paste this immediately below the dashboard block)
+function fmt(val, digits) {
+  if (val == null || isNaN(val)) return '—';
+  return Number(val).toFixed(digits);
+}
 // Draw News Events
 if (state.indicatorData) {
   Object.keys(state.indicatorData).forEach(uid => {
@@ -8227,6 +8449,13 @@ function stepForward(n) {
   updateOpenPositions(true);
   updateTradeInfo();
   updateVWAPForReplay();
+  if (state.indicators.some(i => i.id === 'londonvol')) {
+  const lv = state.indicators.find(i => i.id === 'londonvol');
+  const fiveMin = state._originalRawData && state._originalRawData.length
+    ? aggregateBars(state._originalRawData.slice(0, getReplaySourceIndex()), 5)
+    : state.data;
+  state.indicatorData[lv.uid] = calcLondonVolatility(fiveMin, lv.params);
+}
   renderChart(changed.renderFrom);
 
   if (state._replaySourceIndex >= source.length) {
@@ -8241,6 +8470,13 @@ function stepBackward(n) {
   setReplaySourceIndex(newSourceIndex);
 
   updateVWAPForReplay();
+  if (state.indicators.some(i => i.id === 'londonvol')) {
+  const lv = state.indicators.find(i => i.id === 'londonvol');
+  const fiveMin = state._originalRawData && state._originalRawData.length
+    ? aggregateBars(state._originalRawData.slice(0, getReplaySourceIndex()), 5)
+    : state.data;
+  state.indicatorData[lv.uid] = calcLondonVolatility(fiveMin, lv.params);
+}
   renderChart();
 }
 function goToDate() {
@@ -9031,6 +9267,56 @@ style.textContent = `
   }
 `;
 document.head.appendChild(style);
+
+function openLondonVolSettings(uid) {
+  const ind = state.indicators.find(i => i.uid === uid);
+  if (!ind) return;
+  const p = ind.params;
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay show';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal" style="min-width: 340px;">
+      <div class="modal-header">
+        <span class="modal-title">London Volatility Settings</span>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+      </div>
+      <div style="padding: 0 12px;">
+        <div class="form-row">
+          <div class="form-group"><label>Session Start (UTC)</label><input type="number" class="form-input" id="lvStart" value="${p.sessionStartHour}" min="0" max="23"></div>
+          <div class="form-group"><label>Session End (UTC)</label><input type="number" class="form-input" id="lvEnd" value="${p.sessionEndHour}" min="0" max="24"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>ATR Length</label><input type="number" class="form-input" id="lvAtr" value="${p.atrLength}" min="1"></div>
+          <div class="form-group"><label>Lookback</label><input type="number" class="form-input" id="lvLookback" value="${p.lookback}" min="5"></div>
+        </div>
+        <div class="form-group"><label>Pip Size</label><input type="number" class="form-input" id="lvPip" value="${p.pipSize}" step="0.01"></div>
+      </div>
+      <div class="btn-group" style="margin-top:16px; padding:12px;">
+        <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+        <button class="btn btn-primary" onclick="updateLondonVolSettings('${uid}')">Apply</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function updateLondonVolSettings(uid) {
+  const ind = state.indicators.find(i => i.uid === uid);
+  if (!ind) return;
+  ind.params.sessionStartHour = parseInt(document.getElementById('lvStart').value);
+  ind.params.sessionEndHour = parseInt(document.getElementById('lvEnd').value);
+  ind.params.atrLength = parseInt(document.getElementById('lvAtr').value);
+  ind.params.lookback = parseInt(document.getElementById('lvLookback').value);
+  ind.params.pipSize = parseFloat(document.getElementById('lvPip').value);
+
+  const fiveMin = state._originalRawData && state._originalRawData.length
+    ? aggregateBars(state._originalRawData, 5)
+    : state.data;
+  state.indicatorData[ind.uid] = calcLondonVolatility(fiveMin, ind.params);
+  redrawDrawingsOverlay();
+  document.querySelector('.modal-overlay.show')?.remove();
+  showToastNotification('London Volatility updated', false);
+}
 </script>
 </body>
 </html>
