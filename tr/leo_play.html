@@ -1222,7 +1222,32 @@ body > div:has(> #mobileReplaySpeed) { display: none !important; }
       </div>
 	      <!-- ===== NEW: LOAD CSV FROM URL ===== -->
     <div class="data-loader-section">
-      <div class="data-loader-title">🔗 Load CSV from URL</div>
+     <!-- ===== NEW: LOAD CSV FROM URL (DROPDOWN) ===== -->
+<div class="data-loader-section">
+  <div class="data-loader-title">🔗 Load CSV from URL</div>
+  <p style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">
+    Select a saved link or paste a new one.
+  </p>
+  
+  <div class="form-group">
+    <select class="form-select" id="csvUrlSelect" onchange="handleUrlSelectChange()">
+      <option value="">-- Select a saved file --</option>
+      <!-- Options will be populated by JS -->
+    </select>
+  </div>
+
+  <div class="form-group">
+    <input type="text" class="form-input" id="csvUrlInput"
+           placeholder="Or paste a custom URL here..."
+           style="font-size:11px;">
+  </div>
+
+  <div class="btn-group">
+    <button class="btn btn-outline btn-sm" onclick="document.getElementById('csvUrlInput').value='';">Clear</button>
+    <button class="btn btn-primary btn-sm" id="csvUrlLoadBtn" onclick="loadCSVFromURL()">Load URL</button>
+  </div>
+  <div id="csvUrlStatus" style="font-size:10px;color:var(--text-muted);margin-top:6px;min-height:14px;"></div>
+</div>
       <p style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">
         Paste a direct link to a raw CSV (e.g. a GitHub "raw" URL). Same format: date,open,high,low,close,volume
       </p>
@@ -1891,6 +1916,29 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     return this;
   };
 }
+
+// Add your custom CSV URLs here
+const SAVED_CSV_URLS = [
+  { name: 'XAUUSD 2022 Q1', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2022_q1.csv' },
+  { name: 'XAUUSD 2022 Q2', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2022_q2.csv' },
+  { name: 'XAUUSD 2022 Q3', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2022_q3.csv' },
+  { name: 'XAUUSD 2022 Q4', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2022_q4.csv' },
+  { name: 'XAUUSD 2023 Q1', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2023_q1.csv' },
+  { name: 'XAUUSD 2023 Q2', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2023_q2.csv' },
+  { name: 'XAUUSD 2023 Q3', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2023_q3.csv' },
+  { name: 'XAUUSD 2023 Q4', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2023_q4.csv' },
+  { name: 'XAUUSD 2024 Q1', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2024_q1.csv' },
+  { name: 'XAUUSD 2024 Q2', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2024_q2.csv' },
+  { name: 'XAUUSD 2024 Q3', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2024_q3.csv' },
+  { name: 'XAUUSD 2024 Q4', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2024_q4.csv' },
+  { name: 'XAUUSD 2025 Q1', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2025_q1.csv' },
+  { name: 'XAUUSD 2025 Q2', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2025_q2.csv' },
+  { name: 'XAUUSD 2025 Q3', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2025_q3.csv' },
+  { name: 'XAUUSD 2025 Q4', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2025_q4.csv' },
+  { name: 'XAUUSD 2026 Q1', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2026_q1.csv' },
+  { name: 'XAUUSD 2026 Q2', url: 'https://raw.githubusercontent.com/leopardcana-dot/xaucsvz/main/XAUUSD1_2026_q2.csv' },
+  
+];
 const INDICATORS = [
   { id: 'sma', name: 'SMA', category: 'Trend', desc: 'Simple Moving Average', params: { period: 20, color: '#2196F3' }, overlay: true },
   { id: 'ema', name: 'EMA', category: 'Trend', desc: 'Exponential Moving Average', params: { period: 50, color: '#ff9800' }, overlay: true },
@@ -3648,6 +3696,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEvents();
   populateIndicatorModal();
   renderChart();
+  populateCsvDropdown();
  document.getElementById('csvUrlInput')?.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     e.preventDefault();
@@ -3663,6 +3712,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   updateBalanceDisplay();
 });
+
+
+
+
+
+
 // ===== 03.1 CANVAS =====
 let lwChart, candleSeries, volumeSeries;
 function setupCanvas() {
@@ -5894,6 +5949,104 @@ async function loadCSVFromURL() {
       const base = pathName.split('/').pop() || '';
       label = base.replace(/\.csv$/i, '').toUpperCase() || 'CSV';
     } catch (_) { /* keep default */ }
+
+    parseCSVText(text, label);
+  } catch (err) {
+    console.error('URL load error:', err);
+    status.textContent = '❌ ' + err.message;
+    status.style.color = 'var(--accent-red)';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Load URL';
+  }
+}
+
+// 1. Populate the dropdown list
+function populateCsvDropdown() {
+  const select = document.getElementById('csvUrlSelect');
+  if (!select) return;
+  
+  // Clear existing options except the default one
+  select.innerHTML = '<option value="">-- Select a saved file --</option>';
+  
+  SAVED_CSV_URLS.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.url;
+    opt.textContent = item.name;
+    select.appendChild(opt);
+  });
+}
+
+// 2. Handle dropdown selection (auto-fills the text box)
+function handleUrlSelectChange() {
+  const select = document.getElementById('csvUrlSelect');
+  const input = document.getElementById('csvUrlInput');
+  
+  if (select.value) {
+    input.value = select.value;
+    // Optionally auto-trigger the load immediately:
+    loadCSVFromURL(); 
+  }
+}
+
+// 3. Modify your existing loadCSVFromURL function
+// Find function loadCSVFromURL() and replace it with this:
+async function loadCSVFromURL() {
+  const input  = document.getElementById('csvUrlInput');
+  const status = document.getElementById('csvUrlStatus');
+  const btn    = document.getElementById('csvUrlLoadBtn');
+  let url = (input.value || '').trim();
+
+  if (!url) {
+    status.textContent = '❌ Please select or paste a URL first.';
+    status.style.color = 'var(--accent-red)';
+    return;
+  }
+
+  // Friendly hint: convert GitHub blob URL to raw URL
+  if (url.includes('github.com') && url.includes('/blob/')) {
+    url = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+    input.value = url;
+    status.textContent = 'ℹ️ Auto-converted GitHub "blob" link to "raw" link.';
+    status.style.color = 'var(--accent-blue)';
+  }
+
+  if (!/^https?:\/\//i.test(url)) {
+    status.textContent = '❌ URL must start with http:// or https://';
+    status.style.color = 'var(--accent-red)';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Loading…';
+  status.textContent = '⏳ Downloading…';
+  status.style.color = 'var(--text-muted)';
+
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+
+    const text = await res.text();
+    const head = text.slice(0, 200).toLowerCase();
+    if (head.includes('<!doctype html') || head.includes('<html')) {
+      throw new Error('The URL returned an HTML page, not a CSV.');
+    }
+
+    status.textContent = `✅ Downloaded ${(text.length / 1024).toFixed(1)} KB — parsing…`;
+    status.style.color = 'var(--accent-green)';
+
+    // Try to use the dropdown name, otherwise use filename, otherwise 'CSV'
+    let label = 'CSV';
+    const selectedOpt = document.getElementById('csvUrlSelect').selectedOptions[0];
+    if (selectedOpt && selectedOpt.textContent !== '-- Select a saved file --') {
+        label = selectedOpt.textContent.toUpperCase();
+    } else {
+        try {
+            const pathName = new URL(url).pathname;
+            const base = pathName.split('/').pop() || '';
+            label = base.replace(/\.csv$/i, '').toUpperCase() || 'CSV';
+        } catch (_) {}
+    }
 
     parseCSVText(text, label);
   } catch (err) {
