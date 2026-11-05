@@ -241,6 +241,9 @@
       <div class="field"><label>Slippage (pts)</label>
         <input type="number" id="slippagePts" value="0" step="0.1" min="0">
       </div>
+	  <div class="field"><label>Max trades / day (0 = off)</label>
+  <input type="number" id="maxTradesPerDay" value="0" step="1" min="0">
+</div>
     </div>
     <div class="row">
       <div class="field"><label>Spread mode</label>
@@ -826,7 +829,6 @@ function adxCalc(bars, period = 14) {
     dx[i] = (plusDI[i] + minusDI[i]) > 0
       ? (100 * Math.abs(plusDI[i] - minusDI[i])) / (plusDI[i] + minusDI[i]) : 0;
   }
-  // ADX seeds at period*2 from dx[period+1..period*2]; dx[period] is computed but unused (standard variant).
   let sum = 0;
   for (let i = period + 1; i < period * 2 + 1; i++) sum += dx[i];
   adx[period * 2] = sum / period;
@@ -875,8 +877,6 @@ function resample(m1Bars, tfMin) {
   return out;
 }
 
-// Returns map[i] = latest CLOSED HTF bar index for M1 bar i (uses closeTime).
-// -1 before the first HTF bar closes; callers must treat that as "no data".
 function buildHTFIndexGetter(m1Bars, htfBars) {
   const map = new Array(m1Bars.length).fill(-1);
   let h = -1;
@@ -920,7 +920,7 @@ function validateBars(rawBars, tfMin) {
 }
 
 // ============================================================
-// 3 · BROKER — realistic execution
+// 3 · BROKER
 // ============================================================
 class Broker {
   constructor(cfg) {
@@ -930,11 +930,11 @@ class Broker {
     this.point = cfg.point;
     this.tickValue = cfg.tickValue;
     this.minLot = cfg.minLot;
-    this.maxLot = cfg.maxLot || 100;
+    this.maxLot = cfg.maxLot != null ? cfg.maxLot : 100;
     this.lotStep = cfg.lotStep || 0.01;
     this.spreadPts = cfg.spreadPts;
     this.spreadMode = cfg.spreadMode || 'fixed';
-    this.slippagePts = cfg.slippagePts || 0;
+    this.slippagePts = cfg.slippagePts != null ? cfg.slippagePts : 0;
     this.commissionPerLot = cfg.commissionPerLot;
     this.intrabarOrder = cfg.intrabarOrder || 'sl_first';
     this.minStopPts = cfg.minStopPts != null ? cfg.minStopPts : 30;
@@ -944,10 +944,14 @@ class Broker {
     this.tradeId = 1;
   }
 
+  // Round to the NEAREST lot step, then clamp to 2dp. Previous version used
+  // Math.floor, which can undersize by one step on float noise (0.29/0.01 =
+  // 28.999… → floor 28 → 0.28).
   _roundLot(l) {
-    const stepped = Math.floor(l / this.lotStep) * this.lotStep;
-    return +stepped.toFixed(2);
-  }
+  const steps = Math.floor(l / this.lotStep + 1e-9);
+  const dec = Math.max(0, Math.ceil(-Math.log10(this.lotStep) - 1e-9));
+  return +(steps * this.lotStep).toFixed(dec);
+}
 
   _spreadPrice(bar) {
     if (this.spreadMode === 'fixed' || bar == null) return this.spreadPts * this.point;
@@ -960,15 +964,13 @@ class Broker {
     return this.spreadPts * this.point * mult;
   }
 
-  // Slippage is always against the trader. Returns a positive price delta
-  // magnitude that the caller adds (buy) or subtracts (sell).
+  // Slippage magnitude; caller applies it against the trader.
   _slippage(side, bar) {
     if (this.slippagePts <= 0) return 0;
     const range = bar ? Math.abs(bar.high - bar.low) : 0;
     return Math.min(this.slippagePts * this.point, range * 0.5 || Infinity);
   }
 
-  // OHLC is bid. Buy entry → ask (bid + spread + slip). Sell entry → bid - slip.
   fillEntry(side, bar) {
     const base = bar.open;
     const spread = this._spreadPrice(bar);
@@ -976,24 +978,22 @@ class Broker {
     return side === 'buy' ? base + spread + slip : base - slip;
   }
 
-  // Buy exits at bid, sell exits at ask. Gaps respected.
   fillExit(pos, bar, requestedPrice, kind) {
     const spread = this._spreadPrice(bar);
     let fill = requestedPrice;
     if (kind === 'SL') {
       if (pos.side === 'buy') {
-        if (bar.open <= requestedPrice) fill = bar.open;   // gap through SL (bid)
+        if (bar.open <= requestedPrice) fill = bar.open;
       } else {
-        if (bar.open + spread >= requestedPrice) fill = bar.open + spread; // gap through SL (ask)
+        if (bar.open + spread >= requestedPrice) fill = bar.open + spread;
       }
     } else if (kind === 'TP') {
       if (pos.side === 'buy') {
-        if (bar.open >= requestedPrice) fill = bar.open;   // gap through TP (bid)
+        if (bar.open >= requestedPrice) fill = bar.open;
       } else {
-        if (bar.open + spread <= requestedPrice) fill = bar.open + spread; // gap through TP (ask)
+        if (bar.open + spread <= requestedPrice) fill = bar.open + spread;
       }
     } else {
-      // EOD / manual close
       fill = pos.side === 'buy' ? bar.close : bar.close + spread;
     }
     return fill;
@@ -1022,7 +1022,7 @@ class Broker {
       requestedEntry, entry: fillPrice, sl, tp,
       openTime, openBar, comment: comment || '',
       highestSinceOpen: fillPrice, lowestSinceOpen: fillPrice,
-      maePips: 0, mfePips: 0,
+      maePoints: 0, mfePoints: 0,
       beMoved: false, trailActive: false,
       initialSL: sl, initialTP: tp,
       initialRiskMoney,
@@ -1049,8 +1049,8 @@ class Broker {
       durationMin: Math.round((closeTime.getTime() - pos.openTime.getTime()) / 60000),
       rMultiple: pos.initialRiskMoney && pos.initialRiskMoney > 0
         ? +(pnl / pos.initialRiskMoney).toFixed(3) : 0,
-      maeR: pos.stopDistance > 0 ? +(pos.maePips / (pos.stopDistance / this.point)).toFixed(3) : 0,
-      mfeR: pos.stopDistance > 0 ? +(pos.mfePips / (pos.stopDistance / this.point)).toFixed(3) : 0,
+      maeR: pos.stopDistance > 0 ? +(pos.maePoints / (pos.stopDistance / this.point)).toFixed(3) : 0,
+      mfeR: pos.stopDistance > 0 ? +(pos.mfePoints / (pos.stopDistance / this.point)).toFixed(3) : 0,
     };
     this.closedTrades.push(closed);
     this.positions = this.positions.filter(p => p.id !== pos.id);
@@ -1133,7 +1133,7 @@ function makeEntryFilters(cfg, entryBars, entryIdxMap) {
     filters.push((m1Idx, side) => {
       const ei = entryIdxMap[m1Idx];
       const A = arrays.bbArr;
-      const up = getVal(A.upper, ei), lo = getVal(A.lower, ei), mid = getVal(A.middle, ei);
+      const up = getVal(A.upper, ei), lo = getVal(A.lower, ei);
       const c = getVal(closes, ei);
       const pC = getVal(closes, ei - 1);
       const pLo = getVal(A.lower, ei - 1), pUp = getVal(A.upper, ei - 1);
@@ -1282,7 +1282,6 @@ function makeEntryFilters(cfg, entryBars, entryIdxMap) {
 // ============================================================
 class UnifiedTrendPullbackEA {
   constructor(cfg, filterEngine) {
-    // Config
     Object.assign(this, {
       lwmaFast: cfg.lwmaFast, lwmaMid: cfg.lwmaMid, lwmaSlow: cfg.lwmaSlow,
       pullbackLookback: cfg.pullbackLookback, entryMode: cfg.entryMode,
@@ -1291,21 +1290,31 @@ class UnifiedTrendPullbackEA {
       breakEvenR: cfg.breakEvenR, trailStartR: cfg.trailStartR,
       trailAtrMult: cfg.trailAtrMult, maxDailyLossPct: cfg.maxDailyLossPct,
       maxSpreadPts: cfg.maxSpreadPts,
-      retestExpiryBars: cfg.retestExpiryBars || 10,       // counted in ENTRY-TF bars
+      retestExpiryBars: cfg.retestExpiryBars || 10,
       maxRiskPerTradePct: cfg.maxRiskPerTradePct || 2,
       maxAggregateRiskPct: cfg.maxAggregateRiskPct || 6,
+      oneEntryPerSetup: cfg.oneEntryPerSetup === true,
+      maxTradesPerDay: cfg.maxTradesPerDay != null ? cfg.maxTradesPerDay : 0,
     });
-    // State
     this.filters = filterEngine;
     this.pendingBuyBar = null; this.pendingBuyLevel = null; this.pendingBuyBarIdx = null;
     this.pendingSellBar = null; this.pendingSellLevel = null; this.pendingSellBarIdx = null;
     this._day = null;
     this.dailyStartEquity = null;
     this.dailyLossTripped = false;
-    this._lastSignalE = -1;   // gate: only evaluate breakout once per closed entry-TF bar
+    this._lastSignalE = -1;
+    this._lastRetestE = -1;
+    this._lastImmediateBuyE = -Infinity;
+    this._lastImmediateSellE = -Infinity;
+    this._tradesToday = 0;
+    this._dayForTrades = null;
+    // Diagnostic: how many times _detectBreakout actually ran. Should be
+    // ~ (bars - warmup) / entryTFMin. If 15x higher, the gate is bypassed.
+    this._breakoutEvals = 0;
     this.stats = {
       signals: 0, entries: 0, retests: 0, skippedMinLot: 0, skippedRiskCap: 0,
-      expiredRetests: 0, invalidStop: 0, skippedMinStop: 0,
+      expiredRetests: 0, invalidStop: 0, skippedMinStop: 0, skippedRuin: 0,
+      maxTradesPerDayHit: 0,
       timeBlocks: { session: 0, hour: 0, day: 0, month: 0 },
       filterBlocks: {},
     };
@@ -1315,45 +1324,78 @@ class UnifiedTrendPullbackEA {
 
   onBar(ctx) {
     const { broker, now, entryBars, entryIdxMap } = ctx;
-    const e = entryIdxMap[ctx.m1Idx];       // last CLOSED entry-TF bar
+    const e = entryIdxMap[ctx.m1Idx];
     if (e < this.pullbackLookback + 1) return;
 
-    // ---- Time filter ----
-    const timeReject = this.timeFilter(now);
-    if (timeReject) { this.stats.timeBlocks[timeReject]++; return; }
-
-    // ---- Daily reset ----
+    // ---- Daily reset (runs before any gate so it always fires on a new day) ----
     const day = now.toISOString().slice(0, 10);
     if (this._day !== day) {
       this._day = day;
       this.dailyStartEquity = broker.equity;
       this.dailyLossTripped = false;
     }
-    if (this.dailyStartEquity != null) {
+    if (this.dailyStartEquity != null && this.dailyStartEquity > 0) {
       const dd = ((this.dailyStartEquity - broker.equity) / this.dailyStartEquity) * 100;
       if (dd >= this.maxDailyLossPct) this.dailyLossTripped = true;
     }
+
+    // ---- Daily trade counter reset + hard cap ----
+    if (this._dayForTrades !== day) {
+      this._dayForTrades = day;
+      this._tradesToday = 0;
+    }
+    if (this.maxTradesPerDay > 0 && this._tradesToday >= this.maxTradesPerDay) {
+      this.stats.maxTradesPerDayHit++;
+      return;
+    }
+
+    // ---- CRITICAL: advance the signal-bar gate BEFORE any early return.
+    // Previously the gate sat below the time/spread/positions/risk checks, so
+    // the first M1 bar of an entry-TF bar could be blocked and the *next* bar
+    // would re-run the whole signal evaluation. That made _detectBreakout
+    // fire up to ~15× per closed entry-TF bar, which is why skippedMinLot
+    // reached six figures. By advancing here, _detectBreakout and
+    // _processRetests run exactly once per e, regardless of what the gates do.
+    const newSignalBar = e !== this._lastSignalE;
+    if (newSignalBar) this._lastSignalE = e;
+    const newRetestBar = e !== this._lastRetestE;
+    if (newRetestBar) this._lastRetestE = e;
+
+    // Same-bar M1 ticks (no new entry-TF bar closed): nothing to evaluate.
+    if (!newSignalBar && !newRetestBar) return;
+
+    // ---- Time filter ----
+    const timeReject = this.timeFilter(now);
+    if (timeReject) { this.stats.timeBlocks[timeReject]++; return; }
+
     if (this.dailyLossTripped) return;
 
-    // ---- Spread gate: uses SESSION-ADJUSTED spread, not the base config value ----
+    // ---- Ruin / invalid equity guard ----
+    if (!(broker.equity > 0) || !isFinite(broker.equity) || broker.ruined) {
+      this.stats.skippedRuin++;
+      return;
+    }
+
+    // ---- Spread gate (session-adjusted, with epsilon) ----
     const curBar = ctx.m1Bars[ctx.m1Idx];
     const sessionSpread = curBar ? broker._spreadPrice(curBar) : broker.spreadPts * broker.point;
-    if (sessionSpread / broker.point > this.maxSpreadPts) return;
+    const EPS_PTS = 1e-6;
+    if (sessionSpread / broker.point > this.maxSpreadPts + EPS_PTS) return;
 
     if (broker.positions.length + this._pendingQueue.length >= this.maxPositions) return;
 
-    // ---- Aggregate risk gate (positions only; per-trade re-check in _flushPending) ----
-    let aggRisk = 0;
-    for (const p of broker.positions) if (p.initialRiskMoney) aggRisk += p.initialRiskMoney;
-    if (aggRisk / broker.equity * 100 >= this.maxAggregateRiskPct) { this.stats.skippedRiskCap++; return; }
+    // ---- Aggregate risk gate (only if enabled) ----
+    if (this.maxAggregateRiskPct > 0) {
+      let aggRisk = 0;
+      for (const p of broker.positions) if (p.initialRiskMoney) aggRisk += p.initialRiskMoney;
+      if (aggRisk / broker.equity * 100 >= this.maxAggregateRiskPct) { this.stats.skippedRiskCap++; return; }
+    }
 
-    // ---- Trend (HTF) ----
     const htf = ctx.trendAt(ctx.m1Idx);
     if (!htf) return;
     const upTrend = htf.trend === 'up' && htf.slope > 0;
     const downTrend = htf.trend === 'down' && htf.slope < 0;
 
-    // ---- Entry-TF indicators ----
     const f = ctx.entryFastAt(ctx.m1Idx), m = ctx.entryMidAt(ctx.m1Idx), s = ctx.entrySlowAt(ctx.m1Idx);
     if (f == null || m == null || s == null) return;
     const a = ctx.atrAt(ctx.m1Idx);
@@ -1368,21 +1410,13 @@ class UnifiedTrendPullbackEA {
       return true;
     };
 
-    // ---- Breakout detection: gated to run ONCE per closed entry-TF bar ----
-    // Without this gate, the same setup passes the same test on every M1 bar
-    // inside the entry-TF bar (~15x), and each pass schedules a market entry.
-    if (e !== this._lastSignalE) {
-      this._lastSignalE = e;
-      this._detectBreakout(ctx, e, upTrend, downTrend, f, a, tryEnter);
-    }
-
-    this._processRetests(ctx, tryEnter, a, upTrend, downTrend);
+    if (newSignalBar) this._detectBreakout(ctx, e, upTrend, downTrend, bullStack, bearStack, f, a, tryEnter);
+    if (newRetestBar)  this._processRetests(ctx, tryEnter, a, upTrend, downTrend);
   }
 
-  _detectBreakout(ctx, e, upTrend, downTrend, f, a, tryEnter) {
+  _detectBreakout(ctx, e, upTrend, downTrend, bullStack, bearStack, f, a, tryEnter) {
+    this._breakoutEvals++;   // diagnostic
     const { entryBars } = ctx;
-
-    // e is the LAST CLOSED entry-TF bar → signal bar is e, lookback is [e-lookback, e-1]
     const pb = entryBars[e];
     const win = entryBars.slice(e - this.pullbackLookback, e);
     if (!pb || win.length < this.pullbackLookback) return;
@@ -1390,8 +1424,6 @@ class UnifiedTrendPullbackEA {
     const prevHigh = Math.max(...win.map(b => b.high));
     const prevLow  = Math.min(...win.map(b => b.low));
 
-    // Pullback test: compare each historical bar's extreme to THAT BAR'S LWMA,
-    // not the current LWMA. This is what "price pulled back to the mid LWMA" means.
     const midArr = ctx.entryMidArr;
     let pulledBackBull = false, pulledBackBear = false;
     for (let j = e - this.pullbackLookback; j < e; j++) {
@@ -1400,45 +1432,35 @@ class UnifiedTrendPullbackEA {
       if (entryBars[j].low  <= midAtJ) pulledBackBull = true;
       if (entryBars[j].high >= midAtJ) pulledBackBear = true;
     }
-    const pulledBack = (upTrend && pulledBackBull) || (downTrend && pulledBackBear);
+    const pulledBack = (upTrend && bullStack && pulledBackBull)
+                    || (downTrend && bearStack && pulledBackBear);
 
     const bullBreakout = upTrend && pulledBack && pb.close > prevHigh && pb.close > f;
     const bearBreakout = downTrend && pulledBack && pb.close < prevLow  && pb.close < f;
 
-    // ---- Immediate: schedule for NEXT bar open ----
     if (this.entryMode === 'immediate' || this.entryMode === 'both') {
       if (bullBreakout) {
         this.stats.signals++;
-        if (tryEnter('buy')) this._scheduleEntry(ctx, 'buy', pb.close - a * this.atrStopMult, 'immediate');
+        if (tryEnter('buy')) { this._scheduleEntry(ctx, 'buy', pb.close - a * this.atrStopMult, 'immediate'); this._lastImmediateBuyE = e; }
       }
       if (bearBreakout) {
         this.stats.signals++;
-        if (tryEnter('sell')) this._scheduleEntry(ctx, 'sell', pb.close + a * this.atrStopMult, 'immediate');
+        if (tryEnter('sell')) { this._scheduleEntry(ctx, 'sell', pb.close + a * this.atrStopMult, 'immediate'); this._lastImmediateSellE = e; }
       }
     }
 
-    // ---- Retest: register pending with expiry in ENTRY-TF bars ----
     if (this.entryMode === 'retest' || this.entryMode === 'both') {
       if (bullBreakout && this.pendingBuyBar == null) {
-        this.pendingBuyBar = pb.date;
-        this.pendingBuyLevel = prevHigh;
-        this.pendingBuyBarIdx = e;
+        this.pendingBuyBar = pb.date; this.pendingBuyLevel = prevHigh; this.pendingBuyBarIdx = e;
       }
       if (bearBreakout && this.pendingSellBar == null) {
-        this.pendingSellBar = pb.date;
-        this.pendingSellLevel = prevLow;
-        this.pendingSellBarIdx = e;
+        this.pendingSellBar = pb.date; this.pendingSellLevel = prevLow; this.pendingSellBarIdx = e;
       }
     }
   }
 
   _scheduleEntry(ctx, side, stop, source) {
-    this._pendingQueue.push({
-      side, stop,
-      triggerBar: ctx.m1Idx,
-      source,
-      placedEquity: ctx.broker.equity,
-    });
+    this._pendingQueue.push({ side, stop, triggerBar: ctx.m1Idx, source, placedEquity: ctx.broker.equity });
   }
 
   _flushPending(ctx) {
@@ -1446,85 +1468,84 @@ class UnifiedTrendPullbackEA {
     const { m1Bars, m1Idx, broker } = ctx;
     const bar = m1Bars[m1Idx];
     if (!bar) return;
-    for (const pending of this._pendingQueue.slice()) {
+
+    // ---- Enforce next-bar execution: drop any pending triggered on this bar ----
+    const ready = [];
+    for (const pending of this._pendingQueue) {
+      if (pending.triggerBar >= m1Idx) continue;
+      ready.push(pending);
+    }
+    this._pendingQueue = this._pendingQueue.filter(p => p.triggerBar >= m1Idx);
+    if (!ready.length) return;
+
+    // ---- Precompute total pending risk so aggregate check sees the whole batch ----
+    let totalPendingRisk = 0;
+    const pendingRisk = new Map();
+    for (const pending of ready) {
+      const fill = broker.fillEntry(pending.side, bar);
+      const dist = Math.abs(fill - pending.stop);
+      if (dist > 0 && isFinite(dist)) {
+        const lotsEst = broker.calculateLots(dist, this.riskPercent);
+        if (lotsEst != null) {
+          const rEst = dist / broker.point * broker.tickValue * lotsEst;
+          pendingRisk.set(pending, rEst);
+          totalPendingRisk += rEst;
+        }
+      }
+    }
+
+    for (const pending of ready) {
+      // Daily cap at fill time
+      if (this.maxTradesPerDay > 0 && this._tradesToday >= this.maxTradesPerDay) {
+        this.stats.maxTradesPerDayHit++;
+        continue;
+      }
+
       const fill = broker.fillEntry(pending.side, bar);
 
-      // P1-3: reject stops on the wrong side after a gap
-      if (pending.side === 'buy'  && pending.stop >= fill) {
-        this.stats.invalidStop++;
-        this._pendingQueue = this._pendingQueue.filter(p => p !== pending);
-        continue;
-      }
-      if (pending.side === 'sell' && pending.stop <= fill) {
-        this.stats.invalidStop++;
-        this._pendingQueue = this._pendingQueue.filter(p => p !== pending);
-        continue;
-      }
+      if (pending.side === 'buy'  && pending.stop >= fill) { this.stats.invalidStop++; continue; }
+      if (pending.side === 'sell' && pending.stop <= fill) { this.stats.invalidStop++; continue; }
 
       const dist = Math.abs(fill - pending.stop);
-      if (dist <= 0) { this._pendingQueue = this._pendingQueue.filter(p => p !== pending); continue; }
+      if (dist <= 0) continue;
 
-      // Reject trades whose stop is too tight (noise ATR bars)
-      const minStopPts = broker.minStopPts || 30;
-      if (dist / broker.point < minStopPts) {
-        this.stats.skippedMinStop++;
-        this._pendingQueue = this._pendingQueue.filter(p => p !== pending);
-        continue;
-      }
+      const minStopPts = broker.minStopPts != null ? broker.minStopPts : 30;
+      if (minStopPts > 0 && dist / broker.point < minStopPts) { this.stats.skippedMinStop++; continue; }
 
       const lots = broker.calculateLots(dist, this.riskPercent);
-      if (lots == null) {
-        this.stats.skippedMinLot++;
-        this._pendingQueue = this._pendingQueue.filter(p => p !== pending);
-        continue;
-      }
+      if (lots == null) { this.stats.skippedMinLot++; continue; }
 
       const riskMoney = dist / broker.point * broker.tickValue * lots;
 
-      // Per-trade cap
-      if (riskMoney / broker.equity * 100 > this.maxRiskPerTradePct) {
-        this.stats.skippedRiskCap++;
-        this._pendingQueue = this._pendingQueue.filter(p => p !== pending);
-        continue;
+      const maxRiskPct = this.maxRiskPerTradePct;
+      if (maxRiskPct > 0 && riskMoney / broker.equity * 100 > maxRiskPct) { this.stats.skippedRiskCap++; continue; }
+
+      if (this.maxAggregateRiskPct > 0) {
+        let aggRisk = riskMoney;
+        for (const p of broker.positions) if (p.initialRiskMoney) aggRisk += p.initialRiskMoney;
+        for (const [other, rEst] of pendingRisk) if (other !== pending) aggRisk += rEst;
+        if (aggRisk / broker.equity * 100 > this.maxAggregateRiskPct) { this.stats.skippedRiskCap++; continue; }
       }
 
-      // P1-2: re-check aggregate risk INCLUDING this proposed trade
-      let aggRisk = riskMoney;
-      for (const p of broker.positions) if (p.initialRiskMoney) aggRisk += p.initialRiskMoney;
-      if (aggRisk / broker.equity * 100 > this.maxAggregateRiskPct) {
-        this.stats.skippedRiskCap++;
-        this._pendingQueue = this._pendingQueue.filter(p => p !== pending);
-        continue;
-      }
-
-      const tp = pending.side === 'buy'
-        ? fill + dist * this.rewardRisk
-        : fill - dist * this.rewardRisk;
+      const tp = pending.side === 'buy' ? fill + dist * this.rewardRisk : fill - dist * this.rewardRisk;
       broker.openPosition({
-        side: pending.side,
-        fillPrice: fill,
-        lots,
-        sl: pending.stop,
-        tp,
-        openTime: bar.date,
-        openBar: m1Idx,
-        requestedEntry: bar.open,
+        side: pending.side, fillPrice: fill, lots, sl: pending.stop, tp,
+        openTime: bar.date, openBar: m1Idx, requestedEntry: bar.open,
         comment: 'UTP-' + pending.source,
       });
       this.stats.entries++;
-      this._pendingQueue = this._pendingQueue.filter(p => p !== pending);
+      this._tradesToday++;
     }
   }
 
   _processRetests(ctx, tryEnter, atrNow, upTrend, downTrend) {
     if (this.entryMode === 'immediate') return;
-    const { m1Bars, m1Idx, entryBars, entryIdxMap } = ctx;
+    const { entryBars, entryIdxMap, m1Idx } = ctx;
     const e = entryIdxMap[m1Idx];
     if (e < 1) return;
-    const cur = entryBars[e - 1];   // last CLOSED entry-TF bar (the bar BEFORE the forming one)
+    const cur = entryBars[e];
     if (!cur) return;
 
-    // Cancel pending retests when the trend flips against them
     if (this.pendingBuyBar && !upTrend) {
       this.pendingBuyBar = null; this.pendingBuyLevel = null; this.pendingBuyBarIdx = null;
       this.stats.expiredRetests++;
@@ -1534,7 +1555,6 @@ class UnifiedTrendPullbackEA {
       this.stats.expiredRetests++;
     }
 
-    // Expiry counted in ENTRY-TF bars
     if (this.pendingBuyBar && (e - this.pendingBuyBarIdx) > this.retestExpiryBars) {
       this.pendingBuyBar = null; this.pendingBuyLevel = null; this.pendingBuyBarIdx = null;
       this.stats.expiredRetests++;
@@ -1544,7 +1564,10 @@ class UnifiedTrendPullbackEA {
       this.stats.expiredRetests++;
     }
 
-    if (this.pendingBuyBar && cur.date.getTime() > this.pendingBuyBar.getTime()) {
+    const suppressBuyRetest  = this.oneEntryPerSetup && this._lastImmediateBuyE  === this.pendingBuyBarIdx;
+    const suppressSellRetest = this.oneEntryPerSetup && this._lastImmediateSellE === this.pendingSellBarIdx;
+
+    if (this.pendingBuyBar && !suppressBuyRetest && cur.date.getTime() > this.pendingBuyBar.getTime()) {
       if (cur.low <= this.pendingBuyLevel && cur.close > this.pendingBuyLevel && tryEnter('buy')) {
         const stop = cur.close - atrNow * this.atrStopMult;
         this._scheduleEntry(ctx, 'buy', stop, 'retest');
@@ -1552,7 +1575,7 @@ class UnifiedTrendPullbackEA {
         this.pendingBuyBar = null; this.pendingBuyLevel = null; this.pendingBuyBarIdx = null;
       }
     }
-    if (this.pendingSellBar && cur.date.getTime() > this.pendingSellBar.getTime()) {
+    if (this.pendingSellBar && !suppressSellRetest && cur.date.getTime() > this.pendingSellBar.getTime()) {
       if (cur.high >= this.pendingSellLevel && cur.close < this.pendingSellLevel && tryEnter('sell')) {
         const stop = cur.close + atrNow * this.atrStopMult;
         this._scheduleEntry(ctx, 'sell', stop, 'retest');
@@ -1562,7 +1585,6 @@ class UnifiedTrendPullbackEA {
     }
   }
 
-  // BE + trailing only. Excursion tracking is done in runEngine BEFORE exits (P0-3).
   managePosition(pos, bar, ctx) {
     const a = ctx.atrAt(ctx.m1Idx);
     if (!a || !pos.stopDistance) return;
@@ -1588,9 +1610,8 @@ class UnifiedTrendPullbackEA {
     }
   }
 }
-
 // ============================================================
-// 7 · CSV PARSER (P1-7: returns raw + clean + removal counts)
+// 7 · CSV PARSER
 // ============================================================
 function parseCSV(text) {
   const lines = text.split(/\r?\n/);
@@ -1608,7 +1629,6 @@ function parseCSV(text) {
       ds = d; ts = t;
       [o, h, l, c, v] = rest.concat(parts.slice(1));
     } else { ds = parts[0]; ts = '00:00'; [o, h, l, c, v] = parts.slice(1); }
-    // NEW: strip seconds if present. HH:MM:SS → HH:MM, so the date parse doesn't silently fail.
     ts = ts.replace(/^(\d{2}:\d{2}):\d{2}$/, '$1');
     const date = new Date(ds.replace(/\./g, '-') + 'T' + ts + ':00Z');
     if (isNaN(date.getTime())) continue;
@@ -1617,10 +1637,7 @@ function parseCSV(text) {
     raw.push(bar);
   }
 
-  // Validate the RAW ordering BEFORE cleaning
   const rawQuality = validateBars(raw, 1);
-
-  // Clean: sort + de-dupe
   const sorted = raw.slice().sort((a, b) => a.date - b.date);
   const unique = [];
   let removedDuplicates = 0;
@@ -1664,7 +1681,7 @@ async function runEngine(m1Bars, cfg, onProgress) {
   const ctx = {
     m1Bars, m1Idx: 0, broker, now: null,
     entryBars, entryIdxMap,
-    entryMidArr: entryMid,             // NEW: raw LWMA-mid array, needed for per-bar pullback test
+    entryMidArr: entryMid,
     entryFastAt: (i) => getVal(entryFast, entryIdxMap[i]),
     entryMidAt:  (i) => getVal(entryMid,  entryIdxMap[i]),
     entrySlowAt: (i) => getVal(entrySlow, entryIdxMap[i]),
@@ -1694,23 +1711,20 @@ async function runEngine(m1Bars, cfg, onProgress) {
     ctx.m1Idx = i;
     ctx.now = bar.date;
 
-    // 1. Fill pending entries scheduled for this bar's OPEN
     ea._flushPending(ctx);
 
-    // 2. P0-3: update excursions BEFORE exit checks so the closing bar counts
     for (const pos of broker.positions) {
       if (bar.high > pos.highestSinceOpen) pos.highestSinceOpen = bar.high;
       if (bar.low  < pos.lowestSinceOpen)  pos.lowestSinceOpen  = bar.low;
       if (pos.side === 'buy') {
-        pos.mfePips = Math.max(pos.mfePips, (pos.highestSinceOpen - pos.entry) / broker.point);
-        pos.maePips = Math.max(pos.maePips, (pos.entry - pos.lowestSinceOpen) / broker.point);
+        pos.mfePoints = Math.max(pos.mfePoints, (pos.highestSinceOpen - pos.entry) / broker.point);
+        pos.maePoints = Math.max(pos.maePoints, (pos.entry - pos.lowestSinceOpen) / broker.point);
       } else {
-        pos.mfePips = Math.max(pos.mfePips, (pos.entry - pos.lowestSinceOpen) / broker.point);
-        pos.maePips = Math.max(pos.maePips, (pos.highestSinceOpen - pos.entry) / broker.point);
+        pos.mfePoints = Math.max(pos.mfePoints, (pos.entry - pos.lowestSinceOpen) / broker.point);
+        pos.maePoints = Math.max(pos.maePoints, (pos.highestSinceOpen - pos.entry) / broker.point);
       }
     }
 
-    // 3. Exits — P0-2: bid/ask model (shorts trigger on ask)
     const S = broker._spreadPrice(bar);
     for (const pos of [...broker.positions]) {
       let hitSL, hitTP;
@@ -1746,13 +1760,10 @@ async function runEngine(m1Bars, cfg, onProgress) {
       ea.managePosition(pos, bar, ctx);
     }
 
-    // 4. MTM equity
     const eq = broker.markToMarket(bar.close, bar);
     equityCurve.push({ date: bar.date, equity: eq, balance: broker.balance });
     balanceCurve.push({ date: bar.date, balance: broker.balance });
 
-    // Track max $ AND max % drawdowns independently (the max-% DD can occur at a
-    // smaller $ peak under compounding).
     if (eq > peakMTM) peakMTM = eq;
     const ddMTM = peakMTM - eq;
     if (ddMTM > maxMTMDD) maxMTMDD = ddMTM;
@@ -1765,7 +1776,6 @@ async function runEngine(m1Bars, cfg, onProgress) {
     const ddBalPct = peakBal > 0 ? (ddBal / peakBal) * 100 : 0;
     if (ddBalPct > maxBalDDPct) maxBalDDPct = ddBalPct;
 
-    // 5. Strategy (breakout detected on CLOSED bar, entry scheduled for NEXT bar open)
     ea.onBar(ctx);
 
     if (i - last > 5000) {
@@ -1775,7 +1785,6 @@ async function runEngine(m1Bars, cfg, onProgress) {
     }
   }
 
-  // Force close at EOD
   if (broker.positions.length) {
     const lb = m1Bars[m1Bars.length - 1];
     for (const p of [...broker.positions]) {
@@ -1815,7 +1824,6 @@ function buildReport(broker, m1Bars, cfg, ea, entryBars, startM1, filterEngine, 
   const gl = Math.abs(losses.reduce((s, t) => s + t.pnl, 0));
   const pf = gl > 0 ? gw / gl : (gw > 0 ? Infinity : 0);
 
-  // Performance ratios from DAILY equity returns
   const dailyRets = dailyReturnsFromEquity(mtm.equityCurve);
   const meanD = dailyRets.length ? dailyRets.reduce((a, b) => a + b, 0) / dailyRets.length : 0;
   const stdD = dailyRets.length > 1
@@ -1827,7 +1835,6 @@ function buildReport(broker, m1Bars, cfg, ea, entryBars, startM1, filterEngine, 
   const sharpe = stdD > 0 ? (meanD / stdD) * Math.sqrt(252) : 0;
   const sortino = downsideD > 0 ? (meanD / downsideD) * Math.sqrt(252) : 0;
 
-  // Ulcer index & time under water
   let peak = -Infinity, sumSqDD = 0, maxDD = 0, uwStart = null, maxUW = 0;
   for (const p of mtm.equityCurve) {
     if (p.equity > peak) peak = p.equity;
@@ -1843,8 +1850,6 @@ function buildReport(broker, m1Bars, cfg, ea, entryBars, startM1, filterEngine, 
   }
   const ulcer = mtm.equityCurve.length ? Math.sqrt(sumSqDD / mtm.equityCurve.length) : 0;
 
-  // Calmar is only meaningful on spans >= ~1 year. Below that, CAGR extrapolates
-  // absurdly (a 5% return over 2 weeks becomes ~240% "CAGR"). Report null instead.
   const spanMs = mtm.equityCurve.length > 1
     ? mtm.equityCurve[mtm.equityCurve.length - 1].date - mtm.equityCurve[0].date
     : 0;
@@ -1857,17 +1862,15 @@ function buildReport(broker, m1Bars, cfg, ea, entryBars, startM1, filterEngine, 
     calmar = mtm.maxMTMDDPct > 0 ? (cagr * 100) / mtm.maxMTMDDPct : null;
   }
 
-  // Streaks (zero-PnL counts as a win for streak continuity)
   let cw = 0, cl = 0, maxCW = 0, maxCL = 0;
   for (const t of trades) {
     if (t.pnl >= 0) { cw++; cl = 0; } else { cl++; cw = 0; }
     maxCW = Math.max(maxCW, cw); maxCL = Math.max(maxCL, cl);
   }
 
-  const avgMAE = trades.length ? trades.reduce((s, t) => s + (t.maePips || 0), 0) / trades.length : 0;
-  const avgMFE = trades.length ? trades.reduce((s, t) => s + (t.mfePips || 0), 0) / trades.length : 0;
+  const avgMAE = trades.length ? trades.reduce((s, t) => s + (t.maePoints || 0), 0) / trades.length : 0;
+  const avgMFE = trades.length ? trades.reduce((s, t) => s + (t.mfePoints || 0), 0) / trades.length : 0;
 
-  // Breakdowns
   const byMonth = {}, byDow = {}, byHour = {}, bySession = {};
   const getSession = (h) => {
     if (h >= 0 && h < 8) return 'Asia';
@@ -1930,6 +1933,8 @@ function buildReport(broker, m1Bars, cfg, ea, entryBars, startM1, filterEngine, 
       skippedRiskCap: ea.stats.skippedRiskCap,
       invalidStop: ea.stats.invalidStop,
       skippedMinStop: ea.stats.skippedMinStop,
+      maxTradesPerDayHit: ea.stats.maxTradesPerDayHit,
+      breakoutEvals: ea._breakoutEvals,       // NEW diagnostic
       expiredRetests: ea.stats.expiredRetests,
       timeBlocks: ea.stats.timeBlocks,
       filterBlocks: filterEngine.rej,
@@ -1944,7 +1949,7 @@ function buildReport(broker, m1Bars, cfg, ea, entryBars, startM1, filterEngine, 
 }
 
 // ============================================================
-// 10 · ROBUSTNESS TOOLS (unchanged; not wired to UI)
+// 10 · ROBUSTNESS TOOLS
 // ============================================================
 function splitBars(m1Bars, fractions) {
   const n = m1Bars.length;
@@ -1992,7 +1997,7 @@ function monteCarlo(trades, startingBalance, iterations = 1000) {
 }
 
 // ============================================================
-// 11 · CHART RENDERING (unchanged)
+// 11 · CHART RENDERING
 // ============================================================
 const charts = [];
 function clearCharts() { document.getElementById('chartsContainer').innerHTML = ''; charts.length = 0; }
@@ -2245,13 +2250,18 @@ function handleFile(evt) {
 function readConfig() {
   const g = id => { const el = document.getElementById(id); return el ? el.value : undefined; };
   const gc = id => { const el = document.getElementById(id); return el ? el.checked : false; };
-  const gn = id => { const v = g(id); return v === undefined ? 0 : +v; };
   const ge = id => g(id);
+  const num = (id, def) => {
+    const raw = ge(id);
+    if (raw === undefined || raw === null || raw === '') return def;
+    const v = +raw;
+    return isFinite(v) ? v : def;
+  };
 
-  const clampH = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(+v || 0)));
+  const clampH = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(v || 0)));
   const mkSess = (startId, endId, enId, defStart, defEnd) => {
-    let st = clampH(gn(startId), 0, 23);
-    let en = clampH(gn(endId), 0, 24);
+    let st = clampH(num(startId, defStart), 0, 23);
+    let en = clampH(num(endId, defEnd), 0, 24);
     if (en <= st) { st = defStart; en = defEnd; }
     return { enabled: g(enId) === '1', start: st, end: en };
   };
@@ -2261,36 +2271,42 @@ function readConfig() {
   const months= gc('enableMonths')? (monthsSet.size? new Set(monthsSet): BLOCK_ALL) : null;
 
   return {
-    startingBalance: gn('startingBalance'), point: gn('point'), tickValue: gn('tickValue'),
-    minLot: gn('minLot'), spreadPts: gn('spreadPts'), commissionPerLot: gn('commissionPerLot'),
-    trendTFMin: gn('trendTFMin'), entryTFMin: gn('entryTFMin'),
-    trendFastPeriod: gn('trendFastPeriod'), trendSlowPeriod: gn('trendSlowPeriod'), trendSlopeBars: 5,
-    lwmaFast: gn('lwmaFast'), lwmaMid: gn('lwmaMid'), lwmaSlow: gn('lwmaSlow'),
-    pullbackLookback: gn('pullbackLookback'), entryMode: g('entryMode'),
-    riskPercent: gn('riskPercent'), atrPeriod: gn('atrPeriod'), atrStopMult: gn('atrStopMult'),
-    rewardRisk: gn('rewardRisk'), maxPositions: gn('maxPositions'),
-    breakEvenR: gn('breakEvenR'), trailStartR: gn('trailStartR'), trailAtrMult: gn('trailAtrMult'),
-    maxDailyLossPct: gn('maxDailyLossPct'), maxSpreadPts: gn('maxSpreadPts'),
+    startingBalance: num('startingBalance', 10000),
+    point: num('point', 0.01),
+    tickValue: num('tickValue', 1),
+    minLot: num('minLot', 0.01),
+    spreadPts: num('spreadPts', 30),
+    commissionPerLot: num('commissionPerLot', 7),
+    trendTFMin: num('trendTFMin', 60), entryTFMin: num('entryTFMin', 15),
+    trendFastPeriod: num('trendFastPeriod', 50), trendSlowPeriod: num('trendSlowPeriod', 200), trendSlopeBars: 5,
+    lwmaFast: num('lwmaFast', 8), lwmaMid: num('lwmaMid', 13), lwmaSlow: num('lwmaSlow', 21),
+    pullbackLookback: num('pullbackLookback', 5), entryMode: g('entryMode') || 'both',
+    riskPercent: num('riskPercent', 0.5), atrPeriod: num('atrPeriod', 14), atrStopMult: num('atrStopMult', 1.5),
+    rewardRisk: num('rewardRisk', 2), maxPositions: num('maxPositions', 3),
+    breakEvenR: num('breakEvenR', 1), trailStartR: num('trailStartR', 1.5), trailAtrMult: num('trailAtrMult', 1.5),
+    maxDailyLossPct: num('maxDailyLossPct', 3), maxSpreadPts: num('maxSpreadPts', 30),
 
     spreadMode: ge('spreadMode') || 'fixed',
-    slippagePts: +(ge('slippagePts') || 0),
+    slippagePts: num('slippagePts', 0),
     intrabarOrder: ge('intrabarOrder') || 'sl_first',
-    retestExpiryBars: +(ge('retestExpiryBars') || 10),
-    maxRiskPerTradePct: +(ge('maxRiskPerTradePct') || 2),
-    maxAggregateRiskPct: +(ge('maxAggregateRiskPct') || 6),
-    minStopPts: +(ge('minStopPts') || 30),
+    retestExpiryBars: num('retestExpiryBars', 10),
+    maxRiskPerTradePct: num('maxRiskPerTradePct', 2),
+    maxAggregateRiskPct: num('maxAggregateRiskPct', 6),
+    minStopPts: num('minStopPts', 30),
+    maxTradesPerDay: num('maxTradesPerDay', 0),
     compound: gc('compound'),
-    maxLot: +(ge('maxLot') || 100),
+    maxLot: num('maxLot', 100),
+    oneEntryPerSetup: g('oneEntryPerSetup') === '1',
 
     filters: {
-      macd: { enabled: gc('enableMACD'), fast: gn('macdFast'), slow: gn('macdSlow'), signal: gn('macdSignal'), mode: g('macdMode') },
-      bb: { enabled: gc('enableBB'), period: gn('bbPeriod'), stdDev: gn('bbStdDev'), mode: g('bbMode') },
-      mom: { enabled: gc('enableMom'), period: gn('momPeriod'), threshold: gn('momThreshold'), mode: g('momMode') },
-      atr: { enabled: gc('enableATRFilter'), period: gn('atrFilterPeriod'), smaPeriod: gn('atrFilterSma'), mode: g('atrFilterMode'), minMul: gn('atrFilterMin'), maxMul: gn('atrFilterMax') },
-      ao: { enabled: gc('enableAO'), fast: gn('aoFast'), slow: gn('aoSlow'), mode: g('aoMode') },
-      rsi: { enabled: gc('enableRSI'), period: gn('rsiPeriod'), overbought: gn('rsiOverbought'), oversold: gn('rsiOversold'), mode: g('rsiMode') },
-      stoch: { enabled: gc('enableStoch'), kPeriod: gn('stochK'), dPeriod: gn('stochD'), mode: g('stochMode') },
-      adx: { enabled: gc('enableADX'), period: gn('adxPeriod'), min: gn('adxMin'), mode: g('adxMode') },
+      macd: { enabled: gc('enableMACD'), fast: num('macdFast', 12), slow: num('macdSlow', 26), signal: num('macdSignal', 9), mode: g('macdMode') || 'aligned' },
+      bb: { enabled: gc('enableBB'), period: num('bbPeriod', 20), stdDev: num('bbStdDev', 2), mode: g('bbMode') || 'inside' },
+      mom: { enabled: gc('enableMom'), period: num('momPeriod', 10), threshold: num('momThreshold', 0), mode: g('momMode') || 'sign' },
+      atr: { enabled: gc('enableATRFilter'), period: num('atrFilterPeriod', 14), smaPeriod: num('atrFilterSma', 20), mode: g('atrFilterMode') || 'aboveAvg', minMul: num('atrFilterMin', 0.8), maxMul: num('atrFilterMax', 2.0) },
+      ao: { enabled: gc('enableAO'), fast: num('aoFast', 5), slow: num('aoSlow', 34), mode: g('aoMode') || 'sign' },
+      rsi: { enabled: gc('enableRSI'), period: num('rsiPeriod', 14), overbought: num('rsiOverbought', 70), oversold: num('rsiOversold', 30), mode: g('rsiMode') || 'notExtreme' },
+      stoch: { enabled: gc('enableStoch'), kPeriod: num('stochK', 14), dPeriod: num('stochD', 3), mode: g('stochMode') || 'cross' },
+      adx: { enabled: gc('enableADX'), period: num('adxPeriod', 14), min: num('adxMin', 25), mode: g('adxMode') || 'strength' },
     },
     timeFilter: {
       sessions: gc('enableSessions') ? {
@@ -2390,6 +2406,8 @@ function displayReport(r, elapsed) {
       <tr><td>Skipped (risk cap)</td><td class="num">${d.skippedRiskCap}</td></tr>
       <tr><td>Rejected (invalid stop)</td><td class="num">${d.invalidStop}</td></tr>
       <tr><td>Rejected (stop &lt; min)</td><td class="num">${d.skippedMinStop || 0}</td></tr>
+      <tr><td>Blocked (daily cap)</td><td class="num">${d.maxTradesPerDayHit || 0}</td></tr>
+      <tr><td>Breakout evals (≈ bars/TF)</td><td class="num">${d.breakoutEvals || 0}</td></tr>
       <tr><td>Expired retests</td><td class="num">${d.expiredRetests}</td></tr>
       <tr><td colspan="2" style="color:var(--text-dim);padding-top:8px;font-size:10px;">TIME FILTER BLOCKS</td></tr>
       <tr><td>Blocked by session</td><td class="num">${d.timeBlocks.session || 0}</td></tr>
@@ -2446,11 +2464,11 @@ function downloadReport() {
 
 function downloadTradesCSV() {
   if (!lastReport || !lastReport.trades.length) return;
-  const headers = ['id','side','entry','exit','sl','tp','lots','openTime','closeTime','pnl','rMultiple','maePips','mfePips','maeR','mfeR','reason','comment','durationMin'];
+  const headers = ['id','side','entry','exit','sl','tp','lots','openTime','closeTime','pnl','rMultiple','maePoints','mfePoints','maeR','mfeR','reason','comment','durationMin'];
   const rows = lastReport.trades.map(t => [
     t.id, t.side, t.entry, t.exit, t.sl, t.tp, t.lots,
     t.openTime.toISOString(), t.closeTime.toISOString(),
-    t.pnl, t.rMultiple, t.maePips, t.mfePips, t.maeR, t.mfeR, t.reason, t.comment, t.durationMin,
+    t.pnl, t.rMultiple, t.maePoints, t.mfePoints, t.maeR, t.mfeR, t.reason, t.comment, t.durationMin,
   ]);
   const csv = [headers, ...rows].map(r => r.map(v => {
     const s = v == null ? '' : String(v);
@@ -2463,7 +2481,6 @@ function downloadTradesCSV() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-// Optional (not wired): kept for later research use.
 async function runSubPeriodStability() {
   if (!loadedBars || !lastReport) { alert('Run a backtest first'); return; }
   const splits = splitBars(loadedBars, [0.6, 0.2, 0.2]);
@@ -2496,7 +2513,6 @@ async function runMonteCarlo() {
   alert('Monte Carlo (i.i.d. bootstrap) results printed to console.');
 }
 
-// Init
 document.addEventListener('DOMContentLoaded', () => {
   buildPills();
   updateHoursBadge(); updateDaysBadge(); updateMonthsBadge();
