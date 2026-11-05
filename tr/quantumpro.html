@@ -937,8 +937,8 @@ class Broker {
     this.slippagePts = cfg.slippagePts || 0;
     this.commissionPerLot = cfg.commissionPerLot;
     this.intrabarOrder = cfg.intrabarOrder || 'sl_first';
-	this.minStopPts = cfg.minStopPts != null ? cfg.minStopPts : 30;
-	this.compound = cfg.compound !== false;
+    this.minStopPts = cfg.minStopPts != null ? cfg.minStopPts : 30;
+    this.compound = cfg.compound !== false;
     this.positions = [];
     this.closedTrades = [];
     this.tradeId = 1;
@@ -960,14 +960,15 @@ class Broker {
     return this.spreadPts * this.point * mult;
   }
 
+  // Slippage is always against the trader. Returns a positive price delta
+  // magnitude that the caller adds (buy) or subtracts (sell).
   _slippage(side, bar) {
     if (this.slippagePts <= 0) return 0;
     const range = bar ? Math.abs(bar.high - bar.low) : 0;
-    const maxSlip = Math.min(this.slippagePts * this.point, range * 0.5 || Infinity);
-    return side === 'buy' ? maxSlip : -maxSlip;
+    return Math.min(this.slippagePts * this.point, range * 0.5 || Infinity);
   }
 
-  // OHLC is bid. Buy entry → ask (bid + spread). Sell entry → bid.
+  // OHLC is bid. Buy entry → ask (bid + spread + slip). Sell entry → bid - slip.
   fillEntry(side, bar) {
     const base = bar.open;
     const spread = this._spreadPrice(bar);
@@ -999,7 +1000,7 @@ class Broker {
   }
 
   calculateLots(stopDistPrice, riskPct, equity) {
-    const compound = this.compound !== false;          // default true
+    const compound = this.compound !== false;
     const base = compound
       ? (equity == null ? this.equity : equity)
       : this.cfg.startingBalance;
@@ -1301,6 +1302,7 @@ class UnifiedTrendPullbackEA {
     this._day = null;
     this.dailyStartEquity = null;
     this.dailyLossTripped = false;
+    this._lastSignalE = -1;   // gate: only evaluate breakout once per closed entry-TF bar
     this.stats = {
       signals: 0, entries: 0, retests: 0, skippedMinLot: 0, skippedRiskCap: 0,
       expiredRetests: 0, invalidStop: 0, skippedMinStop: 0,
@@ -1313,7 +1315,7 @@ class UnifiedTrendPullbackEA {
 
   onBar(ctx) {
     const { broker, now, entryBars, entryIdxMap } = ctx;
-    const e = entryIdxMap[ctx.m1Idx];       // current closed ENTRY-TF bar index
+    const e = entryIdxMap[ctx.m1Idx];       // last CLOSED entry-TF bar
     if (e < this.pullbackLookback + 1) return;
 
     // ---- Time filter ----
@@ -1332,7 +1334,12 @@ class UnifiedTrendPullbackEA {
       if (dd >= this.maxDailyLossPct) this.dailyLossTripped = true;
     }
     if (this.dailyLossTripped) return;
-    if (broker.spreadPts > this.maxSpreadPts) return;
+
+    // ---- Spread gate: uses SESSION-ADJUSTED spread, not the base config value ----
+    const curBar = ctx.m1Bars[ctx.m1Idx];
+    const sessionSpread = curBar ? broker._spreadPrice(curBar) : broker.spreadPts * broker.point;
+    if (sessionSpread / broker.point > this.maxSpreadPts) return;
+
     if (broker.positions.length + this._pendingQueue.length >= this.maxPositions) return;
 
     // ---- Aggregate risk gate (positions only; per-trade re-check in _flushPending) ----
@@ -1355,26 +1362,48 @@ class UnifiedTrendPullbackEA {
     const bullStack = f > m && m > s;
     const bearStack = f < m && m < s;
 
-    // ---- P0-1: pullback / breakout scan on ENTRY-TF bars ----
-    const recent = entryBars.slice(e - this.pullbackLookback, e);
-    const pb = entryBars[e - 1];                              // last CLOSED entry-TF bar
-    const win = entryBars.slice(e - this.pullbackLookback - 1, e - 1);
-    if (!pb || win.length < 2) return;
-
-    const prevHigh = Math.max(...win.map(b => b.high));
-    const prevLow  = Math.min(...win.map(b => b.low));
-
-    const pulledBack = (bullStack && recent.some(b => b.low  <= m))
-                    || (bearStack && recent.some(b => b.high >= m));
-
-    const bullBreakout = upTrend && pulledBack && pb.close > prevHigh && pb.close > f;
-    const bearBreakout = downTrend && pulledBack && pb.close < prevLow  && pb.close < f;
-
     const tryEnter = (side) => {
       if (this.filters.filters.length === 0) return true;
       for (const fn of this.filters.filters) if (!fn(ctx.m1Idx, side)) return false;
       return true;
     };
+
+    // ---- Breakout detection: gated to run ONCE per closed entry-TF bar ----
+    // Without this gate, the same setup passes the same test on every M1 bar
+    // inside the entry-TF bar (~15x), and each pass schedules a market entry.
+    if (e !== this._lastSignalE) {
+      this._lastSignalE = e;
+      this._detectBreakout(ctx, e, upTrend, downTrend, f, a, tryEnter);
+    }
+
+    this._processRetests(ctx, tryEnter, a, upTrend, downTrend);
+  }
+
+  _detectBreakout(ctx, e, upTrend, downTrend, f, a, tryEnter) {
+    const { entryBars } = ctx;
+
+    // e is the LAST CLOSED entry-TF bar → signal bar is e, lookback is [e-lookback, e-1]
+    const pb = entryBars[e];
+    const win = entryBars.slice(e - this.pullbackLookback, e);
+    if (!pb || win.length < this.pullbackLookback) return;
+
+    const prevHigh = Math.max(...win.map(b => b.high));
+    const prevLow  = Math.min(...win.map(b => b.low));
+
+    // Pullback test: compare each historical bar's extreme to THAT BAR'S LWMA,
+    // not the current LWMA. This is what "price pulled back to the mid LWMA" means.
+    const midArr = ctx.entryMidArr;
+    let pulledBackBull = false, pulledBackBear = false;
+    for (let j = e - this.pullbackLookback; j < e; j++) {
+      const midAtJ = getVal(midArr, j);
+      if (midAtJ == null) continue;
+      if (entryBars[j].low  <= midAtJ) pulledBackBull = true;
+      if (entryBars[j].high >= midAtJ) pulledBackBear = true;
+    }
+    const pulledBack = (upTrend && pulledBackBull) || (downTrend && pulledBackBear);
+
+    const bullBreakout = upTrend && pulledBack && pb.close > prevHigh && pb.close > f;
+    const bearBreakout = downTrend && pulledBack && pb.close < prevLow  && pb.close < f;
 
     // ---- Immediate: schedule for NEXT bar open ----
     if (this.entryMode === 'immediate' || this.entryMode === 'both') {
@@ -1401,8 +1430,6 @@ class UnifiedTrendPullbackEA {
         this.pendingSellBarIdx = e;
       }
     }
-
-    this._processRetests(ctx, tryEnter, a);
   }
 
   _scheduleEntry(ctx, side, stop, source) {
@@ -1434,11 +1461,10 @@ class UnifiedTrendPullbackEA {
         continue;
       }
 
-
       const dist = Math.abs(fill - pending.stop);
       if (dist <= 0) { this._pendingQueue = this._pendingQueue.filter(p => p !== pending); continue; }
 
-      // NEW: reject trades whose stop is too tight (noise ATR bars)
+      // Reject trades whose stop is too tight (noise ATR bars)
       const minStopPts = broker.minStopPts || 30;
       if (dist / broker.point < minStopPts) {
         this.stats.skippedMinStop++;
@@ -1490,15 +1516,25 @@ class UnifiedTrendPullbackEA {
     }
   }
 
-  _processRetests(ctx, tryEnter, atrNow) {
+  _processRetests(ctx, tryEnter, atrNow, upTrend, downTrend) {
     if (this.entryMode === 'immediate') return;
     const { m1Bars, m1Idx, entryBars, entryIdxMap } = ctx;
     const e = entryIdxMap[m1Idx];
     if (e < 1) return;
-    const cur = entryBars[e - 1];   // last CLOSED entry-TF bar
+    const cur = entryBars[e - 1];   // last CLOSED entry-TF bar (the bar BEFORE the forming one)
     if (!cur) return;
 
-    // P1-4: expiry counted in ENTRY-TF bars, not M1
+    // Cancel pending retests when the trend flips against them
+    if (this.pendingBuyBar && !upTrend) {
+      this.pendingBuyBar = null; this.pendingBuyLevel = null; this.pendingBuyBarIdx = null;
+      this.stats.expiredRetests++;
+    }
+    if (this.pendingSellBar && !downTrend) {
+      this.pendingSellBar = null; this.pendingSellLevel = null; this.pendingSellBarIdx = null;
+      this.stats.expiredRetests++;
+    }
+
+    // Expiry counted in ENTRY-TF bars
     if (this.pendingBuyBar && (e - this.pendingBuyBarIdx) > this.retestExpiryBars) {
       this.pendingBuyBar = null; this.pendingBuyLevel = null; this.pendingBuyBarIdx = null;
       this.stats.expiredRetests++;
@@ -1572,6 +1608,8 @@ function parseCSV(text) {
       ds = d; ts = t;
       [o, h, l, c, v] = rest.concat(parts.slice(1));
     } else { ds = parts[0]; ts = '00:00'; [o, h, l, c, v] = parts.slice(1); }
+    // NEW: strip seconds if present. HH:MM:SS → HH:MM, so the date parse doesn't silently fail.
+    ts = ts.replace(/^(\d{2}:\d{2}):\d{2}$/, '$1');
     const date = new Date(ds.replace(/\./g, '-') + 'T' + ts + ':00Z');
     if (isNaN(date.getTime())) continue;
     const bar = { date, open: +o, high: +h, low: +l, close: +c, volume: +v || 0 };
@@ -1625,7 +1663,8 @@ async function runEngine(m1Bars, cfg, onProgress) {
 
   const ctx = {
     m1Bars, m1Idx: 0, broker, now: null,
-    entryBars, entryIdxMap,            // P0-1: exposed for strategy
+    entryBars, entryIdxMap,
+    entryMidArr: entryMid,             // NEW: raw LWMA-mid array, needed for per-bar pullback test
     entryFastAt: (i) => getVal(entryFast, entryIdxMap[i]),
     entryMidAt:  (i) => getVal(entryMid,  entryIdxMap[i]),
     entrySlowAt: (i) => getVal(entrySlow, entryIdxMap[i]),
@@ -1712,12 +1751,19 @@ async function runEngine(m1Bars, cfg, onProgress) {
     equityCurve.push({ date: bar.date, equity: eq, balance: broker.balance });
     balanceCurve.push({ date: bar.date, balance: broker.balance });
 
+    // Track max $ AND max % drawdowns independently (the max-% DD can occur at a
+    // smaller $ peak under compounding).
     if (eq > peakMTM) peakMTM = eq;
     const ddMTM = peakMTM - eq;
-    if (ddMTM > maxMTMDD) { maxMTMDD = ddMTM; maxMTMDDPct = peakMTM > 0 ? (ddMTM / peakMTM) * 100 : 0; }
+    if (ddMTM > maxMTMDD) maxMTMDD = ddMTM;
+    const ddMTMPct = peakMTM > 0 ? (ddMTM / peakMTM) * 100 : 0;
+    if (ddMTMPct > maxMTMDDPct) maxMTMDDPct = ddMTMPct;
+
     if (broker.balance > peakBal) peakBal = broker.balance;
     const ddBal = peakBal - broker.balance;
-    if (ddBal > maxBalDD) { maxBalDD = ddBal; maxBalDDPct = peakBal > 0 ? (ddBal / peakBal) * 100 : 0; }
+    if (ddBal > maxBalDD) maxBalDD = ddBal;
+    const ddBalPct = peakBal > 0 ? (ddBal / peakBal) * 100 : 0;
+    if (ddBalPct > maxBalDDPct) maxBalDDPct = ddBalPct;
 
     // 5. Strategy (breakout detected on CLOSED bar, entry scheduled for NEXT bar open)
     ea.onBar(ctx);
@@ -1745,7 +1791,7 @@ async function runEngine(m1Bars, cfg, onProgress) {
 }
 
 // ============================================================
-// 9 · REPORT (P0-4: daily-return-based ratios; P2-4: proper Calmar)
+// 9 · REPORT
 // ============================================================
 function dailyReturnsFromEquity(equityCurve) {
   const byDay = new Map();
@@ -1769,7 +1815,7 @@ function buildReport(broker, m1Bars, cfg, ea, entryBars, startM1, filterEngine, 
   const gl = Math.abs(losses.reduce((s, t) => s + t.pnl, 0));
   const pf = gl > 0 ? gw / gl : (gw > 0 ? Infinity : 0);
 
-  // P0-4: performance ratios from DAILY equity returns
+  // Performance ratios from DAILY equity returns
   const dailyRets = dailyReturnsFromEquity(mtm.equityCurve);
   const meanD = dailyRets.length ? dailyRets.reduce((a, b) => a + b, 0) / dailyRets.length : 0;
   const stdD = dailyRets.length > 1
@@ -1797,14 +1843,19 @@ function buildReport(broker, m1Bars, cfg, ea, entryBars, startM1, filterEngine, 
   }
   const ulcer = mtm.equityCurve.length ? Math.sqrt(sumSqDD / mtm.equityCurve.length) : 0;
 
-  // P2-4: Calmar = annualized return / max MTM DD
+  // Calmar is only meaningful on spans >= ~1 year. Below that, CAGR extrapolates
+  // absurdly (a 5% return over 2 weeks becomes ~240% "CAGR"). Report null instead.
   const spanMs = mtm.equityCurve.length > 1
     ? mtm.equityCurve[mtm.equityCurve.length - 1].date - mtm.equityCurve[0].date
     : 0;
   const years = spanMs > 0 ? spanMs / (365.25 * 24 * 3600 * 1000) : 0;
   const totalRet = cfg.startingBalance > 0 ? (broker.balance - cfg.startingBalance) / cfg.startingBalance : 0;
-  const cagr = years > 0 ? Math.pow(1 + totalRet, 1 / years) - 1 : 0;
-  const calmar = mtm.maxMTMDDPct > 0 ? (cagr * 100) / mtm.maxMTMDDPct : 0;
+  const MIN_YEARS_FOR_CALMAR = 1.0;
+  let cagr = null, calmar = null;
+  if (years >= MIN_YEARS_FOR_CALMAR) {
+    cagr = Math.pow(1 + totalRet, 1 / years) - 1;
+    calmar = mtm.maxMTMDDPct > 0 ? (cagr * 100) / mtm.maxMTMDDPct : null;
+  }
 
   // Streaks (zero-PnL counts as a win for streak continuity)
   let cw = 0, cl = 0, maxCW = 0, maxCL = 0;
@@ -1862,7 +1913,7 @@ function buildReport(broker, m1Bars, cfg, ea, entryBars, startM1, filterEngine, 
       maxDrawdownEquityPct: +mtm.maxMTMDDPct.toFixed(2),
       sharpe: +sharpe.toFixed(2),
       sortino: +sortino.toFixed(2),
-      calmar: +calmar.toFixed(2),
+      calmar: calmar == null ? null : +calmar.toFixed(2),
       ulcer: +ulcer.toFixed(2),
       recoveryFactor: mtm.maxMTMDD > 0 ? +((broker.balance - cfg.startingBalance) / mtm.maxMTMDD).toFixed(2) : 0,
       maxConsecWins: maxCW, maxConsecLosses: maxCL,
@@ -1878,7 +1929,7 @@ function buildReport(broker, m1Bars, cfg, ea, entryBars, startM1, filterEngine, 
       skippedMinLot: ea.stats.skippedMinLot,
       skippedRiskCap: ea.stats.skippedRiskCap,
       invalidStop: ea.stats.invalidStop,
-	  skippedMinStop: ea.stats.skippedMinStop,
+      skippedMinStop: ea.stats.skippedMinStop,
       expiredRetests: ea.stats.expiredRetests,
       timeBlocks: ea.stats.timeBlocks,
       filterBlocks: filterEngine.rej,
@@ -2197,7 +2248,6 @@ function readConfig() {
   const gn = id => { const v = g(id); return v === undefined ? 0 : +v; };
   const ge = id => g(id);
 
-  // P1-1: clamp session hours; fall back to defaults if start >= end
   const clampH = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(+v || 0)));
   const mkSess = (startId, endId, enId, defStart, defEnd) => {
     let st = clampH(gn(startId), 0, 23);
@@ -2206,7 +2256,6 @@ function readConfig() {
     return { enabled: g(enId) === '1', start: st, end: en };
   };
 
-  // P1-1: empty set means "block all", not "no restriction"
   const hours = gc('enableHours') ? (hoursSet.size ? new Set(hoursSet) : BLOCK_ALL) : null;
   const days  = gc('enableDays')  ? (daysSet.size  ? new Set(daysSet)  : BLOCK_ALL) : null;
   const months= gc('enableMonths')? (monthsSet.size? new Set(monthsSet): BLOCK_ALL) : null;
@@ -2223,13 +2272,15 @@ function readConfig() {
     breakEvenR: gn('breakEvenR'), trailStartR: gn('trailStartR'), trailAtrMult: gn('trailAtrMult'),
     maxDailyLossPct: gn('maxDailyLossPct'), maxSpreadPts: gn('maxSpreadPts'),
 
-    // Execution realism (now exposed in body)
     spreadMode: ge('spreadMode') || 'fixed',
     slippagePts: +(ge('slippagePts') || 0),
     intrabarOrder: ge('intrabarOrder') || 'sl_first',
-    retestExpiryBars: +(ge('retestExpiryBars') || 10),   // ENTRY-TF bars
+    retestExpiryBars: +(ge('retestExpiryBars') || 10),
     maxRiskPerTradePct: +(ge('maxRiskPerTradePct') || 2),
     maxAggregateRiskPct: +(ge('maxAggregateRiskPct') || 6),
+    minStopPts: +(ge('minStopPts') || 30),
+    compound: gc('compound'),
+    maxLot: +(ge('maxLot') || 100),
 
     filters: {
       macd: { enabled: gc('enableMACD'), fast: gn('macdFast'), slow: gn('macdSlow'), signal: gn('macdSignal'), mode: g('macdMode') },
@@ -2249,7 +2300,6 @@ function readConfig() {
       } : null,
       hours, days, months,
     },
-    // P2-1: only equity is actually rendered
     overlay: { equity: gc('showEquity') },
   };
 }
@@ -2299,6 +2349,7 @@ function displayReport(r, elapsed) {
   ];
   document.getElementById('miniStats').innerHTML = cards.map(c => `<div class="stat-card ${c.cls}"><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div></div>`).join('');
   const posCls = s.netProfit >= 0 ? 'pos' : 'neg';
+  const calmarStr = s.calmar == null ? 'n/a (<1y)' : s.calmar;
   const block = `<span class="hdr">═══════════════════════════════════════════</span>
 <span class="hdr">  RESULTS  ·  ${r.config.entryMode.toUpperCase()} mode  ·  ${elapsed}s</span>
 <span class="hdr">═══════════════════════════════════════════</span>
@@ -2316,13 +2367,13 @@ function displayReport(r, elapsed) {
 <span class="lbl">Max DD Equity:</span>    <span class="neg">$${s.maxDrawdownEquity.toFixed(2)} (${s.maxDrawdownEquityPct.toFixed(2)}%)</span>
 <span class="lbl">Sharpe (daily):</span>   <span class="val">${s.sharpe}</span>
 <span class="lbl">Sortino (daily):</span>  <span class="val">${s.sortino}</span>
-<span class="lbl">Calmar (CAGR/DD):</span><span class="val">${s.calmar}</span>
+<span class="lbl">Calmar (CAGR/DD):</span><span class="val">${calmarStr}</span>
 <span class="lbl">Ulcer Index:</span>       <span class="val">${s.ulcer}</span>
 <span class="lbl">Recovery Factor:</span>   <span class="val">${s.recoveryFactor}</span>
 <span class="lbl">Max Consec Win:</span>    <span class="pos">${s.maxConsecWins}</span>
 <span class="lbl">Max Consec Loss:</span>   <span class="neg">${s.maxConsecLosses}</span>
-<span class="lbl">Avg MAE:</span>           <span class="val">${s.avgMAE} pips</span>
-<span class="lbl">Avg MFE:</span>           <span class="val">${s.avgMFE} pips</span>
+<span class="lbl">Avg MAE:</span>           <span class="val">${s.avgMAE} pts</span>
+<span class="lbl">Avg MFE:</span>           <span class="val">${s.avgMFE} pts</span>
 <span class="lbl">Avg Duration:</span>      <span class="val">${s.avgDurationMin} min</span>
 <span class="lbl">Max Time Under Water:</span><span class="neg">${s.maxTimeUnderWaterHours}h</span>`;
   document.getElementById('resultBlock').innerHTML = block;
@@ -2338,7 +2389,7 @@ function displayReport(r, elapsed) {
       <tr><td>Skipped (min-lot risk)</td><td class="num">${d.skippedMinLot}</td></tr>
       <tr><td>Skipped (risk cap)</td><td class="num">${d.skippedRiskCap}</td></tr>
       <tr><td>Rejected (invalid stop)</td><td class="num">${d.invalidStop}</td></tr>
-	  <tr><td>Rejected (stop &lt; min)</td><td class="num">${d.skippedMinStop || 0}</td></tr>
+      <tr><td>Rejected (stop &lt; min)</td><td class="num">${d.skippedMinStop || 0}</td></tr>
       <tr><td>Expired retests</td><td class="num">${d.expiredRetests}</td></tr>
       <tr><td colspan="2" style="color:var(--text-dim);padding-top:8px;font-size:10px;">TIME FILTER BLOCKS</td></tr>
       <tr><td>Blocked by session</td><td class="num">${d.timeBlocks.session || 0}</td></tr>
