@@ -1,0 +1,2455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Unified Trend Pullback EA — Backtest</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --panel2: #1c2230;
+    --border: #30363d; --text: #c9d1d9; --text-dim: #8b949e;
+    --accent: #58a6ff; --green: #3fb950; --red: #f85149;
+    --yellow: #d29922; --purple: #bc8cff;
+    --mono: 'SF Mono', 'Consolas', 'Roboto Mono', monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; min-height: 100vh; padding: 16px; }
+  h1 { font-size: 18px; font-weight: 600; margin-bottom: 4px; color: #fff; }
+  .subtitle { color: var(--text-dim); font-size: 12px; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: 360px 1fr; gap: 16px; max-width: 1500px; margin: 0 auto; }
+  @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .panel-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-dim); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; font-weight: 500; }
+  .field input, .field select { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px 8px; border-radius: 5px; font-size: 12px; font-family: var(--mono); outline: none; }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .section-label { font-size: 10px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 6px; padding-top: 10px; border-top: 1px dashed var(--border); }
+  .section-label:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+  button { width: 100%; padding: 10px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: filter 0.15s; }
+  button:hover { filter: brightness(1.15); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; filter: none; }
+  .btn-run { background: var(--green); color: #fff; margin-top: 6px; }
+  .btn-reset { background: var(--panel2); color: var(--text); border: 1px solid var(--border); margin-top: 8px; }
+  .btn-load { background: var(--accent); color: #fff; margin-bottom: 8px; }
+  .file-info { font-size: 11px; color: var(--text-dim); font-family: var(--mono); margin-top: 6px; padding: 6px 8px; background: var(--bg); border-radius: 5px; border: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-info.loaded { color: var(--green); border-color: rgba(63,185,80,0.3); }
+
+  /* Filter card */
+  .filter-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 8px;
+    transition: border-color 0.15s;
+  }
+  .filter-card.enabled { border-color: var(--accent); background: rgba(88,166,255,0.04); }
+  .filter-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .filter-head input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+  .filter-head .badge {
+    margin-left: auto;
+    font-size: 9px;
+    font-weight: 500;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--panel2);
+  }
+  .filter-card.enabled .filter-head .badge { background: rgba(88,166,255,0.2); color: var(--accent); }
+  .filter-body {
+    display: none;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+  }
+  .filter-card.enabled .filter-body { display: block; }
+  .filter-body .field:last-child { margin-bottom: 0; }
+
+  /* Multi-select pills */
+  .pill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+    gap: 4px;
+  }
+  .pill-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .pill-grid.cols-6 { grid-template-columns: repeat(6, 1fr); }
+  .pill-grid.cols-7 { grid-template-columns: repeat(7, 1fr); }
+  .pill-grid.cols-12 { grid-template-columns: repeat(6, 1fr); }
+  .pill {
+    text-align: center;
+    padding: 5px 2px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-dim);
+    font-size: 10px;
+    font-family: var(--mono);
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.1s;
+  }
+  .pill:hover { border-color: var(--accent); color: var(--text); }
+  .pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* Results */
+  #results { display: none; }
+  #results.show { display: block; }
+  .result-block { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; font-family: var(--mono); font-size: 13px; line-height: 1.9; white-space: pre; overflow-x: auto; }
+  .result-block .hdr { color: var(--text-dim); }
+  .result-block .pos { color: var(--green); font-weight: 600; }
+  .result-block .neg { color: var(--red); font-weight: 600; }
+  .result-block .lbl { color: var(--text-dim); }
+  .result-block .val { color: #fff; }
+  .mini-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 16px; }
+  .stat-card { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; }
+  .stat-card .lbl { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .stat-card .val { font-family: var(--mono); font-size: 16px; font-weight: 600; color: #fff; }
+  .stat-card.good .val { color: var(--green); }
+  .stat-card.bad .val { color: var(--red); }
+  .chart-wrap { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-top: 12px; position: relative; }
+  .chart-title { font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .chart-title .legend { font-family: var(--mono); font-size: 10px; color: var(--text-dim); font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .chart-title .legend span { margin-left: 10px; }
+  .chart-title .legend .c-green { color: var(--green); }
+  .chart-title .legend .c-red { color: var(--red); }
+  .chart-title .legend .c-blue { color: var(--accent); }
+  .chart-title .legend .c-yellow { color: var(--yellow); }
+  .chart-title .legend .c-purple { color: var(--purple); }
+  canvas { display: block; width: 100%; }
+  #progress { display: none; margin-top: 10px; }
+  #progress.show { display: block; }
+  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.1s; }
+  .progress-text { font-size: 11px; color: var(--text-dim); margin-top: 6px; font-family: var(--mono); }
+  .error { background: rgba(248,81,73,0.1); border: 1px solid var(--red); color: var(--red); padding: 12px; border-radius: 6px; font-family: var(--mono); font-size: 12px; margin-top: 12px; white-space: pre-wrap; }
+  .tooltip-chart { position: fixed; background: rgba(22,27,34,0.95); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; font-size: 11px; font-family: var(--mono); color: #fff; pointer-events: none; z-index: 10000; display: none; white-space: nowrap; }
+
+  /* diagnostics table */
+  .diag-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 11px; margin-top: 8px; }
+  .diag-table th { text-align: left; color: var(--text-dim); padding: 4px 8px; border-bottom: 1px solid var(--border); font-weight: 500; }
+  .diag-table td { padding: 4px 8px; border-bottom: 1px solid rgba(48,54,61,0.4); }
+  .diag-table td.num { text-align: right; color: #fff; }
+  .diag-table tr:last-child td { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<div style="max-width:1500px;margin:0 auto 20px;">
+  <h1>Unified Trend Pullback EA — Backtest</h1>
+  <div class="subtitle">Entry filters (MACD/BB/Momentum/ATR/AC/RSI/Stoch/ADX) + session / hour / day / month gating</div>
+</div>
+
+<div class="grid">
+
+  <!-- ================= LEFT: CONFIG ================= -->
+  <div class="panel">
+    <div class="panel-title">1 · Load Data</div>
+    <button class="btn-load" onclick="document.getElementById('csvFile').click()">📂 Choose CSV File</button>
+    <input type="file" id="csvFile" accept=".csv,.txt" style="display:none" onchange="handleFile(event)">
+    <!-- CHANGED: removed <br> so it doesn't clip under nowrap -->
+    <div class="file-info" id="fileInfo">No file loaded — expected: YYYY.MM.DD HH:MM O H L C V</div>
+
+    <div class="panel-title" style="margin-top:16px;">2 · Base Strategy</div>
+    <div class="section-label">Account</div>
+    <div class="row">
+      <div class="field"><label>Starting Balance ($)</label><input type="number" id="startingBalance" value="10000" step="100"></div>
+      <div class="field"><label>Point Size</label><input type="number" id="point" value="0.01" step="0.0001"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Tick Value</label><input type="number" id="tickValue" value="1" step="0.01"></div>
+      <div class="field"><label>Spread (pts)</label><input type="number" id="spreadPts" value="30" step="1"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Commission $/lot</label><input type="number" id="commissionPerLot" value="7" step="0.5"></div>
+      <div class="field"><label>Min Lot</label><input type="number" id="minLot" value="0.01" step="0.01"></div>
+    </div>
+
+    <div class="section-label">Timeframes</div>
+    <div class="row">
+      <div class="field"><label>Trend TF</label>
+        <select id="trendTFMin"><option value="15">M15</option><option value="30">M30</option><option value="60" selected>H1</option><option value="240">H4</option><option value="1440">D1</option></select>
+      </div>
+      <div class="field"><label>Entry TF</label>
+        <select id="entryTFMin"><option value="1">M1</option><option value="5">M5</option><option value="15" selected>M15</option><option value="30">M30</option></select>
+      </div>
+    </div>
+
+    <div class="section-label">Trend & Entry</div>
+    <div class="row">
+      <div class="field"><label>Trend Fast LWMA</label><input type="number" id="trendFastPeriod" value="50" step="1"></div>
+      <div class="field"><label>Trend Slow LWMA</label><input type="number" id="trendSlowPeriod" value="200" step="1"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>LWMA Fast</label><input type="number" id="lwmaFast" value="8" step="1"></div>
+      <div class="field"><label>LWMA Mid</label><input type="number" id="lwmaMid" value="13" step="1"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>LWMA Slow</label><input type="number" id="lwmaSlow" value="21" step="1"></div>
+      <div class="field"><label>Pullback Lookback</label><input type="number" id="pullbackLookback" value="5" step="1"></div>
+    </div>
+    <div class="field"><label>Entry Mode</label>
+      <select id="entryMode"><option value="immediate">Immediate</option><option value="retest">Retest</option><option value="both" selected>Both</option></select>
+    </div>
+
+    <div class="section-label">Risk</div>
+    <div class="row">
+      <div class="field"><label>Risk % / trade</label><input type="number" id="riskPercent" value="0.5" step="0.1"></div>
+      <div class="field"><label>R:R</label><input type="number" id="rewardRisk" value="2" step="0.1"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>ATR Period</label><input type="number" id="atrPeriod" value="14" step="1"></div>
+      <div class="field"><label>ATR Stop ×</label><input type="number" id="atrStopMult" value="1.5" step="0.1"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Max Positions</label><input type="number" id="maxPositions" value="3" step="1"></div>
+      <div class="field"><label>BE at (R)</label><input type="number" id="breakEvenR" value="1" step="0.1"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Trail start (R)</label><input type="number" id="trailStartR" value="1.5" step="0.1"></div>
+      <div class="field"><label>Trail ATR ×</label><input type="number" id="trailAtrMult" value="1.5" step="0.1"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Max Daily Loss %</label><input type="number" id="maxDailyLossPct" value="3" step="0.5"></div>
+      <div class="field"><label>Max Spread (pts)</label><input type="number" id="maxSpreadPts" value="30" step="1"></div>
+    </div>
+
+    <!-- ADDED: Execution realism block. The script already reads these ids;
+         previously they were absent and silently defaulted. -->
+    <div class="section-label">Execution realism</div>
+    <div class="row">
+      <div class="field"><label>Intrabar order</label>
+        <select id="intrabarOrder">
+          <option value="sl_first" selected>SL first (conservative)</option>
+          <option value="tp_first">TP first (optimistic)</option>
+          <option value="nearest">Nearest to open</option>
+        </select>
+      </div>
+      <div class="field"><label>Slippage (pts)</label>
+        <input type="number" id="slippagePts" value="0" step="0.1" min="0">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Spread mode</label>
+        <select id="spreadMode">
+          <option value="fixed" selected>Fixed</option>
+          <option value="variable">Variable (session-aware)</option>
+        </select>
+      </div>
+      <div class="field"><label>Retest expiry (entry bars)</label>
+        <input type="number" id="retestExpiryBars" value="10" step="1" min="1">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Max risk / trade %</label>
+        <input type="number" id="maxRiskPerTradePct" value="2" step="0.1" min="0">
+      </div>
+      <div class="field"><label>Max aggregate risk %</label>
+        <input type="number" id="maxAggregateRiskPct" value="6" step="0.1" min="0">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Min stop (pts)</label>
+        <input type="number" id="minStopPts" value="30" step="1" min="0">
+      </div>
+      <div class="field"><label>Max lot</label>
+        <input type="number" id="maxLot" value="100" step="0.01" min="0.01">
+      </div>
+    </div>
+	    <div class="row">
+      <div class="field" style="grid-column: 1 / -1;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="compound" checked style="width:auto;">
+          <span>Compound risk on current equity (uncheck = fixed % of starting balance)</span>
+        </label>
+      </div>
+    </div>
+    <!-- ================ ENTRY FILTERS ================ -->
+    <div class="panel-title" style="margin-top:16px;">3 · Entry Filters</div>
+    <div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;line-height:1.5;">
+      Every filter is optional. Combine as many as you like — all enabled filters must pass (logical AND).
+    </div>
+
+    <!-- MACD -->
+    <div class="filter-card" id="filter-macd">
+      <label class="filter-head">
+        <input type="checkbox" id="enableMACD" onchange="toggleFilterCard('filter-macd', this.checked)">
+        <span>MACD</span>
+        <span class="badge">12, 26, 9</span>
+      </label>
+      <div class="filter-body">
+        <div class="row">
+          <div class="field"><label>Fast EMA</label><input type="number" id="macdFast" value="12" step="1"></div>
+          <div class="field"><label>Slow EMA</label><input type="number" id="macdSlow" value="26" step="1"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Signal EMA</label><input type="number" id="macdSignal" value="9" step="1"></div>
+          <div class="field"><label>Mode</label>
+            <select id="macdMode">
+              <option value="aligned">MACD &gt; Signal (buy)</option>
+              <option value="histPositive">Hist &gt; 0 (buy) / &lt; 0 (sell)</option>
+              <option value="crossover">Fresh crossover on last bar</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bollinger Bands -->
+    <div class="filter-card" id="filter-bb">
+      <label class="filter-head">
+        <input type="checkbox" id="enableBB" onchange="toggleFilterCard('filter-bb', this.checked)">
+        <span>Bollinger Bands</span>
+        <span class="badge">20, 2</span>
+      </label>
+      <div class="filter-body">
+        <div class="row">
+          <div class="field"><label>Period</label><input type="number" id="bbPeriod" value="20" step="1"></div>
+          <div class="field"><label>Std Dev</label><input type="number" id="bbStdDev" value="2" step="0.1"></div>
+        </div>
+        <div class="field"><label>Mode</label>
+          <select id="bbMode">
+            <option value="inside">Price inside bands</option>
+            <option value="bounce">Bounce from band (last bar)</option>
+            <option value="breakout">Band breakout (last bar)</option>
+            <option value="trendSqueeze">Inside middle ± (SMA)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Momentum -->
+    <div class="filter-card" id="filter-mom">
+      <label class="filter-head">
+        <input type="checkbox" id="enableMom" onchange="toggleFilterCard('filter-mom', this.checked)">
+        <span>Momentum</span>
+        <span class="badge">10</span>
+      </label>
+      <div class="filter-body">
+        <div class="row">
+          <div class="field"><label>Period</label><input type="number" id="momPeriod" value="10" step="1"></div>
+          <div class="field"><label>Threshold</label><input type="number" id="momThreshold" value="0" step="0.01"></div>
+        </div>
+        <div class="field"><label>Mode</label>
+          <select id="momMode">
+            <option value="sign">Sign matches direction</option>
+            <option value="aboveThreshold">Above threshold (buy) / below (sell)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ATR filter -->
+    <div class="filter-card" id="filter-atr">
+      <label class="filter-head">
+        <input type="checkbox" id="enableATRFilter" onchange="toggleFilterCard('filter-atr', this.checked)">
+        <span>ATR Range Filter</span>
+        <span class="badge">14</span>
+      </label>
+      <div class="filter-body">
+        <div class="row">
+          <div class="field"><label>ATR Period</label><input type="number" id="atrFilterPeriod" value="14" step="1"></div>
+          <div class="field"><label>ATR SMA Period</label><input type="number" id="atrFilterSma" value="20" step="1"></div>
+        </div>
+        <div class="field"><label>Mode</label>
+          <select id="atrFilterMode">
+            <option value="aboveAvg">ATR above SMA (volatile)</option>
+            <option value="belowAvg">ATR below SMA (quiet)</option>
+            <option value="inRange">ATR within [min, max] × SMA</option>
+          </select>
+        </div>
+        <div class="row">
+          <div class="field"><label>Min × SMA</label><input type="number" id="atrFilterMin" value="0.8" step="0.1"></div>
+          <div class="field"><label>Max × SMA</label><input type="number" id="atrFilterMax" value="2.0" step="0.1"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accelerator Oscillator -->
+    <div class="filter-card" id="filter-ao">
+      <label class="filter-head">
+        <input type="checkbox" id="enableAO" onchange="toggleFilterCard('filter-ao', this.checked)">
+        <span>Accelerator Oscillator</span>
+        <span class="badge">AC</span>
+      </label>
+      <div class="filter-body">
+        <div class="row">
+          <div class="field"><label>Fast</label><input type="number" id="aoFast" value="5" step="1"></div>
+          <div class="field"><label>Slow</label><input type="number" id="aoSlow" value="34" step="1"></div>
+        </div>
+        <div class="field"><label>Mode</label>
+          <select id="aoMode">
+            <option value="sign">AC sign matches direction</option>
+            <option value="rising">AC &gt; 0 &amp; rising (buy) / AC &lt; 0 &amp; falling (sell)</option>
+            <option value="twoRising">2 consecutive rising (buy) / falling (sell)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- RSI -->
+    <div class="filter-card" id="filter-rsi">
+      <label class="filter-head">
+        <input type="checkbox" id="enableRSI" onchange="toggleFilterCard('filter-rsi', this.checked)">
+        <span>RSI</span>
+        <span class="badge">14</span>
+      </label>
+      <div class="filter-body">
+        <div class="row">
+          <div class="field"><label>Period</label><input type="number" id="rsiPeriod" value="14" step="1"></div>
+          <div class="field"><label>Overbought</label><input type="number" id="rsiOverbought" value="70" step="1"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Oversold</label><input type="number" id="rsiOversold" value="30" step="1"></div>
+          <div class="field"><label>Mode</label>
+            <select id="rsiMode">
+              <option value="notExtreme">Not extreme (buy &lt; OB, sell &gt; OS)</option>
+              <option value="aboveMid">Above 50 (buy) / Below 50 (sell)</option>
+              <option value="pullback">Buy 40–60, Sell 40–60</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stochastic -->
+    <div class="filter-card" id="filter-stoch">
+      <label class="filter-head">
+        <input type="checkbox" id="enableStoch" onchange="toggleFilterCard('filter-stoch', this.checked)">
+        <span>Stochastic</span>
+        <span class="badge">14, 3, 3</span>
+      </label>
+      <div class="filter-body">
+        <div class="row">
+          <div class="field"><label>%K Period</label><input type="number" id="stochK" value="14" step="1"></div>
+          <div class="field"><label>%D Period</label><input type="number" id="stochD" value="3" step="1"></div>
+        </div>
+        <div class="field"><label>Mode</label>
+          <select id="stochMode">
+            <option value="cross">%K crosses %D (last bar)</option>
+            <option value="aligned">%K &gt; %D (buy) / &lt; (sell)</option>
+            <option value="notExtreme">Buy K &lt; 80, Sell K &gt; 20</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADX -->
+    <div class="filter-card" id="filter-adx">
+      <label class="filter-head">
+        <input type="checkbox" id="enableADX" onchange="toggleFilterCard('filter-adx', this.checked)">
+        <span>ADX Trend Strength</span>
+        <span class="badge">14</span>
+      </label>
+      <div class="filter-body">
+        <div class="row">
+          <div class="field"><label>Period</label><input type="number" id="adxPeriod" value="14" step="1"></div>
+          <div class="field"><label>Min ADX</label><input type="number" id="adxMin" value="25" step="1"></div>
+        </div>
+        <div class="field"><label>Mode</label>
+          <select id="adxMode">
+            <option value="strength">ADX above min</option>
+            <option value="strength+di">ADX above min AND DI aligned</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================ TIME FILTERS ================ -->
+    <div class="panel-title" style="margin-top:16px;">4 · Time Filters</div>
+    <div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;line-height:1.5;">
+      All time values are UTC. Click pills to toggle. Empty = no restriction.
+    </div>
+
+    <!-- Sessions. CHANGED: added step/min/max hints (browser enforces step only;
+         the JS readConfig clamp is still required — see note below). -->
+    <div class="filter-card" id="filter-sessions">
+      <label class="filter-head">
+        <input type="checkbox" id="enableSessions" onchange="toggleFilterCard('filter-sessions', this.checked)">
+        <span>Session</span>
+        <span class="badge">UTC</span>
+      </label>
+      <div class="filter-body">
+        <div class="row3">
+          <div class="field"><label>Asia Start</label><input type="number" id="sessAsiaStart" value="0" min="0" max="23" step="1"></div>
+          <div class="field"><label>Asia End</label><input type="number" id="sessAsiaEnd" value="8" min="0" max="24" step="1"></div>
+          <div class="field"><label>Asia</label>
+            <select id="sessAsiaEnabled"><option value="1">On</option><option value="0">Off</option></select>
+          </div>
+        </div>
+        <div class="row3">
+          <div class="field"><label>London Start</label><input type="number" id="sessLonStart" value="8" min="0" max="23" step="1"></div>
+          <div class="field"><label>London End</label><input type="number" id="sessLonEnd" value="16" min="0" max="24" step="1"></div>
+          <div class="field"><label>London</label>
+            <select id="sessLonEnabled"><option value="1">On</option><option value="0">Off</option></select>
+          </div>
+        </div>
+        <div class="row3">
+          <div class="field"><label>NY Start</label><input type="number" id="sessNYStart" value="13" min="0" max="23" step="1"></div>
+          <div class="field"><label>NY End</label><input type="number" id="sessNYEnd" value="22" min="0" max="24" step="1"></div>
+          <div class="field"><label>NY</label>
+            <select id="sessNYEnabled"><option value="1">On</option><option value="0">Off</option></select>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:6px;line-height:1.4;">
+          Session windows must satisfy start &lt; end (same UTC day). Overnight windows are not supported.
+        </div>
+      </div>
+    </div>
+
+    <!-- Hours -->
+    <div class="filter-card" id="filter-hours">
+      <label class="filter-head">
+        <input type="checkbox" id="enableHours" onchange="toggleFilterCard('filter-hours', this.checked)">
+        <span>Hours (UTC)</span>
+        <span class="badge" id="hoursBadge">all</span>
+      </label>
+      <div class="filter-body">
+        <!-- CHANGED: dropped misleading cols-12 class (rendered 6 cols anyway) -->
+        <div class="pill-grid" id="hoursPills"></div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:6px;">
+          <a href="#" onclick="hoursAll();return false;" style="color:var(--accent);">All</a> ·
+          <a href="#" onclick="hoursClear();return false;" style="color:var(--accent);">None</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Days of week -->
+    <div class="filter-card" id="filter-days">
+      <label class="filter-head">
+        <input type="checkbox" id="enableDays" onchange="toggleFilterCard('filter-days', this.checked)">
+        <span>Days of Week</span>
+        <span class="badge" id="daysBadge">all</span>
+      </label>
+      <div class="filter-body">
+        <div class="pill-grid cols-7" id="daysPills"></div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:6px;">
+          <a href="#" onclick="daysWeekdays();return false;" style="color:var(--accent);">Weekdays</a> ·
+          <a href="#" onclick="daysAll();return false;" style="color:var(--accent);">All</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Months -->
+    <div class="filter-card" id="filter-months">
+      <label class="filter-head">
+        <input type="checkbox" id="enableMonths" onchange="toggleFilterCard('filter-months', this.checked)">
+        <span>Months</span>
+        <span class="badge" id="monthsBadge">all</span>
+      </label>
+      <div class="filter-body">
+        <div class="pill-grid cols-6" id="monthsPills"></div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:6px;">
+          <a href="#" onclick="monthsAll();return false;" style="color:var(--accent);">All</a> ·
+          <a href="#" onclick="monthsClear();return false;" style="color:var(--accent);">None</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHANGED: removed dead MACD/BB/ATR chart checkboxes. Only Equity is rendered. -->
+    <div class="panel-title" style="margin-top:16px;">5 · Overlay Charts</div>
+    <div class="check-list" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+      <label class="filter-head" style="padding:4px 6px;font-size:11px;font-weight:400;"><input type="checkbox" id="showEquity" checked><span>Equity Curve</span></label>
+    </div>
+
+    <button class="btn-run" id="runBtn" onclick="runBacktest()" disabled>▶ Run Backtest</button>
+    <!-- CHANGED: confirm before destroying loaded CSV + config -->
+    <button class="btn-reset" onclick="if(confirm('Reset all settings and discard loaded CSV?')) location.reload();">↺ Reset All</button>
+
+    <div id="progress">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-text" id="progressText">Preparing…</div>
+    </div>
+  </div>
+
+  <!-- ================= RIGHT: RESULTS ================= -->
+  <div>
+    <div class="panel" id="results">
+      <div class="panel-title">Backtest Results</div>
+      <div class="mini-stats" id="miniStats"></div>
+      <div class="result-block" id="resultBlock"></div>
+      <div id="diagSection"></div>
+      <div id="chartsContainer"></div>
+      <div style="margin-top:16px;display:flex;gap:8px;">
+        <button class="btn-reset" style="flex:1;margin:0;" onclick="downloadReport()">⬇ Download Full Report (JSON)</button>
+        <button class="btn-reset" style="flex:1;margin:0;" onclick="downloadTradesCSV()">⬇ Download Trades (CSV)</button>
+      </div>
+    </div>
+
+    <div class="panel" id="errorBox" style="display:none;margin-top:16px;">
+      <div class="panel-title">Error</div>
+      <div class="error" id="errorMsg"></div>
+    </div>
+
+    <div class="panel" id="placeholder" style="margin-top:16px;text-align:center;padding:60px 20px;">
+      <div style="font-size:40px;margin-bottom:12px;">📊</div>
+      <div style="color:var(--text-dim);font-size:13px;line-height:1.7;">
+        Load a CSV, pick your filters, run.<br>
+        Results + diagnostics will appear here.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tooltip-chart" id="chartTooltip"></div>
+
+<script>
+'use strict';
+
+// ============================================================
+// 0 · UTILITIES
+// ============================================================
+function sma(values, period) {
+  const out = new Array(values.length).fill(null);
+  let sum = 0, cnt = 0;
+  const q = [];
+  for (let i = 0; i < values.length; i++) {
+    const v = values[i];
+    q.push(v);
+    if (v != null && isFinite(v)) { sum += v; cnt++; }
+    if (q.length > period) {
+      const old = q.shift();
+      if (old != null && isFinite(old)) { sum -= old; cnt--; }
+    }
+    if (q.length === period && cnt === period) out[i] = sum / cnt;
+  }
+  return out;
+}
+
+function ema(values, period) {
+  const out = new Array(values.length).fill(null);
+  if (values.length < period) return out;
+  const k = 2 / (period + 1);
+  let sum = 0, cnt = 0, seedIdx = -1;
+  for (let i = 0; i < values.length; i++) {
+    if (values[i] == null || !isFinite(values[i])) continue;
+    sum += values[i]; cnt++;
+    if (cnt === period) { seedIdx = i; break; }
+  }
+  if (seedIdx < 0) return out;
+  out[seedIdx] = sum / period;
+  for (let i = seedIdx + 1; i < values.length; i++) {
+    const v = (values[i] == null || !isFinite(values[i])) ? out[i - 1] : values[i];
+    out[i] = v * k + out[i - 1] * (1 - k);
+  }
+  return out;
+}
+
+function lwma(values, period) {
+  const out = new Array(values.length).fill(null);
+  const denom = (period * (period + 1)) / 2;
+  for (let i = period - 1; i < values.length; i++) {
+    let sum = 0, ok = true;
+    for (let k = 0; k < period; k++) {
+      const v = values[i - k];
+      if (v == null || !isFinite(v)) { ok = false; break; }
+      sum += v * (period - k);
+    }
+    if (ok) out[i] = sum / denom;
+  }
+  return out;
+}
+
+function atr(bars, period) {
+  const out = new Array(bars.length).fill(null);
+  if (bars.length < period + 1) return out;
+  const tr = new Array(bars.length).fill(0);
+  tr[0] = bars[0].high - bars[0].low;
+  for (let i = 1; i < bars.length; i++) {
+    tr[i] = Math.max(
+      bars[i].high - bars[i].low,
+      Math.abs(bars[i].high - bars[i - 1].close),
+      Math.abs(bars[i].low - bars[i - 1].close)
+    );
+  }
+  let sum = 0;
+  for (let i = 0; i < period; i++) sum += tr[i];
+  out[period - 1] = sum / period;
+  for (let i = period; i < bars.length; i++) out[i] = (out[i - 1] * (period - 1) + tr[i]) / period;
+  return out;
+}
+
+function macdCalc(closes, fast = 12, slow = 26, signalP = 9) {
+  const ef = ema(closes, fast), es = ema(closes, slow);
+  const m = closes.map((_, i) => (ef[i] != null && es[i] != null) ? ef[i] - es[i] : null);
+  const sig = new Array(closes.length).fill(null);
+  const start = m.findIndex(v => v != null);
+  if (start >= 0) {
+    const slice = m.slice(start);
+    const s = ema(slice, signalP);
+    for (let i = 0; i < s.length; i++) sig[start + i] = s[i];
+  }
+  const hist = closes.map((_, i) => (m[i] != null && sig[i] != null) ? m[i] - sig[i] : null);
+  return { macd: m, signal: sig, hist };
+}
+
+function bollingerBands(closes, period = 20, mult = 2) {
+  const mid = sma(closes, period);
+  const upper = new Array(closes.length).fill(null);
+  const lower = new Array(closes.length).fill(null);
+  const bandwidth = new Array(closes.length).fill(null);
+  for (let i = period - 1; i < closes.length; i++) {
+    let sq = 0, cnt = 0;
+    for (let k = i - period + 1; k <= i; k++) {
+      if (closes[k] == null || !isFinite(closes[k])) continue;
+      const d = closes[k] - mid[i];
+      sq += d * d; cnt++;
+    }
+    if (cnt < period) continue;
+    const sd = Math.sqrt(sq / period);
+    upper[i] = mid[i] + sd * mult;
+    lower[i] = mid[i] - sd * mult;
+    bandwidth[i] = mid[i] !== 0 ? (upper[i] - lower[i]) / mid[i] : null;
+  }
+  return { upper, middle: mid, lower, bandwidth };
+}
+
+function momentum(closes, period = 10) {
+  const out = new Array(closes.length).fill(null);
+  for (let i = period; i < closes.length; i++) {
+    if (closes[i] == null || closes[i - period] == null) continue;
+    out[i] = closes[i] - closes[i - period];
+  }
+  return out;
+}
+
+function aoCalc(bars, fast = 5, slow = 34, acSmooth = 5) {
+  const median = bars.map(b => (b.high + b.low) / 2);
+  const fs = sma(median, fast), ss = sma(median, slow);
+  const ao = median.map((_, i) => (fs[i] != null && ss[i] != null) ? fs[i] - ss[i] : null);
+  const ac = new Array(bars.length).fill(null);
+  const aoStart = ao.findIndex(v => v != null);
+  if (aoStart >= 0) {
+    const slice = ao.slice(aoStart);
+    const s = sma(slice, acSmooth);
+    for (let i = 0; i < slice.length; i++) if (slice[i] != null && s[i] != null) ac[aoStart + i] = slice[i] - s[i];
+  }
+  return { ao, ac };
+}
+
+function rsiCalc(closes, period = 14) {
+  const out = new Array(closes.length).fill(null);
+  if (closes.length < period + 1) return out;
+  let g = 0, l = 0;
+  for (let i = 1; i <= period; i++) { const d = closes[i] - closes[i - 1]; if (d > 0) g += d; else l -= d; }
+  let ag = g / period, al = l / period;
+  out[period] = al === 0 ? 100 : 100 - 100 / (1 + ag / al);
+  for (let i = period + 1; i < closes.length; i++) {
+    const d = closes[i] - closes[i - 1];
+    ag = (ag * (period - 1) + (d > 0 ? d : 0)) / period;
+    al = (al * (period - 1) + (d < 0 ? -d : 0)) / period;
+    out[i] = al === 0 ? 100 : 100 - 100 / (1 + ag / al);
+  }
+  return out;
+}
+
+function stochCalc(bars, kPeriod = 14, dPeriod = 3, smooth = 3) {
+  const rawK = new Array(bars.length).fill(null);
+  for (let i = kPeriod - 1; i < bars.length; i++) {
+    let hi = -Infinity, lo = Infinity, ok = true;
+    for (let k = i - kPeriod + 1; k <= i; k++) {
+      if (bars[k] == null) { ok = false; break; }
+      if (bars[k].high > hi) hi = bars[k].high;
+      if (bars[k].low < lo) lo = bars[k].low;
+    }
+    if (!ok) continue;
+    rawK[i] = hi === lo ? 50 : ((bars[i].close - lo) / (hi - lo)) * 100;
+  }
+  const kS = new Array(bars.length).fill(null);
+  for (let i = 0; i < bars.length; i++) {
+    if (i < kPeriod - 1 + smooth - 1) continue;
+    let sum = 0, ok = true;
+    for (let j = i - smooth + 1; j <= i; j++) {
+      if (rawK[j] == null) { ok = false; break; }
+      sum += rawK[j];
+    }
+    if (ok) kS[i] = sum / smooth;
+  }
+  const dS = new Array(bars.length).fill(null);
+  for (let i = 0; i < bars.length; i++) {
+    if (i < kPeriod + smooth + dPeriod - 3) continue;
+    let sum = 0, ok = true;
+    for (let j = i - dPeriod + 1; j <= i; j++) {
+      if (kS[j] == null) { ok = false; break; }
+      sum += kS[j];
+    }
+    if (ok) dS[i] = sum / dPeriod;
+  }
+  return { k: kS, d: dS };
+}
+
+function adxCalc(bars, period = 14) {
+  const len = bars.length;
+  const adx = new Array(len).fill(null);
+  const plusDI = new Array(len).fill(null);
+  const minusDI = new Array(len).fill(null);
+  if (len < period * 2 + 1) return { adx, plusDI, minusDI };
+
+  const tr = new Array(len).fill(0);
+  const pDM = new Array(len).fill(0);
+  const mDM = new Array(len).fill(0);
+  tr[0] = bars[0].high - bars[0].low;
+  for (let i = 1; i < len; i++) {
+    tr[i] = Math.max(bars[i].high - bars[i].low, Math.abs(bars[i].high - bars[i - 1].close), Math.abs(bars[i].low - bars[i - 1].close));
+    const up = bars[i].high - bars[i - 1].high;
+    const dn = bars[i - 1].low - bars[i].low;
+    pDM[i] = (up > dn && up > 0) ? up : 0;
+    mDM[i] = (dn > up && dn > 0) ? dn : 0;
+  }
+  let sTR = 0, sP = 0, sM = 0;
+  for (let i = 1; i <= period; i++) { sTR += tr[i]; sP += pDM[i]; sM += mDM[i]; }
+  plusDI[period] = sTR > 0 ? (100 * sP) / sTR : 0;
+  minusDI[period] = sTR > 0 ? (100 * sM) / sTR : 0;
+  const dx = new Array(len).fill(null);
+  dx[period] = (plusDI[period] + minusDI[period]) > 0
+    ? (100 * Math.abs(plusDI[period] - minusDI[period])) / (plusDI[period] + minusDI[period]) : 0;
+
+  for (let i = period + 1; i < len; i++) {
+    sTR = sTR - sTR / period + tr[i];
+    sP = sP - sP / period + pDM[i];
+    sM = sM - sM / period + mDM[i];
+    plusDI[i] = sTR > 0 ? (100 * sP) / sTR : 0;
+    minusDI[i] = sTR > 0 ? (100 * sM) / sTR : 0;
+    dx[i] = (plusDI[i] + minusDI[i]) > 0
+      ? (100 * Math.abs(plusDI[i] - minusDI[i])) / (plusDI[i] + minusDI[i]) : 0;
+  }
+  // ADX seeds at period*2 from dx[period+1..period*2]; dx[period] is computed but unused (standard variant).
+  let sum = 0;
+  for (let i = period + 1; i < period * 2 + 1; i++) sum += dx[i];
+  adx[period * 2] = sum / period;
+  for (let i = period * 2 + 1; i < len; i++) adx[i] = (adx[i - 1] * (period - 1) + dx[i]) / period;
+  return { adx, plusDI, minusDI };
+}
+
+function getVal(arr, idx) {
+  if (!arr || idx < 0 || idx >= arr.length) return null;
+  const v = arr[idx];
+  return (v == null || !isFinite(v)) ? null : v;
+}
+
+// ============================================================
+// 1 · RESAMPLING WITH EXPLICIT closeTime
+// ============================================================
+function resample(m1Bars, tfMin) {
+  if (tfMin === 1) {
+    return m1Bars.map(b => ({
+      ...b,
+      closeTime: new Date(b.date.getTime() + 60 * 1000),
+    }));
+  }
+  const bucketMs = tfMin * 60 * 1000;
+  const out = [];
+  let cur = null, key = null;
+  for (const b of m1Bars) {
+    const k = Math.floor(b.date.getTime() / bucketMs) * bucketMs;
+    if (k !== key) {
+      if (cur) out.push(cur);
+      key = k;
+      cur = {
+        date: new Date(k),
+        closeTime: new Date(k + bucketMs),
+        open: b.open, high: b.high, low: b.low, close: b.close,
+        volume: b.volume || 0,
+      };
+    } else {
+      cur.high = Math.max(cur.high, b.high);
+      cur.low = Math.min(cur.low, b.low);
+      cur.close = b.close;
+      cur.volume += b.volume || 0;
+    }
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+
+// Returns map[i] = latest CLOSED HTF bar index for M1 bar i (uses closeTime).
+// -1 before the first HTF bar closes; callers must treat that as "no data".
+function buildHTFIndexGetter(m1Bars, htfBars) {
+  const map = new Array(m1Bars.length).fill(-1);
+  let h = -1;
+  for (let i = 0; i < m1Bars.length; i++) {
+    const decisionTime = m1Bars[i].date.getTime();
+    while (h + 1 < htfBars.length && htfBars[h + 1].closeTime.getTime() <= decisionTime) h++;
+    map[i] = h;
+  }
+  return map;
+}
+
+// ============================================================
+// 2 · DATA VALIDATION
+// ============================================================
+function validateBars(rawBars, tfMin) {
+  const report = {
+    total: rawBars.length,
+    duplicates: 0, missing: 0, invalidOHLC: 0, zeroOrNegative: 0,
+    outOfOrder: 0, bigGaps: 0, emptyVolume: 0,
+    from: rawBars[0]?.date, to: rawBars[rawBars.length - 1]?.date,
+  };
+  if (!rawBars.length) return report;
+  const stepMs = tfMin * 60 * 1000;
+  for (let i = 0; i < rawBars.length; i++) {
+    const b = rawBars[i];
+    if (!(b.high >= Math.max(b.open, b.close) && b.low <= Math.min(b.open, b.close) && b.high >= b.low)) report.invalidOHLC++;
+    if (b.open <= 0 || b.close <= 0 || b.high <= 0 || b.low <= 0) report.zeroOrNegative++;
+    if (!b.volume) report.emptyVolume++;
+    if (i > 0) {
+      const diff = b.date.getTime() - rawBars[i - 1].date.getTime();
+      if (diff === 0) report.duplicates++;
+      else if (diff < 0) report.outOfOrder++;
+      else if (diff > stepMs * 1.5 && diff < 86400000 * 3) {
+        report.missing += Math.max(0, Math.round(diff / stepMs) - 1);
+      } else if (diff >= 86400000 * 3) {
+        report.bigGaps++;
+      }
+    }
+  }
+  return report;
+}
+
+// ============================================================
+// 3 · BROKER — realistic execution
+// ============================================================
+class Broker {
+  constructor(cfg) {
+    this.cfg = cfg;
+    this.balance = cfg.startingBalance;
+    this.equity = cfg.startingBalance;
+    this.point = cfg.point;
+    this.tickValue = cfg.tickValue;
+    this.minLot = cfg.minLot;
+    this.maxLot = cfg.maxLot || 100;
+    this.lotStep = cfg.lotStep || 0.01;
+    this.spreadPts = cfg.spreadPts;
+    this.spreadMode = cfg.spreadMode || 'fixed';
+    this.slippagePts = cfg.slippagePts || 0;
+    this.commissionPerLot = cfg.commissionPerLot;
+    this.intrabarOrder = cfg.intrabarOrder || 'sl_first';
+	this.minStopPts = cfg.minStopPts != null ? cfg.minStopPts : 30;
+	this.compound = cfg.compound !== false;
+    this.positions = [];
+    this.closedTrades = [];
+    this.tradeId = 1;
+  }
+
+  _roundLot(l) {
+    const stepped = Math.floor(l / this.lotStep) * this.lotStep;
+    return +stepped.toFixed(2);
+  }
+
+  _spreadPrice(bar) {
+    if (this.spreadMode === 'fixed' || bar == null) return this.spreadPts * this.point;
+    const h = bar.date.getUTCHours();
+    const inRollover = h >= 21 && h <= 22;
+    const inLiquid = h >= 7 && h <= 20;
+    let mult = 1;
+    if (inRollover) mult = 2.5;
+    else if (!inLiquid) mult = 1.8;
+    return this.spreadPts * this.point * mult;
+  }
+
+  _slippage(side, bar) {
+    if (this.slippagePts <= 0) return 0;
+    const range = bar ? Math.abs(bar.high - bar.low) : 0;
+    const maxSlip = Math.min(this.slippagePts * this.point, range * 0.5 || Infinity);
+    return side === 'buy' ? maxSlip : -maxSlip;
+  }
+
+  // OHLC is bid. Buy entry → ask (bid + spread). Sell entry → bid.
+  fillEntry(side, bar) {
+    const base = bar.open;
+    const spread = this._spreadPrice(bar);
+    const slip = this._slippage(side, bar);
+    return side === 'buy' ? base + spread + slip : base - slip;
+  }
+
+  // Buy exits at bid, sell exits at ask. Gaps respected.
+  fillExit(pos, bar, requestedPrice, kind) {
+    const spread = this._spreadPrice(bar);
+    let fill = requestedPrice;
+    if (kind === 'SL') {
+      if (pos.side === 'buy') {
+        if (bar.open <= requestedPrice) fill = bar.open;   // gap through SL (bid)
+      } else {
+        if (bar.open + spread >= requestedPrice) fill = bar.open + spread; // gap through SL (ask)
+      }
+    } else if (kind === 'TP') {
+      if (pos.side === 'buy') {
+        if (bar.open >= requestedPrice) fill = bar.open;   // gap through TP (bid)
+      } else {
+        if (bar.open + spread <= requestedPrice) fill = bar.open + spread; // gap through TP (ask)
+      }
+    } else {
+      // EOD / manual close
+      fill = pos.side === 'buy' ? bar.close : bar.close + spread;
+    }
+    return fill;
+  }
+
+  calculateLots(stopDistPrice, riskPct, equity) {
+    const compound = this.compound !== false;          // default true
+    const base = compound
+      ? (equity == null ? this.equity : equity)
+      : this.cfg.startingBalance;
+    const riskMoney = base * (riskPct / 100);
+    const riskPerLot = (stopDistPrice / this.point) * this.tickValue;
+    if (riskPerLot <= 0) return null;
+    const raw = riskMoney / riskPerLot;
+    const rounded = this._roundLot(raw);
+    if (rounded < this.minLot) return null;
+    return Math.min(rounded, this.maxLot);
+  }
+
+  openPosition({ side, fillPrice, lots, sl, tp, openTime, openBar, requestedEntry, comment }) {
+    const initialRiskMoney = sl != null
+      ? Math.abs(fillPrice - sl) / this.point * this.tickValue * lots
+      : null;
+    const pos = {
+      id: this.tradeId++, side, lots,
+      requestedEntry, entry: fillPrice, sl, tp,
+      openTime, openBar, comment: comment || '',
+      highestSinceOpen: fillPrice, lowestSinceOpen: fillPrice,
+      maePips: 0, mfePips: 0,
+      beMoved: false, trailActive: false,
+      initialSL: sl, initialTP: tp,
+      initialRiskMoney,
+      stopDistance: sl != null ? Math.abs(fillPrice - sl) : null,
+    };
+    this.positions.push(pos);
+    return pos;
+  }
+
+  closePosition(pos, exitPrice, closeTime, closeBar, reason) {
+    const diff = pos.side === 'buy' ? exitPrice - pos.entry : pos.entry - exitPrice;
+    const gross = (diff / this.point) * this.tickValue * pos.lots;
+    const comm = this.commissionPerLot * pos.lots;
+    const pnl = gross - comm;
+    this.balance += pnl;
+    const closed = {
+      ...pos,
+      exit: exitPrice,
+      closeTime, closeBar,
+      pnl: +pnl.toFixed(2),
+      grossPnl: +gross.toFixed(2),
+      commission: +comm.toFixed(2),
+      reason,
+      durationMin: Math.round((closeTime.getTime() - pos.openTime.getTime()) / 60000),
+      rMultiple: pos.initialRiskMoney && pos.initialRiskMoney > 0
+        ? +(pnl / pos.initialRiskMoney).toFixed(3) : 0,
+      maeR: pos.stopDistance > 0 ? +(pos.maePips / (pos.stopDistance / this.point)).toFixed(3) : 0,
+      mfeR: pos.stopDistance > 0 ? +(pos.mfePips / (pos.stopDistance / this.point)).toFixed(3) : 0,
+    };
+    this.closedTrades.push(closed);
+    this.positions = this.positions.filter(p => p.id !== pos.id);
+    return closed;
+  }
+
+  markToMarket(bid, bar) {
+    let floating = 0;
+    for (const p of this.positions) {
+      const exitBid = p.side === 'buy' ? bid : bid + this._spreadPrice(bar);
+      const diff = p.side === 'buy' ? exitBid - p.entry : p.entry - exitBid;
+      floating += (diff / this.point) * this.tickValue * p.lots;
+    }
+    this.equity = this.balance + floating;
+    return this.equity;
+  }
+}
+
+// ============================================================
+// 4 · TIME FILTER
+// ============================================================
+const BLOCK_ALL = 'BLOCK_ALL';
+
+function makeTimeFilter(tf) {
+  return function (date) {
+    if (tf.sessions) {
+      const h = date.getUTCHours();
+      const inAny =
+        (tf.sessions.asia.enabled && h >= tf.sessions.asia.start && h < tf.sessions.asia.end) ||
+        (tf.sessions.london.enabled && h >= tf.sessions.london.start && h < tf.sessions.london.end) ||
+        (tf.sessions.ny.enabled && h >= tf.sessions.ny.start && h < tf.sessions.ny.end);
+      if (!inAny) return 'session';
+    }
+    if (tf.hours === BLOCK_ALL) return 'hour';
+    if (tf.hours && tf.hours.size > 0 && !tf.hours.has(date.getUTCHours())) return 'hour';
+    if (tf.days === BLOCK_ALL) return 'day';
+    if (tf.days && tf.days.size > 0 && !tf.days.has(date.getUTCDay())) return 'day';
+    if (tf.months === BLOCK_ALL) return 'month';
+    if (tf.months && tf.months.size > 0 && !tf.months.has(date.getUTCMonth() + 1)) return 'month';
+    return null;
+  };
+}
+
+// ============================================================
+// 5 · ENTRY FILTERS
+// ============================================================
+function makeEntryFilters(cfg, entryBars, entryIdxMap) {
+  const filters = [];
+  const rej = {};
+  const closes = entryBars.map(b => b.close);
+  const arrays = {};
+
+  if (cfg.filters.macd.enabled) {
+    arrays.macdArr = macdCalc(closes, cfg.filters.macd.fast, cfg.filters.macd.slow, cfg.filters.macd.signal);
+    rej.macd = 0;
+    filters.push((m1Idx, side) => {
+      const ei = entryIdxMap[m1Idx];
+      const A = arrays.macdArr;
+      const m = getVal(A.macd, ei), s = getVal(A.signal, ei), h = getVal(A.hist, ei), hP = getVal(A.hist, ei - 1);
+      if (m == null || s == null) { rej.macd++; return false; }
+      const mode = cfg.filters.macd.mode;
+      let ok;
+      if (mode === 'aligned') ok = side === 'buy' ? m > s : m < s;
+      else if (mode === 'histPositive') {
+        if (h == null) { rej.macd++; return false; }
+        ok = side === 'buy' ? h > 0 : h < 0;
+      } else {
+        if (h == null || hP == null) { rej.macd++; return false; }
+        ok = side === 'buy' ? (hP <= 0 && h > 0) : (hP >= 0 && h < 0);
+      }
+      if (!ok) rej.macd++;
+      return ok;
+    });
+  }
+
+  if (cfg.filters.bb.enabled) {
+    arrays.bbArr = bollingerBands(closes, cfg.filters.bb.period, cfg.filters.bb.stdDev);
+    rej.bb = 0;
+    const bwSma = sma(arrays.bbArr.bandwidth, 20);
+    filters.push((m1Idx, side) => {
+      const ei = entryIdxMap[m1Idx];
+      const A = arrays.bbArr;
+      const up = getVal(A.upper, ei), lo = getVal(A.lower, ei), mid = getVal(A.middle, ei);
+      const c = getVal(closes, ei);
+      const pC = getVal(closes, ei - 1);
+      const pLo = getVal(A.lower, ei - 1), pUp = getVal(A.upper, ei - 1);
+      const bw = getVal(A.bandwidth, ei);
+      const bwAvg = getVal(bwSma, ei);
+      if (up == null || lo == null || c == null) { rej.bb++; return false; }
+      const mode = cfg.filters.bb.mode;
+      let ok;
+      if (mode === 'inside') ok = c >= lo && c <= up;
+      else if (mode === 'bounce') {
+        if (pC == null || pLo == null || pUp == null) { rej.bb++; return false; }
+        const buy = pC <= pLo && c > lo;
+        const sell = pC >= pUp && c < up;
+        ok = side === 'buy' ? buy : sell;
+      } else if (mode === 'breakout') {
+        if (pC == null || pLo == null || pUp == null) { rej.bb++; return false; }
+        const buy = pC <= pUp && c > up;
+        const sell = pC >= pLo && c < lo;
+        ok = side === 'buy' ? buy : sell;
+      } else if (mode === 'trendSqueeze') {
+        if (bw == null || bwAvg == null || bwAvg === 0 || pLo == null || pUp == null) { rej.bb++; return false; }
+        const inSqueeze = bw < bwAvg * 0.7;
+        const released = side === 'buy' ? c > pUp : c < pLo;
+        ok = inSqueeze && released;
+      } else ok = true;
+      if (!ok) rej.bb++;
+      return ok;
+    });
+  }
+
+  if (cfg.filters.mom.enabled) {
+    arrays.momArr = momentum(closes, cfg.filters.mom.period);
+    rej.mom = 0;
+    filters.push((m1Idx, side) => {
+      const v = getVal(arrays.momArr, entryIdxMap[m1Idx]);
+      if (v == null) { rej.mom++; return false; }
+      const mode = cfg.filters.mom.mode;
+      let ok;
+      if (mode === 'sign') ok = side === 'buy' ? v > 0 : v < 0;
+      else ok = side === 'buy' ? v > cfg.filters.mom.threshold : v < -cfg.filters.mom.threshold;
+      if (!ok) rej.mom++;
+      return ok;
+    });
+  }
+
+  if (cfg.filters.atr.enabled) {
+    arrays.atrArr = atr(entryBars, cfg.filters.atr.period);
+    const atrSma = sma(arrays.atrArr, cfg.filters.atr.smaPeriod);
+    rej.atr = 0;
+    filters.push((m1Idx, side) => {
+      const ei = entryIdxMap[m1Idx];
+      const a = getVal(arrays.atrArr, ei), sa = getVal(atrSma, ei);
+      if (a == null || sa == null || sa === 0) { rej.atr++; return false; }
+      const mode = cfg.filters.atr.mode;
+      let ok;
+      if (mode === 'aboveAvg') ok = a > sa;
+      else if (mode === 'belowAvg') ok = a < sa;
+      else ok = a >= sa * cfg.filters.atr.minMul && a <= sa * cfg.filters.atr.maxMul;
+      if (!ok) rej.atr++;
+      return ok;
+    });
+  }
+
+  if (cfg.filters.ao.enabled) {
+    const ao = aoCalc(entryBars, cfg.filters.ao.fast, cfg.filters.ao.slow, 5);
+    arrays.acArr = ao.ac;
+    rej.ao = 0;
+    filters.push((m1Idx, side) => {
+      const ei = entryIdxMap[m1Idx];
+      if (ei < 2) { rej.ao++; return false; }
+      const a = getVal(arrays.acArr, ei), a1 = getVal(arrays.acArr, ei - 1), a2 = getVal(arrays.acArr, ei - 2);
+      if (a == null || a1 == null) { rej.ao++; return false; }
+      const mode = cfg.filters.ao.mode;
+      let ok;
+      if (mode === 'sign') ok = side === 'buy' ? a > 0 : a < 0;
+      else if (mode === 'rising') ok = side === 'buy' ? (a > 0 && a > a1) : (a < 0 && a < a1);
+      else {
+        if (a2 == null) { rej.ao++; return false; }
+        ok = side === 'buy' ? (a > a1 && a1 > a2) : (a < a1 && a1 < a2);
+      }
+      if (!ok) rej.ao++;
+      return ok;
+    });
+  }
+
+  if (cfg.filters.rsi.enabled) {
+    arrays.rsiArr = rsiCalc(closes, cfg.filters.rsi.period);
+    rej.rsi = 0;
+    filters.push((m1Idx, side) => {
+      const v = getVal(arrays.rsiArr, entryIdxMap[m1Idx]);
+      if (v == null) { rej.rsi++; return false; }
+      const mode = cfg.filters.rsi.mode;
+      const ob = cfg.filters.rsi.overbought, os = cfg.filters.rsi.oversold;
+      let ok;
+      if (mode === 'notExtreme') ok = side === 'buy' ? v < ob : v > os;
+      else if (mode === 'aboveMid') ok = side === 'buy' ? v > 50 : v < 50;
+      else ok = v >= 40 && v <= 60;
+      if (!ok) rej.rsi++;
+      return ok;
+    });
+  }
+
+  if (cfg.filters.stoch.enabled) {
+    arrays.stochArr = stochCalc(entryBars, cfg.filters.stoch.kPeriod, cfg.filters.stoch.dPeriod, 3);
+    rej.stoch = 0;
+    filters.push((m1Idx, side) => {
+      const ei = entryIdxMap[m1Idx];
+      const k = getVal(arrays.stochArr.k, ei), d = getVal(arrays.stochArr.d, ei);
+      const kP = getVal(arrays.stochArr.k, ei - 1), dP = getVal(arrays.stochArr.d, ei - 1);
+      if (k == null || d == null) { rej.stoch++; return false; }
+      const mode = cfg.filters.stoch.mode;
+      let ok;
+      if (mode === 'cross') {
+        if (kP == null || dP == null) { rej.stoch++; return false; }
+        ok = side === 'buy' ? (kP <= dP && k > d) : (kP >= dP && k < d);
+      } else if (mode === 'aligned') ok = side === 'buy' ? k > d : k < d;
+      else ok = side === 'buy' ? k < 80 : k > 20;
+      if (!ok) rej.stoch++;
+      return ok;
+    });
+  }
+
+  if (cfg.filters.adx.enabled) {
+    arrays.adxArr = adxCalc(entryBars, cfg.filters.adx.period);
+    rej.adx = 0;
+    filters.push((m1Idx, side) => {
+      const ei = entryIdxMap[m1Idx];
+      const a = getVal(arrays.adxArr.adx, ei);
+      const pdi = getVal(arrays.adxArr.plusDI, ei), mdi = getVal(arrays.adxArr.minusDI, ei);
+      if (a == null) { rej.adx++; return false; }
+      let ok = a >= cfg.filters.adx.min;
+      if (cfg.filters.adx.mode === 'strength+di' && ok) {
+        if (pdi == null || mdi == null) { rej.adx++; return false; }
+        ok = side === 'buy' ? pdi > mdi : mdi > pdi;
+      }
+      if (!ok) rej.adx++;
+      return ok;
+    });
+  }
+
+  return { filters, rej, arrays };
+}
+
+// ============================================================
+// 6 · STRATEGY
+// ============================================================
+class UnifiedTrendPullbackEA {
+  constructor(cfg, filterEngine) {
+    // Config
+    Object.assign(this, {
+      lwmaFast: cfg.lwmaFast, lwmaMid: cfg.lwmaMid, lwmaSlow: cfg.lwmaSlow,
+      pullbackLookback: cfg.pullbackLookback, entryMode: cfg.entryMode,
+      riskPercent: cfg.riskPercent, atrStopMult: cfg.atrStopMult,
+      rewardRisk: cfg.rewardRisk, maxPositions: cfg.maxPositions,
+      breakEvenR: cfg.breakEvenR, trailStartR: cfg.trailStartR,
+      trailAtrMult: cfg.trailAtrMult, maxDailyLossPct: cfg.maxDailyLossPct,
+      maxSpreadPts: cfg.maxSpreadPts,
+      retestExpiryBars: cfg.retestExpiryBars || 10,       // counted in ENTRY-TF bars
+      maxRiskPerTradePct: cfg.maxRiskPerTradePct || 2,
+      maxAggregateRiskPct: cfg.maxAggregateRiskPct || 6,
+    });
+    // State
+    this.filters = filterEngine;
+    this.pendingBuyBar = null; this.pendingBuyLevel = null; this.pendingBuyBarIdx = null;
+    this.pendingSellBar = null; this.pendingSellLevel = null; this.pendingSellBarIdx = null;
+    this._day = null;
+    this.dailyStartEquity = null;
+    this.dailyLossTripped = false;
+    this.stats = {
+      signals: 0, entries: 0, retests: 0, skippedMinLot: 0, skippedRiskCap: 0,
+      expiredRetests: 0, invalidStop: 0, skippedMinStop: 0,
+      timeBlocks: { session: 0, hour: 0, day: 0, month: 0 },
+      filterBlocks: {},
+    };
+    this.timeFilter = makeTimeFilter(cfg.timeFilter);
+    this._pendingQueue = [];
+  }
+
+  onBar(ctx) {
+    const { broker, now, entryBars, entryIdxMap } = ctx;
+    const e = entryIdxMap[ctx.m1Idx];       // current closed ENTRY-TF bar index
+    if (e < this.pullbackLookback + 1) return;
+
+    // ---- Time filter ----
+    const timeReject = this.timeFilter(now);
+    if (timeReject) { this.stats.timeBlocks[timeReject]++; return; }
+
+    // ---- Daily reset ----
+    const day = now.toISOString().slice(0, 10);
+    if (this._day !== day) {
+      this._day = day;
+      this.dailyStartEquity = broker.equity;
+      this.dailyLossTripped = false;
+    }
+    if (this.dailyStartEquity != null) {
+      const dd = ((this.dailyStartEquity - broker.equity) / this.dailyStartEquity) * 100;
+      if (dd >= this.maxDailyLossPct) this.dailyLossTripped = true;
+    }
+    if (this.dailyLossTripped) return;
+    if (broker.spreadPts > this.maxSpreadPts) return;
+    if (broker.positions.length + this._pendingQueue.length >= this.maxPositions) return;
+
+    // ---- Aggregate risk gate (positions only; per-trade re-check in _flushPending) ----
+    let aggRisk = 0;
+    for (const p of broker.positions) if (p.initialRiskMoney) aggRisk += p.initialRiskMoney;
+    if (aggRisk / broker.equity * 100 >= this.maxAggregateRiskPct) { this.stats.skippedRiskCap++; return; }
+
+    // ---- Trend (HTF) ----
+    const htf = ctx.trendAt(ctx.m1Idx);
+    if (!htf) return;
+    const upTrend = htf.trend === 'up' && htf.slope > 0;
+    const downTrend = htf.trend === 'down' && htf.slope < 0;
+
+    // ---- Entry-TF indicators ----
+    const f = ctx.entryFastAt(ctx.m1Idx), m = ctx.entryMidAt(ctx.m1Idx), s = ctx.entrySlowAt(ctx.m1Idx);
+    if (f == null || m == null || s == null) return;
+    const a = ctx.atrAt(ctx.m1Idx);
+    if (a == null || a <= 0) return;
+
+    const bullStack = f > m && m > s;
+    const bearStack = f < m && m < s;
+
+    // ---- P0-1: pullback / breakout scan on ENTRY-TF bars ----
+    const recent = entryBars.slice(e - this.pullbackLookback, e);
+    const pb = entryBars[e - 1];                              // last CLOSED entry-TF bar
+    const win = entryBars.slice(e - this.pullbackLookback - 1, e - 1);
+    if (!pb || win.length < 2) return;
+
+    const prevHigh = Math.max(...win.map(b => b.high));
+    const prevLow  = Math.min(...win.map(b => b.low));
+
+    const pulledBack = (bullStack && recent.some(b => b.low  <= m))
+                    || (bearStack && recent.some(b => b.high >= m));
+
+    const bullBreakout = upTrend && pulledBack && pb.close > prevHigh && pb.close > f;
+    const bearBreakout = downTrend && pulledBack && pb.close < prevLow  && pb.close < f;
+
+    const tryEnter = (side) => {
+      if (this.filters.filters.length === 0) return true;
+      for (const fn of this.filters.filters) if (!fn(ctx.m1Idx, side)) return false;
+      return true;
+    };
+
+    // ---- Immediate: schedule for NEXT bar open ----
+    if (this.entryMode === 'immediate' || this.entryMode === 'both') {
+      if (bullBreakout) {
+        this.stats.signals++;
+        if (tryEnter('buy')) this._scheduleEntry(ctx, 'buy', pb.close - a * this.atrStopMult, 'immediate');
+      }
+      if (bearBreakout) {
+        this.stats.signals++;
+        if (tryEnter('sell')) this._scheduleEntry(ctx, 'sell', pb.close + a * this.atrStopMult, 'immediate');
+      }
+    }
+
+    // ---- Retest: register pending with expiry in ENTRY-TF bars ----
+    if (this.entryMode === 'retest' || this.entryMode === 'both') {
+      if (bullBreakout && this.pendingBuyBar == null) {
+        this.pendingBuyBar = pb.date;
+        this.pendingBuyLevel = prevHigh;
+        this.pendingBuyBarIdx = e;
+      }
+      if (bearBreakout && this.pendingSellBar == null) {
+        this.pendingSellBar = pb.date;
+        this.pendingSellLevel = prevLow;
+        this.pendingSellBarIdx = e;
+      }
+    }
+
+    this._processRetests(ctx, tryEnter, a);
+  }
+
+  _scheduleEntry(ctx, side, stop, source) {
+    this._pendingQueue.push({
+      side, stop,
+      triggerBar: ctx.m1Idx,
+      source,
+      placedEquity: ctx.broker.equity,
+    });
+  }
+
+  _flushPending(ctx) {
+    if (!this._pendingQueue.length) return;
+    const { m1Bars, m1Idx, broker } = ctx;
+    const bar = m1Bars[m1Idx];
+    if (!bar) return;
+    for (const pending of this._pendingQueue.slice()) {
+      const fill = broker.fillEntry(pending.side, bar);
+
+      // P1-3: reject stops on the wrong side after a gap
+      if (pending.side === 'buy'  && pending.stop >= fill) {
+        this.stats.invalidStop++;
+        this._pendingQueue = this._pendingQueue.filter(p => p !== pending);
+        continue;
+      }
+      if (pending.side === 'sell' && pending.stop <= fill) {
+        this.stats.invalidStop++;
+        this._pendingQueue = this._pendingQueue.filter(p => p !== pending);
+        continue;
+      }
+
+
+      const dist = Math.abs(fill - pending.stop);
+      if (dist <= 0) { this._pendingQueue = this._pendingQueue.filter(p => p !== pending); continue; }
+
+      // NEW: reject trades whose stop is too tight (noise ATR bars)
+      const minStopPts = broker.minStopPts || 30;
+      if (dist / broker.point < minStopPts) {
+        this.stats.skippedMinStop++;
+        this._pendingQueue = this._pendingQueue.filter(p => p !== pending);
+        continue;
+      }
+
+      const lots = broker.calculateLots(dist, this.riskPercent);
+      if (lots == null) {
+        this.stats.skippedMinLot++;
+        this._pendingQueue = this._pendingQueue.filter(p => p !== pending);
+        continue;
+      }
+
+      const riskMoney = dist / broker.point * broker.tickValue * lots;
+
+      // Per-trade cap
+      if (riskMoney / broker.equity * 100 > this.maxRiskPerTradePct) {
+        this.stats.skippedRiskCap++;
+        this._pendingQueue = this._pendingQueue.filter(p => p !== pending);
+        continue;
+      }
+
+      // P1-2: re-check aggregate risk INCLUDING this proposed trade
+      let aggRisk = riskMoney;
+      for (const p of broker.positions) if (p.initialRiskMoney) aggRisk += p.initialRiskMoney;
+      if (aggRisk / broker.equity * 100 > this.maxAggregateRiskPct) {
+        this.stats.skippedRiskCap++;
+        this._pendingQueue = this._pendingQueue.filter(p => p !== pending);
+        continue;
+      }
+
+      const tp = pending.side === 'buy'
+        ? fill + dist * this.rewardRisk
+        : fill - dist * this.rewardRisk;
+      broker.openPosition({
+        side: pending.side,
+        fillPrice: fill,
+        lots,
+        sl: pending.stop,
+        tp,
+        openTime: bar.date,
+        openBar: m1Idx,
+        requestedEntry: bar.open,
+        comment: 'UTP-' + pending.source,
+      });
+      this.stats.entries++;
+      this._pendingQueue = this._pendingQueue.filter(p => p !== pending);
+    }
+  }
+
+  _processRetests(ctx, tryEnter, atrNow) {
+    if (this.entryMode === 'immediate') return;
+    const { m1Bars, m1Idx, entryBars, entryIdxMap } = ctx;
+    const e = entryIdxMap[m1Idx];
+    if (e < 1) return;
+    const cur = entryBars[e - 1];   // last CLOSED entry-TF bar
+    if (!cur) return;
+
+    // P1-4: expiry counted in ENTRY-TF bars, not M1
+    if (this.pendingBuyBar && (e - this.pendingBuyBarIdx) > this.retestExpiryBars) {
+      this.pendingBuyBar = null; this.pendingBuyLevel = null; this.pendingBuyBarIdx = null;
+      this.stats.expiredRetests++;
+    }
+    if (this.pendingSellBar && (e - this.pendingSellBarIdx) > this.retestExpiryBars) {
+      this.pendingSellBar = null; this.pendingSellLevel = null; this.pendingSellBarIdx = null;
+      this.stats.expiredRetests++;
+    }
+
+    if (this.pendingBuyBar && cur.date.getTime() > this.pendingBuyBar.getTime()) {
+      if (cur.low <= this.pendingBuyLevel && cur.close > this.pendingBuyLevel && tryEnter('buy')) {
+        const stop = cur.close - atrNow * this.atrStopMult;
+        this._scheduleEntry(ctx, 'buy', stop, 'retest');
+        this.stats.retests++;
+        this.pendingBuyBar = null; this.pendingBuyLevel = null; this.pendingBuyBarIdx = null;
+      }
+    }
+    if (this.pendingSellBar && cur.date.getTime() > this.pendingSellBar.getTime()) {
+      if (cur.high >= this.pendingSellLevel && cur.close < this.pendingSellLevel && tryEnter('sell')) {
+        const stop = cur.close + atrNow * this.atrStopMult;
+        this._scheduleEntry(ctx, 'sell', stop, 'retest');
+        this.stats.retests++;
+        this.pendingSellBar = null; this.pendingSellLevel = null; this.pendingSellBarIdx = null;
+      }
+    }
+  }
+
+  // BE + trailing only. Excursion tracking is done in runEngine BEFORE exits (P0-3).
+  managePosition(pos, bar, ctx) {
+    const a = ctx.atrAt(ctx.m1Idx);
+    if (!a || !pos.stopDistance) return;
+    const R = pos.stopDistance;
+    if (!pos.beMoved) {
+      const p = pos.side === 'buy' ? (bar.close - pos.entry) / R : (pos.entry - bar.close) / R;
+      if (p >= this.breakEvenR) { pos.sl = pos.entry; pos.beMoved = true; }
+    }
+    if (pos.side === 'buy') {
+      const p = (pos.highestSinceOpen - pos.entry) / R;
+      if (p >= this.trailStartR) {
+        const ns = pos.highestSinceOpen - a * this.trailAtrMult;
+        if (ns > pos.sl) pos.sl = ns;
+        pos.trailActive = true;
+      }
+    } else {
+      const p = (pos.entry - pos.lowestSinceOpen) / R;
+      if (p >= this.trailStartR) {
+        const ns = pos.lowestSinceOpen + a * this.trailAtrMult;
+        if (pos.sl == null || ns < pos.sl) pos.sl = ns;
+        pos.trailActive = true;
+      }
+    }
+  }
+}
+
+// ============================================================
+// 7 · CSV PARSER (P1-7: returns raw + clean + removal counts)
+// ============================================================
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/);
+  const raw = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const parts = line.split(/[\t,;]+/);
+    if (parts.length < 6) continue;
+    let ds, ts, o, h, l, c, v;
+    if (parts.length >= 7 && /^\d{2}:\d{2}/.test(parts[1])) {
+      [ds, ts, o, h, l, c, v] = parts;
+    } else if (parts[0].includes(' ') && /^\d{4}[.\-]\d{2}[.\-]\d{2} \d{2}:\d{2}/.test(parts[0])) {
+      const [d, t, ...rest] = parts[0].split(' ');
+      ds = d; ts = t;
+      [o, h, l, c, v] = rest.concat(parts.slice(1));
+    } else { ds = parts[0]; ts = '00:00'; [o, h, l, c, v] = parts.slice(1); }
+    const date = new Date(ds.replace(/\./g, '-') + 'T' + ts + ':00Z');
+    if (isNaN(date.getTime())) continue;
+    const bar = { date, open: +o, high: +h, low: +l, close: +c, volume: +v || 0 };
+    if ([bar.open, bar.high, bar.low, bar.close].some(x => !isFinite(x) || x <= 0)) continue;
+    raw.push(bar);
+  }
+
+  // Validate the RAW ordering BEFORE cleaning
+  const rawQuality = validateBars(raw, 1);
+
+  // Clean: sort + de-dupe
+  const sorted = raw.slice().sort((a, b) => a.date - b.date);
+  const unique = [];
+  let removedDuplicates = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    if (i === 0 || sorted[i].date.getTime() !== sorted[i - 1].date.getTime()) unique.push(sorted[i]);
+    else removedDuplicates++;
+  }
+
+  return {
+    clean: unique,
+    rawQuality,
+    removedDuplicates,
+    removedOutOfOrder: rawQuality.outOfOrder,
+  };
+}
+
+// ============================================================
+// 8 · MAIN ENGINE
+// ============================================================
+async function runEngine(m1Bars, cfg, onProgress) {
+  const entryBars = resample(m1Bars, cfg.entryTFMin);
+  const trendBars = resample(m1Bars, cfg.trendTFMin);
+  const entryCloses = entryBars.map(b => b.close);
+
+  const entryFast = lwma(entryCloses, cfg.lwmaFast);
+  const entryMid  = lwma(entryCloses, cfg.lwmaMid);
+  const entrySlow = lwma(entryCloses, cfg.lwmaSlow);
+  const entryATR  = atr(entryBars, cfg.atrPeriod);
+
+  const trendCloses = trendBars.map(b => b.close);
+  const trendFast = lwma(trendCloses, cfg.trendFastPeriod);
+  const trendSlow = lwma(trendCloses, cfg.trendSlowPeriod);
+
+  const entryIdxMap = buildHTFIndexGetter(m1Bars, entryBars);
+  const trendIdxMap = buildHTFIndexGetter(m1Bars, trendBars);
+
+  const broker = new Broker(cfg);
+  const filterEngine = makeEntryFilters(cfg, entryBars, entryIdxMap);
+  const ea = new UnifiedTrendPullbackEA(cfg, filterEngine);
+
+  const ctx = {
+    m1Bars, m1Idx: 0, broker, now: null,
+    entryBars, entryIdxMap,            // P0-1: exposed for strategy
+    entryFastAt: (i) => getVal(entryFast, entryIdxMap[i]),
+    entryMidAt:  (i) => getVal(entryMid,  entryIdxMap[i]),
+    entrySlowAt: (i) => getVal(entrySlow, entryIdxMap[i]),
+    atrAt:       (i) => getVal(entryATR,  entryIdxMap[i]),
+    trendAt: (i) => {
+      const t = trendIdxMap[i];
+      if (t < 0) return null;
+      const f = getVal(trendFast, t), s = getVal(trendSlow, t);
+      const fp = getVal(trendFast, t - cfg.trendSlopeBars);
+      if (f == null || s == null || fp == null) return null;
+      return { trend: f > s ? 'up' : (f < s ? 'down' : 'flat'), fast: f, slow: s, slope: f - fp };
+    },
+  };
+
+  const warmupEntry = Math.max(cfg.lwmaSlow, cfg.atrPeriod) + 10;
+  const warmupTrend = cfg.trendSlowPeriod + 10;
+  const startM1 = Math.max(warmupEntry * cfg.entryTFMin, warmupTrend * cfg.trendTFMin, 100);
+
+  const equityCurve = [];
+  const balanceCurve = [];
+  let peakMTM = cfg.startingBalance, maxMTMDD = 0, maxMTMDDPct = 0;
+  let peakBal = cfg.startingBalance, maxBalDD = 0, maxBalDDPct = 0;
+
+  let last = 0;
+  for (let i = startM1; i < m1Bars.length; i++) {
+    const bar = m1Bars[i];
+    ctx.m1Idx = i;
+    ctx.now = bar.date;
+
+    // 1. Fill pending entries scheduled for this bar's OPEN
+    ea._flushPending(ctx);
+
+    // 2. P0-3: update excursions BEFORE exit checks so the closing bar counts
+    for (const pos of broker.positions) {
+      if (bar.high > pos.highestSinceOpen) pos.highestSinceOpen = bar.high;
+      if (bar.low  < pos.lowestSinceOpen)  pos.lowestSinceOpen  = bar.low;
+      if (pos.side === 'buy') {
+        pos.mfePips = Math.max(pos.mfePips, (pos.highestSinceOpen - pos.entry) / broker.point);
+        pos.maePips = Math.max(pos.maePips, (pos.entry - pos.lowestSinceOpen) / broker.point);
+      } else {
+        pos.mfePips = Math.max(pos.mfePips, (pos.entry - pos.lowestSinceOpen) / broker.point);
+        pos.maePips = Math.max(pos.maePips, (pos.highestSinceOpen - pos.entry) / broker.point);
+      }
+    }
+
+    // 3. Exits — P0-2: bid/ask model (shorts trigger on ask)
+    const S = broker._spreadPrice(bar);
+    for (const pos of [...broker.positions]) {
+      let hitSL, hitTP;
+      if (pos.side === 'buy') {
+        hitSL = pos.sl != null && bar.low  <= pos.sl;
+        hitTP = pos.tp != null && bar.high >= pos.tp;
+      } else {
+        hitSL = pos.sl != null && bar.high + S >= pos.sl;
+        hitTP = pos.tp != null && bar.low  + S <= pos.tp;
+      }
+      let action = null;
+      if (hitSL && hitTP) {
+        if (cfg.intrabarOrder === 'tp_first') action = 'TP';
+        else if (cfg.intrabarOrder === 'nearest') {
+          const distSL = Math.abs(bar.open - pos.sl);
+          const distTP = Math.abs(bar.open - pos.tp);
+          action = distTP < distSL ? 'TP' : 'SL';
+        } else action = 'SL';
+      } else if (hitSL) action = 'SL';
+      else if (hitTP) action = 'TP';
+
+      if (action === 'SL') {
+        const fill = broker.fillExit(pos, bar, pos.sl, 'SL');
+        broker.closePosition(pos, fill, bar.date, i, 'SL');
+        continue;
+      }
+      if (action === 'TP') {
+        const fill = broker.fillExit(pos, bar, pos.tp, 'TP');
+        broker.closePosition(pos, fill, bar.date, i, 'TP');
+        continue;
+      }
+
+      ea.managePosition(pos, bar, ctx);
+    }
+
+    // 4. MTM equity
+    const eq = broker.markToMarket(bar.close, bar);
+    equityCurve.push({ date: bar.date, equity: eq, balance: broker.balance });
+    balanceCurve.push({ date: bar.date, balance: broker.balance });
+
+    if (eq > peakMTM) peakMTM = eq;
+    const ddMTM = peakMTM - eq;
+    if (ddMTM > maxMTMDD) { maxMTMDD = ddMTM; maxMTMDDPct = peakMTM > 0 ? (ddMTM / peakMTM) * 100 : 0; }
+    if (broker.balance > peakBal) peakBal = broker.balance;
+    const ddBal = peakBal - broker.balance;
+    if (ddBal > maxBalDD) { maxBalDD = ddBal; maxBalDDPct = peakBal > 0 ? (ddBal / peakBal) * 100 : 0; }
+
+    // 5. Strategy (breakout detected on CLOSED bar, entry scheduled for NEXT bar open)
+    ea.onBar(ctx);
+
+    if (i - last > 5000) {
+      last = i;
+      onProgress((i - startM1) / (m1Bars.length - startM1));
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+
+  // Force close at EOD
+  if (broker.positions.length) {
+    const lb = m1Bars[m1Bars.length - 1];
+    for (const p of [...broker.positions]) {
+      const fill = broker.fillExit(p, lb, lb.close, 'EOD');
+      broker.closePosition(p, fill, lb.date, m1Bars.length - 1, 'EOD');
+    }
+  }
+
+  return buildReport(broker, m1Bars, cfg, ea, entryBars, startM1, filterEngine, {
+    equityCurve, balanceCurve,
+    maxMTMDD, maxMTMDDPct, maxBalDD, maxBalDDPct,
+  });
+}
+
+// ============================================================
+// 9 · REPORT (P0-4: daily-return-based ratios; P2-4: proper Calmar)
+// ============================================================
+function dailyReturnsFromEquity(equityCurve) {
+  const byDay = new Map();
+  for (const p of equityCurve) byDay.set(p.date.toISOString().slice(0, 10), p.equity);
+  const days = [...byDay.keys()].sort();
+  const rets = [];
+  for (let i = 1; i < days.length; i++) {
+    const prev = byDay.get(days[i - 1]);
+    const cur = byDay.get(days[i]);
+    rets.push(prev > 0 ? (cur - prev) / prev : 0);
+  }
+  return rets;
+}
+
+function buildReport(broker, m1Bars, cfg, ea, entryBars, startM1, filterEngine, mtm) {
+  const trades = broker.closedTrades;
+  const wins = trades.filter(t => t.pnl > 0);
+  const losses = trades.filter(t => t.pnl < 0);
+  const breakEvens = trades.filter(t => t.pnl === 0);
+  const gw = wins.reduce((s, t) => s + t.pnl, 0);
+  const gl = Math.abs(losses.reduce((s, t) => s + t.pnl, 0));
+  const pf = gl > 0 ? gw / gl : (gw > 0 ? Infinity : 0);
+
+  // P0-4: performance ratios from DAILY equity returns
+  const dailyRets = dailyReturnsFromEquity(mtm.equityCurve);
+  const meanD = dailyRets.length ? dailyRets.reduce((a, b) => a + b, 0) / dailyRets.length : 0;
+  const stdD = dailyRets.length > 1
+    ? Math.sqrt(dailyRets.reduce((s, r) => s + (r - meanD) ** 2, 0) / (dailyRets.length - 1))
+    : 0;
+  const downsideD = dailyRets.length
+    ? Math.sqrt(dailyRets.reduce((s, r) => s + Math.min(r, 0) ** 2, 0) / dailyRets.length)
+    : 0;
+  const sharpe = stdD > 0 ? (meanD / stdD) * Math.sqrt(252) : 0;
+  const sortino = downsideD > 0 ? (meanD / downsideD) * Math.sqrt(252) : 0;
+
+  // Ulcer index & time under water
+  let peak = -Infinity, sumSqDD = 0, maxDD = 0, uwStart = null, maxUW = 0;
+  for (const p of mtm.equityCurve) {
+    if (p.equity > peak) peak = p.equity;
+    const ddPct = peak > 0 ? ((peak - p.equity) / peak) * 100 : 0;
+    sumSqDD += ddPct * ddPct;
+    if (ddPct > maxDD) maxDD = ddPct;
+    if (ddPct > 0.01) {
+      if (uwStart == null) uwStart = p.date.getTime();
+      maxUW = Math.max(maxUW, p.date.getTime() - uwStart);
+    } else {
+      uwStart = null;
+    }
+  }
+  const ulcer = mtm.equityCurve.length ? Math.sqrt(sumSqDD / mtm.equityCurve.length) : 0;
+
+  // P2-4: Calmar = annualized return / max MTM DD
+  const spanMs = mtm.equityCurve.length > 1
+    ? mtm.equityCurve[mtm.equityCurve.length - 1].date - mtm.equityCurve[0].date
+    : 0;
+  const years = spanMs > 0 ? spanMs / (365.25 * 24 * 3600 * 1000) : 0;
+  const totalRet = cfg.startingBalance > 0 ? (broker.balance - cfg.startingBalance) / cfg.startingBalance : 0;
+  const cagr = years > 0 ? Math.pow(1 + totalRet, 1 / years) - 1 : 0;
+  const calmar = mtm.maxMTMDDPct > 0 ? (cagr * 100) / mtm.maxMTMDDPct : 0;
+
+  // Streaks (zero-PnL counts as a win for streak continuity)
+  let cw = 0, cl = 0, maxCW = 0, maxCL = 0;
+  for (const t of trades) {
+    if (t.pnl >= 0) { cw++; cl = 0; } else { cl++; cw = 0; }
+    maxCW = Math.max(maxCW, cw); maxCL = Math.max(maxCL, cl);
+  }
+
+  const avgMAE = trades.length ? trades.reduce((s, t) => s + (t.maePips || 0), 0) / trades.length : 0;
+  const avgMFE = trades.length ? trades.reduce((s, t) => s + (t.mfePips || 0), 0) / trades.length : 0;
+
+  // Breakdowns
+  const byMonth = {}, byDow = {}, byHour = {}, bySession = {};
+  const getSession = (h) => {
+    if (h >= 0 && h < 8) return 'Asia';
+    if (h >= 8 && h < 13) return 'London';
+    if (h >= 13 && h < 16) return 'LDN/NY';
+    if (h >= 16 && h < 22) return 'NY';
+    return 'Off';
+  };
+  for (const t of trades) {
+    const d = t.closeTime;
+    const mkey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+    byMonth[mkey] = (byMonth[mkey] || 0) + t.pnl;
+    const dowKey = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getUTCDay()];
+    byDow[dowKey] = (byDow[dowKey] || 0) + t.pnl;
+    const hkey = d.getUTCHours();
+    byHour[hkey] = (byHour[hkey] || 0) + t.pnl;
+    const skey = getSession(hkey);
+    bySession[skey] = (bySession[skey] || 0) + t.pnl;
+  }
+
+  return {
+    config: cfg,
+    period: { from: m1Bars[startM1].date, to: m1Bars[m1Bars.length - 1].date },
+    summary: {
+      startingBalance: cfg.startingBalance,
+      finalBalance: +broker.balance.toFixed(2),
+      netProfit: +(broker.balance - cfg.startingBalance).toFixed(2),
+      netProfitPct: +(totalRet * 100).toFixed(2),
+      totalTrades: trades.length,
+      wins: wins.length,
+      losses: losses.length,
+      breakEvens: breakEvens.length,
+      winRate: trades.length ? +((wins.length / trades.length) * 100).toFixed(2) : 0,
+      grossWin: +gw.toFixed(2), grossLoss: +gl.toFixed(2),
+      profitFactor: +pf.toFixed(2),
+      avgWin: wins.length ? +(gw / wins.length).toFixed(2) : 0,
+      avgLoss: losses.length ? +(-gl / losses.length).toFixed(2) : 0,
+      expectancy: trades.length ? +((gw - gl) / trades.length).toFixed(2) : 0,
+      avgRMultiple: trades.length ? +(trades.reduce((s, t) => s + t.rMultiple, 0) / trades.length).toFixed(2) : 0,
+      maxDrawdownBalance: +mtm.maxBalDD.toFixed(2),
+      maxDrawdownBalancePct: +mtm.maxBalDDPct.toFixed(2),
+      maxDrawdownEquity: +mtm.maxMTMDD.toFixed(2),
+      maxDrawdownEquityPct: +mtm.maxMTMDDPct.toFixed(2),
+      sharpe: +sharpe.toFixed(2),
+      sortino: +sortino.toFixed(2),
+      calmar: +calmar.toFixed(2),
+      ulcer: +ulcer.toFixed(2),
+      recoveryFactor: mtm.maxMTMDD > 0 ? +((broker.balance - cfg.startingBalance) / mtm.maxMTMDD).toFixed(2) : 0,
+      maxConsecWins: maxCW, maxConsecLosses: maxCL,
+      avgMAE: +avgMAE.toFixed(1), avgMFE: +avgMFE.toFixed(1),
+      avgDurationMin: trades.length ? Math.round(trades.reduce((s, t) => s + (t.durationMin || 0), 0) / trades.length) : 0,
+      maxTimeUnderWaterHours: +(maxUW / 3600000).toFixed(1),
+    },
+    breakdown: { byMonth, byDow, byHour, bySession },
+    diagnostics: {
+      signals: ea.stats.signals,
+      entries: ea.stats.entries,
+      retests: ea.stats.retests,
+      skippedMinLot: ea.stats.skippedMinLot,
+      skippedRiskCap: ea.stats.skippedRiskCap,
+      invalidStop: ea.stats.invalidStop,
+	  skippedMinStop: ea.stats.skippedMinStop,
+      expiredRetests: ea.stats.expiredRetests,
+      timeBlocks: ea.stats.timeBlocks,
+      filterBlocks: filterEngine.rej,
+    },
+    trades,
+    equityCurve: mtm.equityCurve,
+    balanceCurve: mtm.balanceCurve,
+    _entryBars: entryBars,
+    _startM1: startM1,
+    _filterArrays: filterEngine.arrays,
+  };
+}
+
+// ============================================================
+// 10 · ROBUSTNESS TOOLS (unchanged; not wired to UI)
+// ============================================================
+function splitBars(m1Bars, fractions) {
+  const n = m1Bars.length;
+  const cuts = [];
+  let cum = 0;
+  for (const f of fractions) { cum += f; cuts.push(Math.floor(n * cum)); }
+  const splits = [];
+  let prev = 0;
+  for (const cut of cuts) { splits.push(m1Bars.slice(prev, cut)); prev = cut; }
+  return splits;
+}
+
+function monteCarlo(trades, startingBalance, iterations = 1000) {
+  if (!trades.length) return null;
+  const pnls = trades.map(t => t.pnl);
+  const finals = [];
+  const maxDDs = [];
+  for (let iter = 0; iter < iterations; iter++) {
+    let eq = startingBalance, peak = eq, mdd = 0;
+    for (let i = 0; i < pnls.length; i++) {
+      const r = pnls[Math.floor(Math.random() * pnls.length)];
+      eq += r;
+      if (eq > peak) peak = eq;
+      const dd = peak - eq;
+      if (dd > mdd) mdd = dd;
+    }
+    finals.push(eq);
+    maxDDs.push(mdd);
+  }
+  finals.sort((a, b) => a - b);
+  maxDDs.sort((a, b) => a - b);
+  const pct = (arr, p) => arr[Math.floor(arr.length * p)];
+  return {
+    iterations,
+    final: {
+      p5: pct(finals, 0.05), p25: pct(finals, 0.25), p50: pct(finals, 0.5),
+      p75: pct(finals, 0.75), p95: pct(finals, 0.95),
+      best: finals[finals.length - 1], worst: finals[0],
+    },
+    maxDD: {
+      p50: pct(maxDDs, 0.5), p75: pct(maxDDs, 0.75), p95: pct(maxDDs, 0.95),
+      worst: maxDDs[maxDDs.length - 1],
+    },
+  };
+}
+
+// ============================================================
+// 11 · CHART RENDERING (unchanged)
+// ============================================================
+const charts = [];
+function clearCharts() { document.getElementById('chartsContainer').innerHTML = ''; charts.length = 0; }
+function makeChart(title, height, legendHTML = '') {
+  const w = document.createElement('div');
+  w.className = 'chart-wrap';
+  w.innerHTML = `<div class="chart-title"><span>${title}</span><span class="legend">${legendHTML}</span></div>`;
+  const c = document.createElement('canvas');
+  c.style.height = height + 'px';
+  w.appendChild(c);
+  document.getElementById('chartsContainer').appendChild(w);
+  return { wrap: w, canvas: c };
+}
+function fitCanvas(canvas, cssH) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const W = rect.width - 20;
+  canvas.width = W * dpr; canvas.height = cssH * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = cssH + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W, H: cssH };
+}
+
+function drawEquityChart(report) {
+  const { canvas } = makeChart('Equity (MTM) & Balance', 280, `<span class="c-green">● Wins</span><span class="c-red">● Losses</span>`);
+  const { ctx, W, H } = fitCanvas(canvas, 280);
+  const curve = report.equityCurve;
+  if (!curve || curve.length < 2) {
+    ctx.fillStyle = '#8b949e'; ctx.font = '12px monospace'; ctx.fillText('Not enough data', 20, H / 2);
+    return;
+  }
+  const padL = 60, padR = 10, padT = 10, padB = 24;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  let min = Infinity, max = -Infinity;
+  for (const p of curve) {
+    min = Math.min(min, p.equity, p.balance);
+    max = Math.max(max, p.equity, p.balance);
+  }
+  const pad = (max - min) * 0.08 || 100;
+  min -= pad; max += pad;
+  const t0 = curve[0].date.getTime();
+  const t1 = curve[curve.length - 1].date.getTime();
+  const xOf = t => padL + ((t - t0) / (t1 - t0)) * iw;
+  const yOf = v => padT + (1 - (v - min) / (max - min)) * ih;
+
+  ctx.strokeStyle = 'rgba(48,54,61,0.7)'; ctx.font = '10px monospace'; ctx.fillStyle = '#8b949e';
+  for (let i = 0; i <= 4; i++) {
+    const v = min + (max - min) * i / 4;
+    const y = yOf(v);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.textAlign = 'right'; ctx.fillText('$' + v.toFixed(0), padL - 6, y + 3);
+  }
+
+  ctx.strokeStyle = '#d29922'; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i = 0; i < curve.length; i++) {
+    const x = xOf(curve[i].date.getTime()), y = yOf(curve[i].balance);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  const up = curve[curve.length - 1].equity >= report.summary.startingBalance;
+  ctx.beginPath();
+  for (let i = 0; i < curve.length; i++) {
+    const x = xOf(curve[i].date.getTime()), y = yOf(curve[i].equity);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = up ? '#3fb950' : '#f85149'; ctx.lineWidth = 2; ctx.stroke();
+
+  for (const t of report.trades) {
+    const x = xOf(t.closeTime.getTime());
+    let idx = Math.min(curve.length - 1, Math.max(0, Math.floor((t.closeTime.getTime() - t0) / (t1 - t0) * curve.length)));
+    const y = yOf(curve[idx].equity);
+    ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = t.pnl >= 0 ? '#3fb950' : '#f85149'; ctx.fill();
+  }
+
+  ctx.textAlign = 'center'; ctx.fillStyle = '#8b949e';
+  for (let i = 0; i < 5; i++) {
+    const t = t0 + (t1 - t0) * i / 4;
+    ctx.fillText(new Date(t).toISOString().slice(0, 10), xOf(t), H - 6);
+  }
+}
+
+function drawDrawdownChart(report) {
+  const { canvas } = makeChart('Equity Drawdown (MTM)', 110, `<span class="c-red">● DD %</span>`);
+  const { ctx, W, H } = fitCanvas(canvas, 110);
+  const curve = report.equityCurve;
+  if (!curve || curve.length < 2) return;
+  const padL = 60, padR = 10, padT = 8, padB = 18;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  let peak = -Infinity;
+  const dds = curve.map(p => {
+    if (p.equity > peak) peak = p.equity;
+    return { date: p.date, dd: peak > 0 ? (peak - p.equity) / peak * 100 : 0 };
+  });
+  const maxDD = Math.max(...dds.map(p => p.dd), 0.01);
+  const t0 = dds[0].date.getTime(), t1 = dds[dds.length - 1].date.getTime();
+  const xOf = t => padL + ((t - t0) / (t1 - t0)) * iw;
+  const yOf = v => padT + (v / maxDD) * ih;
+  ctx.beginPath();
+  ctx.moveTo(xOf(dds[0].date.getTime()), padT);
+  for (const p of dds) ctx.lineTo(xOf(p.date.getTime()), yOf(p.dd));
+  ctx.lineTo(xOf(dds[dds.length - 1].date.getTime()), padT);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(248,81,73,0.25)'; ctx.fill();
+  ctx.beginPath();
+  for (let i = 0; i < dds.length; i++) {
+    const p = dds[i];
+    const x = xOf(p.date.getTime()), y = yOf(p.dd);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = '#f85149'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#8b949e'; ctx.font = '10px monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('0%', padL - 6, padT + 4);
+  ctx.fillText('-' + maxDD.toFixed(1) + '%', padL - 6, padT + ih);
+}
+
+function drawMonthlyChart(report) {
+  const byMonth = report.breakdown.byMonth;
+  const months = Object.keys(byMonth).sort();
+  if (!months.length) return;
+  const { canvas } = makeChart('Monthly P&L', 130, `<span class="c-green">+</span><span class="c-red">−</span>`);
+  const { ctx, W, H } = fitCanvas(canvas, 130);
+  const padL = 60, padR = 10, padT = 8, padB = 18;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  const maxAbs = Math.max(...months.map(m => Math.abs(byMonth[m])), 1);
+  const zeroY = padT + ih / 2;
+  const barW = iw / months.length * 0.75;
+  for (let i = 0; i < months.length; i++) {
+    const v = byMonth[months[i]];
+    const x = padL + (i + 0.5) * (iw / months.length);
+    const h = (Math.abs(v) / maxAbs) * (ih / 2);
+    ctx.fillStyle = v >= 0 ? 'rgba(63,185,80,0.8)' : 'rgba(248,81,73,0.8)';
+    ctx.fillRect(x - barW / 2, v >= 0 ? zeroY - h : zeroY, barW, h);
+  }
+  ctx.strokeStyle = 'rgba(48,54,61,0.9)';
+  ctx.beginPath(); ctx.moveTo(padL, zeroY); ctx.lineTo(W - padR, zeroY); ctx.stroke();
+  ctx.fillStyle = '#8b949e'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+  for (let i = 0; i < months.length; i++) {
+    if (i % Math.max(1, Math.floor(months.length / 8)) !== 0) continue;
+    const x = padL + (i + 0.5) * (iw / months.length);
+    ctx.fillText(months[i].slice(2), x, H - 4);
+  }
+}
+
+// ============================================================
+// 12 · UI WIRING
+// ============================================================
+let loadedBars = null;
+let lastReport = null;
+let hoursSet = new Set([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]);
+let daysSet = new Set([0,1,2,3,4,5,6]);
+let monthsSet = new Set([1,2,3,4,5,6,7,8,9,10,11,12]);
+
+function toggleFilterCard(cardId, enabled) {
+  document.getElementById(cardId).classList.toggle('enabled', enabled);
+}
+function buildPills() {
+  const hp = document.getElementById('hoursPills'); if (!hp) return;
+  hp.innerHTML = '';
+  for (let h = 0; h < 24; h++) {
+    const el = document.createElement('div');
+    el.className = 'pill active';
+    el.textContent = String(h).padStart(2, '0');
+    el.dataset.hour = h;
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.onclick = () => {
+      el.classList.toggle('active');
+      if (el.classList.contains('active')) hoursSet.add(h); else hoursSet.delete(h);
+      updateHoursBadge();
+    };
+    el.addEventListener('keydown', ev => { if (ev.key === ' ' || ev.key === 'Enter') { ev.preventDefault(); el.click(); } });
+    hp.appendChild(el);
+  }
+  const dp = document.getElementById('daysPills');
+  if (dp) {
+    const names = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    dp.innerHTML = '';
+    for (let d = 0; d < 7; d++) {
+      const el = document.createElement('div');
+      el.className = 'pill active'; el.textContent = names[d]; el.dataset.day = d;
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.onclick = () => {
+        el.classList.toggle('active');
+        if (el.classList.contains('active')) daysSet.add(d); else daysSet.delete(d);
+        updateDaysBadge();
+      };
+      el.addEventListener('keydown', ev => { if (ev.key === ' ' || ev.key === 'Enter') { ev.preventDefault(); el.click(); } });
+      dp.appendChild(el);
+    }
+  }
+  const mp = document.getElementById('monthsPills');
+  if (mp) {
+    const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    mp.innerHTML = '';
+    for (let m = 0; m < 12; m++) {
+      const el = document.createElement('div');
+      el.className = 'pill active'; el.textContent = names[m]; el.dataset.month = m + 1;
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.onclick = () => {
+        el.classList.toggle('active');
+        if (el.classList.contains('active')) monthsSet.add(m + 1); else monthsSet.delete(m + 1);
+        updateMonthsBadge();
+      };
+      el.addEventListener('keydown', ev => { if (ev.key === ' ' || ev.key === 'Enter') { ev.preventDefault(); el.click(); } });
+      mp.appendChild(el);
+    }
+  }
+}
+function updateHoursBadge() { const el = document.getElementById('hoursBadge'); if (!el) return; el.textContent = hoursSet.size === 24 ? 'all' : hoursSet.size === 0 ? 'none' : `${hoursSet.size} hours`; }
+function updateDaysBadge() { const el = document.getElementById('daysBadge'); if (!el) return; el.textContent = daysSet.size === 7 ? 'all' : daysSet.size === 0 ? 'none' : `${daysSet.size} days`; }
+function updateMonthsBadge() { const el = document.getElementById('monthsBadge'); if (!el) return; el.textContent = monthsSet.size === 12 ? 'all' : monthsSet.size === 0 ? 'none' : `${monthsSet.size} months`; }
+function hoursAll() { hoursSet = new Set([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]); document.querySelectorAll('#hoursPills .pill').forEach(p => p.classList.add('active')); updateHoursBadge(); }
+function hoursClear() { hoursSet = new Set(); document.querySelectorAll('#hoursPills .pill').forEach(p => p.classList.remove('active')); updateHoursBadge(); }
+function daysAll() { daysSet = new Set([0,1,2,3,4,5,6]); document.querySelectorAll('#daysPills .pill').forEach(p => p.classList.add('active')); updateDaysBadge(); }
+function daysWeekdays() { daysSet = new Set([1,2,3,4,5]); document.querySelectorAll('#daysPills .pill').forEach(p => p.classList.toggle('active', daysSet.has(+p.dataset.day))); updateDaysBadge(); }
+function monthsAll() { monthsSet = new Set([1,2,3,4,5,6,7,8,9,10,11,12]); document.querySelectorAll('#monthsPills .pill').forEach(p => p.classList.add('active')); updateMonthsBadge(); }
+function monthsClear() { monthsSet = new Set(); document.querySelectorAll('#monthsPills .pill').forEach(p => p.classList.remove('active')); updateMonthsBadge(); }
+
+function handleFile(evt) {
+  const f = evt.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const parsed = parseCSV(e.target.result);
+      if (!parsed.clean.length) throw new Error('No valid bars found');
+      loadedBars = parsed.clean;
+      const info = document.getElementById('fileInfo');
+      info.classList.add('loaded');
+      const q = parsed.rawQuality;
+      info.innerHTML = `✓ ${f.name}<br>${parsed.clean.length.toLocaleString()} bars<br>${parsed.clean[0].date.toISOString().slice(0,16)} → ${parsed.clean[parsed.clean.length-1].date.toISOString().slice(0,16)}<br>
+        <span style="color:${q.invalidOHLC ? '#f85149' : '#8b949e'}">Invalid OHLC: ${q.invalidOHLC}</span> ·
+        <span style="color:${q.missing ? '#d29922' : '#8b949e'}">Gaps: ${q.missing}</span> ·
+        <span style="color:${parsed.removedDuplicates ? '#d29922' : '#8b949e'}">Dup removed: ${parsed.removedDuplicates}</span> ·
+        <span style="color:${parsed.removedOutOfOrder ? '#d29922' : '#8b949e'}">OOO removed: ${parsed.removedOutOfOrder}</span>`;
+      document.getElementById('runBtn').disabled = false;
+      document.getElementById('errorBox').style.display = 'none';
+    } catch (err) { showError('CSV parse failed: ' + err.message); }
+  };
+  r.readAsText(f);
+}
+
+function readConfig() {
+  const g = id => { const el = document.getElementById(id); return el ? el.value : undefined; };
+  const gc = id => { const el = document.getElementById(id); return el ? el.checked : false; };
+  const gn = id => { const v = g(id); return v === undefined ? 0 : +v; };
+  const ge = id => g(id);
+
+  // P1-1: clamp session hours; fall back to defaults if start >= end
+  const clampH = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(+v || 0)));
+  const mkSess = (startId, endId, enId, defStart, defEnd) => {
+    let st = clampH(gn(startId), 0, 23);
+    let en = clampH(gn(endId), 0, 24);
+    if (en <= st) { st = defStart; en = defEnd; }
+    return { enabled: g(enId) === '1', start: st, end: en };
+  };
+
+  // P1-1: empty set means "block all", not "no restriction"
+  const hours = gc('enableHours') ? (hoursSet.size ? new Set(hoursSet) : BLOCK_ALL) : null;
+  const days  = gc('enableDays')  ? (daysSet.size  ? new Set(daysSet)  : BLOCK_ALL) : null;
+  const months= gc('enableMonths')? (monthsSet.size? new Set(monthsSet): BLOCK_ALL) : null;
+
+  return {
+    startingBalance: gn('startingBalance'), point: gn('point'), tickValue: gn('tickValue'),
+    minLot: gn('minLot'), spreadPts: gn('spreadPts'), commissionPerLot: gn('commissionPerLot'),
+    trendTFMin: gn('trendTFMin'), entryTFMin: gn('entryTFMin'),
+    trendFastPeriod: gn('trendFastPeriod'), trendSlowPeriod: gn('trendSlowPeriod'), trendSlopeBars: 5,
+    lwmaFast: gn('lwmaFast'), lwmaMid: gn('lwmaMid'), lwmaSlow: gn('lwmaSlow'),
+    pullbackLookback: gn('pullbackLookback'), entryMode: g('entryMode'),
+    riskPercent: gn('riskPercent'), atrPeriod: gn('atrPeriod'), atrStopMult: gn('atrStopMult'),
+    rewardRisk: gn('rewardRisk'), maxPositions: gn('maxPositions'),
+    breakEvenR: gn('breakEvenR'), trailStartR: gn('trailStartR'), trailAtrMult: gn('trailAtrMult'),
+    maxDailyLossPct: gn('maxDailyLossPct'), maxSpreadPts: gn('maxSpreadPts'),
+
+    // Execution realism (now exposed in body)
+    spreadMode: ge('spreadMode') || 'fixed',
+    slippagePts: +(ge('slippagePts') || 0),
+    intrabarOrder: ge('intrabarOrder') || 'sl_first',
+    retestExpiryBars: +(ge('retestExpiryBars') || 10),   // ENTRY-TF bars
+    maxRiskPerTradePct: +(ge('maxRiskPerTradePct') || 2),
+    maxAggregateRiskPct: +(ge('maxAggregateRiskPct') || 6),
+
+    filters: {
+      macd: { enabled: gc('enableMACD'), fast: gn('macdFast'), slow: gn('macdSlow'), signal: gn('macdSignal'), mode: g('macdMode') },
+      bb: { enabled: gc('enableBB'), period: gn('bbPeriod'), stdDev: gn('bbStdDev'), mode: g('bbMode') },
+      mom: { enabled: gc('enableMom'), period: gn('momPeriod'), threshold: gn('momThreshold'), mode: g('momMode') },
+      atr: { enabled: gc('enableATRFilter'), period: gn('atrFilterPeriod'), smaPeriod: gn('atrFilterSma'), mode: g('atrFilterMode'), minMul: gn('atrFilterMin'), maxMul: gn('atrFilterMax') },
+      ao: { enabled: gc('enableAO'), fast: gn('aoFast'), slow: gn('aoSlow'), mode: g('aoMode') },
+      rsi: { enabled: gc('enableRSI'), period: gn('rsiPeriod'), overbought: gn('rsiOverbought'), oversold: gn('rsiOversold'), mode: g('rsiMode') },
+      stoch: { enabled: gc('enableStoch'), kPeriod: gn('stochK'), dPeriod: gn('stochD'), mode: g('stochMode') },
+      adx: { enabled: gc('enableADX'), period: gn('adxPeriod'), min: gn('adxMin'), mode: g('adxMode') },
+    },
+    timeFilter: {
+      sessions: gc('enableSessions') ? {
+        asia:   mkSess('sessAsiaStart', 'sessAsiaEnd', 'sessAsiaEnabled', 0, 8),
+        london: mkSess('sessLonStart',  'sessLonEnd',  'sessLonEnabled',  8, 16),
+        ny:     mkSess('sessNYStart',   'sessNYEnd',   'sessNYEnabled',   13, 22),
+      } : null,
+      hours, days, months,
+    },
+    // P2-1: only equity is actually rendered
+    overlay: { equity: gc('showEquity') },
+  };
+}
+
+async function runBacktest() {
+  if (!loadedBars) { showError('Load a CSV file first'); return; }
+  const cfg = readConfig();
+  const btn = document.getElementById('runBtn');
+  const prog = document.getElementById('progress');
+  const fill = document.getElementById('progressFill');
+  const ptext = document.getElementById('progressText');
+  btn.disabled = true; btn.textContent = '⏳ Running…';
+  prog.classList.add('show'); fill.style.width = '0%'; ptext.textContent = 'Starting…';
+  document.getElementById('errorBox').style.display = 'none';
+  try {
+    const t0 = performance.now();
+    const report = await runEngine(loadedBars, cfg, (pct) => {
+      fill.style.width = (pct * 100).toFixed(1) + '%';
+      ptext.textContent = `Running… ${(pct * 100).toFixed(1)}%`;
+    });
+    const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
+    lastReport = report;
+    fill.style.width = '100%'; ptext.textContent = `Done in ${elapsed}s`;
+    displayReport(report, elapsed);
+    renderCharts(report);
+  } catch (err) {
+    console.error(err);
+    showError('Backtest failed: ' + err.message + '\n' + (err.stack || ''));
+  } finally {
+    btn.disabled = false; btn.textContent = '▶ Run Backtest';
+  }
+}
+
+function displayReport(r, elapsed) {
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('results').classList.add('show');
+  const s = r.summary;
+  const cards = [
+    { lbl: 'Net Profit', val: `${s.netProfit >= 0 ? '+' : ''}$${s.netProfit.toFixed(2)}`, cls: s.netProfit >= 0 ? 'good' : 'bad' },
+    { lbl: 'Return', val: `${s.netProfitPct >= 0 ? '+' : ''}${s.netProfitPct.toFixed(2)}%`, cls: s.netProfitPct >= 0 ? 'good' : 'bad' },
+    { lbl: 'Win Rate', val: `${s.winRate.toFixed(1)}%`, cls: s.winRate >= 50 ? 'good' : 'bad' },
+    { lbl: 'Profit Factor', val: `${s.profitFactor}`, cls: s.profitFactor >= 1.5 ? 'good' : (s.profitFactor >= 1 ? '' : 'bad') },
+    { lbl: 'Expectancy', val: `${s.expectancy >= 0 ? '+' : ''}$${s.expectancy.toFixed(2)}`, cls: s.expectancy >= 0 ? 'good' : 'bad' },
+    { lbl: 'Avg R', val: `${s.avgRMultiple >= 0 ? '+' : ''}${s.avgRMultiple}R`, cls: s.avgRMultiple >= 0 ? 'good' : 'bad' },
+    { lbl: 'DD (Equity)', val: `${s.maxDrawdownEquityPct.toFixed(2)}%`, cls: 'bad' },
+    { lbl: 'Sharpe', val: `${s.sharpe}`, cls: s.sharpe >= 1 ? 'good' : 'bad' },
+  ];
+  document.getElementById('miniStats').innerHTML = cards.map(c => `<div class="stat-card ${c.cls}"><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div></div>`).join('');
+  const posCls = s.netProfit >= 0 ? 'pos' : 'neg';
+  const block = `<span class="hdr">═══════════════════════════════════════════</span>
+<span class="hdr">  RESULTS  ·  ${r.config.entryMode.toUpperCase()} mode  ·  ${elapsed}s</span>
+<span class="hdr">═══════════════════════════════════════════</span>
+<span class="lbl">Period:</span>           <span class="val">${r.period.from.toISOString()} → ${r.period.to.toISOString()}</span>
+<span class="lbl">Starting:</span>         <span class="val">$${s.startingBalance.toFixed(2)}</span>
+<span class="lbl">Final:</span>            <span class="val">$${s.finalBalance.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>
+<span class="lbl">Net Profit:</span>       <span class="${posCls}">$${s.netProfit.toFixed(2)}  (${s.netProfitPct.toFixed(2)}%)</span>
+<span class="lbl">Trades:</span>           <span class="val">${s.totalTrades}  (W:${s.wins} L:${s.losses} BE:${s.breakEvens})</span>
+<span class="lbl">Win Rate:</span>         <span class="val">${s.winRate.toFixed(2)}%</span>
+<span class="lbl">Profit Factor:</span>    <span class="val">${s.profitFactor}</span>
+<span class="lbl">Expectancy:</span>       <span class="${s.expectancy >= 0 ? 'pos' : 'neg'}">$${s.expectancy.toFixed(2)}/trade</span>
+<span class="lbl">Avg R:</span>            <span class="val">${s.avgRMultiple}R</span>
+<span class="hdr">──── RISK ANALYTICS ────</span>
+<span class="lbl">Max DD Balance:</span>   <span class="neg">$${s.maxDrawdownBalance.toFixed(2)} (${s.maxDrawdownBalancePct.toFixed(2)}%)</span>
+<span class="lbl">Max DD Equity:</span>    <span class="neg">$${s.maxDrawdownEquity.toFixed(2)} (${s.maxDrawdownEquityPct.toFixed(2)}%)</span>
+<span class="lbl">Sharpe (daily):</span>   <span class="val">${s.sharpe}</span>
+<span class="lbl">Sortino (daily):</span>  <span class="val">${s.sortino}</span>
+<span class="lbl">Calmar (CAGR/DD):</span><span class="val">${s.calmar}</span>
+<span class="lbl">Ulcer Index:</span>       <span class="val">${s.ulcer}</span>
+<span class="lbl">Recovery Factor:</span>   <span class="val">${s.recoveryFactor}</span>
+<span class="lbl">Max Consec Win:</span>    <span class="pos">${s.maxConsecWins}</span>
+<span class="lbl">Max Consec Loss:</span>   <span class="neg">${s.maxConsecLosses}</span>
+<span class="lbl">Avg MAE:</span>           <span class="val">${s.avgMAE} pips</span>
+<span class="lbl">Avg MFE:</span>           <span class="val">${s.avgMFE} pips</span>
+<span class="lbl">Avg Duration:</span>      <span class="val">${s.avgDurationMin} min</span>
+<span class="lbl">Max Time Under Water:</span><span class="neg">${s.maxTimeUnderWaterHours}h</span>`;
+  document.getElementById('resultBlock').innerHTML = block;
+
+  const d = r.diagnostics;
+  const filterNames = Object.keys(d.filterBlocks);
+  let diagHtml = `<div class="panel-title" style="margin-top:16px;">Diagnostics</div>
+    <table class="diag-table">
+      <tr><th>Metric</th><th style="text-align:right">Count</th></tr>
+      <tr><td>Breakout signals</td><td class="num">${d.signals}</td></tr>
+      <tr><td>Entries filled</td><td class="num">${d.entries}</td></tr>
+      <tr><td>Retest entries</td><td class="num">${d.retests}</td></tr>
+      <tr><td>Skipped (min-lot risk)</td><td class="num">${d.skippedMinLot}</td></tr>
+      <tr><td>Skipped (risk cap)</td><td class="num">${d.skippedRiskCap}</td></tr>
+      <tr><td>Rejected (invalid stop)</td><td class="num">${d.invalidStop}</td></tr>
+	  <tr><td>Rejected (stop &lt; min)</td><td class="num">${d.skippedMinStop || 0}</td></tr>
+      <tr><td>Expired retests</td><td class="num">${d.expiredRetests}</td></tr>
+      <tr><td colspan="2" style="color:var(--text-dim);padding-top:8px;font-size:10px;">TIME FILTER BLOCKS</td></tr>
+      <tr><td>Blocked by session</td><td class="num">${d.timeBlocks.session || 0}</td></tr>
+      <tr><td>Blocked by hour</td><td class="num">${d.timeBlocks.hour || 0}</td></tr>
+      <tr><td>Blocked by day</td><td class="num">${d.timeBlocks.day || 0}</td></tr>
+      <tr><td>Blocked by month</td><td class="num">${d.timeBlocks.month || 0}</td></tr>`;
+  if (filterNames.length) {
+    diagHtml += `<tr><td colspan="2" style="color:var(--text-dim);padding-top:8px;font-size:10px;">ENTRY FILTER BLOCKS (sequential, AND)</td></tr>`;
+    for (const fn of filterNames) diagHtml += `<tr><td>${fn.toUpperCase()}</td><td class="num">${d.filterBlocks[fn]}</td></tr>`;
+  }
+  diagHtml += '</table>';
+
+  const b = r.breakdown;
+  const renderMap = (obj, title) => {
+    const keys = Object.keys(obj).sort();
+    if (!keys.length) return '';
+    return `<div class="panel-title" style="margin-top:16px;">${title}</div>
+      <table class="diag-table">${keys.map(k => `<tr><td>${k}</td><td class="num" style="color:${obj[k] >= 0 ? '#3fb950' : '#f85149'}">${obj[k] >= 0 ? '+' : ''}$${obj[k].toFixed(2)}</td></tr>`).join('')}</table>`;
+  };
+  diagHtml += renderMap(b.byMonth, 'Monthly P&L');
+  diagHtml += renderMap(b.byDow, 'Day of Week P&L');
+  diagHtml += renderMap(b.bySession, 'Session P&L');
+
+  document.getElementById('diagSection').innerHTML = diagHtml;
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderCharts(report) {
+  clearCharts();
+  if (report.config.overlay.equity) { drawEquityChart(report); drawDrawdownChart(report); }
+  drawMonthlyChart(report);
+}
+
+function showError(msg) {
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('errorBox').style.display = 'block';
+  document.getElementById('errorMsg').textContent = msg;
+}
+
+function downloadReport() {
+  if (!lastReport) return;
+  const clean = JSON.parse(JSON.stringify(lastReport, (k, v) => {
+    if (v instanceof Date) return v.toISOString();
+    if (v instanceof Set) return [...v];
+    if (k.startsWith('_')) return undefined;
+    return v;
+  }));
+  const blob = new Blob([JSON.stringify(clean, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `backtest_report_${Date.now()}.json`; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function downloadTradesCSV() {
+  if (!lastReport || !lastReport.trades.length) return;
+  const headers = ['id','side','entry','exit','sl','tp','lots','openTime','closeTime','pnl','rMultiple','maePips','mfePips','maeR','mfeR','reason','comment','durationMin'];
+  const rows = lastReport.trades.map(t => [
+    t.id, t.side, t.entry, t.exit, t.sl, t.tp, t.lots,
+    t.openTime.toISOString(), t.closeTime.toISOString(),
+    t.pnl, t.rMultiple, t.maePips, t.mfePips, t.maeR, t.mfeR, t.reason, t.comment, t.durationMin,
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(v => {
+    const s = v == null ? '' : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  }).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `backtest_trades_${Date.now()}.csv`; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Optional (not wired): kept for later research use.
+async function runSubPeriodStability() {
+  if (!loadedBars || !lastReport) { alert('Run a backtest first'); return; }
+  const splits = splitBars(loadedBars, [0.6, 0.2, 0.2]);
+  const labels = ['Train (60%)', 'Validation (20%)', 'Test (20%)'];
+  const results = [];
+  for (let i = 0; i < splits.length; i++) {
+    if (splits[i].length < 500) { results.push({ label: labels[i], error: 'Too few bars' }); continue; }
+    const rep = await runEngine(splits[i], lastReport.config, () => {});
+    results.push({ label: labels[i], summary: rep.summary });
+  }
+  console.table(results.map(r => ({
+    Window: r.label,
+    Trades: r.summary?.totalTrades,
+    NetPnL: r.summary?.netProfit,
+    PF: r.summary?.profitFactor,
+    WinRate: r.summary?.winRate,
+    MaxDD: r.summary?.maxDrawdownEquityPct,
+  })));
+  alert('Sub-period results printed to console.');
+}
+
+async function runMonteCarlo() {
+  if (!lastReport || !lastReport.trades.length) { alert('Run a backtest with trades first'); return; }
+  const mc = monteCarlo(lastReport.trades, lastReport.config.startingBalance, 2000);
+  console.table({
+    'Final P5': mc.final.p5, 'Final P50': mc.final.p50, 'Final P95': mc.final.p95,
+    'MaxDD P50': mc.maxDD.p50, 'MaxDD P95': mc.maxDD.p95,
+    'Worst Final': mc.final.worst, 'Worst DD': mc.maxDD.worst,
+  });
+  alert('Monte Carlo (i.i.d. bootstrap) results printed to console.');
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  buildPills();
+  updateHoursBadge(); updateDaysBadge(); updateMonthsBadge();
+});
+</script>
+</body>
+</html>
