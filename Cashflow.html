@@ -1,0 +1,2168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CASHFLOW 101 — Advanced Board Game</title>
+<style>
+:root {
+  --bg: #0a0f0a;
+  --panel: #0f1a0f;
+  --panel2: #162216;
+  --panel3: #1c2c1c;
+  --green: #2a5a2a;
+  --green-l: #5cbf5c;
+  --amber: #d4a017;
+  --amber-l: #f0c040;
+  --amber-dim: #8a6a0a;
+  --red: #d43a2a;
+  --red-dim: #6a1a1a;
+  --text: #e8e0c8;
+  --dim: #8a8268;
+  --border: #243824;
+  --payday: #0e2e0e;
+  --deal-s: #162a12;
+  --deal-b: #122412;
+  --doodad: #2a0e0e;
+  --event: #0e1e2e;
+  --market: #1e0e2e;
+  --charity: #2a2a0e;
+  --downsized: #2a180e;
+}
+*{box-sizing:border-box;margin:0;padding:0;user-select:none}
+body{background:var(--bg);font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 15% 50%,rgba(30,70,30,.15) 0,transparent 55%),radial-gradient(ellipse at 85% 20%,rgba(40,60,10,.12) 0,transparent 50%);pointer-events:none}
+
+/* ── SCREENS ── */
+.screen{display:none;flex-direction:column}
+.screen.active{display:flex}
+
+/* ── PROFESSION SELECT ── */
+#profScreen{min-height:100vh;align-items:center;justify-content:center;padding:40px 20px}
+.game-title{font-family:Georgia,serif;font-size:3.2rem;font-weight:bold;letter-spacing:6px;color:var(--amber-l);text-shadow:0 0 60px rgba(212,160,23,.4);margin-bottom:8px;text-align:center}
+.game-sub{font-size:.78rem;letter-spacing:6px;text-transform:uppercase;color:var(--dim);margin-bottom:12px;text-align:center}
+.game-intro{font-size:.85rem;color:var(--dim);max-width:560px;text-align:center;line-height:1.7;margin-bottom:36px}
+.game-intro strong{color:var(--amber-l)}
+.prof-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;max-width:960px;width:100%}
+.prof-card{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:22px;cursor:pointer;transition:.2s;position:relative;overflow:hidden}
+.prof-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(212,160,23,.07),transparent);opacity:0;transition:.2s}
+.prof-card:hover{border-color:var(--amber);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.6)}
+.prof-card:hover::before{opacity:1}
+.p-emoji{font-size:2.4rem;margin-bottom:8px}
+.p-name{font-family:Georgia,serif;font-size:1.2rem;color:var(--amber-l);margin-bottom:4px}
+.p-desc{font-size:.74rem;color:var(--dim);margin-bottom:14px;line-height:1.5}
+.p-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.p-stat{background:rgba(0,0,0,.4);border-radius:8px;padding:6px 10px}
+.p-stat-l{font-size:.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim)}
+.p-stat-v{font-family:'Courier New',monospace;font-size:.88rem;color:var(--amber-l);font-weight:bold}
+
+/* ── GAME SCREEN ── */
+#gameScreen{min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--panel);border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:100}
+.topbar-l,.topbar-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.prof-badge{background:rgba(212,160,23,.12);border:1px solid var(--amber);border-radius:30px;padding:6px 16px;font-size:.82rem;color:var(--amber-l);font-weight:600}
+.pill{background:var(--panel2);border:1px solid var(--border);border-radius:30px;padding:6px 16px;text-align:center}
+.pill .lbl{font-size:.56rem;text-transform:uppercase;letter-spacing:1.8px;color:var(--dim)}
+.pill .val{font-family:'Courier New',monospace;font-size:1rem;font-weight:bold}
+.val.pos{color:var(--green-l)}.val.neg{color:#e05050}.val.amr{color:var(--amber-l)}
+.btn{border:none;border-radius:30px;padding:8px 20px;font-size:.84rem;font-weight:600;cursor:pointer;transition:.1s;font-family:inherit}
+.btn:active{transform:scale(.96)}.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn-primary{background:var(--amber);color:#0a0a0a}
+.btn-primary:hover:not(:disabled){background:var(--amber-l)}
+.btn-sec{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
+.btn-sec:hover:not(:disabled){border-color:var(--amber)}
+.btn-danger{background:#3a0f0f;color:#e08080;border:1px solid var(--red-dim)}
+.btn-danger:hover:not(:disabled){background:#4a1515}
+.btn-go{background:#1a3a0a;color:#80d060;border:1px solid #2a6010}
+.btn-go:hover:not(:disabled){background:#224a12}
+
+/* ── MAIN GRID ── */
+.game-main{display:grid;grid-template-columns:280px 1fr 280px;flex:1;overflow:hidden}
+.lpanel,.rpanel{background:var(--panel);overflow-y:auto;padding:16px}
+.lpanel{border-right:1px solid var(--border)}
+.rpanel{border-left:1px solid var(--border)}
+.ptitle{font-size:.66rem;letter-spacing:4px;text-transform:uppercase;color:var(--amber);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:12px;font-family:Georgia,serif;font-weight:600}
+.fin-sec{margin-bottom:14px}
+.fin-sec-title{font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:6px;font-weight:600}
+.fin-row{display:flex;justify-content:space-between;align-items:center;padding:3px 8px;border-radius:5px}
+.fin-row:hover{background:rgba(255,255,255,.03)}
+.fin-label{font-size:.76rem;color:var(--dim)}
+.fin-val{font-family:'Courier New',monospace;font-size:.82rem}
+.fin-val.inc{color:var(--green-l)}.fin-val.exp{color:#e05050}
+.fin-total{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-top:1px solid var(--border);margin-top:5px;font-weight:bold}
+.fin-total .fin-label{font-size:.8rem;color:var(--text)}
+.fin-total .fin-val{font-size:.9rem}
+.cf-row{display:flex;justify-content:space-between;align-items:center;padding:10px 8px;border-top:2px solid var(--amber);margin-top:8px}
+.cf-label{font-weight:bold;font-size:.88rem}
+.cf-val{font-family:'Courier New',monospace;font-size:1.1rem;font-weight:bold}
+
+/* ── BOARD CENTER ── */
+.board-area{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;background:#060b06;background-image:radial-gradient(ellipse at center,#0b160b 0%,#060b06 70%);position:relative;overflow-y:auto}
+.board-wrap{position:relative;width:560px;height:560px;flex-shrink:0}
+.board-ring{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.board-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:240px;text-align:center;pointer-events:none}
+.bc-title{font-family:Georgia,serif;font-size:1.1rem;color:var(--amber-l);font-weight:bold;margin-bottom:3px}
+.bc-sub{font-size:.62rem;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+.pbar-wrap{background:rgba(0,0,0,.6);border-radius:20px;height:8px;overflow:hidden;margin:5px 0}
+.pbar-fill{height:100%;background:linear-gradient(90deg,#1a5a1a,#5cbf5c);border-radius:20px;transition:width .6s}
+.pbar-vals{display:flex;justify-content:space-between;margin-top:4px}
+.pbar-vals span{font-size:.62rem;font-family:'Courier New',monospace}
+.bc-space-label{font-size:.6rem;color:var(--dim);margin-top:12px}
+.bc-space-name{font-family:Georgia,serif;font-size:.95rem;color:var(--amber-l);margin-top:2px}
+#downsizedBadge{margin-top:8px;font-size:.66rem;color:#e09050;background:rgba(100,40,0,.5);border:1px solid #6a3010;border-radius:12px;padding:4px 12px;display:inline-block}
+
+/* ── SPACES ── */
+.space{position:absolute;width:68px;height:56px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid transparent;transition:.15s;cursor:default}
+.space.t-payday{background:var(--payday);border-color:#1e4a1e}
+.space.t-small_deal{background:var(--deal-s);border-color:#2a4a18}
+.space.t-big_deal{background:var(--deal-b);border-color:#1a4018}
+.space.t-doodad{background:var(--doodad);border-color:#5a1a1a}
+.space.t-baby{background:var(--event);border-color:#1a3050}
+.space.t-charity{background:var(--charity);border-color:#4a4a12}
+.space.t-downsized{background:var(--downsized);border-color:#5a3010}
+.space.t-market{background:var(--market);border-color:#30185a}
+.space.cur{box-shadow:0 0 0 3px var(--amber-l),0 0 24px rgba(212,160,23,.6);transform:scale(1.18);z-index:10}
+.sp-emoji{font-size:1.1rem;line-height:1}
+.sp-name{font-size:.48rem;text-transform:uppercase;letter-spacing:.6px;color:var(--dim);margin-top:2px;text-align:center;max-width:64px;line-height:1.2}
+
+/* ── TOKEN ── */
+.token{position:absolute;width:16px;height:16px;background:radial-gradient(circle at 35% 35%,#ff7777,#bb1111);border-radius:50%;border:2px solid #ff9999;box-shadow:0 2px 10px rgba(0,0,0,.9),0 0 10px rgba(255,50,50,.4);z-index:20;transition:left .45s cubic-bezier(.34,1.56,.64,1),top .45s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+
+/* ── CONTROLS ── */
+.controls{display:flex;flex-direction:column;gap:10px;margin-top:16px;align-items:center;width:100%;max-width:560px}
+.dice-row{display:flex;align-items:center;gap:16px}
+.dice-face{font-size:2.6rem;width:64px;height:64px;background:#f0ebe0;border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 #888,0 8px 14px rgba(0,0,0,.6);color:#1a1a1a;transition:.1s}
+.log{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-size:.78rem;max-height:100px;overflow-y:auto;width:100%;max-width:560px;color:var(--dim);line-height:1.6}
+.log .lg{margin-bottom:2px}.lg.hi{color:var(--amber-l);font-weight:600}.lg.gd{color:var(--green-l)}.lg.bd{color:#e05050}
+
+/* ── ASSETS ── */
+.asset-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;position:relative}
+.ac-title{font-size:.8rem;font-weight:600;color:var(--text);margin-bottom:2px}
+.ac-inc{font-family:'Courier New',monospace;font-size:.74rem;color:var(--green-l)}
+.ac-sub{font-size:.66rem;color:var(--dim);margin-top:2px}
+.sell-btn{position:absolute;top:8px;right:8px;background:rgba(80,15,15,.85);color:#e08080;border:1px solid var(--red-dim);border-radius:16px;padding:3px 10px;font-size:.64rem;cursor:pointer;font-family:inherit}
+.sell-btn:hover{background:rgba(130,25,25,.85)}
+.loan-row{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;font-size:.74rem}
+.loan-row .l-lbl{color:var(--dim)}.loan-row .l-val{font-family:'Courier New',monospace;color:#e05050}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:1000}
+.overlay.open{display:flex}
+.modal{background:#0c180c;border:1px solid var(--border);border-radius:24px;padding:32px;max-width:500px;width:92%;box-shadow:0 40px 80px rgba(0,0,0,.9);max-height:90vh;overflow-y:auto}
+.m-icon{font-size:2.6rem;margin-bottom:12px}
+.m-type{font-size:.6rem;letter-spacing:4px;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.m-title{font-family:Georgia,serif;font-size:1.6rem;color:var(--amber-l);margin-bottom:8px}
+.m-desc{font-size:.82rem;color:var(--dim);line-height:1.6;margin-bottom:20px}
+.m-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
+.m-stat{background:rgba(0,0,0,.5);border:1px solid var(--border);border-radius:10px;padding:10px 14px}
+.ms-l{font-size:.6rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-bottom:3px}
+.ms-v{font-family:'Courier New',monospace;font-size:1.05rem;color:var(--amber-l);font-weight:bold}
+.ms-v.g{color:var(--green-l)}.ms-v.r{color:#e05050}
+.m-input-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:10px;padding:10px 14px}
+.m-input-row label{font-size:.8rem;color:var(--dim);flex:1}
+.m-input-row input{background:var(--panel);border:1px solid var(--border);border-radius:8px;color:var(--amber-l);font-family:'Courier New',monospace;font-size:1rem;padding:6px 10px;width:120px;text-align:right}
+.m-input-row input:focus{outline:none;border-color:var(--amber)}
+.m-btns{display:flex;gap:12px;flex-wrap:wrap}
+.m-btns .btn{flex:1;min-width:90px;text-align:center;padding:10px 16px;font-size:.86rem}
+
+/* ── WIN SCREEN ── */
+#winScreen{min-height:100vh;align-items:center;justify-content:center;text-align:center;padding:40px}
+.win-trophy{font-size:5rem;margin-bottom:20px;animation:bob 1.2s ease-in-out infinite alternate}
+@keyframes bob{from{transform:translateY(0)}to{transform:translateY(-12px)}}
+.win-title{font-family:Georgia,serif;font-size:2.8rem;color:var(--amber-l);margin-bottom:12px;text-shadow:0 0 40px rgba(212,160,23,.4)}
+.win-sub{font-size:.95rem;color:var(--dim);max-width:520px;line-height:1.7}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1000px){
+  .game-main{grid-template-columns:1fr}
+  .lpanel,.rpanel{display:none}
+  .board-wrap{width:420px;height:420px}
+}
+@media(max-width:600px){
+  .board-wrap{width:320px;height:320px}
+  .game-title{font-size:2rem}
+  .space{width:52px;height:44px}
+  .sp-emoji{font-size:.9rem}
+  .sp-name{font-size:.4rem}
+}
+
+input{-webkit-user-select:text;user-select:text}
+.board-area{background:radial-gradient(ellipse at 50% 40%,#2a0f4a 0,#12061f 70%)}
+.board-wrap{width:560px!important;height:560px!important;transform-origin:top center;border-radius:50%;background:radial-gradient(circle,#4a1a80 0,#1f0b38 62%,#0d0418 100%);box-shadow:0 0 0 6px #7a3fb5,0 0 0 10px #c9a24a,0 30px 80px rgba(0,0,0,.8),inset 0 0 80px rgba(0,0,0,.6)}
+.space{width:54px;height:52px;border-radius:12px;border:1px solid rgba(255,255,255,.3);box-shadow:inset 0 2px 0 rgba(255,255,255,.35),inset 0 -3px 0 rgba(0,0,0,.3),0 4px 8px rgba(0,0,0,.5)}
+.sp-name{color:#fff;font-weight:700;font-size:.46rem;text-shadow:0 1px 2px #000}
+.space.t-payday{background:linear-gradient(160deg,#3cc15a,#1b7a35)}
+.space.t-small_deal{background:linear-gradient(160deg,#6fd06a,#2f8f3a)}
+.space.t-big_deal,.space.t-ftbiz{background:linear-gradient(160deg,#f1c64a,#b8860b)}
+.space.t-doodad{background:linear-gradient(160deg,#ef6a5a,#a02a22)}
+.space.t-baby{background:linear-gradient(160deg,#5db8f0,#2a6aa8)}
+.space.t-charity{background:linear-gradient(160deg,#f6e36a,#b59a1a)}
+.space.t-downsized{background:linear-gradient(160deg,#f0954a,#a8531a)}
+.space.t-market{background:linear-gradient(160deg,#b26af0,#6a2aa8)}
+.space.t-cfday{background:linear-gradient(160deg,#3cc1a0,#1b7a62)}
+.space.t-dream{background:linear-gradient(160deg,#f07ac0,#a82a78)}
+.space.t-audit{background:linear-gradient(160deg,#9aa0a8,#555a62)}
+.space.cur{box-shadow:0 0 0 3px #fff,0 0 28px 6px rgba(255,220,100,.9);transform:scale(1.2)}
+.token{width:20px;height:20px;transition:left .19s ease-in-out,top .19s ease-in-out}
+.bc-title{font-size:1.3rem;letter-spacing:2px}
+.die{width:64px;height:64px;border-radius:14px;background:linear-gradient(145deg,#fff,#d9d1bd);box-shadow:0 5px 0 #8a8270,0 10px 16px rgba(0,0,0,.6);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:9px}
+.pip{width:13px;height:13px;margin:auto;border-radius:50%;background:radial-gradient(circle at 35% 35%,#555,#111)}
+.die.rolling{animation:tumble .45s linear infinite}
+@keyframes tumble{0%{transform:rotate(0) translateY(0)}25%{transform:rotate(90deg) translateY(-16px)}50%{transform:rotate(180deg) translateY(0)}75%{transform:rotate(270deg) translateY(-10px)}100%{transform:rotate(360deg) translateY(0)}}
+@media(max-width:1000px){.board-wrap{transform:scale(.75);margin:0 -70px -140px}}
+@media(max-width:600px){.board-wrap{transform:scale(.56);margin:0 -123px -246px}.space{width:54px!important;height:52px!important}.sp-emoji{font-size:1.1rem!important}.sp-name{font-size:.46rem!important}}
+</style>
+</head>
+<body>
+
+<!-- ══ PROFESSION SELECT ══ -->
+<div id="profScreen" class="screen active">
+  <div class="game-title">CASHFLOW 101</div>
+  <div class="game-sub">Rich Dad Poor Dad — Advanced Board Game</div>
+  <div class="game-intro">
+    Choose your profession. Grow your <strong>passive income</strong> until it exceeds your total monthly expenses to escape the Rat Race and achieve financial freedom. Use deals, stocks, and leverage wisely.
+  </div>
+  <div class="prof-grid" id="profGrid"></div>
+</div>
+
+<!-- ══ GAME SCREEN ══ -->
+<div id="gameScreen" class="screen">
+  <div class="topbar">
+    <div class="topbar-l">
+      <div class="prof-badge" id="profBadge">—</div>
+      <div class="pill"><div class="lbl">Cash</div><div class="val amr" id="tbCash">$0</div></div>
+      <div class="pill"><div class="lbl">Cash Flow</div><div class="val" id="tbCF">$0</div></div>
+      <div class="pill"><div class="lbl">Passive / Expenses</div><div class="val amr" id="tbPvE">$0 / $0</div></div>
+    </div>
+    <div class="topbar-r">
+      <button class="btn btn-sec" id="loanTopBtn">💳 Bank Loan</button>
+      <button class="btn btn-sec" id="newGameBtn">↩ New Game</button>
+    </div>
+  </div>
+  <div class="game-main">
+    <!-- LEFT PANEL -->
+    <div class="lpanel">
+      <div class="ptitle">Income Statement</div>
+      <div class="fin-sec">
+        <div class="fin-sec-title">Income</div>
+        <div class="fin-row"><span class="fin-label">Salary</span><span class="fin-val inc" id="fSal">$0</span></div>
+        <div class="fin-row"><span class="fin-label">Interest</span><span class="fin-val inc" id="fInt">$0</span></div>
+        <div class="fin-row"><span class="fin-label">Dividends</span><span class="fin-val inc" id="fDiv">$0</span></div>
+        <div class="fin-row"><span class="fin-label">Real Estate</span><span class="fin-val inc" id="fRE">$0</span></div>
+        <div class="fin-row"><span class="fin-label">Business</span><span class="fin-val inc" id="fBiz">$0</span></div>
+        <div class="fin-total"><span class="fin-label">TOTAL INCOME</span><span class="fin-val inc" id="fTI">$0</span></div>
+      </div>
+      <div class="fin-sec">
+        <div class="fin-sec-title">Expenses</div>
+        <div class="fin-row"><span class="fin-label">Taxes</span><span class="fin-val exp" id="fTax">$0</span></div>
+        <div class="fin-row"><span class="fin-label">Mortgage / Rent</span><span class="fin-val exp" id="fMort">$0</span></div>
+        <div class="fin-row"><span class="fin-label">School Loan</span><span class="fin-val exp" id="fSch">$0</span></div>
+        <div class="fin-row"><span class="fin-label">Car Loan</span><span class="fin-val exp" id="fCar">$0</span></div>
+        <div class="fin-row"><span class="fin-label">Credit Card</span><span class="fin-val exp" id="fCC">$0</span></div>
+        <div class="fin-row"><span class="fin-label">Retail</span><span class="fin-val exp" id="fRet">$0</span></div>
+        <div class="fin-row"><span class="fin-label">Other</span><span class="fin-val exp" id="fOth">$0</span></div>
+        <div class="fin-row"><span class="fin-label">Children (<span id="cCount">0</span>)</span><span class="fin-val exp" id="fChi">$0</span></div>
+        <div class="fin-row"><span class="fin-label">Bank Loan Pmts</span><span class="fin-val exp" id="fBL">$0</span></div>
+        <div class="fin-total"><span class="fin-label">TOTAL EXPENSES</span><span class="fin-val exp" id="fTE">$0</span></div>
+      </div>
+      <div class="cf-row"><span class="cf-label">MONTHLY CASH FLOW</span><span class="cf-val" id="fCF">$0</span></div>
+    </div>
+
+    <!-- CENTER BOARD -->
+    <div class="board-area">
+      <div class="board-wrap" id="boardWrap">
+        <svg class="board-ring" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="280" cy="280" r="256" fill="none" stroke="#1a2e1a" stroke-width="2" stroke-dasharray="6,5" opacity=".5"/>
+          <circle cx="280" cy="280" r="186" fill="none" stroke="#0f1f0f" stroke-width="1" opacity=".3"/>
+          <circle cx="280" cy="280" r="126" fill="rgba(5,12,5,.7)" stroke="#0f1f0f" stroke-width="1"/>
+        </svg>
+        <div class="token" id="token"></div>
+        <div class="board-center">
+          <div class="bc-title">RAT RACE</div>
+          <div class="bc-sub">Escape to Freedom</div>
+          <div style="font-size:.62rem;color:var(--dim)">Passive / Expenses</div>
+          <div class="pbar-wrap"><div class="pbar-fill" id="pbar" style="width:0%"></div></div>
+          <div class="pbar-vals">
+            <span style="color:var(--green-l)" id="bcPass">$0</span>
+            <span style="color:#e05050" id="bcExp">$0</span>
+          </div>
+          <div class="bc-space-label">Current Space</div>
+          <div class="bc-space-name" id="bcSpace">—</div>
+          <div id="downsizedBadge" style="display:none">⚠️ DOWNSIZED — skip turn</div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="dice-row">
+          <div class="die" id="d1"></div><div class="die" id="d2" style="display:none"></div>
+          <button class="btn btn-primary" id="rollBtn" style="font-size:1.05rem;padding:12px 36px">🎲 Roll Dice</button>
+        </div>
+        <div class="log" id="log"><div class="lg">Welcome to Cashflow 101! Roll the dice to begin.</div></div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="rpanel">
+      <div class="ptitle">Assets</div>
+      <div id="assetList"><div style="font-size:.74rem;color:var(--dim);text-align:center;padding:12px">No assets. Buy deals to build passive income!</div></div>
+      <div class="ptitle" style="margin-top:16px">Stocks Portfolio</div>
+      <div id="stockList"><div style="font-size:.74rem;color:var(--dim);text-align:center;padding:10px">No stocks owned.</div></div>
+      <div class="ptitle" style="margin-top:16px">Liabilities</div>
+      <div id="liabList"></div>
+      <button class="btn btn-sec" id="loanPanelBtn" style="width:100%;margin-top:12px;font-size:.78rem">+ Take Bank Loan ($1,000+)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ WIN SCREEN ══ -->
+<div id="winScreen" class="screen">
+  <div class="win-trophy">🏆</div>
+  <div class="win-title">FINANCIAL FREEDOM!</div>
+  <div class="win-sub" id="winSub"></div>
+  <div id="winStats" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:28px 0"></div>
+  <button class="btn btn-primary" onclick="showProfSelect()" style="padding:14px 42px;font-size:1.05rem;margin-top:10px">Play Again</button>
+</div>
+
+<!-- ══ CARD MODAL ══ -->
+<div class="overlay" id="cardOverlay">
+  <div class="modal">
+    <div class="m-icon" id="mIcon">💼</div>
+    <div class="m-type" id="mType"></div>
+    <div class="m-title" id="mTitle"></div>
+    <div class="m-desc" id="mDesc"></div>
+    <div class="m-stats" id="mStats"></div>
+    <div class="m-input-row" id="mStockRow" style="display:none">
+      <label>Shares to buy (max <span id="mMaxShares">0</span>)</label>
+      <input type="number" id="mShares" min="1" value="1">
+    </div>
+    <div class="m-btns" id="mBtns"></div>
+  </div>
+</div>
+
+<!-- ══ LOAN MODAL ══ -->
+<div class="overlay" id="loanOverlay">
+  <div class="modal">
+    <div class="m-icon">🏦</div>
+    <div class="m-type">BANK OF DAD</div>
+    <div class="m-title">Take a Bank Loan</div>
+    <div class="m-desc">Borrow in $1,000 increments. Each $1,000 borrowed adds <strong style="color:#e05050">$100/month</strong> in loan payments. Current balance: <span id="loanBal" style="color:#e05050;font-family:'Courier New',monospace">$0</span></div>
+    <div class="m-input-row">
+      <label>Amount to borrow</label>
+      <input type="number" id="loanAmt" min="1000" step="1000" value="1000">
+    </div>
+    <div style="font-size:.78rem;color:var(--dim);margin-bottom:18px">Monthly payment added: <span id="loanPmtPrev" style="color:#e05050">$100</span></div>
+    <div class="m-btns">
+      <button class="btn btn-primary" id="loanConfirm">Borrow</button>
+      <button class="btn btn-go" id="loanRepay">Repay $1,000</button><button class="btn btn-sec" id="loanCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   CASHFLOW 101 — Advanced Game Engine
+   Features: Full board, stocks, market events,
+   charity, downsizing, bank loans, win condition
+══════════════════════════════════════════════════ */
+
+// ─── PROFESSIONS ─────────────────────────────────
+
+const PROFS = [
+{id:'law',name:'Lawyer',emoji:'⚖️',desc:'High earning potential, but expensive lifestyle and student debt.',
+   inc:{sal:9500},exp:{tax:2500,mort:1500,sch:650,car:300,cc:250,ret:50,oth:500,perKid:550},
+   liab:{mort:160000,sch:85000,car:16000,cc:8000,ret:2000},startCash:500},
+
+  {id:'dent',name:'Dentist',emoji:'🦷',desc:'Excellent salary with substantial education debt.',
+   inc:{sal:8500},exp:{tax:2100,mort:1300,sch:700,car:250,cc:200,ret:50,oth:450,perKid:500},
+   liab:{mort:150000,sch:180000,car:14000,cc:7000,ret:2000},startCash:500},
+
+  {id:'pilot',name:'Airline Pilot',emoji:'✈️',desc:'Strong salary, expensive training and travel lifestyle.',
+   inc:{sal:7800},exp:{tax:1900,mort:1200,sch:350,car:250,cc:200,ret:50,oth:400,perKid:450},
+   liab:{mort:140000,sch:65000,car:14000,cc:6000,ret:2000},startCash:450},
+
+  {id:'chef',name:'Restaurant Chef',emoji:'👨‍🍳',desc:'Moderate income with opportunities to build a food business.',
+   inc:{sal:3200},exp:{tax:650,mort:550,sch:40,car:120,cc:80,ret:50,oth:220,perKid:280},
+   liab:{mort:50000,sch:8000,car:6000,cc:3000,ret:1000},startCash:300},
+
+  {id:'fire',name:'Firefighter',emoji:'🚒',desc:'Reliable income, modest expenses and manageable debt.',
+   inc:{sal:2900},exp:{tax:550,mort:500,sch:0,car:120,cc:50,ret:50,oth:180,perKid:250},
+   liab:{mort:45000,sch:0,car:6000,cc:2000,ret:1500},startCash:350},
+
+  {id:'sales',name:'Sales Representative',emoji:'🤝',desc:'Commission-driven career. Strong earning potential.',
+   inc:{sal:4200},exp:{tax:1000,mort:700,sch:50,car:180,cc:100,ret:50,oth:250,perKid:300},
+   liab:{mort:75000,sch:10000,car:9000,cc:4000,ret:1000},startCash:400},
+
+  {id:'real',name:'Real Estate Agent',emoji:'🏘️',desc:'Variable income and valuable industry connections.',
+   inc:{sal:3800},exp:{tax:850,mort:650,sch:40,car:200,cc:100,ret:50,oth:300,perKid:300},
+   liab:{mort:70000,sch:8000,car:10000,cc:4000,ret:1000},startCash:450},
+
+  {id:'it',name:'IT Specialist',emoji:'💻',desc:'Good salary and strong opportunities in technology.',
+   inc:{sal:5600},exp:{tax:1400,mort:850,sch:150,car:150,cc:80,ret:50,oth:250,perKid:350},
+   liab:{mort:95000,sch:30000,car:7000,cc:3000,ret:1500},startCash:450},
+
+  {id:'plumb',name:'Plumber',emoji:'🔧',desc:'Practical skills and the opportunity to own a service company.',
+   inc:{sal:3900},exp:{tax:800,mort:600,sch:0,car:180,cc:70,ret:50,oth:250,perKid:280},
+   liab:{mort:55000,sch:0,car:10000,cc:3000,ret:1000},startCash:350},
+
+  {id:'farm',name:'Farmer',emoji:'🚜',desc:'Asset-heavy career with equipment costs and seasonal risks.',
+   inc:{sal:3500},exp:{tax:650,mort:650,sch:0,car:200,cc:100,ret:50,oth:350,perKid:300},
+   liab:{mort:90000,sch:0,car:18000,cc:4000,ret:1000},startCash:500},
+
+  {id:'artist',name:'Graphic Designer',emoji:'🎨',desc:'Creative income with room to build a freelance business.',
+   inc:{sal:3000},exp:{tax:550,mort:450,sch:100,car:100,cc:80,ret:50,oth:180,perKid:250},
+   liab:{mort:40000,sch:20000,car:4000,cc:3000,ret:1000},startCash:300},
+
+  {id:'entre',name:'Small Business Owner',emoji:'🏪',desc:'Higher risk, variable income and entrepreneurial experience.',
+   inc:{sal:5200},exp:{tax:1300,mort:900,sch:0,car:200,cc:150,ret:50,oth:400,perKid:350},
+   liab:{mort:110000,sch:0,car:10000,cc:6000,ret:1000},startCash:700},
+
+  {id:'account',name:'Accountant',emoji:'🧮',desc:'Stable professional income and strong financial knowledge.',
+   inc:{sal:4600},exp:{tax:1100,mort:700,sch:100,car:120,cc:60,ret:50,oth:220,perKid:300},
+   liab:{mort:70000,sch:20000,car:6000,cc:2500,ret:1000},startCash:400},
+
+  {id:'retail',name:'Retail Manager',emoji:'🛍️',desc:'Steady employment with modest income and expenses.',
+   inc:{sal:2700},exp:{tax:500,mort:450,sch:40,car:100,cc:50,ret:50,oth:180,perKid:220},
+   liab:{mort:40000,sch:8000,car:5000,cc:2000,ret:1000},startCash:300}
+];
+
+// ─── BOARD (24 spaces, classic layout) ──────────
+
+let BOARD = [
+  {n:'PAYDAY',t:'payday',e:'💵'},
+  {n:'SMALL DEAL',t:'small_deal',e:'🏠'},
+  {n:'DOODAD',t:'doodad',e:'🛒'},
+  {n:'PAYDAY',t:'payday',e:'💵'},
+  {n:'BIG DEAL',t:'big_deal',e:'🏢'},
+  {n:'DOODAD',t:'doodad',e:'🛒'},
+  {n:'BABY',t:'baby',e:'👶'},
+  {n:'PAYDAY',t:'payday',e:'💵'},
+  {n:'SMALL DEAL',t:'small_deal',e:'🏠'},
+  {n:'MARKET',t:'market',e:'📊'},
+  {n:'DOODAD',t:'doodad',e:'🛒'},
+  {n:'PAYDAY',t:'payday',e:'💵'},
+  {n:'BIG DEAL',t:'big_deal',e:'🏢'},
+  {n:'CHARITY',t:'charity',e:'✨'},
+  {n:'DOODAD',t:'doodad',e:'🛒'},
+  {n:'PAYDAY',t:'payday',e:'💵'},
+  {n:'SMALL DEAL',t:'small_deal',e:'🏠'},
+  {n:'DOODAD',t:'doodad',e:'🛒'},
+  {n:'DOWNSIZED',t:'downsized',e:'⚠️'},
+  {n:'PAYDAY',t:'payday',e:'💵'},
+  {n:'BIG DEAL',t:'big_deal',e:'🏢'},
+  {n:'DOODAD',t:'doodad',e:'🛒'},
+  {n:'SMALL DEAL',t:'small_deal',e:'🏠'},
+  {n:'PAYDAY',t:'payday',e:'💵'},
+];
+
+const RAT_BOARD = BOARD;
+// ─── SMALL DEALS ─────────────────────────────────
+
+const SMALL_DEALS = [
+  // --- Original Narrative Real Estate ---
+  {id:'s1', t:'re', name:'8-plex for Sale', cost:220000, dp:40000, mort:180000, cf:1700, sellRange:'$200,000-$280,000', desc:'Reinvesting owner offers 8-plex for sale at reasonable price. Financing already in place. All it needs is your down payment. 51% ROI.'},
+  {id:'s2', t:'re', name:'House for Sale - 3Br/2Ba', cost:70000, dp:20000, mort:50000, cf:500, sellRange:'$65,000-$135,000', desc:'Divorce leads to sale of this 3/2 house in an area full of owner occupied homes. Has been on the market 5 months. 30% ROI.'},
+  {id:'s3', t:'re', name:'House for Sale - 3Br/2Ba', cost:65000, dp:8000, mort:57000, cf:300, sellRange:'$65,000-$135,000', desc:'Good investment potential in this 3/2 house if you can be patient. Positive cash flow even though rents are weak. 45% ROI.'},
+  {id:'s4', t:'re', name:'4-plex for Sale', cost:80000, dp:16000, mort:64000, cf:750, sellRange:'$100,000-$140,000', desc:'4-plex available - forced sale. Out-of-state, financially distressed owner years behind on taxes. Some records available. 56% ROI.'},
+  {id:'s5', t:'re', name:'8-plex for Sale', cost:160000, dp:32000, mort:128000, cf:1700, sellRange:'$200,000-$280,000', desc:'Professional person urgently needs cash to save partnership. 8-plex sale to raise capital, good opportunity for right person. 64% ROI.'},
+  {id:'s6', t:'biz', name:'4 bay coin operated auto wash', cost:125000, dp:25000, mort:100000, cf:1800, sellRange:'None', desc:'Successful 4 bay coin operated auto wash near busy intersection. Seller is moving to retirement community out of state. 86% ROI.'},
+  {id:'s7', t:'re', name:'20 Acres for Sale', cost:20000, dp:20000, mort:0, cf:0, sellRange:'??', desc:'20 acres of vacant land, currently zoned residential. Possibility of good appreciation if rezoned commercial. 0% ROI.'},
+  {id:'s8', t:'re', name:'8-plex for Sale', cost:240000, dp:40000, mort:200000, cf:950, sellRange:'$200,000-$280,000', desc:'Retiring investor/owner offers his 8-plex at current appraisal value. Professional lawn service and management. Full records. 29% ROI.'},
+  {id:'s9', t:'biz', name:'Limited Partner Wanted', cost:30000, dp:30000, mort:0, cf:1500, sellRange:'$60,000-$90,000', desc:'Non-franchise sandwich shop doubling the number of locations. Owner needs additional equity capital to get operating loan. 60% ROI.'},
+  {id:'s10', t:'re', name:'4-plex for Sale', cost:80000, dp:20000, mort:60000, cf:400, sellRange:'$100,000-$140,000', desc:'Project 4-plex for sale in rehabilitating neighborhood. Owner being forced out by income tax liens. 24% ROI.'},
+  {id:'s11', t:'re', name:'4-plex for Sale', cost:90000, dp:15000, mort:75000, cf:500, sellRange:'$100,000-$140,000', desc:'Older 4-plex next to new highway for sale. Owner/occupant moving to quieter area. Priced for quick sale. 40% ROI.'},
+  {id:'s12', t:'re', name:'12 unit apartment house', cost:350000, dp:50000, mort:300000, cf:2400, sellRange:'$300,000-$480,000', desc:'Offered by out-of-state heirs of handyman/owner. Long waiting list for apartments in this building. 58% ROI.'},
+  {id:'s13', t:'re', name:'Apartment House for Sale', cost:550000, dp:50000, mort:500000, cf:2800, sellRange:'$600,000-$960,000', desc:'24 unit older building near community college available from retiring owner/builder. Fully rented, nice cash flow. 67% ROI.'},
+  {id:'s14', t:'re', name:'Duplex for Sale', cost:60000, dp:6000, mort:54000, cf:300, sellRange:'$50,000-$80,000', desc:'Well maintained duplex in desirable area available due to transfer of owner. Excellent investment opportunity. 60% ROI.'},
+  {id:'s15', t:'re', name:'4-plex for Sale', cost:125000, dp:15000, mort:110000, cf:600, sellRange:'$100,000-$140,000', desc:'Nice, well maintained 4-plex in good neighborhood. Stable tenants, positive cash flow, few problems. Full records. 48% ROI.'},
+  
+  // --- Your Modernized Real Estate ---
+  {id:'s16',t:'re',name:'Studio Apartment',cost:22000,dp:2500,mort:19500,cf:65,sellRange:'$15,000-$30,000',desc:'Affordable studio rental near a university.'},
+  {id:'s17',t:'re',name:'Townhouse',cost:78000,dp:7500,mort:70500,cf:260,sellRange:'$70,000-$100,000',desc:'Family townhouse in a growing suburb.'},
+  {id:'s18',t:'re',name:'Beachside Condo',cost:95000,dp:9500,mort:85500,cf:300,sellRange:'$85,000-$120,000',desc:'Vacation rental with seasonal demand.'},
+  {id:'s19',t:'re',name:'Student Housing Unit',cost:42000,dp:4000,mort:38000,cf:180,sellRange:'$35,000-$50,000',desc:'Rental close to a university.'},
+  {id:'s20',t:'re',name:'Small Office Unit',cost:60000,dp:6000,mort:54000,cf:230,sellRange:'$50,000-$75,000',desc:'Compact commercial office rental.'},
+  {id:'s21',t:'re',name:'Storage Units',cost:85000,dp:8500,mort:76500,cf:350,sellRange:'$70,000-$100,000',desc:'Self-storage facility with recurring customers.'},
+  {id:'s22',t:'re',name:'Small Retail Unit',cost:72000,dp:7000,mort:65000,cf:280,sellRange:'$60,000-$90,000',desc:'Street-level shop with a commercial tenant.'},
+  {id:'s23',t:'re',name:'Duplex with Garage',cost:68000,dp:6500,mort:61500,cf:250,sellRange:'$55,000-$80,000',desc:'Two rentals with additional garage income.'},
+  {id:'s24',t:'re',name:'Small Warehouse',cost:110000,dp:10000,mort:100000,cf:450,sellRange:'$90,000-$130,000',desc:'Warehouse space rented to a local company.'},
+  {id:'s25',t:'re',name:'Corner Shop Property',cost:88000,dp:8500,mort:79500,cf:320,sellRange:'$75,000-$110,000',desc:'Small commercial property in a busy neighborhood.'},
+
+  // --- Original Stocks / Mutual Funds / CD ---
+  {id:'s_stk1', t:'stk', sym:'MYT4U', name:'MYT4U Electronics Co.', pps:20, max:999, div:0, desc:'Fast growing seller of home electronics. Today\'s price: $20. Trading range: $5-$30.'},
+  {id:'s_stk2', t:'stk', sym:'OK4U', name:'OK4U Drug Co.', pps:30, max:999, div:0, desc:'Long time maker of medicines. Today\'s price: $30. Trading range: $5-$40.'},
+  {id:'s_stk3', t:'stk', sym:'ON2U', name:'ON2U Entertainment Co.', pps:20, max:999, div:0, desc:'Recent merger strengthened market share. Today\'s price: $20. Trading range: $10-$30.'},
+  {id:'s_mf1', t:'stk', sym:'GRO4US', name:'Mutual Fund', pps:30, max:999, div:0, desc:'General market strength leads well managed fund\'s price to a strong level. Today\'s price: $30. Trading range: $10-$30.'},
+  {id:'s_pfd1', t:'stk', sym:'2BIG', name:'Preferred Stock - 2BIG Power', pps:1200, max:999, div:10, desc:'High yield, preferred shares of major domestic electricity power company. Today\'s price: $1,200. Dividend: $10/month. Yield = 10%.'},
+  {id:'s_cd1', t:'cd', name:'Certificate of Deposit', cost:5000, int:20, desc:'A leading bank offers this special CD. Today\'s price: $5,000. Interest: $20/month. Yield = 4.8%.'},
+  {id:'s_cd2', t:'cd', name:'Certificate of Deposit', cost:4000, int:20, desc:'A leading bank offers this special CD. Today\'s price: $4,000. Interest: $20/month. Yield = 6%.'},
+  
+  // --- Your Modern Notes/CDs ---
+  {id:'s44',t:'note',name:'Private Lending Note',cost:3000,int:150,desc:'Lend to a local entrepreneur.'},
+  {id:'s45',t:'note',name:'Equipment Loan Note',cost:5000,int:220,desc:'Finance business equipment for monthly interest.'},
+  {id:'s46',t:'note',name:'Real Estate Note',cost:7000,int:300,desc:'Private mortgage lending investment.'},
+  {id:'s47',t:'note',name:'Small Business Note',cost:1500,int:60,desc:'Short-term loan to a growing business.'},
+  {id:'s48',t:'note',name:'Commercial Lending Note',cost:10000,int:400,desc:'Lend capital to a commercial operator.'},
+  {id:'s49',t:'note',name:'Startup Funding Note',cost:2500,int:100,desc:'Provide funding to a new business.'},
+  {id:'s50',t:'note',name:'Vehicle Finance Note',cost:4000,int:170,desc:'Receive interest from a vehicle loan.'},
+  {id:'s51',t:'cd',name:'6-Month CD',cost:3000,int:25,desc:'Short-term bank deposit.'},
+  {id:'s52',t:'cd',name:'24-Month CD',cost:10000,int:110,desc:'Longer-term certificate of deposit.'},
+  {id:'s53',t:'cd',name:'Premium Savings CD',cost:15000,int:140,desc:'Higher-value bank certificate.'},
+  {id:'s54',t:'cd',name:'Corporate Bond CD',cost:6000,int:65,desc:'Fixed-income investment.'},
+  {id:'s55',t:'cd',name:'Government Savings Certificate',cost:12000,int:100,desc:'Conservative income-producing investment.'}
+];
+
+// ─── BIG DEALS ───────────────────────────────────
+
+const BIG_DEALS = [
+  // --- Original Narrative Big Deals ---
+  {id:'b1', t:'re', name:'Apartment Complex for Sale', cost:1200000, dp:200000, mort:1000000, cf:11000, sellRange:'$1,500,000-$2,700,000', desc:'60 unit complex available from pension fund that foreclosed on builder/owner. On-site management in place. 66% ROI.'},
+  {id:'b2', t:'biz', name:'Automated Business for Sale', cost:100000, dp:20000, mort:80000, cf:1600, sellRange:'None', desc:'30 video/pinball machines at long term contract locations for sale by overextended owner. Owner is desperate. 96% ROI.'},
+  {id:'b3', t:'biz', name:'Limited Partner Wanted', cost:25000, dp:25000, mort:0, cf:1000, sellRange:'$50,000-$75,000', desc:'Successful doctor expanding office and clinic. Needs partner to fund equity portion of construction costs. 48% ROI.'},
+  {id:'b4', t:'re', name:'Duplex for Sale', cost:70000, dp:7000, mort:63000, cf:140, sellRange:'$50,000-$80,000', desc:'This duplex is the best in the neighborhood! Proud owner retiring to another state to be near her grandchildren. 24% ROI.'},
+  {id:'b5', t:'re', name:'Small shopping mall for sale', cost:50000, dp:50000, mort:0, cf:800, sellRange:'$35,000-$150,000', desc:'Bank has taken back mall from bankrupt owner. Mall is currently 50% occupied. Just listed today. 19% ROI.'},
+  {id:'b6', t:'biz', name:'Automated Business for Sale', cost:200000, dp:40000, mort:160000, cf:2700, sellRange:'None', desc:'Successful coin telephone business available due to death of owner. Heirs live out of state. All locations on long term contract. 81% ROI.'},
+  {id:'b7', t:'re', name:'House for Sale - 3Br/2Ba', cost:70000, dp:9000, mort:61000, cf:300, sellRange:'$65,000-$135,000', desc:'Downsized manager must sell this 3/2 house, cannot afford payments on new salary. Area in transition. 40% ROI.'},
+  {id:'b8', t:'re', name:'4-plex for Sale', cost:100000, dp:20000, mort:80000, cf:800, sellRange:'$100,000-$140,000', desc:'4-plex in recovering neighborhood. Fully rented, repairs kept up. Needs your down payment and patience. 48% ROI.'},
+  {id:'b9', t:'re', name:'8-plex for Sale', cost:200000, dp:40000, mort:160000, cf:1600, sellRange:'$200,000-$280,000', desc:'Owner\'s legal troubles lead to forced sale of this 8-plex. No qualifying on this loan, as mortgage holder is cooperating. 48% ROI.'},
+  {id:'b10', t:'re', name:'8-plex for Sale', cost:50000, dp:8000, mort:42000, cf:240, sellRange:'$50,000-$70,000', desc:'Owner moving out of this duplex due to growing family. Tenant remains, well maintained, excellent landscaping. 36% ROI.'},
+  {id:'b11', t:'biz', name:'Automated Business for Sale', cost:150000, dp:30000, mort:120000, cf:2500, sellRange:'None', desc:'Personal bankruptcy sale of busy, successful laundromat on busy highway. Absentee owner, contract cleaning. 100% ROI.'},
+
+  // --- Your Modernized Big Deals ---
+  {id:'b12',t:'re',name:'50-Plex Apartment Complex',cost:1400000,dp:120000,mort:1280000,cf:6500,sellRange:'$1,200,000-$1,800,000',desc:'Large residential portfolio.'},
+  {id:'b13',t:'re',name:'Luxury Apartment Tower',cost:2200000,dp:200000,mort:2000000,cf:9500,sellRange:'$1,800,000-$2,800,000',desc:'Premium apartments in a major city.'},
+  {id:'b14',t:'re',name:'Shopping Plaza',cost:850000,dp:85000,mort:765000,cf:4000,sellRange:'$700,000-$1,100,000',desc:'Multiple retail tenants.'},
+  {id:'b15',t:'re',name:'Industrial Warehouse',cost:650000,dp:65000,mort:585000,cf:3200,sellRange:'$550,000-$850,000',desc:'Large industrial rental property.'},
+  {id:'b16',t:'re',name:'Hotel Property',cost:1200000,dp:120000,mort:1080000,cf:5500,sellRange:'$1,000,000-$1,500,000',desc:'Operating hotel with recurring bookings.'},
+  {id:'b17',t:'re',name:'Office Tower',cost:1800000,dp:180000,mort:1620000,cf:7500,sellRange:'$1,500,000-$2,300,000',desc:'Multi-tenant office investment.'},
+  {id:'b18',t:'re',name:'Student Housing Complex',cost:500000,dp:50000,mort:450000,cf:2800,sellRange:'$400,000-$650,000',desc:'Large student rental property.'},
+  {id:'b19',t:'re',name:'Luxury Villa Portfolio',cost:950000,dp:95000,mort:855000,cf:4200,sellRange:'$800,000-$1,200,000',desc:'Portfolio of premium rentals.'},
+  {id:'b20',t:'re',name:'Self Storage Facility',cost:420000,dp:42000,mort:378000,cf:2600,sellRange:'$350,000-$550,000',desc:'Large storage business property.'},
+  {id:'b21',t:'re',name:'Medical Office Complex',cost:780000,dp:78000,mort:702000,cf:3900,sellRange:'$650,000-$1,000,000',desc:'Medical tenants on long-term leases.'},
+  {id:'b22',t:'biz',name:'Regional Supermarket',cost:700000,dp:80000,mort:620000,cf:4500,sellRange:'$600,000-$900,000',desc:'Established grocery business.'},
+  {id:'b23',t:'biz',name:'Laundromat Mega Chain',cost:550000,dp:65000,mort:485000,cf:4000,sellRange:'$450,000-$700,000',desc:'Multiple automated laundry locations.'},
+  {id:'b24',t:'biz',name:'Logistics Company',cost:900000,dp:100000,mort:800000,cf:5500,sellRange:'$750,000-$1,150,000',desc:'Regional delivery and logistics operation.'},
+  {id:'b25',t:'biz',name:'Digital Marketing Agency',cost:180000,dp:25000,mort:155000,cf:1800,sellRange:'$150,000-$250,000',desc:'Recurring contracts and digital services.'},
+  {id:'b26',t:'biz',name:'Fitness Club Chain',cost:650000,dp:70000,mort:580000,cf:4200,sellRange:'$550,000-$850,000',desc:'Several membership-based fitness centers.'},
+  {id:'b27',t:'biz',name:'Car Rental Company',cost:480000,dp:55000,mort:425000,cf:3200,sellRange:'$400,000-$600,000',desc:'Fleet-based rental business.'},
+  {id:'b28',t:'biz',name:'Private Daycare Chain',cost:350000,dp:40000,mort:310000,cf:2600,sellRange:'$300,000-$450,000',desc:'Multiple childcare locations.'},
+  {id:'b29',t:'biz',name:'Coffee Shop Franchise',cost:250000,dp:30000,mort:220000,cf:2100,sellRange:'$200,000-$350,000',desc:'Established multi-location coffee operation.'},
+  {id:'b30',t:'biz',name:'Waste Management Company',cost:800000,dp:90000,mort:710000,cf:5000,sellRange:'$700,000-$1,050,000',desc:'Commercial waste collection contracts.'},
+  {id:'b31',t:'biz',name:'Online Retail Brand',cost:320000,dp:35000,mort:285000,cf:2700,sellRange:'$250,000-$450,000',desc:'Established online store with repeat customers.'},
+  {id:'b32',t:'biz',name:'Event Management Company',cost:200000,dp:25000,mort:175000,cf:1700,sellRange:'$150,000-$300,000',desc:'Corporate and private event contracts.'},
+  {id:'b33',t:'biz',name:'Solar Installation Company',cost:600000,dp:65000,mort:535000,cf:3800,sellRange:'$500,000-$800,000',desc:'Renewable energy installation business.'},
+  {id:'b34',t:'biz',name:'Veterinary Clinic Chain',cost:750000,dp:85000,mort:665000,cf:4300,sellRange:'$650,000-$950,000',desc:'Multiple veterinary practices.'},
+  {id:'b35',t:'biz',name:'Car Dealership',cost:1100000,dp:120000,mort:980000,cf:6000,sellRange:'$900,000-$1,500,000',desc:'Established automotive dealership.'},
+  {id:'b36',t:'biz',name:'Software Development Firm',cost:500000,dp:55000,mort:445000,cf:4200,sellRange:'$400,000-$700,000',desc:'Recurring software contracts and subscriptions.'},
+  {id:'b37',t:'biz',name:'Regional Hotel Group',cost:2500000,dp:250000,mort:2250000,cf:12000,sellRange:'$2,000,000-$3,200,000',desc:'Portfolio of operating hotels.'}
+];
+
+// ─── DOODADS ────────────────────────────────────
+
+const DOODADS = [
+  // Original classics
+  {n:'Buy New Clothes',c:250,d:'You bought some new clothes.'},
+  {n:'Rumor of Layoff',c:220,d:'Pay $220 for tuition & books. Go back to school for added skills.'},
+  {n:'Go to the Air Show',c:120,d:'You went to the air show.'},
+  {n:'Must Have New Sunglasses',c:70,d:'You bought new sunglasses.'},
+  {n:'Buy a Food Processor',c:150,d:'You bought a food processor.'},
+  {n:'Lunch with Friends',c:40,d:'You had lunch with friends.'},
+  {n:'Car Needs Tires',c:300,d:'Your car needed new tires.'},
+  {n:'Sewer Line Breaks',c:2000,d:'Water everywhere at your 8-plex! Broken sewer line needs repair immediately. If you own an 8-plex, pay $2,000. If you own more than one, pay repairs on only one.',req:'8-plex'},
+  {n:'Tenant Damages Your Property',c:500,d:'Tenant fails to pay rent for 2 months and then skips town leaving damage. Insurance covers most, but you are out of pocket $500. Only the person who draws this card pays.',req:'rental'},
+  // Your modernized
+  {n:'Luxury Sports Car',c:4500,d:'You upgraded your car. Your monthly expenses are not impressed.'},
+  {n:'Designer Handbag',c:1200,d:'A designer purchase you absolutely had to have.'},
+  {n:'Expensive Birthday Party',c:900,d:'You threw a spectacular party. Your bank account remembers.'},
+  {n:'Weekend Getaway',c:750,d:'A relaxing weekend away comes with an expensive bill.'},
+  {n:'Broken Washing Machine',c:650,d:'The washing machine finally gave up.'},
+  {n:'Emergency Plumbing',c:1100,d:'A burst pipe floods the kitchen. Call the plumber!'},
+  {n:'New Gaming Computer',c:1800,d:'You bought the latest gaming setup.'},
+  {n:'Luxury Hotel Stay',c:1400,d:'Five-star comfort. Five-star bill.'},
+  {n:'Lost Smartphone',c:850,d:'Your phone disappeared. Time for an expensive replacement.'},
+  {n:'Family Wedding Trip',c:1600,d:'Travel, accommodation and gifts add up.'},
+  {n:'Swimming Pool Installation',c:3800,d:'Your backyard upgrade costs more than expected.'},
+  {n:'New Motorcycle',c:2200,d:'Freedom on two wheels. Another vehicle expense.'},
+  {n:'Roof Replacement',c:3200,d:'The old roof finally needs replacing.'}
+];
+
+// ─── MARKET EVENTS & OFFERS ──────────────────────
+
+const MARKET_EVENTS = [
+  // Stock price events
+  {sym:'MYT4U',np:24,d:'MYT4U announces record earnings! Shares double to $24.'},
+  {sym:'MYT4U',np:4,d:'MYT4U loses a major client. Shares crash to $4.'},
+  {sym:'MYT4U',np:30,d:'Low interest rates lead to substantial share price for this home electronics seller.'},
+  {sym:'MYT4U',np:10,d:'Weak market leads to sagging share price for this home electronics seller.'},
+  {sym:'OK4U',np:40,d:'OK4U reports record profits. Shares climb to $40.'},
+  {sym:'OK4U',np:10,d:'OK4U faces a financial scandal. Shares drop to $10.'},
+  {sym:'OK4U',np:1,d:'Market panic causes crash in the shares of this long time maker of medicines.'},
+  {sym:'ON2U',np:30,d:'ON2U releases a blockbuster title. Shares rise to $30.'},
+  {sym:'ON2U',np:10,d:'ON2U newest theme park loses record amount. Share price hits all-time low.'},
+  {sym:'GRO4US',np:30,d:'General market strength leads well managed fund to a strong level.'},
+  {sym:'2BIG',np:1200,d:'High yield, preferred shares of major domestic electricity power company. Dividend and price fixed at fair level.'}
+];
+
+const MARKET_BUYER_OFFERS = [
+  { name:'Plex Buyer', type:'8-plex', offerPerUnit:30000, desc:'Buyer offers $30,000 per unit for all units in any combination of duplexes, 4-plexes, or 8-plexes.' },
+  { name:'Apartment House Buyer', type:'Apartment', offerPerUnit:25000, desc:'Buyer offers $25,000 per unit for all units in apartment houses of any size.' },
+  { name:'House Buyer', type:'3Br/2Ba', offerTotal:135000, desc:'You are offered $135,000 for a 3/2 rental house.' },
+  { name:'Condo Buyer', type:'2Br/1Ba', offerTotal:45000, desc:'You are offered $45,000 for a 2/1 rental condo.' },
+  { name:'Plex Buyer', type:'4-plex', offerPerUnit:35000, desc:'Buyer offers $35,000 per unit for all units in any combination of duplexes, 4-plexes, or 8-plexes.' },
+  { name:'Plex Buyer', type:'8-plex', offerPerUnit:25000, desc:'Buyer offers $25,000 per unit for all units in any combination of duplexes, 4-plexes, or 8-plexes.' }
+];
+
+const STOCK_SPLITS = [
+  { sym: 'MYT4U', ratio: 2, desc: 'Business is up dramatically and the company is doing so well their shares have just split! Everyone who owns MYT4U shares doubles the numbers of shares they own.' },
+  { sym: 'OK4U', ratio: 2, desc: 'Things are going so well for the company that their shares have just split! Everyone who owns OK4U shares doubles the number of shares they own.' },
+  { sym: 'MYT4U', ratio: 0.5, desc: 'Company reorganizes! Massive losses due to over-expansion and recession. Stockholders lose 1/2 of their ownership rights.' },
+  { sym: 'OK4U', ratio: 0.5, desc: 'Company founders! Massive losses due to tainted drug scandal. All stockholders lose 1/2 of their ownership rights.' }
+];
+
+// ─── GAME STATE ─────────────────────────────────
+
+let G = {};
+
+function initGame(profId) {
+  const p = PROFS.find(x => x.id === profId);
+  G = {
+    prof: p,
+    pos: 0,
+    cash: p.startCash,
+    children: 0,
+    downsized: 0,
+    downsizedTotal: 0,
+    charityTurns: 0,
+    over: false,
+    busy: false,
+    entering: false,
+    justLanded: false,
+    dream: null,
+    ftGoal: 0,
+    ftGoalLocked: false,
+    income: { ...p.inc },
+    expenses: { ...p.exp },
+    liab: { ...p.liab, bankLoan: 0 },
+    // Per-liability monthly payments (initialized from the base expense figures)
+    liabPmt: {
+      mort: p.exp.mort || 0,
+      sch:  p.exp.sch  || 0,
+      car:  p.exp.car  || 0,
+      cc:   p.exp.cc   || 0,
+      ret:  p.exp.ret  || 0,
+    },
+    assets: { re: [], biz: [], notes: [], cds: [], stocks: {} },
+    turn: 0,
+    mkt: {},
+    fast: false,
+    history: [],
+  };
+}
+
+const DISTRESS_SELL_RATE = 0.70;
+const BANK_LOAN_RATE     = 0.10;
+const DEBT_WARN_RATIO    = 0.50;
+const FREEDOM_WARN_RATIO = 0.80;
+
+// ─── HISTORY ────────────────────────────────────
+
+function recordHistory(text, delta = 0) {
+  G.history.push({ turn: G.turn, text, delta, cash: G.cash, ts: Date.now() });
+  if (G.history.length > 200) G.history.shift();
+}
+
+// ─── COMPUTED ───────────────────────────────────
+
+const passive = () => G.income.int + G.income.div + G.income.re + G.income.biz;
+const salary = () => (G.fast ? 0 : G.income.sal);
+const totalInc = () => salary() + passive();
+
+const bankInterest = () => Math.ceil((G.liab.bankLoan * BANK_LOAN_RATE) / 100) * 100;
+
+// Property mortgages are tracked as fixed monthly payments. The cf on each card
+// is *gross* cash flow before the mortgage payment — so we deduct property
+// mortgage payments here as real expenses.
+const propertyMortgagePmt = () => {
+  let m = 0;
+  G.assets.re.forEach(a => { if (a.mort > 0 && a.monthlyMortgage) m += a.monthlyMortgage; });
+  G.assets.biz.forEach(a => { if (a.mort > 0 && a.monthlyMortgage) m += a.monthlyMortgage; });
+  return m;
+};
+
+const totalExp = () => {
+  const e = G.expenses;
+  return e.tax + e.oth
+       + (e.perKid * G.children)
+       + bankInterest()
+       + propertyMortgagePmt();
+};
+
+const cashFlow = () => totalInc() - totalExp();
+
+const totalDebt = () => {
+  const l = G.liab;
+  let d = (l.mort || 0) + (l.sch || 0) + (l.car || 0) + (l.cc || 0) + (l.ret || 0) + (l.bankLoan || 0);
+  G.assets.re.forEach(a => d += a.mort || 0);
+  G.assets.biz.forEach(a => d += a.mort || 0);
+  return d;
+};
+
+const totalLiquidValue = () => {
+  let v = G.cash;
+  G.assets.re.forEach(a => {
+    const mv = a.marketValue ?? a.cost;
+    v += Math.max(0, Math.round(mv * DISTRESS_SELL_RATE) - (a.mort || 0));
+  });
+  G.assets.biz.forEach(a => {
+    const mv = a.marketValue ?? a.cost;
+    v += Math.max(0, Math.round(mv * DISTRESS_SELL_RATE) - (a.mort || 0));
+  });
+  G.assets.notes.forEach(n => v += n.cost);
+  G.assets.cds.forEach(c => v += c.cost);
+  Object.values(G.assets.stocks).forEach(s => v += s.shares * s.pps);
+  return v;
+};
+
+const totalNetWorth = () => {
+  let v = G.cash;
+  G.assets.re.forEach(a => v += (a.marketValue ?? a.cost) - (a.mort || 0));
+  G.assets.biz.forEach(a => v += (a.marketValue ?? a.cost) - (a.mort || 0));
+  G.assets.notes.forEach(n => v += n.cost);
+  G.assets.cds.forEach(c => v += c.cost);
+  Object.values(G.assets.stocks).forEach(s => v += s.shares * s.pps);
+  const l = G.liab;
+  v -= (l.sch || 0) + (l.car || 0) + (l.cc || 0) + (l.ret || 0) + (l.bankLoan || 0);
+  return v;
+};
+
+const totalAssetValue = () => {
+  let v = 0;
+  G.assets.re.forEach(a => v += a.marketValue ?? a.cost);
+  G.assets.biz.forEach(a => v += a.marketValue ?? a.cost);
+  G.assets.notes.forEach(n => v += n.cost);
+  G.assets.cds.forEach(c => v += c.cost);
+  Object.values(G.assets.stocks).forEach(s => v += s.shares * s.pps);
+  return v;
+};
+
+// Can the player realistically recover? Cash + distress-sale value + potential
+// borrowing capacity (they can borrow against assets to cover gaps).
+const canRecover = () => {
+  const liquid = totalLiquidValue();
+  if (liquid > 0) return true;
+  // Borrowing capacity: roughly 50% of gross asset value as potential loan
+  const borrowing = Math.round(totalAssetValue() * 0.5);
+  return borrowing > 0;
+};
+
+function recalcPassive() {
+  let int = 0, div = 0, re = 0, biz = 0;
+  G.assets.notes.forEach(n => int += (n.int || 0));
+  G.assets.cds.forEach(c => int += (c.int || 0));
+  Object.values(G.assets.stocks).forEach(s => div += (s.shares || 0) * (s.div || 0));
+  G.assets.re.forEach(r => re += (r.cf || 0));
+  G.assets.biz.forEach(b => biz += (b.cf || 0));
+  G.income.int = int; G.income.div = div; G.income.re = re; G.income.biz = biz;
+}
+
+// Keeps G.mkt in sync with owned stock prices
+function syncStockPrices() {
+  Object.entries(G.assets.stocks).forEach(([sym, s]) => {
+    G.mkt[sym] = s.pps;
+  });
+}
+
+// ─── FORMATTING ─────────────────────────────────
+
+const fmt = n => n < 0 ? `-$${Math.abs(n).toLocaleString()}` : `$${n.toLocaleString()}`;
+
+// ─── LOGGING ────────────────────────────────────
+
+function log(msg, cls = '') {
+  const el = document.getElementById('log');
+  if (!el) return;
+  const d = document.createElement('div');
+  d.className = 'lg ' + cls;
+  d.textContent = msg;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+  while (el.children.length > 12) el.removeChild(el.firstChild);
+}
+
+// ─── WARNING SYSTEM ─────────────────────────────
+
+async function warn(title, msg, opts = {}) {
+  const buttons = opts.buttons || [{ l: 'OK', v: 'ok', c: 'btn-primary' }];
+  return await showModal({
+    icon: opts.icon || '⚠️',
+    type: opts.type || 'WARNING',
+    title,
+    desc: msg,
+    stats: opts.stats || [],
+    btns: buttons,
+  });
+}
+
+// ─── REPAY LIABILITY ────────────────────────────
+// Base liabilities (mort, sch, car, cc, ret) track both balance AND monthly
+// payment. Repaying reduces both proportionally.
+
+async function repayLiability(kind) {
+  const labels = { mort: 'Home Mortgage', sch: 'School Loan', car: 'Car Loan', cc: 'Credit Card', ret: 'Retail Debt' };
+  const bal = G.liab[kind] || 0;
+  if (!bal) { log(`No ${labels[kind]} to repay.`); return; }
+
+  const amt = Math.min(bal, 1000);
+  if (G.cash < amt) {
+    await warn('Insufficient Funds', `You need ${fmt(amt)} to repay but only have ${fmt(G.cash)}.`, { icon: '💸' });
+    return;
+  }
+  const oldPmt = G.liabPmt[kind] || 0;
+  // Payment is proportional to remaining balance; if loan is fully paid, payment → 0
+  const newBal = bal - amt;
+  const newPmt = newBal === 0 ? 0 : Math.round(oldPmt * (newBal / bal));
+
+  const c = await showModal({
+    icon: '💳', type: 'REPAY LIABILITY',
+    title: `Repay ${labels[kind]}?`,
+    desc: `Pay ${fmt(amt)} toward ${labels[kind]}. Monthly payment drops from ${fmt(oldPmt)} to ${fmt(newPmt)}.`,
+    stats: [
+      { l: 'Balance', v: fmt(bal), c: 'r' },
+      { l: 'Repay Now', v: fmt(amt), c: 'r' },
+      { l: 'New Balance', v: fmt(newBal), c: 'g' },
+      { l: 'New Monthly Pmt', v: fmt(newPmt), c: 'g' },
+    ],
+    btns: [
+      { l: 'Repay', v: 'ok', c: 'btn-primary' },
+      { l: 'Cancel', v: 'cancel', c: 'btn-sec' }
+    ]
+  });
+  if (c !== 'ok') return;
+
+  G.cash -= amt;
+  G.liab[kind] = newBal;
+  G.liabPmt[kind] = newPmt;
+  // Sync the base expense mirror
+  G.expenses[kind] = newPmt;
+  recordHistory(`Repaid ${fmt(amt)} on ${labels[kind]}`, -amt);
+  log(`💳 Repaid ${fmt(amt)} of ${labels[kind]}. Balance ${fmt(newBal)}, payment ${fmt(newPmt)}.`, 'gd');
+  updateUI();
+}
+window.repayLiability = repayLiability;
+
+// ─── REPAY PROPERTY MORTGAGE ────────────────────
+// Repaying principal reduces the balance, but the *monthly payment* stays the
+// same until the mortgage is fully paid off. When the balance hits 0, payment
+// goes to 0 and cf "locks in" at the gross value shown on the card.
+
+async function repayPropertyMortgage(assetKind, index) {
+  const arr = G.assets[assetKind];
+  const a = arr?.[index];
+  if (!a || !a.mort) { log('No mortgage to repay.'); return; }
+
+  const amt = Math.min(a.mort, 1000);
+  const canPay = G.cash >= amt;
+  const newBal = a.mort - amt;
+  const newPmt = newBal === 0 ? 0 : a.monthlyMortgage;
+
+  const c = await showModal({
+    icon: '🏠', type: 'REPAY MORTGAGE',
+    title: `Repay ${a.name} mortgage?`,
+    desc: newBal === 0
+      ? `Pay off the mortgage entirely. Monthly expense drops by ${fmt(a.monthlyMortgage || 0)}, cash flow improves.`
+      : `Pay down principal. Monthly payment stays ${fmt(a.monthlyMortgage || 0)} until the loan is fully paid off.`,
+    stats: [
+      { l: 'Current Mortgage', v: fmt(a.mort), c: 'r' },
+      { l: 'Repay Now', v: fmt(amt), c: 'r' },
+      { l: 'New Balance', v: fmt(newBal), c: 'g' },
+      { l: 'New Monthly Pmt', v: fmt(newPmt), c: newBal === 0 ? 'g' : 'amr' },
+    ],
+    btns: [
+      { l: canPay ? '💳 Repay' : "🚫 Can't Afford", v: 'ok', c: 'btn-primary', disabled: !canPay },
+      { l: 'Cancel', v: 'cancel', c: 'btn-sec' }
+    ]
+  });
+  if (c !== 'ok') return;
+
+  a.mort = newBal;
+  a.monthlyMortgage = newPmt;
+  G.cash -= amt;
+  recordHistory(`Repaid ${fmt(amt)} on ${a.name} mortgage`, -amt);
+  log(`🏠 Repaid ${fmt(amt)} on ${a.name}. Balance ${fmt(a.mort)}${newBal === 0 ? ' (mortgage fully paid off!)' : ''}.`, 'gd');
+  updateUI();
+}
+window.repayPropertyMortgage = repayPropertyMortgage;
+
+// ─── UI UPDATE ──────────────────────────────────
+
+function updateUI() {
+  recalcPassive();
+  syncStockPrices();
+  const ti = totalInc(), te = totalExp(), cf = cashFlow(), pass = passive();
+
+  document.getElementById('tbCash').textContent = fmt(G.cash);
+  const cfEl = document.getElementById('tbCF');
+  cfEl.textContent = fmt(cf);
+  cfEl.className = 'val ' + (cf >= 0 ? 'pos' : 'neg');
+  document.getElementById('tbPvE').textContent = `${fmt(pass)} / ${fmt(te)}`;
+  document.getElementById('profBadge').textContent = `${G.prof.emoji} ${G.prof.name}`;
+
+  let tbExtra = document.getElementById('tbExtra');
+  if (!tbExtra) {
+    tbExtra = document.createElement('div');
+    tbExtra.id = 'tbExtra';
+    tbExtra.className = 'pill';
+    tbExtra.innerHTML = `<div class="lbl">Turn / Net Worth</div><div class="val amr" id="tbTurn">0 / $0</div>`;
+    document.querySelector('.topbar-l')?.appendChild(tbExtra);
+  }
+  const tbTurn = document.getElementById('tbTurn');
+  if (tbTurn) tbTurn.textContent = `${G.turn} / ${fmt(totalNetWorth())}`;
+
+  document.getElementById('fSal').textContent = fmt(salary());
+  document.getElementById('fInt').textContent = fmt(G.income.int);
+  document.getElementById('fDiv').textContent = fmt(G.income.div);
+  document.getElementById('fRE').textContent  = fmt(G.income.re);
+  document.getElementById('fBiz').textContent = fmt(G.income.biz);
+  document.getElementById('fTI').textContent  = fmt(ti);
+  document.getElementById('fTax').textContent = fmt(G.expenses.tax);
+  document.getElementById('fMort').textContent= fmt(G.expenses.mort);
+  document.getElementById('fSch').textContent = fmt(G.expenses.sch);
+  document.getElementById('fCar').textContent = fmt(G.expenses.car);
+  document.getElementById('fCC').textContent  = fmt(G.expenses.cc);
+  document.getElementById('fRet').textContent = fmt(G.expenses.ret);
+  document.getElementById('fOth').textContent = fmt(G.expenses.oth);
+  document.getElementById('fBL').textContent  = fmt(bankInterest());
+  document.getElementById('cCount').textContent = G.children;
+  document.getElementById('fChi').textContent = fmt(G.expenses.perKid * G.children);
+  document.getElementById('fTE').textContent  = fmt(te);
+  const cfDisp = document.getElementById('fCF');
+  cfDisp.textContent = fmt(cf);
+  cfDisp.style.color = cf >= 0 ? 'var(--green-l)' : '#e05050';
+
+  let tgt, label;
+  if (G.fast) {
+    tgt = G.ftGoal || 1;
+    label = 'Goal: reach ' + fmt(G.ftGoal) + '/mo passive';
+  } else {
+    tgt = te;
+    label = 'Escape to Freedom';
+  }
+  const pct = tgt > 0 ? Math.min(100, Math.round((pass / tgt) * 100)) : 0;
+  document.getElementById('pbar').style.width = pct + '%';
+  document.getElementById('bcPass').textContent = fmt(pass);
+  document.getElementById('bcExp').textContent  = fmt(tgt);
+  document.querySelector('.bc-title').textContent = G.fast ? '🚀 FAST TRACK' : '🐀 RAT RACE';
+  document.querySelector('.bc-sub').textContent   = G.fast ? label : 'Escape to Freedom';
+  document.getElementById('bcSpace').textContent  = BOARD[G.pos].n;
+  document.getElementById('downsizedBadge').style.display = G.downsized > 0 ? 'inline-block' : 'none';
+
+  renderAssets(); renderStocks(); renderLiab();
+}
+
+function renderAssets() {
+  const el = document.getElementById('assetList');
+  const items = [];
+  G.assets.re.forEach((a, i) => items.push(`
+    <div class="asset-card">
+      <button class="sell-btn" onclick="sellRE(${i})">Sell</button>
+      <div class="ac-title">🏠 ${a.name}</div>
+      <div class="ac-inc">+${fmt(a.cf)}/mo</div>
+      <div class="ac-sub">Down: ${fmt(a.dp)} | Mortgage: ${fmt(a.mort)}${a.monthlyMortgage ? ` | Pmt: ${fmt(a.monthlyMortgage)}/mo` : ''}${a.marketValue ? ` | Mkt: ${fmt(a.marketValue)}` : ''}</div>
+    </div>`));
+  G.assets.biz.forEach((a, i) => items.push(`
+    <div class="asset-card">
+      <button class="sell-btn" onclick="sellBiz(${i})">Sell</button>
+      <div class="ac-title">🏢 ${a.name}</div>
+      <div class="ac-inc">+${fmt(a.cf)}/mo</div>
+      <div class="ac-sub">Investment: ${fmt(a.cost)}${a.monthlyMortgage ? ` | Pmt: ${fmt(a.monthlyMortgage)}/mo` : ''}${a.marketValue ? ` | Mkt: ${fmt(a.marketValue)}` : ''}</div>
+    </div>`));
+  G.assets.notes.forEach(a => items.push(`
+    <div class="asset-card">
+      <div class="ac-title">📄 ${a.name}</div>
+      <div class="ac-inc">+${fmt(a.int)}/mo interest</div>
+      <div class="ac-sub">Principal lent: ${fmt(a.cost)}</div>
+    </div>`));
+  G.assets.cds.forEach(a => items.push(`
+    <div class="asset-card">
+      <div class="ac-title">🏦 ${a.name}</div>
+      <div class="ac-inc">+${fmt(a.int)}/mo interest</div>
+      <div class="ac-sub">Amount: ${fmt(a.cost)}</div>
+    </div>`));
+  el.innerHTML = items.length ? items.join('') : '<div style="font-size:.74rem;color:var(--dim);text-align:center;padding:12px">No assets yet.</div>';
+}
+
+function renderStocks() {
+  const el = document.getElementById('stockList');
+  const stocks = Object.entries(G.assets.stocks);
+  if (!stocks.length) {
+    el.innerHTML = '<div style="font-size:.74rem;color:var(--dim);text-align:center;padding:10px">No stocks owned.</div>';
+    return;
+  }
+  el.innerHTML = stocks.map(([sym, s]) => {
+    const avg = s.avgCost ?? s.pps;
+    const gain = (s.pps - avg) * s.shares;
+    return `
+    <div class="asset-card">
+      <button class="sell-btn" onclick="sellStock('${sym}')">Sell All</button>
+      <div class="ac-title">📈 ${sym}</div>
+      <div class="ac-inc">${s.shares} × ${fmt(s.pps)} = ${fmt(s.shares * s.pps)}</div>
+      <div class="ac-sub">Avg cost ${fmt(avg)} | P/L ${fmt(gain)} | Div: ${fmt(s.div)}/sh → ${fmt(s.shares * s.div)}/mo</div>
+    </div>`;
+  }).join('');
+}
+
+function renderLiab() {
+  const el = document.getElementById('liabList');
+  const rows = [];
+  const l = G.liab;
+
+  const makeRow = (label, kind, bal, pmt) => {
+    if (!bal) return '';
+    return `<div class="loan-row" style="align-items:center">
+      <span class="l-lbl">${label}${pmt ? ` <span style="color:var(--dim);font-size:.6rem">(${fmt(pmt)}/mo)</span>` : ''}</span>
+      <span style="display:flex;gap:8px;align-items:center">
+        <span class="l-val">${fmt(bal)}</span>
+        <button class="sell-btn" style="position:static;padding:2px 8px;font-size:.6rem"
+                onclick="repayLiability('${kind}')">Repay</button>
+      </span>
+    </div>`;
+  };
+
+  rows.push(makeRow('Home Mortgage', 'mort', l.mort, G.liabPmt.mort));
+  rows.push(makeRow('School Loan',   'sch',  l.sch,  G.liabPmt.sch));
+  rows.push(makeRow('Car Loan',      'car',  l.car,  G.liabPmt.car));
+  rows.push(makeRow('Credit Card',   'cc',   l.cc,   G.liabPmt.cc));
+  rows.push(makeRow('Retail Debt',   'ret',  l.ret,  G.liabPmt.ret));
+
+  G.assets.re.forEach((a, i) => {
+    if (a.mort) rows.push(`<div class="loan-row" style="align-items:center">
+      <span class="l-lbl">${a.name} <span style="color:var(--dim);font-size:.6rem">(${fmt(a.monthlyMortgage || 0)}/mo)</span></span>
+      <span style="display:flex;gap:8px;align-items:center">
+        <span class="l-val">${fmt(a.mort)}</span>
+        <button class="sell-btn" style="position:static;padding:2px 8px;font-size:.6rem"
+                onclick="repayPropertyMortgage('re',${i})">Repay</button>
+      </span>
+    </div>`);
+  });
+  G.assets.biz.forEach((a, i) => {
+    if (a.mort) rows.push(`<div class="loan-row" style="align-items:center">
+      <span class="l-lbl">${a.name} <span style="color:var(--dim);font-size:.6rem">(${fmt(a.monthlyMortgage || 0)}/mo)</span></span>
+      <span style="display:flex;gap:8px;align-items:center">
+        <span class="l-val">${fmt(a.mort)}</span>
+        <button class="sell-btn" style="position:static;padding:2px 8px;font-size:.6rem"
+                onclick="repayPropertyMortgage('biz',${i})">Repay</button>
+      </span>
+    </div>`);
+  });
+
+  if (l.bankLoan) {
+    rows.push(`<div class="loan-row" style="color:var(--amber);align-items:center">
+      <span class="l-lbl">Bank Loan Balance <span style="color:var(--dim);font-size:.6rem">(${fmt(bankInterest())}/mo)</span></span>
+      <span style="display:flex;gap:8px;align-items:center">
+        <span class="l-val" style="color:var(--amber)">${fmt(l.bankLoan)}</span>
+        <button class="sell-btn" style="position:static;padding:2px 8px;font-size:.6rem;background:rgba(80,60,15,.85);color:#f0c040;border-color:#8a6a0a"
+                onclick="openLoan()">Manage</button>
+      </span>
+    </div>`);
+  }
+
+  el.innerHTML = rows.length ? rows.join('') : '<div style="font-size:.74rem;color:var(--dim);text-align:center;padding:10px">No extra liabilities.</div>';
+}
+
+// ─── BOARD BUILDER ──────────────────────────────
+
+function buildBoard() {
+  document.querySelectorAll('.space').forEach(e => e.remove());
+  const wrap = document.getElementById('boardWrap');
+  const cx = 280, cy = 280, r = 228, n = BOARD.length;
+  BOARD.forEach((sp, i) => {
+    const ang = (i / n) * 2 * Math.PI - Math.PI / 2;
+    const x = cx + r * Math.cos(ang) - 27;
+    const y = cy + r * Math.sin(ang) - 26;
+    const div = document.createElement('div');
+    div.className = `space t-${sp.t}${i === G.pos ? ' cur' : ''}`;
+    div.id = `sp${i}`;
+    div.style.cssText = `left:${x}px;top:${y}px`;
+    div.innerHTML = `<div class="sp-emoji">${sp.e}</div><div class="sp-name">${sp.n}</div>`;
+    wrap.appendChild(div);
+  });
+  moveToken();
+}
+
+function refreshBoard() {
+  BOARD.forEach((_, i) => {
+    const el = document.getElementById(`sp${i}`);
+    if (el) el.classList.toggle('cur', i === G.pos);
+  });
+  moveToken();
+}
+
+function moveToken() {
+  const t = document.getElementById('token');
+  const cx = 280, cy = 280, r = 228, n = BOARD.length;
+  const ang = (G.pos / n) * 2 * Math.PI - Math.PI / 2;
+  t.style.left = (cx + r * Math.cos(ang) - 8) + 'px';
+  t.style.top  = (cy + r * Math.sin(ang) + 14) + 'px';
+}
+
+// ─── MODAL ENGINE ───────────────────────────────
+
+function showModal(cfg) {
+  return new Promise(resolve => {
+    const ov = document.getElementById('cardOverlay');
+    document.getElementById('mIcon').textContent  = cfg.icon || '💼';
+    document.getElementById('mType').textContent  = cfg.type || '';
+    document.getElementById('mTitle').textContent = cfg.title || '';
+    document.getElementById('mDesc').textContent  = cfg.desc || '';
+
+    const statsEl = document.getElementById('mStats');
+    if (cfg.stats?.length) {
+      statsEl.innerHTML = cfg.stats.map(s => `
+        <div class="m-stat"><div class="ms-l">${s.l}</div><div class="ms-v ${s.c||''}">${s.v}</div></div>`).join('');
+      statsEl.style.display = 'grid';
+    } else statsEl.style.display = 'none';
+
+    const sRow = document.getElementById('mStockRow');
+    if (cfg.stockMax != null && cfg.stockMax > 0) {
+      sRow.style.display = 'flex';
+      document.getElementById('mMaxShares').textContent = cfg.stockMax;
+      const inp = document.getElementById('mShares');
+      inp.max = cfg.stockMax;
+      inp.value = Math.min(1, cfg.stockMax);
+    } else sRow.style.display = 'none';
+
+    const btnsEl = document.getElementById('mBtns');
+    btnsEl.innerHTML = '';
+    cfg.btns.forEach(b => {
+      const btn = document.createElement('button');
+      btn.className = `btn ${b.c || 'btn-sec'}`;
+      btn.textContent = b.l;
+      if (b.disabled) btn.disabled = true;
+      btn.onclick = () => { cleanup(); resolve(b.v); };
+      btnsEl.appendChild(btn);
+    });
+
+    const escHandler = (e) => { if (e.key === 'Escape') { cleanup(); resolve('cancel'); } };
+    const clickHandler = (e) => { if (e.target === ov) { cleanup(); resolve('cancel'); } };
+    document.addEventListener('keydown', escHandler);
+    ov.addEventListener('click', clickHandler);
+
+    function cleanup() {
+      ov.classList.remove('open');
+      document.removeEventListener('keydown', escHandler);
+      ov.removeEventListener('click', clickHandler);
+    }
+
+    ov.classList.add('open');
+  });
+}
+
+// ─── TURN LOCK ──────────────────────────────────
+
+function setBusy(v) {
+  G.busy = v;
+  const b = document.getElementById('rollBtn');
+  if (b) b.disabled = v;
+}
+
+// ─── SPACE HANDLERS ─────────────────────────────
+
+async function handleSpace(t) {
+  const map = {
+    payday: () => doPayday(false),
+    small_deal: () => doDeal('small'),
+    big_deal:   () => doDeal('big'),
+    doodad: doDoodad, baby: doBaby, charity: doCharity,
+    downsized: doDownsized, market: doMarket,
+    cfday: doCfDay, ftbiz: doFtBiz, dream: doDream, audit: doAudit
+  };
+  if (map[t]) await map[t]();
+}
+
+async function doPayday(passing = false) {
+  const cf = cashFlow();
+  const tag = passing ? 'PAYDAY (passed)' : 'PAYDAY (landed)';
+
+  if (cf > 0) {
+    G.cash += cf;
+    recordHistory(`Payday: collected ${fmt(cf)}`, cf);
+    log(`💵 ${tag}: collected ${fmt(cf)}.`, 'gd');
+    return;
+  }
+  if (cf === 0) { log(`💵 ${tag}: zero cash flow.`); return; }
+
+  const need = -cf;
+  const shortfall = Math.max(0, need - G.cash);
+  const loanNeeded = Math.ceil(shortfall / 1000) * 1000;
+
+  if (loanNeeded <= 0) {
+    G.cash -= need;
+    recordHistory(`Payday: paid ${fmt(need)}`, -need);
+    log(`💵 ${tag}: paid ${fmt(need)}.`, 'bd');
+    return;
+  }
+
+  const choice = await warn(
+    `Negative cash flow: ${fmt(cf)}`,
+    `You owe ${fmt(need)} this payday but only have ${fmt(G.cash)}. Take a bank loan of ${fmt(loanNeeded)}?`,
+    {
+      icon: '💸', type: 'PAYDAY SHORTFALL',
+      stats: [
+        { l: 'Cash Needed', v: fmt(need), c: 'r' },
+        { l: 'Your Cash',   v: fmt(G.cash), c: 'r' },
+        { l: 'Loan Amount', v: fmt(loanNeeded), c: 'r' },
+        { l: 'New Interest', v: '+'+fmt(Math.ceil(loanNeeded*BANK_LOAN_RATE/100)*100)+'/mo', c: 'r' }
+      ],
+      buttons: [
+        { l: '💰 Take Loan', v: 'loan', c: 'btn-primary' },
+        { l: '❌ Declare Bankruptcy', v: 'bankrupt', c: 'btn-danger' }
+      ]
+    }
+  );
+
+  if (choice === 'bankrupt') { await endGame('bankruptcy'); return; }
+
+  G.liab.bankLoan += loanNeeded;
+  G.cash += loanNeeded;
+  G.cash -= need;
+  recordHistory(`Payday shortfall: borrowed ${fmt(loanNeeded)}, paid ${fmt(need)}`, -need);
+  log(`💵 ${tag}: took bank loan ${fmt(loanNeeded)}, paid ${fmt(need)}.`, 'bd');
+}
+
+async function doDeal(size) {
+  const deck = size === 'small' ? SMALL_DEALS : BIG_DEALS;
+  let card = deck[Math.floor(Math.random() * deck.length)];
+  if (card.t === 'stk') card = { ...card, pps: G.mkt[card.sym] ?? card.pps };
+
+  let cfg = { icon: size === 'small' ? '🏠' : '🏢', type: `${size.toUpperCase()} DEAL`, title: card.name, desc: card.desc };
+  let canAfford = false;
+  let buyDisabled = false;
+
+  if (card.t === 're' || card.t === 'biz') {
+    canAfford = G.cash >= card.dp;
+    cfg.stats = [
+      { l: 'Down Payment', v: fmt(card.dp), c: 'r' },
+      { l: 'Cash Flow/Mo', v: fmt(card.cf), c: 'g' },
+      { l: 'Total Cost',   v: fmt(card.cost) },
+      { l: 'Your Cash',    v: fmt(G.cash), c: canAfford ? 'g' : 'r' },
+    ];
+    cfg.icon = card.t === 're' ? (size === 'small' ? '🏠' : '🏢') : '🏭';
+    buyDisabled = !canAfford;
+  } else if (card.t === 'stk') {
+    const afford = Math.min(card.max, Math.floor(G.cash / card.pps));
+    canAfford = afford > 0;
+    cfg.icon = '📈';
+    cfg.stats = [
+      { l: 'Price/Share', v: fmt(card.pps) },
+      { l: 'Dividend/Share/Mo', v: fmt(card.div) },
+      { l: 'Max You Can Buy', v: afford + ' shares' },
+      { l: 'Your Cash', v: fmt(G.cash), c: 'amr' },
+    ];
+    cfg.stockMax = afford;
+    buyDisabled = !canAfford;
+  } else {
+    canAfford = G.cash >= card.cost;
+    cfg.icon = card.t === 'cd' ? '🏦' : '📄';
+    cfg.stats = [
+      { l: 'Investment', v: fmt(card.cost), c: 'r' },
+      { l: 'Monthly Income', v: fmt(card.int), c: 'g' },
+      { l: 'Annual Yield', v: ((card.int * 12 / card.cost) * 100).toFixed(1) + '%' },
+      { l: 'Your Cash', v: fmt(G.cash), c: canAfford ? 'g' : 'r' },
+    ];
+    buyDisabled = !canAfford;
+  }
+
+  if (size === 'big' && canAfford) {
+    await warn('Large Investment', `You're about to commit ${fmt(card.dp)} to ${card.name}. This is a significant exposure. Proceed?`, {
+      icon: '⚠️', type: 'INVESTMENT RISK',
+      stats: [{ l: 'Cash After', v: fmt(G.cash - card.dp), c: 'r' }],
+      buttons: [{ l: 'Continue', v: 'ok', c: 'btn-sec' }]
+    });
+  }
+
+  if (canAfford && (card.t === 're' || card.t === 'biz') && cashFlow() >= 0) {
+    const estPmt = card.mort ? Math.round(card.mort * 0.006) : 0;
+    if (cashFlow() + card.cf - estPmt < 0) {
+      await warn('Financial Distress Ahead',
+        `Buying ${card.name} would push your monthly cash flow negative. Proceed with caution.`,
+        { icon: '⚠️', type: 'CASH FLOW WARNING' });
+    }
+  }
+
+  cfg.btns = [
+    { l: canAfford ? '✅ Buy' : "🚫 Can't Afford", v: 'buy', c: 'btn-primary', disabled: buyDisabled },
+    { l: '❌ Pass', v: 'pass', c: 'btn-sec' }
+  ];
+  const choice = await showModal(cfg);
+  if (choice !== 'buy') { log(`⏩ Passed on ${card.name}.`); return; }
+  if (!canAfford) { log(`❌ Cannot afford ${card.name}.`, 'bd'); return; }
+
+  if (card.t === 'stk') {
+    const afford = Math.min(card.max, Math.floor(G.cash / card.pps));
+    const qty = Math.max(1, Math.min(parseInt(document.getElementById('mShares').value) || 1, afford));
+    const total = qty * card.pps;
+    G.cash -= total;
+    if (G.assets.stocks[card.sym]) {
+      const s = G.assets.stocks[card.sym];
+      const newShares = s.shares + qty;
+      s.avgCost = Math.round(((s.shares * (s.avgCost ?? s.pps)) + (qty * card.pps)) / newShares);
+      s.shares = newShares;
+      s.pps = G.mkt[card.sym] ?? card.pps;
+    } else {
+      G.assets.stocks[card.sym] = {
+        name: card.name, shares: qty, pps: card.pps,
+        avgCost: card.pps, div: card.div
+      };
+    }
+    recordHistory(`Bought ${qty} ${card.sym} for ${fmt(total)}`, -total);
+    log(`📈 Bought ${qty} ${card.sym} shares for ${fmt(total)}.`, 'gd');
+  } else if (card.t === 're') {
+    G.cash -= card.dp;
+    const monthlyMortgage = card.mort ? Math.round(card.mort * 0.006) : 0;
+    G.assets.re.push({
+      name: card.name, cost: card.cost, dp: card.dp,
+      mort: card.mort, cf: card.cf,
+      marketValue: card.cost,
+      monthlyMortgage, sellRange: card.sellRange
+    });
+    recordHistory(`Bought ${card.name}`, -card.dp);
+    log(`🏠 Bought ${card.name}! CF +${fmt(card.cf)}/mo.`, 'gd');
+  } else if (card.t === 'biz') {
+    G.cash -= card.dp;
+    G.assets.biz.push({
+      name: card.name, cost: card.cost, dp: card.dp,
+      mort: card.mort || 0, cf: card.cf,
+      marketValue: card.cost,
+      monthlyMortgage: card.mort ? Math.round(card.mort * 0.006) : 0,
+      sellRange: card.sellRange
+    });
+    recordHistory(`Bought ${card.name}`, -card.dp);
+    log(`🏢 Bought ${card.name}! CF +${fmt(card.cf)}/mo.`, 'gd');
+  } else {
+    G.cash -= card.cost;
+    const arr = card.t === 'note' ? G.assets.notes : G.assets.cds;
+    arr.push({ name: card.name, cost: card.cost, int: card.int });
+    recordHistory(`Bought ${card.name}`, -card.cost);
+    log(`📄 Bought ${card.name}. Interest +${fmt(card.int)}/mo.`, 'gd');
+  }
+  updateUI();
+}
+
+async function doDoodad() {
+  const card = DOODADS[Math.floor(Math.random() * DOODADS.length)];
+
+  if (card.req === '8-plex') {
+    const owns8Plex = [...G.assets.re, ...G.assets.biz].some(a => a.name.includes('8-plex'));
+    if (!owns8Plex) {
+      log(`🛒 DOODAD: ${card.n} - skipped (you do not own an 8-plex).`);
+      return;
+    }
+  } else if (card.req === 'rental') {
+    if (G.assets.re.length === 0 && G.assets.biz.length === 0) {
+      log(`🛒 DOODAD: ${card.n} - skipped (you do not own rental property).`);
+      return;
+    }
+  }
+
+  const canPay = G.cash >= card.c;
+  await showModal({
+    icon: '🛒', type: 'DOODAD — UNEXPECTED EXPENSE', title: card.n, desc: card.d,
+    stats: [
+      { l: 'Cost', v: fmt(card.c), c: 'r' },
+      { l: 'Your Cash', v: fmt(G.cash), c: canPay ? 'g' : 'r' }
+    ],
+    btns: [{ l: canPay ? 'Pay & Continue' : 'Take Loan & Pay', v: 'ok', c: 'btn-danger' }]
+  });
+  if (canPay) {
+    G.cash -= card.c;
+    recordHistory(`Doodad: ${card.n}`, -card.c);
+    log(`🛒 DOODAD: ${card.n}. Paid ${fmt(card.c)}.`, 'bd');
+  } else {
+    const need = card.c - G.cash;
+    const loan = Math.ceil(need / 1000) * 1000;
+    G.liab.bankLoan += loan; G.cash += loan; G.cash -= card.c;
+    recordHistory(`Doodad: ${card.n} (borrowed ${fmt(loan)})`, -card.c);
+    log(`🛒 DOODAD: ${card.n}. Took bank loan ${fmt(loan)} to pay.`, 'bd');
+  }
+}
+
+async function doBaby() {
+  if (G.children >= 3) { log(`👶 Already have 3 kids. Event skipped.`); return; }
+  await showModal({
+    icon: '👶', type: 'BABY — NEW ARRIVAL', title: 'Congratulations!',
+    desc: 'A new child joins the family. Monthly child expenses will increase.',
+    stats: [
+      { l: 'New Monthly Cost', v: fmt(G.expenses.perKid), c: 'r' },
+      { l: 'Total After', v: (G.children + 1) + ' children' }
+    ],
+    btns: [{ l: '🍼 Welcome the Baby!', v: 'ok', c: 'btn-primary' }]
+  });
+  G.children++;
+  recordHistory(`New baby (expenses +${fmt(G.expenses.perKid)}/mo)`, 0);
+  log(`👶 BABY! Now ${G.children} child(ren). Expenses +${fmt(G.expenses.perKid)}/mo.`, 'bd');
+}
+
+async function doCharity() {
+  const donation = Math.round(G.income.sal * 0.1);
+  const choice = await showModal({
+    icon: '✨', type: 'CHARITY', title: 'Donate to Charity?',
+    desc: 'Give 10% of your salary. In return, roll 2 dice for the next 3 turns — potentially doubling your movement speed.',
+    stats: [
+      { l: 'Donation', v: fmt(donation), c: 'r' },
+      { l: 'Benefit', v: '2 dice × 3 turns', c: 'g' },
+      { l: 'Your Cash', v: fmt(G.cash), c: G.cash >= donation ? 'g' : 'r' },
+    ],
+    btns: [
+      { l: '✅ Donate', v: 'yes', c: 'btn-primary', disabled: G.cash < donation },
+      { l: '❌ Skip', v: 'no', c: 'btn-sec' }
+    ]
+  });
+  if (choice === 'yes' && G.cash >= donation) {
+    G.cash -= donation;
+    G.charityTurns = 3;
+    recordHistory(`Charity donation`, -donation);
+    log(`✨ CHARITY: Donated ${fmt(donation)}. Roll 2 dice for 3 turns!`, 'gd');
+  } else log(`✨ CHARITY: Skipped.`);
+}
+
+async function doDownsized() {
+  const te = totalExp();
+  await showModal({
+    icon: '⚠️', type: 'DOWNSIZED', title: "You've Been Downsized!",
+    desc: 'You temporarily lost your job. Pay total monthly expenses as emergency costs, then miss 2 turns while job hunting. Your salary is suspended during this time.',
+    stats: [
+      { l: 'Emergency Cost', v: fmt(te), c: 'r' },
+      { l: 'Turns Missed', v: '2', c: 'r' },
+      { l: 'Salary (suspended)', v: fmt(G.income.sal), c: 'r' },
+    ],
+    btns: [{ l: '😰 Accept & Continue', v: 'ok', c: 'btn-danger' }]
+  });
+  G.downsized = 2;
+  G.downsizedTotal = 2;
+  if (G.cash >= te) {
+    G.cash -= te;
+    recordHistory(`Downsized emergency cost`, -te);
+    log(`⚠️ DOWNSIZED! Paid ${fmt(te)}. Salary suspended. Miss 2 turns.`, 'bd');
+  } else {
+    const need = te - G.cash;
+    const loan = Math.ceil(need / 1000) * 1000;
+    G.liab.bankLoan += loan; G.cash += loan; G.cash -= te;
+    recordHistory(`Downsized emergency (borrowed ${fmt(loan)})`, -te);
+    log(`⚠️ DOWNSIZED! Took loan ${fmt(loan)} to cover. Salary suspended. Miss 2 turns.`, 'bd');
+  }
+}
+
+async function doMarket() {
+  const own = [
+    ...G.assets.re.map(a  => ({ a, k: 're'  })),
+    ...G.assets.biz.map(a => ({ a, k: 'biz' }))
+  ];
+
+  if (own.length && Math.random() < 0.5) {
+    const offerCard = MARKET_BUYER_OFFERS[Math.floor(Math.random() * MARKET_BUYER_OFFERS.length)];
+
+    const matching = own.filter(o => {
+      if (offerCard.type === '8-plex' || offerCard.type === '4-plex') return o.a.name.includes(offerCard.type.replace('-', ' '));
+      if (offerCard.type === 'Apartment') return o.a.name.includes('Apartment') || o.a.name.includes('Plex');
+      if (offerCard.type === '3Br/2Ba') return o.a.name.includes('3Br/2Ba');
+      if (offerCard.type === '2Br/1Ba') return o.a.name.includes('2Br/1Ba');
+      return false;
+    });
+
+    if (matching.length > 0) {
+      const o = matching[0];
+      const a = o.a;
+      let offerPrice = offerCard.offerTotal ? offerCard.offerTotal : (offerCard.offerPerUnit * (parseInt(a.name) || 1));
+
+      if (offerCard.offerPerUnit && !a.name.match(/^\d+/)) {
+        offerPrice = offerCard.offerPerUnit * 4;
+      }
+
+      const net = offerPrice - (a.mort || 0);
+      const profit = net - a.dp;
+
+      const c = await showModal({
+        icon: '🤝', type: 'MARKET — BUYER OFFER',
+        title: `${offerCard.name} for ${a.name}`,
+        desc: offerCard.desc,
+        stats: [
+          { l: 'Offer', v: fmt(offerPrice), c: 'g' },
+          { l: 'Mortgage Payoff', v: fmt(a.mort || 0), c: 'r' },
+          { l: 'Net Cash', v: fmt(net), c: net >= 0 ? 'g' : 'r' }
+        ],
+        btns: [
+          { l: '💰 Sell', v: 'sell', c: 'btn-go' },
+          { l: '🏠 Keep', v: 'keep', c: 'btn-sec' }
+        ]
+      });
+
+      if (c === 'sell') {
+        G.cash += net;
+        G.assets[o.k].splice(G.assets[o.k].indexOf(a), 1);
+        recordHistory(`Sold ${a.name} for ${fmt(net)} net`, net);
+        log(`🤝 Sold ${a.name} for ${fmt(offerPrice)}. Net ${fmt(net)}.`, 'gd');
+      } else {
+        log(`🤝 Kept ${a.name}.`);
+      }
+      updateUI();
+      return;
+    } else {
+      log(`🤝 ${offerCard.name} made an offer, but you own no matching assets.`, 'bd');
+    }
+  }
+
+  if (Math.random() < 0.2) {
+    const split = STOCK_SPLITS[Math.floor(Math.random() * STOCK_SPLITS.length)];
+    const owned = G.assets.stocks[split.sym];
+    if (owned) {
+      const oldShares = owned.shares;
+      const oldPps = owned.pps;
+
+      owned.shares = Math.round(owned.shares * split.ratio);
+      owned.pps = Math.round(owned.pps / split.ratio);
+      syncStockPrices();
+
+      await showModal({
+        icon: split.ratio > 1 ? '📈' : '📉',
+        type: 'STOCK SPLIT',
+        title: split.sym + ' Split',
+        desc: split.desc,
+        stats: [
+          { l: 'Old Shares', v: oldShares },
+          { l: 'New Shares', v: owned.shares, c: 'g' },
+          { l: 'Old Price', v: fmt(oldPps) },
+          { l: 'New Price', v: fmt(owned.pps), c: 'g' }
+        ],
+        btns: [{ l: 'Continue', v: 'ok', c: 'btn-sec' }]
+      });
+      recordHistory(`${split.sym} split: ${oldShares}→${owned.shares} shares`, 0);
+      log(`📈 ${split.sym} split! Shares: ${oldShares} → ${owned.shares}. Price: ${fmt(oldPps)} → ${fmt(owned.pps)}.`, 'gd');
+      updateUI();
+      return;
+    }
+  }
+
+  const ev = MARKET_EVENTS[Math.floor(Math.random() * MARKET_EVENTS.length)];
+  const owned = G.assets.stocks[ev.sym];
+  const oldPrice = G.mkt[ev.sym] ?? (owned?.pps ?? ev.np);
+  const pctChange = Math.round(((ev.np - oldPrice) / oldPrice) * 100);
+  const volatile = Math.abs(pctChange) >= 50;
+
+  let stats, btns;
+  if (owned) {
+    const newV = owned.shares * ev.np;
+    const gain = (ev.np - (owned.avgCost ?? owned.pps)) * owned.shares;
+    stats = [
+      { l: 'Symbol', v: ev.sym },
+      { l: 'New Price', v: fmt(ev.np) },
+      { l: `${owned.shares} Shares`, v: fmt(newV), c: 'g' },
+      { l: 'Gain / Loss', v: fmt(gain), c: gain >= 0 ? 'g' : 'r' }
+    ];
+    btns = [
+      { l: '💰 Sell All', v: 'sell', c: 'btn-go' },
+      { l: '📊 Hold', v: 'hold', c: 'btn-sec' }
+    ];
+  } else {
+    stats = [
+      { l: 'Symbol', v: ev.sym },
+      { l: 'New Price', v: fmt(ev.np) },
+      { l: 'Change', v: (pctChange >= 0 ? '+' : '') + pctChange + '%', c: pctChange >= 0 ? 'g' : 'r' },
+      { l: 'You Own', v: '0 shares' }
+    ];
+    btns = [{ l: 'Continue', v: 'ok', c: 'btn-sec' }];
+  }
+
+  const choice = await showModal({
+    icon: volatile ? '📉' : '📊',
+    type: volatile ? 'MARKET ALERT' : 'MARKET EVENT',
+    title: ev.sym + ' Price Move',
+    desc: ev.d,
+    stats, btns
+  });
+
+  G.mkt[ev.sym] = ev.np;
+  if (owned) owned.pps = ev.np;
+  if (choice === 'sell' && owned) {
+    const p = owned.shares * ev.np;
+    G.cash += p;
+    delete G.assets.stocks[ev.sym];
+    recordHistory(`Sold ${owned.shares} ${ev.sym} for ${fmt(p)}`, p);
+    log(`📊 Sold ${owned.shares} ${ev.sym} → ${fmt(p)}.`, 'gd');
+  } else {
+    log(`📊 MARKET: ${ev.sym} → ${fmt(ev.np)} (${pctChange >= 0 ? '+' : ''}${pctChange}%).`);
+  }
+  updateUI();
+}
+
+// ─── FAST TRACK ─────────────────────────────────
+
+const FT_BOARD = [
+  ['CASHFLOW DAY','cfday','💰'],['BUSINESS','ftbiz','🏭'],['DREAM','dream','🌴'],
+  ['BUSINESS','ftbiz','🏭'],['CASHFLOW DAY','cfday','💰'],['TAX AUDIT','audit','🧾'],
+  ['BUSINESS','ftbiz','🏭'],['DREAM','dream','🏝️'],['CASHFLOW DAY','cfday','💰'],
+  ['BUSINESS','ftbiz','🏭'],['CHARITY','charity','✨'],['DREAM','dream','🎬'],
+  ['CASHFLOW DAY','cfday','💰'],['BUSINESS','ftbiz','🏭'],['TAX AUDIT','audit','🧾'],
+  ['DREAM','dream','🏫']
+].map(([n,t,e]) => ({ n, t, e }));
+
+const FT_BIZ = [
+  {n:'Boutique Hotel',c:300000,cf:6000},
+  {n:'Biotech Lab',c:500000,cf:10000},
+  {n:'Logistics Company',c:200000,cf:3500},
+  {n:'Craft Brewery',c:120000,cf:2000},
+  {n:'Software Studio',c:700000,cf:14000},
+  {n:'Solar Farm',c:450000,cf:9000},
+  {n:'Private Jet Charter',c:800000,cf:15000},
+  {n:'Franchise Restaurant',c:250000,cf:5000},
+  {n:'Commercial Real Estate',c:600000,cf:12000},
+  {n:'Tech Startup',c:1000000,cf:20000}
+];
+
+const DREAMS = [
+  {n:'Sail Around the World',c:300000,e:'⛵'},
+  {n:'Build a School',c:200000,e:'🏫'},
+  {n:'Private Island',c:500000,e:'🏝️'},
+  {n:'Produce a Film',c:250000,e:'🎬'},
+  {n:'Luxury Mansion',c:400000,e:'🏰'},
+  {n:'Sports Car Collection',c:150000,e:'🏎️'},
+  {n:'Space Flight',c:600000,e:'🚀'},
+  {n:'Charity Foundation',c:350000,e:'🤝'}
+];
+
+async function enterFast() {
+  if (G.entering) return;
+  G.entering = true;
+  G.fast = true;
+  // NOTE: salary is preserved in G.income.sal; totalInc() reads salary() which
+  // returns 0 when fast — so it is not permanently mutated.
+  G.ftGoal = passive() + 50000;
+  G.ftGoalLocked = true;
+  G.pos = 0;
+  BOARD = FT_BOARD;
+  const bonus = Math.max(0, cashFlow()) * 12;
+  G.cash += bonus;
+  recordHistory(`Escaped Rat Race! Bonus ${fmt(bonus)}`, bonus);
+  await showModal({
+    icon: '🚀', type: 'RAT RACE ESCAPED',
+    title: 'Welcome to the Fast Track',
+    desc: `Passive income now exceeds expenses. You quit your job. Cashflow Days pay 12× monthly cash flow. Win by buying a Dream, or by reaching ${fmt(G.ftGoal)}/mo passive income (locked).`,
+    stats: [
+      { l: 'Escape Bonus', v: fmt(bonus), c: 'g' },
+      { l: 'Goal Income (locked)', v: fmt(G.ftGoal) + '/mo', c: 'g' }
+    ],
+    btns: [{ l: '🚀 Start', v: 'ok', c: 'btn-primary' }]
+  });
+  log('🚀 FAST TRACK! Buy a Dream or reach the locked goal income.', 'hi');
+  buildBoard();
+  updateUI();
+  G.entering = false;
+}
+
+async function doCfDay() {
+  const cf = cashFlow();
+  if (cf <= 0) { log(`💰 CASHFLOW DAY: no positive cash flow — pays $0.`); return; }
+  const p = cf * 12;
+  G.cash += p;
+  recordHistory(`Cashflow Day: +${fmt(p)}`, p);
+  log(`💰 CASHFLOW DAY: ${fmt(p)}.`, 'gd');
+}
+
+async function doFtBiz() {
+  const b = FT_BIZ[Math.floor(Math.random() * FT_BIZ.length)];
+  const canAfford = G.cash >= b.c;
+  const c = await showModal({
+    icon: '🏭', type: 'BUSINESS OPPORTUNITY', title: b.n,
+    desc: 'Fully financed with your cash. Strong passive income.',
+    stats: [
+      { l: 'Cost', v: fmt(b.c), c: 'r' },
+      { l: 'Cash Flow/Mo', v: fmt(b.cf), c: 'g' },
+      { l: 'Your Cash', v: fmt(G.cash), c: canAfford ? 'g' : 'r' },
+      { l: 'Yield', v: (b.cf * 12 / b.c * 100).toFixed(1) + '%' }
+    ],
+    btns: [
+      { l: canAfford ? '✅ Buy' : "🚫 Can't Afford", v: 'buy', c: 'btn-primary', disabled: !canAfford },
+      { l: '❌ Pass', v: 'pass', c: 'btn-sec' }
+    ]
+  });
+  if (c === 'buy' && canAfford) {
+    G.cash -= b.c;
+    G.assets.biz.push({ name: b.n, cost: b.c, dp: b.c, mort: 0, cf: b.cf, marketValue: b.c, monthlyMortgage: 0 });
+    recordHistory(`Bought ${b.n}`, -b.c);
+    log(`🏭 Bought ${b.n}. +${fmt(b.cf)}/mo.`, 'gd');
+  } else log(c === 'buy' ? '❌ Not enough cash.' : `⏩ Passed on ${b.n}.`, c === 'buy' ? 'bd' : '');
+  updateUI();
+}
+
+async function doDream() {
+  const d = DREAMS[Math.floor(Math.random() * DREAMS.length)];
+  const canAfford = G.cash >= d.c;
+  const c = await showModal({
+    icon: d.e, type: 'DREAM', title: d.n,
+    desc: 'Buy your dream and win the game outright.',
+    stats: [
+      { l: 'Price', v: fmt(d.c), c: 'r' },
+      { l: 'Your Cash', v: fmt(G.cash), c: canAfford ? 'g' : 'r' }
+    ],
+    btns: [
+      { l: canAfford ? '🌴 Buy Dream' : "🚫 Can't Afford", v: 'buy', c: 'btn-primary', disabled: !canAfford },
+      { l: 'Not yet', v: 'no', c: 'btn-sec' }
+    ]
+  });
+  if (c === 'buy' && canAfford) {
+    G.cash -= d.c;
+    G.dream = d.n;
+    recordHistory(`Bought dream: ${d.n}`, -d.c);
+    log(`🌴 You bought your dream: ${d.n}!`, 'gd');
+  } else if (c === 'buy') log('❌ Not enough cash for this dream.', 'bd');
+}
+
+async function doAudit() {
+  const l = Math.round(G.cash * 0.5);
+  G.cash -= l;
+  recordHistory(`Tax Audit: -${fmt(l)}`, -l);
+  await showModal({
+    icon: '🧾', type: 'TAX AUDIT', title: 'The IRS Takes a Cut',
+    desc: 'Wealth attracts scrutiny. You lose 50% of your cash.',
+    stats: [{ l: 'Lost', v: fmt(l), c: 'r' }, { l: 'Cash Left', v: fmt(G.cash), c: G.cash >= 0 ? 'g' : 'r' }],
+    btns: [{ l: 'Ouch', v: 'ok', c: 'btn-danger' }]
+  });
+  log(`🧾 TAX AUDIT: −${fmt(l)}.`, 'bd');
+  if (G.cash < 0) await checkBankruptcy();
+}
+
+// ─── SELL FUNCTIONS ─────────────────────────────
+
+async function sellRE(i) {
+  const a = G.assets.re[i]; if (!a) return;
+  const base = a.marketValue ?? a.cost;
+  const sale = Math.round(base * DISTRESS_SELL_RATE);
+  const p = sale - a.mort;
+  const c = await showModal({
+    icon: '🏠', type: 'DISTRESS SALE',
+    title: `Sell ${a.name}?`,
+    desc: `Sell at ${Math.round(DISTRESS_SELL_RATE*100)}% of current market value minus mortgage. You will lose the cash flow.`,
+    stats: [
+      { l: 'Market Value', v: fmt(base) },
+      { l: 'Sale Price', v: fmt(sale) },
+      { l: 'Mortgage Payoff', v: fmt(a.mort), c: 'r' },
+      { l: 'Net Cash', v: fmt(p), c: p >= 0 ? 'g' : 'r' },
+      { l: 'CF Lost', v: '-'+fmt(a.cf)+'/mo', c: 'r' }
+    ],
+    btns: [
+      { l: '💰 Sell', v: 'sell', c: 'btn-danger' },
+      { l: 'Cancel', v: 'cancel', c: 'btn-sec' }
+    ]
+  });
+  if (c !== 'sell') return;
+  if (G.cash + p < 0) { log('❌ Not enough cash to cover the mortgage shortfall.', 'bd'); return; }
+  G.cash += p;
+  G.assets.re.splice(i, 1);
+  recordHistory(`Distress sale of ${a.name}`, p);
+  log(`🏠 Distress sale of ${a.name}. Net ${fmt(p)}.`, p >= 0 ? 'gd' : 'bd');
+  updateUI();
+}
+
+async function sellBiz(i) {
+  const a = G.assets.biz[i]; if (!a) return;
+  const base = a.marketValue ?? a.cost;
+  const sale = Math.round(base * DISTRESS_SELL_RATE);
+  const p = sale - (a.mort || 0);
+  const c = await showModal({
+    icon: '🏢', type: 'DISTRESS SALE',
+    title: `Sell ${a.name}?`,
+    desc: `Sell at ${Math.round(DISTRESS_SELL_RATE*100)}% of current market value minus mortgage. You will lose the cash flow.`,
+    stats: [
+      { l: 'Market Value', v: fmt(base) },
+      { l: 'Sale Price', v: fmt(sale) },
+      { l: 'Mortgage Payoff', v: fmt(a.mort || 0), c: 'r' },
+      { l: 'Net Cash', v: fmt(p), c: p >= 0 ? 'g' : 'r' },
+      { l: 'CF Lost', v: '-'+fmt(a.cf)+'/mo', c: 'r' }
+    ],
+    btns: [
+      { l: '💰 Sell', v: 'sell', c: 'btn-danger' },
+      { l: 'Cancel', v: 'cancel', c: 'btn-sec' }
+    ]
+  });
+  if (c !== 'sell') return;
+  if (G.cash + p < 0) { log('❌ Not enough cash to cover the shortfall.', 'bd'); return; }
+  G.cash += p;
+  G.assets.biz.splice(i, 1);
+  recordHistory(`Distress sale of ${a.name}`, p);
+  log(`🏢 Distress sale of ${a.name}. Net ${fmt(p)}.`, p >= 0 ? 'gd' : 'bd');
+  updateUI();
+}
+
+async function sellStock(sym) {
+  const s = G.assets.stocks[sym]; if (!s) return;
+  const proceeds = s.shares * s.pps;
+  const avg = s.avgCost ?? s.pps;
+  const gain = (s.pps - avg) * s.shares;
+  const c = await showModal({
+    icon: '📈', type: 'SELL STOCK',
+    title: `Sell all ${sym}?`,
+    desc: `Sell ${s.shares} shares at ${fmt(s.pps)} each.`,
+    stats: [
+      { l: 'Proceeds', v: fmt(proceeds), c: 'g' },
+      { l: 'Cost Basis', v: fmt(avg * s.shares), c: 'r' },
+      { l: 'Realized P/L', v: fmt(gain), c: gain >= 0 ? 'g' : 'r' },
+      { l: 'Div Lost', v: '-'+fmt(s.shares * s.div)+'/mo', c: 'r' }
+    ],
+    btns: [
+      { l: '💰 Sell All', v: 'sell', c: 'btn-danger' },
+      { l: 'Cancel', v: 'cancel', c: 'btn-sec' }
+    ]
+  });
+  if (c !== 'sell') return;
+  G.cash += proceeds;
+  delete G.assets.stocks[sym];
+  recordHistory(`Sold ${s.shares} ${sym} for ${fmt(proceeds)}`, proceeds);
+  log(`📈 Sold ${s.shares} ${sym} at ${fmt(s.pps)} = ${fmt(proceeds)}.`, 'gd');
+  updateUI();
+}
+
+window.sellRE = sellRE;
+window.sellBiz = sellBiz;
+window.sellStock = sellStock;
+
+// ─── LOAN MODAL ─────────────────────────────────
+
+function openLoan() {
+  document.getElementById('loanBal').textContent = fmt(G.liab.bankLoan);
+  document.getElementById('loanAmt').value = 1000;
+  document.getElementById('loanPmtPrev').textContent = '$100';
+  document.getElementById('loanOverlay').classList.add('open');
+}
+window.openLoan = openLoan;
+
+document.getElementById('loanAmt')?.addEventListener('input', function() {
+  const v = Math.max(1000, Math.round((parseInt(this.value) || 0) / 1000) * 1000) || 1000;
+  document.getElementById('loanPmtPrev').textContent =
+    fmt(Math.ceil(v * BANK_LOAN_RATE / 100) * 100);
+});
+
+document.getElementById('loanConfirm')?.addEventListener('click', async () => {
+  const amt = Math.max(1000, Math.round((parseInt(document.getElementById('loanAmt').value) || 0) / 1000) * 1000) || 1000;
+  const newDebt = totalDebt() + amt;
+  const assets = totalAssetValue();
+  document.getElementById('loanOverlay').classList.remove('open');
+
+  const debtRatio = assets > 0 ? newDebt / assets : 1;
+  if (debtRatio > DEBT_WARN_RATIO) {
+    const c = await warn(
+      'High Debt Warning',
+      `Taking ${fmt(amt)} will bring total debt to ${fmt(newDebt)} — that's ${Math.round(debtRatio*100)}% of your assets (${fmt(assets)}). Proceed?`,
+      {
+        icon: '⚠️', type: 'LOAN WARNING',
+        stats: [
+          { l: 'Current Debt', v: fmt(totalDebt()), c: 'r' },
+          { l: 'New Debt',     v: fmt(newDebt), c: 'r' },
+          { l: 'Assets',       v: fmt(assets) },
+          { l: 'Debt Ratio',   v: Math.round(debtRatio*100)+'%', c: 'r' }
+        ],
+        buttons: [
+          { l: 'Borrow Anyway', v: 'ok', c: 'btn-danger' },
+          { l: 'Cancel', v: 'cancel', c: 'btn-sec' }
+        ]
+      }
+    );
+    if (c !== 'ok') return;
+  }
+
+  G.liab.bankLoan += amt;
+  G.cash += amt;
+  recordHistory(`Took bank loan ${fmt(amt)}`, amt);
+  log(`🏦 Borrowed ${fmt(amt)}. Monthly interest +${fmt(Math.ceil(amt*BANK_LOAN_RATE/100)*100)}.`, 'bd');
+  updateUI();
+});
+
+document.getElementById('loanCancel')?.addEventListener('click', () =>
+  document.getElementById('loanOverlay').classList.remove('open'));
+
+[document.getElementById('loanTopBtn'), document.getElementById('loanPanelBtn')].forEach(b =>
+  b?.addEventListener('click', openLoan));
+
+document.getElementById('loanRepay')?.addEventListener('click', () => {
+  const a = Math.min(1000, G.liab.bankLoan);
+  if (!a || G.cash < a) { log(a ? '❌ Not enough cash to repay.' : 'No bank loan to repay.', 'bd'); return; }
+  G.liab.bankLoan -= a;
+  G.cash -= a;
+  recordHistory(`Repaid ${fmt(a)} bank loan principal`, -a);
+  log(`🏦 Repaid ${fmt(a)} principal. Balance ${fmt(G.liab.bankLoan)}.`, 'gd');
+  document.getElementById('loanBal').textContent = fmt(G.liab.bankLoan);
+  updateUI();
+});
+
+// ─── SAVE / LOAD ────────────────────────────────
+
+function saveGame() {
+  try {
+    const data = {
+      version: 2,
+      G: { ...G, prof: G.prof, BOARD: BOARD.map(s => ({ n: s.n, t: s.t, e: s.e })) },
+      savedAt: Date.now(),
+    };
+    localStorage.setItem('cashflow101_save', JSON.stringify(data));
+    log(`💾 Game saved.`, 'gd');
+  } catch (e) {
+    log(`❌ Save failed: ${e.message}`, 'bd');
+  }
+}
+window.saveGame = saveGame;
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem('cashflow101_save');
+    if (!raw) { log('❌ No saved game found.', 'bd'); return; }
+    const data = JSON.parse(raw);
+    if (!data.G) { log('❌ Save data invalid.', 'bd'); return; }
+    G = data.G;
+    BOARD = data.G.BOARD ? data.G.BOARD : RAT_BOARD;
+    showScreen('gameScreen');
+    document.getElementById('rollBtn').disabled = false;
+    buildBoard();
+    updateUI();
+    log(`💾 Game loaded (turn ${G.turn}).`, 'gd');
+  } catch (e) {
+    log(`❌ Load failed: ${e.message}`, 'bd');
+  }
+}
+window.loadGame = loadGame;
+
+// ─── WIN / LOSS ─────────────────────────────────
+
+async function checkBankruptcy() {
+  if (G.cash >= 0) return false;
+  // Player can recover if they can liquidate or borrow
+  if (canRecover()) {
+    const liquid = totalLiquidValue();
+    await warn(
+      'Negative Cash!',
+      `You have ${fmt(G.cash)} in cash. You must sell assets or borrow to recover. ` +
+      `Liquidatable assets: ${fmt(liquid)}. ` +
+      (liquid <= 0 ? `You have no assets to sell — borrow or declare bankruptcy.` : `Sell or borrow to get back to positive cash.`),
+      {
+        icon: '💸', type: 'INSOLVENCY WARNING',
+        stats: [
+          { l: 'Cash', v: fmt(G.cash), c: 'r' },
+          { l: 'Liquidatable', v: fmt(liquid), c: liquid > 0 ? 'g' : 'r' },
+          { l: 'Net Worth', v: fmt(totalNetWorth()), c: totalNetWorth() >= 0 ? 'g' : 'r' }
+        ]
+      }
+    );
+    return false;
+  }
+  await endGame('bankruptcy');
+  return true;
+}
+
+async function endGame(reason) {
+  if (G.over) return;
+  G.over = true;
+  document.getElementById('rollBtn').disabled = true;
+  const messages = {
+    bankruptcy: `You have been declared bankrupt. Your liabilities exceeded your ability to pay.`,
+    dream: `You bought your dream and won the game outright!`,
+    goal: `You reached the Fast Track goal (${fmt(G.ftGoal)}/mo passive) and achieved financial freedom.`
+  };
+  document.getElementById('winSub').innerHTML = messages[reason] || 'Game over.';
+  document.getElementById('winStats').innerHTML = `
+    <div class="pill"><div class="lbl">Final Cash</div><div class="val amr">${fmt(G.cash)}</div></div>
+    <div class="pill"><div class="lbl">Passive Income</div><div class="val pos">${fmt(passive())}/mo</div></div>
+    <div class="pill"><div class="lbl">Total Debt</div><div class="val neg">${fmt(totalDebt())}</div></div>
+    <div class="pill"><div class="lbl">Net Worth</div><div class="val amr">${fmt(totalNetWorth())}</div></div>
+    <div class="pill"><div class="lbl">Turns Played</div><div class="val amr">${G.turn}</div></div>`;
+  document.querySelector('.win-trophy').textContent = reason === 'bankruptcy' ? '💀' : '🏆';
+  document.querySelector('.win-title').textContent =
+    reason === 'bankruptcy' ? 'GAME OVER' : 'FINANCIAL FREEDOM!';
+  showScreen('winScreen');
+}
+
+async function checkWin() {
+  if (G.over) return true;
+  recalcPassive();
+  const pass = passive(), te = totalExp();
+
+  if (await checkBankruptcy()) return true;
+
+  if (!G.fast) {
+    if (pass > te && !G.entering) {
+      await enterFast();
+      return true;
+    }
+    if (pass > 0 && pass >= te * FREEDOM_WARN_RATIO && te > 0) {
+      log(`🎯 Approaching freedom: passive ${fmt(pass)} / expenses ${fmt(te)}`, 'hi');
+    }
+    return false;
+  }
+
+  if (G.dream) {
+    await endGame('dream');
+    return true;
+  }
+  if (G.ftGoal > 0 && pass >= G.ftGoal) {
+    await endGame('goal');
+    return true;
+  }
+  return false;
+}
+
+// ─── DICE ───────────────────────────────────────
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const PIPS = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+
+function setDie(el, n) {
+  el.innerHTML = '';
+  for (let i = 0; i < 9; i++) {
+    const p = document.createElement('i');
+    if (PIPS[n].includes(i)) p.className = 'pip';
+    el.appendChild(p);
+  }
+}
+
+async function rollDice(two) {
+  const d = [document.getElementById('d1'), document.getElementById('d2')], n = two ? 2 : 1;
+  d[1].style.display = two ? 'grid' : 'none';
+  const res = [1 + Math.random() * 6 | 0, 1 + Math.random() * 6 | 0];
+  for (let i = 0; i < n; i++) d[i].classList.add('rolling');
+  for (let t = 0; t < 12; t++) {
+    for (let i = 0; i < n; i++) setDie(d[i], 1 + Math.random() * 6 | 0);
+    await sleep(75);
+  }
+  for (let i = 0; i < n; i++) { d[i].classList.remove('rolling'); setDie(d[i], res[i]); }
+  return res.slice(0, n);
+}
+
+document.getElementById('rollBtn').addEventListener('click', async () => {
+  if (G.over || G.busy) return;
+  setBusy(true);
+  G.turn++;
+
+  if (G.downsized > 0) {
+    G.downsized--;
+    if (G.downsized === 0) {
+      log(`💼 DOWNSIZED RECOVERY: You found a new job. Salary restored (${fmt(G.income.sal)}/mo).`, 'gd');
+    } else {
+      log(`⚠️ DOWNSIZED — skipping turn. ${G.downsized} left. Salary suspended.`, 'bd');
+    }
+    updateUI();
+    // Even downsized players need a bankruptcy check
+    const bankrupt = await checkBankruptcy();
+    setBusy(bankrupt || G.over);
+    return;
+  }
+
+  const two = G.charityTurns > 0;
+  if (two) G.charityTurns--;
+
+  const res = await rollDice(two);
+  const roll = res.reduce((a, b) => a + b, 0);
+  log(two ? `✨ Charity dice: ${res.join('+')}=${roll}` : `🎲 Rolled ${roll}.`);
+
+  for (let i = 1; i <= roll; i++) {
+    G.pos = (G.pos + 1) % BOARD.length;
+    refreshBoard();
+    await sleep(190);
+    const landed = i === roll;
+    if (!landed && BOARD[G.pos].t === 'payday') {
+      log('💵 Passed PAYDAY', 'hi');
+      await doPayday(true);
+      updateUI();
+    }
+  }
+
+  const sp = BOARD[G.pos];
+  G.justLanded = true;
+  log(`→ ${sp.n}`, 'hi');
+  updateUI();
+  await sleep(250);
+  await handleSpace(sp.t);
+  G.justLanded = false;
+  updateUI();
+
+  // Bank loan principal amortization removed — repayment is manual via the
+  // loan modal so players stay in control.
+
+  const won = await checkWin();
+  setBusy(won || G.over);
+});
+
+document.addEventListener('keydown', e => {
+  const b = document.getElementById('rollBtn');
+  if (e.code === 'Space'
+      && document.getElementById('gameScreen').classList.contains('active')
+      && !document.querySelector('.overlay.open')
+      && !b.disabled
+      && !G.busy
+      && document.activeElement.tagName !== 'INPUT') {
+    e.preventDefault();
+    b.click();
+  }
+});
+
+// ─── SCREEN MANAGEMENT ──────────────────────────
+
+function showScreen(id) {
+  ['profScreen', 'gameScreen', 'winScreen'].forEach(s => {
+    const el = document.getElementById(s);
+    el.classList.remove('active');
+    el.style.display = 'none';
+  });
+  const target = document.getElementById(id);
+  target.style.display = 'flex';
+  target.classList.add('active');
+  document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open'));
+}
+
+function showProfSelect() { showScreen('profScreen'); }
+
+// ─── PROFESSION GRID ────────────────────────────
+
+function buildProfGrid() {
+  const el = document.getElementById('profGrid');
+  el.innerHTML = '';
+  PROFS.forEach(p => {
+    const e = p.exp;
+    const baseExp = e.tax + e.mort + e.sch + e.car + e.cc + e.ret + e.oth;
+    const cf = p.inc.sal - baseExp;
+    const div = document.createElement('div');
+    div.className = 'prof-card';
+    div.innerHTML = `
+      <div class="p-emoji">${p.emoji}</div>
+      <div class="p-name">${p.name}</div>
+      <div class="p-desc">${p.desc}</div>
+      <div class="p-stats">
+        <div class="p-stat"><div class="p-stat-l">Salary</div><div class="p-stat-v">${fmt(p.inc.sal)}</div></div>
+        <div class="p-stat"><div class="p-stat-l">Cash Flow</div><div class="p-stat-v" style="color:${cf>=0?'var(--green-l)':'#e05050'}">${fmt(cf)}</div></div>
+        <div class="p-stat"><div class="p-stat-l">Expenses</div><div class="p-stat-v" style="color:#e05050">${fmt(baseExp)}</div></div>
+        <div class="p-stat"><div class="p-stat-l">Start Cash</div><div class="p-stat-v">${fmt(p.startCash)}</div></div>
+      </div>`;
+    div.addEventListener('click', () => startGame(p.id));
+    el.appendChild(div);
+  });
+}
+
+function startGame(profId) {
+  BOARD = RAT_BOARD;
+  initGame(profId);
+  showScreen('gameScreen');
+  document.getElementById('rollBtn').disabled = false;
+  document.getElementById('log').innerHTML = '';
+  buildBoard();
+  updateUI();
+  log(`🎮 Started as ${G.prof.emoji} ${G.prof.name}.`, 'hi');
+  log(`💰 Cash: ${fmt(G.cash)} | CF: ${fmt(cashFlow())}/mo`);
+  log(`🎯 Goal: Passive income > ${fmt(totalExp())}/mo`);
+}
+
+document.getElementById('newGameBtn').addEventListener('click', showProfSelect);
+
+// ─── INIT ───────────────────────────────────────
+
+buildProfGrid();
+setDie(document.getElementById("d1"), 1);
+showProfSelect();
+</script>
+</body>
+</html>
