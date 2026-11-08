@@ -1453,6 +1453,7 @@ body > div:has(> #mobileReplaySpeed) { display: none !important; }
   <div id="lwChart" style="position:absolute;top:0;left:0;width:100%;height:100%;"></div>
   <canvas id="drawingOverlay" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;"></canvas>
   <div id="lwChart2"></div>
+  <canvas id="drawingOverlay2" style="position:absolute;display:none;pointer-events:none;z-index:10;"></canvas>
 <select id="tf2Select" onchange="setTf2(this.value)">
   <option value="1">M1</option><option value="5">M5</option><option value="15">M15</option>
   <option value="30">M30</option><option value="60" selected>H1</option>
@@ -3799,6 +3800,9 @@ function setupChart2() {
   candleSeries2 = lwChart2.addCandlestickSeries({});
   volumeSeries2 = lwChart2.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: '', lastValueVisible: false, priceLineVisible: false });
   volumeSeries2.priceScale().applyOptions({ scaleMargins: { top: 0.85, bottom: 0 } });
+    lwChart2.timeScale().subscribeVisibleLogicalRangeChange(scheduleOverlay2);
+  ['wheel', 'mouseup', 'touchend'].forEach(ev => el.addEventListener(ev, scheduleOverlay2, { passive: true }));
+  ['mousemove', 'touchmove'].forEach(ev => el.addEventListener(ev, e => { if (e.type === 'touchmove' || e.buttons) scheduleOverlay2(); }, { passive: true }));
 }
 
 function renderChart2(reset) {            // coalesced to one draw per frame
@@ -3816,13 +3820,37 @@ function drawChart2(reset) {
   const t = b => Math.floor(b.date.getTime() / 1000);
   candleSeries2.applyOptions({ upColor: state.colorUp, downColor: state.colorDown, borderUpColor: state.colorUp, borderDownColor: state.colorDown, wickUpColor: state.colorUp, wickDownColor: state.colorDown });
   candleSeries2.setData(bars.map(b => ({ time: t(b), open: b.open, high: b.high, low: b.low, close: b.close })));
+    state._c2Times = bars.map(t);
   volumeSeries2.setData(state.showVolume ? bars.map(b => ({ time: t(b), value: b.volume || 0, color: b.close >= b.open ? 'rgba(38,166,154,0.3)' : 'rgba(239,83,80,0.3)' })) : []);
   if (reset) lwChart2.timeScale().setVisibleLogicalRange({ from: Math.max(0, bars.length - 150), to: bars.length + 5 });
-  else if (state.replayMode) lwChart2.timeScale().scrollToRealTime();
+  else if (state.replayMode) lwChart2.timeScale().scrollToRealTime(); scheduleOverlay2();
 }
 
 function setTf2(tf) { state.tf2 = Number(tf); renderChart2(true); }
-
+// ===== MIRROR DRAWINGS ONTO CHART 2 =====
+var _ov2Raf = 0;
+function scheduleOverlay2() {
+  if (_ov2Raf) return;
+  _ov2Raf = requestAnimationFrame(() => { _ov2Raf = 0; redrawDrawingsOverlay2(); });
+}
+function redrawDrawingsOverlay2() {
+  _coordChart = 2;
+  try { redrawDrawingsOverlay(2); } finally { _coordChart = 1; }
+}
+// time (unix sec) -> x on chart 2, interpolated inside the bar (works for any timeframe mix)
+function timeToCoord2(t) {
+  try {
+    const arr = state._c2Times;
+    if (!arr || !arr.length || !lwChart2) return null;
+    const sec = (state.tf2 || 60) * 60;
+    let lo = 0, hi = arr.length - 1, i = -1;
+    while (lo <= hi) { const m = (lo + hi) >> 1; if (arr[m] <= t) { i = m; lo = m + 1; } else hi = m - 1; }
+    let logical;
+    if (i < 0) logical = (t - arr[0]) / sec;
+    else logical = i + (i === arr.length - 1 ? (t - arr[i]) / sec : Math.min((t - arr[i]) / sec, 1));
+    return lwChart2.timeScale().logicalToCoordinate(logical);
+  } catch (e) { return null; }
+}
 function setLayout(mode) {
   state.layout = mode;
   const area = document.getElementById('chartArea');
@@ -3863,10 +3891,13 @@ function coordToPrice(y) {
 function coordToTime(x) {
   try { return lwChart.timeScale().coordinateToTime(x); } catch(e) { return null; }
 }
+var _coordChart = 1;   // 1 = main chart, 2 = second chart (only set while painting overlay 2)
 function timeToCoord(t) {
+  if (_coordChart === 2) return timeToCoord2(t);
   try { return lwChart.timeScale().timeToCoordinate(t); } catch(e) { return null; }
 }
 function priceToCoord(p) {
+  if (_coordChart === 2) { try { return candleSeries2.priceToCoordinate(p); } catch(e) { return null; } }
   try { return candleSeries.priceToCoordinate(p); } catch(e) { return null; }
 }
 function getVisibleBars() {
@@ -4392,10 +4423,14 @@ function getCursorForTool(tool) {
 }
 
 
-function redrawDrawingsOverlay() {
-    const overlay = document.getElementById('drawingOverlay');
+function redrawDrawingsOverlay(target) {
+    const isC2 = target === 2;
+    if (!isC2) scheduleOverlay2();
+    const overlay = document.getElementById(isC2 ? 'drawingOverlay2' : 'drawingOverlay');
     if (!overlay || !candleSeries) return;
-    const container = document.getElementById('lwChart');
+    if (isC2 && (state.layout === '1' || !lwChart2 || !candleSeries2)) { overlay.style.display = 'none'; return; }
+    if (isC2) overlay.style.display = 'block';
+    const container = document.getElementById(isC2 ? 'lwChart2' : 'lwChart');
     const rect = container.getBoundingClientRect();
     
     overlay.width = rect.width;
@@ -4403,8 +4438,8 @@ function redrawDrawingsOverlay() {
     overlay.style.width = rect.width + 'px';
     overlay.style.height = rect.height + 'px';
     overlay.style.position = 'absolute';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
+    overlay.style.top = isC2 ? (container.offsetTop + container.clientTop) + 'px' : '0';
+    overlay.style.left = isC2 ? (container.offsetLeft + container.clientLeft) + 'px' : '0';
     overlay.style.pointerEvents = 'none';
     overlay.style.zIndex = '10';
     
@@ -4423,7 +4458,7 @@ function redrawDrawingsOverlay() {
         if (d.hidden) return;
         ctx.save();
         ctx.setLineDash([]);
-        const sel = state.selectedDrawing && state.selectedDrawing.id === d.id;
+                const sel = !isC2 && state.selectedDrawing && state.selectedDrawing.id === d.id;
         const lineWidth = sel ? (d.lineWidth || 1.5) + 1 : (d.lineWidth || 1.5);
         if (sel) {
             ctx.shadowBlur = 4;
@@ -4862,7 +4897,7 @@ function redrawDrawingsOverlay() {
 
         ctx.restore();
     });
-
+    if (isC2) return;   // chart 2 gets drawing-tool shapes only
     // ===== VOLUME PROFILE RENDERING (FIXED POSITION) =====
     if (state._volProfileData) {
         const vp = state._volProfileData;
