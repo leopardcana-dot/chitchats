@@ -4924,9 +4924,9 @@ function redrawDrawingsOverlay(target) {
                 if (Math.abs(row.priceLevel - vp.poc) < (row.max - row.min) * 0.5) {
                     fillColor = state.volProfileParams?.pocColor || '#ffd54f';
                 } else if (row.inValueArea) {
-                    fillColor = state.volProfileParams?.profileColor || '#2196F3';
+                    fillColor = state.volProfileParams?.profileColor || 'rgba(38,166,154,0.3)';
                 } else {
-                    fillColor = (state.volProfileParams?.profileColor || '#2196F3') + '80';
+                    fillColor = (state.volProfileParams?.profileColor || 'rgba(38,166,154,0.3)') + '80';
                 }
                 
                 ctx.fillStyle = fillColor;
