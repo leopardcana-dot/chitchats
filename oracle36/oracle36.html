@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Oracle · 36 Cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#120822;--panel:#241240;--ink:#f0e6d3;--gold:#c9a84c;--gold2:#e8c97a;--mut:#a897c4;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:radial-gradient(circle at 10% 20%,#1a0a2e,#0d0518 60%,#160820);color:var(--ink);font:19px/1.6 'EB Garamond',Georgia,serif;min-height:100vh;overflow-x:hidden}
+.wrap{max-width:760px;margin:0 auto;padding:16px}
+h1{font:600 22px/1.2 Georgia,serif;letter-spacing:.12em;text-align:center;color:var(--gold2);margin:8px 0 14px;text-transform:uppercase}
+nav{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
+button,.btn{background:var(--panel);color:var(--gold2);border:1px solid rgba(201,168,76,.4);border-radius:10px;padding:10px 14px;font:inherit;font-size:15px;cursor:pointer}
+button.on{background:var(--gold);color:#1a0a2e}
+button:active{transform:scale(.97)}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+input[type=text]{width:100%;background:var(--panel);color:var(--ink);border:1px solid rgba(201,168,76,.3);border-radius:10px;padding:11px;font:inherit}
+.sp{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:18px 0}
+.slot{width:calc(50% - 6px);max-width:170px;text-align:center}
+.slot small{display:block;color:var(--mut);font-size:12px;margin-bottom:4px;min-height:16px}
+.card{position:relative;aspect-ratio:2/3;border-radius:12px;overflow:hidden;border:1px solid var(--gold);background:linear-gradient(145deg,#3a1a6e,#160a2c);cursor:pointer;display:flex;align-items:flex-end;justify-content:center}
+.card.back{background:repeating-linear-gradient(45deg,#2d1260,#2d1260 8px,#1a0a2e 8px,#1a0a2e 16px);align-items:center;font-size:34px;color:var(--gold)}
+.card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.card .lb{position:relative;width:100%;padding:18px 6px 7px;background:linear-gradient(transparent,rgba(10,4,20,.92));font-size:13px;line-height:1.2;color:var(--gold2)}
+.card .nm{position:absolute;top:6px;left:8px;font-size:12px;color:var(--gold2);text-shadow:0 1px 3px #000;z-index:1}
+.card.ph{flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:8px}
+.card.ph .big{font-size:38px;color:var(--gold);opacity:.8}
+.det{background:rgba(36,18,64,.7);border:1px solid rgba(201,168,76,.25);border-radius:12px;padding:14px;margin:12px 0}
+.det h3{margin:0;color:var(--gold2);font-size:18px}
+.det .pos{font-size:12px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase}
+.det .q{font-style:italic;color:var(--gold);margin:6px 0}
+.det p{margin:6px 0 0}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(min-width:560px){.grid{grid-template-columns:repeat(4,1fr)}}
+.hh{grid-column:1/-1;color:var(--gold);font-size:13px;letter-spacing:.12em;text-transform:uppercase;margin-top:10px;border-bottom:1px solid rgba(201,168,76,.25)}
+.mut{color:var(--mut);font-size:14px}
+dialog{background:#1a0a2e;color:var(--ink);border:1px solid var(--gold);border-radius:14px;max-width:420px;width:92%;padding:16px}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+.hid{display:none}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes cardReveal{from{opacity:0;transform:rotateY(90deg) scale(.8)}to{opacity:1;transform:rotateY(0) scale(1)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes tw{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:.9;transform:scale(1.3)}}
+@keyframes pg{0%,100%{box-shadow:0 0 15px rgba(201,168,76,.3)}50%{box-shadow:0 0 35px rgba(201,168,76,.7),0 0 60px rgba(201,168,76,.2)}}
+.wrap{position:relative;z-index:1}
+h1{font-family:'Cinzel Decorative','Cinzel',Georgia,serif;font-weight:700;font-size:26px;letter-spacing:.1em}
+.shimmer{background:linear-gradient(90deg,#c9a84c 0%,#e8c97a 40%,#fff8dc 50%,#e8c97a 60%,#c9a84c 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite}
+.sub{text-align:center;margin:-8px 0 18px;color:var(--mut);font-family:'Cinzel',Georgia,serif;font-size:11px;letter-spacing:.35em;text-transform:uppercase}
+button{font-family:'Cinzel',Georgia,serif;letter-spacing:.08em;font-size:13px;text-transform:uppercase;transition:all .2s}
+button:hover{box-shadow:0 0 14px rgba(201,168,76,.35)}
+button.on{background:linear-gradient(135deg,#c9a84c,#e8c97a);box-shadow:0 0 18px rgba(201,168,76,.4)}
+.det h3,.hh,.det .pos,dialog h3,.card .lb,.card.ph div{font-family:'Cinzel',Georgia,serif;letter-spacing:.05em}
+.det .q,input[type=text]{font-family:'EB Garamond',Georgia,serif}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;animation:float 12s infinite alternate}
+.star{position:fixed;width:2px;height:2px;border-radius:50%;background:#fff8dc;pointer-events:none;z-index:0;animation:tw 3s infinite}
+.card{transition:all .25s;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.card:hover{box-shadow:0 0 20px rgba(201,168,76,.5),0 0 40px rgba(201,168,76,.2);transform:translateY(-4px) scale(1.02)}
+.card.back{animation:pg 2.5s ease-in-out infinite}
+.card.rv{animation:cardReveal .5s ease-out}
+.det{animation:fadeUp .4s ease-out;border-left:2px solid var(--gold)}
+.g0{background:linear-gradient(135deg,#2d1260,#1a0a2e)}
+.g1{background:linear-gradient(135deg,#3d1a00,#1a0800)}
+.g2{background:linear-gradient(135deg,#002d3d,#000d1a)}
+.g3{background:linear-gradient(135deg,#0d2d00,#041400)}
+#rt{position:fixed;inset:0;z-index:50;background:radial-gradient(circle at 20% 10%,#1f0d3a,#0d0518 70%);display:flex;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 16px);overflow:hidden;touch-action:none}
+#rt.hid{display:none}
+.pb{display:flex;gap:6px;width:100%;max-width:420px;align-items:center}
+.pb i{flex:1;height:4px;border-radius:3px;background:rgba(201,168,76,.2);transition:background .4s}
+.pb i.on{background:var(--gold);box-shadow:0 0 8px rgba(201,168,76,.6)}
+.x{padding:6px 10px;font-size:16px}
+#rtt{font:600 18px/1.3 'Cinzel',Georgia,serif;color:var(--gold2);margin:22px 0 4px;text-align:center;letter-spacing:.06em}
+#rth{margin:0 0 6px;color:var(--mut);font-size:15px;text-align:center}
+#stg{position:relative;flex:1;min-height:300px;width:100%;max-width:520px;touch-action:none;user-select:none}
+.bk{position:absolute;width:64px;height:96px;left:calc(50% - 32px);top:calc(38% - 48px);border-radius:8px;border:1px solid var(--gold);background:radial-gradient(circle at 50% 50%,rgba(201,168,76,.4) 0 6px,transparent 7px),repeating-linear-gradient(45deg,#2d1260,#2d1260 6px,#1a0a2e 6px,#1a0a2e 12px);box-shadow:0 2px 8px rgba(0,0,0,.5);transition:transform .45s cubic-bezier(.3,.9,.3,1)}
+.wc{cursor:pointer;transition:transform .5s ease,box-shadow .3s}
+.wc.sel{box-shadow:0 0 18px 4px rgba(232,201,122,.8);border-color:#fff8dc}
+.big{width:100%;max-width:420px;margin-top:10px;padding:14px;border-radius:30px;background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#1a0a2e;font-weight:700}
+.big.alt{background:rgba(36,18,64,.8);color:var(--gold2);font-weight:400}
+.big:disabled{opacity:.4}
+.grp h4{margin:0 0 4px;font:600 12px 'Cinzel',Georgia,serif;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);text-align:center}
+.grp .r2{display:flex;gap:10px}
+.grp .slot{width:calc(50% - 5px);max-width:none}
+.sp.tl{display:grid;grid-template-columns:1fr 1fr;gap:16px 14px}
+</style>
+</head>
+<body>
+<div class="orb" style="width:320px;height:320px;background:rgba(88,28,135,.35);top:-80px;left:-100px"></div>
+<div class="orb" style="width:280px;height:280px;background:rgba(201,168,76,.12);bottom:5%;right:-90px;animation-delay:-5s"></div>
+<div class="orb" style="width:240px;height:240px;background:rgba(30,58,138,.25);top:45%;left:-60px;animation-delay:-8s"></div>
+<div class="wrap">
+<h1 class="shimmer">✦ The Oracle ✦</h1><p class="sub">36-Card Mystic Studio</p>
+<nav><button id="tR" class="on">Reading</button><button id="tD">Deck</button></nav>
+
+<section id="vR">
+<input id="qq" type="text" placeholder="Your question (optional)">
+<div class="row" id="spr"></div>
+<div class="row"><button id="go">Begin ritual</button><button id="rev" class="hid">Reveal all</button></div>
+<div class="sp" id="sp"></div>
+<div id="dt"></div>
+</section>
+
+<section id="vD" class="hid">
+<div class="row">
+<button id="bulk">Bulk upload images</button>
+<button id="clr">Remove all images</button>
+</div>
+<p class="mut" id="st"></p>
+<p class="mut">Bulk: name files by card number (01.png … 36.png, or card_7.jpg). Or tap any card to set its image.</p>
+<div class="grid" id="gr"></div>
+</section>
+</div>
+
+<div id="rt" class="hid"><div class="pb"><button id="rx" class="x">✕</button><i></i><i></i><i></i></div><h2 id="rtt"></h2><p id="rth"></p><div id="stg"></div><button id="rb" class="big"></button><button id="rn" class="big alt">Next step</button></div>
+<input type="file" id="fb" accept="image/*" multiple class="hid">
+<input type="file" id="f1" accept="image/*" class="hid">
+<dialog id="dg"></dialog>
+
+<script>
+const H=["Identiteti","Vlerat","Komunikimi","Shtëpia & Familja","Krijimtaria","Shëndeti","Partneriteti","Transformimi","Filozofia","Karriera","Shoqëria","Shpirtërorja"];
+const D=[
+[1,"Kërkuesi","The Seeker","Ku po shkoni?","Dëshira për të zbuluar kush jeni dhe ku po shkoni. Kërkimi hap mundësi të reja, por mund të bëhet edhe mënyrë për ta shtyrë zgjedhjen, kur koha për të vendosur ka ardhur."],
+[1,"Inicimi / Nisja","Initiation","Kush po bëheni?","Hyrja në një fazë të re të jetës duke lënë pas një identitet të vjetër. Pragu është ftesë, por kalimi kërkon pjesëmarrjen tuaj të vërtetë: askush nuk mund ta kalojë në vendin tuaj."],
+[1,"Zemërimi","Anger","Çfarë po mbroni?","Zemërimi sinjalizon se diçka e rëndësishme mund të jetë cenuar. Ai mund të mbrojë një kufi të shëndetshëm, ose të konsumojë pikërisht atë që duhej të mbronte, nëse e lini të udhëheqë vetëm."],
+[2,"Ofruesi","The Provider","Çfarë keni për të dhënë?","Dhënia e kujdesit, burimeve dhe qëndrueshmërisë. Bujaria bëhet e dëmshme kur ju rraskapit, ose kur ndiheni të vlefshëm vetëm nëse të tjerët kanë gjithmonë nevojë për ju."],
+[2,"Thesari","The Treasure","Çfarë ju bën të pasur?","Njohja e asaj që ka vlerë të vërtetë përtej çmimit, statusit apo miratimit të të tjerëve. Vlera mund të jetë e qetë, e dobishme, e lidhur me njerëzit ose e fshehur brenda jush."],
+[2,"Lakmia","Greed","Çfarë keni frikë se do të humbisni?","Përpjekja për të krijuar siguri përmes grumbullimit pa fund. Sa më shumë që mblidhet, aq më shumë ka për t'u frikësuar se mund të humbasë, dhe ndjenja e mjaftueshmërisë nuk vjen kurrë."],
+[3,"Kushëriri / Rrethi i afërt","Cousin","Kush është në rrethin tuaj?","Farefisi, fqinjët, vëllezërit e motrat dhe bota e afërt e njohur. Afërsia mund të nxisë përkatësinë, por edhe ndërhyrjen, krahasimin ose supozimet e trashëguara që nuk i keni zgjedhur vetë."],
+[3,"Mësimi","Learning","Çfarë jeni gati të mësoni?","Informacioni bëhet dije kur ndryshon mënyrën si e perceptoni, e interpretoni ose veproni. Të mësosh është më shumë se të grumbullosh fakte: është të lejosh që diçka t'ju ndryshojë."],
+[3,"Mashtruesi / Tradhëtari","The Trickster","Çfarë besoni?","Manipulimi përmes dukjeve të rreme. Vëzhguesi tërhiqet nga iluzioni sepse ai i ngjan diçkaje që dëshiron ta besojë tashmë. Pyesni veten çfarë po ju pëlqen aq shumë sa nuk e vini në dyshim."],
+[4,"Shtëpia","Home","Ku ndiheni të sigurt?","Shtëpia është strehë, përkatësi, rrënjë dhe themel psikologjik. Ajo që është e njohur mund t'ju mbajë në këmbë, por mund të ruajë edhe modele që nuk i keni vënë kurrë në pyetje."],
+[4,"Prindi","Parent","Çfarë keni trashëguar?","Kujdesi, mbrojtja dhe trashëgimia e pritshmërive e frikërave. Ajo që e mbron një fëmijë mund t'i formësojë edhe kufijtë e identitetit që ai trashëgon, e që ju ndoshta ende i bartni."],
+[4,"Gjyqtari","The Judge","Gjykimin e kujt po bartni?","Zëri i ashpër i brendshëm që e kthen një standard të trashëguar në vendim të prerë. Një gjykim duket autoritar thjesht sepse është përsëritur brez pas brezi, jo sepse është i drejtë."],
+[5,"Dashuri i/e zemrës","Lover","Çfarë kërkon zemra juaj?","Lidhja romantike, dëshira, kënaqësia dhe gjallëria krijuese. Intimiteti është shkëmbim mes dy personave, jo zotërim i tjetrit; ai rritet kur secili mbetet vetvetja pranë tjetrit dhe lejon edhe tjetrin të jetë i lirë."],
+[5,"Suksesi","Success","Çfarë po sjellni në jetë?","Kënaqësia e sjelljes në jetë të diçkaje me përpjekje dhe rrezik krijues. Arritja bëhet e brishtë kur trajtohet si e vetmja provë e vlerës suaj personale ose e së drejtës për t'u dashur."],
+[5,"Bixhozi / Rrezikuesi","The Gambler","Çfarë do të rrezikoni pa e ditur?","Gatishmëria për të vepruar pa e ditur rezultatin. Hapi mund të jetë guxim, krijimtari, impulsivitet ose pamatësi; përfundimi ende nuk duket. Pyetja është çfarë jeni gati të humbni."],
+[6,"Shëruesi","The Healer","Çfarë ka nevojë të shërohet?","Shërimi përmes vëmendjes, kujdesit praktik, kohës dhe ritmit të rivendosur. Rikuperimi shpesh është proces e jo mrekulli, dhe kërkon durim me veten tuaj dhe me ritmin e trupit."],
+[6,"Zaniatçiu / Mjeshtri","Craftsman","Çfarë mund të përmirësoni?","Mprehtësia për të parë çfarë duhet ndryshuar dhe për ta bërë punën më të mirë. E njëjta saktësi bëhet mizori kur pret pa kujdes, ndaj duhet përdorur me respekt për materialin."],
+[6,"Sëmundja","Disease","Ku e keni humbur ekuilibrin?","Sinjal çekuilibri, rraskapitjeje ose sistemi që nuk funksionon si më parë. Vuajtja nuk është dështim moral dhe një kartë nuk bën diagnozë; është thirrje për t'i kushtuar vëmendje vetes."],
+[7,"Partneri","Partner","Çfarë po ndërtoni së bashku?","Partneriteti i përkushtuar, marrëveshjet, bashkëpunimi dhe ndarja e përgjegjësisë. Një lidhje e shëndetshme e shpërndan peshën mes dyve pa e fshirë asnjërin prej tyre, duke i lënë secilit vend për t'u rritur."],
+[7,"Soshitja / Joshja","Seduction","A mund t'i rezistoni tundimit?","Tërheqja magnetike e një personi, mundësie ose së ardhmeje të imagjinuar. Një ftesë mund të bindë edhe kur ajo që qëndron përtej saj mbetet e panjohur; shikoni përtej dritës që ju thërret."],
+[7,"Armiku","Enemy","Çfarë nuk mund të injorohet më?","Një konflikt i jashtëm ose i brendshëm që kërkon më në fund të shihet. Imazhi pyet çfarë u premtua, çfarë u thye dhe çfarë prove ka; nuk akuzon asnjë person real për diçka."],
+[8,"Hajduti","Thief","Çfarë ju është marrë?","Përvoja e marrjes së diçkaje. Boshllëku që mbetet mund të zbulojë vlerën, varësinë ose cenueshmërinë që nuk e kishit vënë re më parë; humbja tregon çfarë ishte vërtet e rëndësishme."],
+[8,"Sekretet","Secrets","Çfarë fsheh heshtja?","Njohuria private mund të mbrojë kufijtë, por fshehtësia gërryese e dëmton intimitetin kur një informacion i rëndësishëm i mbahet atij që ka nevojë për të për të vendosur lirshëm."],
+[8,"Rilindja","Rebirth","Cilën vete të vjetër duhet ta çlironi?","Një identitet i vjetër bëhet i papërdorshëm para se i riu të ndihet i njohur. Transformimi është kalim i vështirë, jo thjesht fillim i pastër; lëshoni ngadalë, pa u nxituar."],
+[9,"Mësuesi","Teacher","Çfarë diturie do të përcillni?","Urtësia është e dobishme kur e ndihmon tjetrin të shohë më larg dhe në fund të ecë vetë. Mësimdhënia nuk është zotërim i rrugës së tjetrit, por dritë për hapat e tij."],
+[9,"Intuita","Intuition","A do t'i besoni zërit tuaj të brendshëm?","Intuita është njohje e drejtpërdrejtë, e ndjerë në trup, që mund të dallojë modele para se arsyetimi t'i arrijë. Një ndjesi është informacion, jo provë; dëgjojeni dhe verifikojeni."],
+[9,"Nghi / Të dyshoresh","To Doubt","Çfarë do t'ju ndryshonte mendjen?","Dyshimi mund t'i testojë besimet ndershmërisht, por mund t'i minojë edhe çdo përfundim derisa veprimi bëhet i pamundur. Pyetja është cilat prova do ta ndryshonin vërtet mendjen tuaj."],
+[10,"Disiplina","Discipline","Cilat zakone formësojnë të ardhmen tuaj?","Disiplina është struktura që e bën të mundur punën e qëndrueshme. Përsëritja ndihmon vetëm kur i shërben drejtimit të duhur; njeriu mund të ngecë duke përsëritur gjënë e gabuar vit pas viti."],
+[10,"Aftësia / Mjeshtëria","Skill","Çfarë keni përvetësuar?","Aftësia është rezultat i praktikës, reagimeve, përsosjes dhe njohjes së kufijve tuaj. Kompetenca ndërtohet, nuk zotërohet thjesht; çdo përpjekje e mëparshme, edhe e dështuar, është një shkallë e saj."],
+[10,"Tirani","The Tyrant","Çfarë nuk jeni më të gatshëm të pranoni?","Autoriteti bëhet tirani kur përdor pushtetin për të kufizuar, frikësuar ose zvogëluar të tjerët. Kjo është abuzim me kontrollin, jo thjesht udhëheqje e fortë; kufiri qëndron te dinjiteti i tjetrit."],
+[11,"Miku","Friend","Ku përkisni me të vërtetë?","Miqësia dhe komuniteti i zgjedhur ofrojnë përkatësi pa zotërim. Një mik i vërtetë mund t'ju shoqërojë pa ju kontrolluar, pa ju rregulluar dhe pa ju mbajtur të lidhur pas vetes."],
+[11,"Inovacioni / Ndryshimi","Innovation / Change","Çfarë mundësie e re po shfaqet?","Ndryshimi sjell një mundësi të re dhe prish rregullimet e vendosura. Mund të bëhet progres, humbje ose thjesht një realitet i ri që duhet kuptuar para se të gjykohet."],
+[11,"Viktima","The Victim","Ku e keni humbur fuqinë tuaj?","Përvoja e pafuqisë brenda një grupi ose situate të pabarabartë. Dëmi real dhe pabarazia e pushtetit ekzistojnë; karta nuk duhet të nënkuptojë kurrë se i dëmtuari është fajtor për dëmin."],
+[12,"Vetmia","Loneliness","Çfarë gjeni në vetmi?","Vetmia mund të jetë hapësirë e zgjedhur për reflektim ose përvoja e dhimbshme e braktisjes. E njëjta heshtje mund të ndihet e shenjtë ose e zbrazët, sipas gjendjes sonë të brendshme."],
+[12,"Humbja","Loss","Çfarë mësuat të vlerësoni përmes humbjes?","Humbja zbulon formën e lidhjes dhe realitetin e përkohshmërisë. Pikëllimi nuk ka nevojë të justifikohet me një mësim; kuptimi mund të vijë ngadalë, ose mund të mos vijë fare."],
+[12,"Frika / Të kesh frikë","To Fear","A është rreziku i vërtetë, apo i imagjinuar?","Frika mund të na mbrojë kur rreziku është real, por pritja mund ta zmadhojë mundësinë derisa mendja e përjeton kërcënimin sikur ndodh tani. Dalloni çfarë ndodh nga ajo që imagjinoni."]
+].map((c,i)=>({nr:i+1,h:c[0],hn:H[c[0]-1],sq:c[1],en:c[2],q:c[3],m:c[4]}));
+
+const TL=["Current · 1","Current · 2","Past · 3","Past · 4","Hidden · 5","Hidden · 6","Obvious · 7","Obvious · 8","Near future · 9","Near future · 10","Outcome · 11","Outcome · 12"];
+const SPREADS={
+ "1 card":["Message"],
+ "3 cards":["Past","Present","Future"],
+ "5 cards":["Situation","Obstacle","Root","Advice","Outcome"],
+ "12 houses":H,
+ "12 timeline":TL
+};
+let imgs={},spread="3 cards",draw=[],shown=new Set(),fr=new Set(),target=0;
+const $=id=>document.getElementById(id);
+
+/* storage: IndexedDB, fails silently to memory */
+function db(){return new Promise((res,rej)=>{try{const r=indexedDB.open('oracle36',1);r.onupgradeneeded=()=>r.result.createObjectStore('i');r.onsuccess=()=>res(r.result);r.onerror=()=>rej()}catch(e){rej()}})}
+async function put(k,v){try{const d=await db();d.transaction('i','readwrite').objectStore('i').put(v,k)}catch(e){}}
+async function rm(k){try{const d=await db();d.transaction('i','readwrite').objectStore('i').delete(k)}catch(e){}}
+async function loadAll(){try{const d=await db();return await new Promise(res=>{const o={};const q=d.transaction('i').objectStore('i').openCursor();q.onsuccess=e=>{const c=e.target.result;if(c){o[c.key]=c.value;c.continue()}else res(o)};q.onerror=()=>res({})})}catch(e){return{}}}
+
+function shrink(f){return new Promise((res,rej)=>{const u=URL.createObjectURL(f),i=new Image();i.onload=()=>{const s=Math.min(1,600/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=Math.round(i.width*s);c.height=Math.round(i.height*s);c.getContext('2d').drawImage(i,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',.86))};i.onerror=rej;i.src=u})}
+async function setImg(nr,f){try{const d=await shrink(f);imgs[nr]=d;await put(nr,d)}catch(e){}}
+
+function face(c,small){
+ const d=document.createElement('div');
+ if(imgs[c.nr]){d.className='card';d.innerHTML=`<img src="${imgs[c.nr]}" alt=""><span class="nm">${c.nr}</span><div class="lb">${c.sq}</div>`}
+ else{d.className='card ph g'+(c.h%4);d.innerHTML=`<div class="big">${c.nr}</div><div style="font-size:13px;color:var(--gold2)">${c.sq}</div><div class="mut" style="font-size:11px">${c.en}</div>`}
+ return d}
+
+function renderSpreads(){
+ const r=$('spr');r.innerHTML='';
+ Object.keys(SPREADS).forEach(k=>{const b=document.createElement('button');b.textContent=k;if(k===spread)b.className='on';b.onclick=()=>{spread=k;draw=[];shown.clear();renderSpreads();renderDraw()};r.appendChild(b)})}
+
+function renderDraw(){
+ const sp=$('sp'),dt=$('dt');sp.innerHTML='';dt.innerHTML='';sp.className='sp'+(spread==='12 timeline'?' tl':'');
+ $('rev').classList.toggle('hid',!draw.length||shown.size===draw.length);
+ draw.forEach((c,i)=>{
+  const s=document.createElement('div');s.className='slot';
+  s.innerHTML=`<small>${SPREADS[spread][i]}</small>`;
+  let el;
+  if(shown.has(i)){el=face(c);if(fr.has(i))el.classList.add('rv')}else{el=document.createElement('div');el.className='card back';el.textContent='✦'}
+  el.onclick=()=>{if(!shown.has(i))fr.add(i);shown.add(i);renderDraw()};
+  s.appendChild(el);
+  if(spread==='12 timeline'){let g=sp.lastChild;if(i%2===0){g=document.createElement('div');g.className='grp';g.innerHTML=`<h4>${SPREADS[spread][i].split(' · ')[0]}</h4><div class="r2"></div>`;sp.appendChild(g)}g.lastChild.appendChild(s)}else sp.appendChild(s)});
+ [...shown].sort((a,b)=>a-b).forEach(i=>{
+  const c=draw[i],d=document.createElement('div');d.className='det';
+  d.innerHTML=`<div class="pos">${SPREADS[spread][i]} · ${c.hn}</div><h3>${c.nr}. ${c.sq} <span class="mut">${c.en}</span></h3><div class="q">${c.q}</div><p>${c.m}</p>`;
+  dt.appendChild(d)});fr.clear()}
+
+function go(){
+ const a=D.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+ draw=a.slice(0,SPREADS[spread].length);shown.clear();renderDraw()}
+
+function renderDeck(){
+ const g=$('gr');g.innerHTML='';let last=0,n=0;
+ D.forEach(c=>{
+  if(c.h!==last){last=c.h;const h=document.createElement('div');h.className='hh';h.textContent=c.h+' · '+c.hn;g.appendChild(h)}
+  const e=face(c);if(imgs[c.nr])n++;e.onclick=()=>openCard(c);g.appendChild(e)});
+ $('st').textContent=Object.keys(imgs).length+' / 36 images set'}
+
+function openCard(c){
+ const d=$('dg');
+ d.innerHTML=`<h3 style="margin:0;color:var(--gold2)">${c.nr}. ${c.sq}</h3><div class="mut">${c.en} · ${c.hn}</div><div class="q" style="font-style:italic;color:var(--gold);margin:8px 0">${c.q}</div><p style="margin:0 0 12px">${c.m}</p><div class="row"><button id="u1">${imgs[c.nr]?'Replace image':'Upload image'}</button>${imgs[c.nr]?'<button id="u2">Remove image</button>':''}<button id="u3">Close</button></div>`;
+ $('u1').onclick=()=>{target=c.nr;$('f1').click()};
+ if($('u2'))$('u2').onclick=async()=>{delete imgs[c.nr];await rm(c.nr);d.close();renderDeck()};
+ $('u3').onclick=()=>d.close();
+ d.showModal()}
+
+function match(name){
+ const n=name.toLowerCase(),m=n.match(/(\d{1,2})/);
+ if(m&&+m[1]>=1&&+m[1]<=36)return +m[1];
+ const c=D.find(c=>n.includes(c.en.toLowerCase().replace(/\W+/g,'')) || n.replace(/\W+/g,'').includes(c.en.toLowerCase().replace(/\W+/g,'')));
+ return c?c.nr:0}
+
+$('f1').onchange=async e=>{const f=e.target.files[0];if(f&&target){await setImg(target,f);$('dg').close();renderDeck()}e.target.value=''};
+$('fb').onchange=async e=>{for(const f of e.target.files){const n=match(f.name);if(n)await setImg(n,f)}e.target.value='';renderDeck()};
+$('bulk').onclick=()=>$('fb').click();
+$('clr').onclick=async()=>{if(!confirm('Remove all uploaded images?'))return;for(const k of Object.keys(imgs))await rm(+k);imgs={};renderDeck()};
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const shf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}};
+let deck=[],step=0,picks=[],rot=0,shuffled=false,busy=false,moved=0;
+const TT=['Shuffle the cards','Cut the deck','Choose your cards'],HT=['Tap the pile to shuffle. Repeat as often as you like.','Swipe sideways to cut the deck. Cut as often as you like.','Drag to turn the wheel, tap to choose.'];
+function openRitual(){deck=D.slice();shf(deck);shuffled=false;picks=[];step=0;$('rt').classList.remove('hid');rstep()}
+function rstep(){const s=$('stg');s.innerHTML='';s.onpointerdown=s.onpointermove=s.onpointerup=s.onpointerleave=s.onclick=null;
+ document.querySelectorAll('.pb i').forEach((e,i)=>e.classList.toggle('on',i<=step));
+ $('rtt').textContent=TT[step];$('rth').textContent=HT[step];
+ $('rb').classList.toggle('hid',step>1);$('rn').classList.toggle('hid',step>1);
+ $('rb').textContent=step?'Cut the deck':'Shuffle';$('rn').disabled=step===0&&!shuffled;
+ [shufStage,cutStage,wheel][step](s)}
+const scat=(s,r)=>[...s.children].forEach(c=>c.style.transform=`translate(${rnd(-r,r)}px,${rnd(-r,r)}px) rotate(${rnd(-180,180)}deg)`);
+function shufStage(s){for(let i=0;i<18;i++){const c=document.createElement('div');c.className='bk';s.appendChild(c)}scat(s,45);s.onclick=doShuf}
+function doShuf(){const s=$('stg');shf(deck);shuffled=true;$('rn').disabled=false;scat(s,150);setTimeout(()=>scat(s,50),420)}
+function cutStage(s){for(let i=0;i<12;i++){const c=document.createElement('div');c.className='bk';c.style.zIndex=i;c.dataset.i=i;c.style.transform=`translate(${i*.6}px,${-i*1.6}px)`;s.appendChild(c)}
+ let x0=0;s.onpointerdown=e=>{x0=e.clientX};s.onpointerup=e=>{const d=e.clientX-x0;if(Math.abs(d)>40)doCut(Math.sign(d))}}
+function doCut(dir){if(busy)return;busy=true;const cs=[...$('stg').children].sort((a,b)=>a.style.zIndex-b.style.zIndex),top=cs.slice(6),k=3+Math.floor(Math.random()*30);
+ deck=deck.slice(k).concat(deck.slice(0,k));
+ top.forEach(c=>c.style.transform=`translate(${dir*100}px,-30px) rotate(${dir*7}deg)`);
+ setTimeout(()=>{const low=+cs[0].style.zIndex;top.forEach((c,j)=>{c.style.zIndex=low-6+j;c.style.transform=`translate(${c.dataset.i*.6}px,${-c.dataset.i*1.6}px)`});busy=false},480)}
+function wheel(s){const N=SPREADS[spread].length,R=Math.min(s.clientWidth*.4,s.clientHeight*.42,190),cw=Math.round(R*.36),ch=Math.round(cw*1.5),ring=document.createElement('div');
+ ring.style.cssText='position:absolute;left:50%;top:50%;width:0;height:0;transform:rotate(-140deg);opacity:0;transition:transform .9s ease-out,opacity .6s';
+ const upd=()=>{const k=picks.length;$('rtt').textContent=k<N?`Card ${k+1} of ${N} · ${SPREADS[spread][k]}`:'The cards are chosen'};
+ deck.forEach((c,i)=>{const e=document.createElement('div'),a=i*10;e.className='bk wc';
+  e.style.cssText=`width:${cw}px;height:${ch}px;left:${-cw/2}px;top:${-ch/2}px;transform:rotate(${a}deg) translateY(${-R}px)`;
+  e.onclick=()=>{if(moved>6||e.classList.contains('sel')||picks.length>=N)return;picks.push(c);e.classList.add('sel');e.style.transform=`rotate(${a}deg) translateY(${-R-cw*.8}px)`;upd();if(picks.length===N)setTimeout(finish,800)};ring.appendChild(e)});
+ s.appendChild(ring);upd();rot=0;
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{ring.style.transform='rotate(0deg)';ring.style.opacity=1}));setTimeout(()=>{ring.style.transition='none'},1000);
+ let sx=0,sr=0,dn=false;
+ s.onpointerdown=e=>{dn=true;sx=e.clientX;sr=rot;moved=0};
+ s.onpointermove=e=>{if(!dn)return;moved=Math.abs(e.clientX-sx);rot=sr+(e.clientX-sx)*.5;ring.style.transform=`rotate(${rot}deg)`};
+ s.onpointerup=s.onpointerleave=()=>{dn=false}}
+function finish(){draw=picks.slice();shown.clear();fr.clear();$('rt').classList.add('hid');renderDraw();$('sp').scrollIntoView({behavior:'smooth',block:'start'})}
+$('go').onclick=openRitual;
+$('rb').onclick=()=>step?doCut(Math.random()<.5?1:-1):doShuf();
+$('rn').onclick=()=>{step++;rstep()};
+$('rx').onclick=()=>$('rt').classList.add('hid');
+$('rev').onclick=()=>{draw.forEach((_,i)=>{if(!shown.has(i))fr.add(i);shown.add(i)});renderDraw()};
+$('tR').onclick=()=>{$('vR').classList.remove('hid');$('vD').classList.add('hid');$('tR').className='on';$('tD').className='';renderDraw()};
+$('tD').onclick=()=>{$('vD').classList.remove('hid');$('vR').classList.add('hid');$('tD').className='on';$('tR').className='';renderDeck()};
+
+for(let i=0;i<40;i++){const s=document.createElement('div');s.className='star';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.animationDelay=Math.random()*3+'s';document.body.appendChild(s)}
+renderSpreads();renderDraw();
+loadAll().then(o=>{imgs=o;renderDraw();renderDeck()});
+</script>
+</body>
+</html>
