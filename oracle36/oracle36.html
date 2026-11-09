@@ -182,11 +182,62 @@ async function loadAll(){try{const d=await db();return await new Promise(res=>{c
 function shrink(f){return new Promise((res,rej)=>{const u=URL.createObjectURL(f),i=new Image();i.onload=()=>{const s=Math.min(1,600/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=Math.round(i.width*s);c.height=Math.round(i.height*s);c.getContext('2d').drawImage(i,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',.86))};i.onerror=rej;i.src=u})}
 async function setImg(nr,f){try{const d=await shrink(f);imgs[nr]=d;await put(nr,d)}catch(e){}}
 
-function face(c,small){
- const d=document.createElement('div');
- if(imgs[c.nr]){d.className='card';d.innerHTML=`<img src="${imgs[c.nr]}" alt=""><span class="nm">${c.nr}</span><div class="lb">${c.sq}</div>`}
- else{d.className='card ph g'+(c.h%4);d.innerHTML=`<div class="big">${c.nr}</div><div style="font-size:13px;color:var(--gold2)">${c.sq}</div><div class="mut" style="font-size:11px">${c.en}</div>`}
- return d}
+
+// YOUR GITHUB IMAGE SETTINGS
+const GITHUB_IMAGE_BASE =
+  'https://raw.githubusercontent.com/leopardcana-dot/oracle36/main/images/';
+
+const IMAGE_EXTENSION = 'jpg';
+
+function githubImage(nr) {
+  return GITHUB_IMAGE_BASE +
+    String(nr).padStart(2, '0') +
+    '.' + IMAGE_EXTENSION;
+}
+
+function face(c, small) {
+  const d = document.createElement('div');
+
+  // Locally uploaded images take priority.
+  // Otherwise, load directly from GitHub.
+  const src = imgs[c.nr] || githubImage(c.nr);
+
+  d.className = 'card';
+
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = c.sq;
+
+  img.onerror = () => {
+    img.remove();
+
+    d.className = 'card ph g' + (c.h % 4);
+    d.innerHTML = `
+      <div class="big">${c.nr}</div>
+      <div style="font-size:13px;color:var(--gold2)">
+        ${c.sq}
+      </div>
+      <div class="mut" style="font-size:11px">
+        ${c.en}
+      </div>
+    `;
+  };
+
+  d.appendChild(img);
+
+  const nr = document.createElement('span');
+  nr.className = 'nm';
+  nr.textContent = c.nr;
+  d.appendChild(nr);
+
+  const label = document.createElement('div');
+  label.className = 'lb';
+  label.textContent = c.sq;
+  d.appendChild(label);
+
+  return d;
+}
+
 
 function renderSpreads(){
  const r=$('spr');r.innerHTML='';
