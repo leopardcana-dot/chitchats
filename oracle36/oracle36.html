@@ -183,23 +183,17 @@ function shrink(f){return new Promise((res,rej)=>{const u=URL.createObjectURL(f)
 async function setImg(nr,f){try{const d=await shrink(f);imgs[nr]=d;await put(nr,d)}catch(e){}}
 
 
-// YOUR GITHUB IMAGE SETTINGS
-const GITHUB_IMAGE_BASE =
-  'https://raw.githubusercontent.com/leopardcana-dot/oracle36/main/images/';
 
-const IMAGE_EXTENSION = 'png';
+const GITHUB_IMAGE_BASE =
+  'https://raw.githubusercontent.com/leopard-dot/oracle36/main/images/';
 
 function githubImage(nr) {
   return GITHUB_IMAGE_BASE +
-    String(nr).padStart(2, '0') +
-    '.' + IMAGE_EXTENSION;
+    String(nr).padStart(2, '0') + '.png';
 }
 
 function face(c, small) {
   const d = document.createElement('div');
-
-  // Locally uploaded images take priority.
-  // Otherwise, load directly from GitHub.
   const src = imgs[c.nr] || githubImage(c.nr);
 
   d.className = 'card';
@@ -210,7 +204,6 @@ function face(c, small) {
 
   img.onerror = () => {
     img.remove();
-
     d.className = 'card ph g' + (c.h % 4);
     d.innerHTML = `
       <div class="big">${c.nr}</div>
