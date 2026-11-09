@@ -902,6 +902,23 @@ body {
 .alert-price { font-family: var(--font-mono); font-weight: 600; }
 .alert-remove { cursor: pointer; color: var(--text-muted); }
 .alert-remove:hover { color: var(--accent-red); }
+/* ===== OBJECT TREE ===== */
+.ot-actions { display:flex; gap:6px; margin-bottom:6px; }
+.ot-actions .btn { flex:1; }
+.ot-row { display:flex; align-items:center; gap:6px; padding:4px 6px; border-radius:var(--radius-sm); cursor:pointer; color:var(--text-primary); }
+.ot-row:hover { background:var(--bg-hover); }
+.ot-row.selected { background:var(--bg-hover); box-shadow:inset 2px 0 0 var(--accent-blue); }
+.ot-row.is-hidden .ot-name, .ot-row.is-hidden .ot-ico { opacity:0.35; }
+.ot-ico { width:20px; height:20px; display:flex; align-items:center; justify-content:center; flex:none; color:var(--text-secondary); }
+.ot-ico svg { width:20px; height:20px; }
+.ot-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:500; }
+.ot-color { width:18px; height:18px; padding:0; border:none; background:transparent; cursor:pointer; flex:none; }
+.ot-btn { background:none; border:none; color:var(--text-muted); cursor:pointer; padding:2px; display:flex; flex:none; }
+.ot-btn:hover { color:var(--text-primary); }
+.ot-btn[data-act="del"]:hover { color:var(--accent-red); }
+.ot-btn.on { color:var(--accent-orange); }
+.ot-btn svg { width:16px; height:16px; }
+.ot-empty { color:var(--text-muted); font-size:11px; text-align:center; padding:12px; }
 /* ===== HOTKEY HINT ===== */
 .hotkey-hint {
   position: fixed;
@@ -1509,6 +1526,10 @@ body > div:has(> #mobileReplaySpeed) { display: none !important; }
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28" fill="none"><path fill="currentColor" d="M14 4c2.5 0 3 2.08 3 2.08 2.445 1.18 4 3.767 4 6.479v4.49a2.501 2.501 0 0 1-.244 4.938L20.5 22H17a3 3 0 0 1-5.996.154L11 22H7.5a2.5 2.5 0 0 1-.5-4.95v-4.491c0-2.712 1.554-5.3 4-6.479.002-.01.506-2.08 3-2.08m-1.5 18a1.5 1.5 0 0 0 3 0zm-5-3.5a1 1 0 1 0 0 2h13a1 1 0 1 0 0-2zm6.5-13c-.765 0-1.11.291-1.29.506a1.5 1.5 0 0 0-.258.45v.005l-.16.661-.64.309C9.747 8.349 8.5 10.397 8.5 12.559V17h11v-4.441c0-2.162-1.249-4.21-3.152-5.128l-.641-.309-.16-.666a1.5 1.5 0 0 0-.257-.45C15.11 5.79 14.765 5.5 14 5.5"></path></svg>
         <span>Alerts</span>
       </button>
+	        <button class="panel-tab" data-panel="objects" onclick="switchPanel('objects'); renderObjectTree(true)" title="Object tree">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28" fill="none"><path stroke="currentColor" d="m14 6 9 5-9 5-9-5 9-5Z"></path><path stroke="currentColor" d="m5 15 9 5 9-5M5 19l9 5 9-5"></path></svg>
+        <span>Objects</span>
+      </button>
     </div>
     <div class="panel-content">
       <!-- TRADE PANEL -->
@@ -1748,7 +1769,20 @@ body > div:has(> #mobileReplaySpeed) { display: none !important; }
         </div>
         <button class="btn btn-outline btn-full btn-sm" onclick="deleteAllAlerts()" style="margin-top:8px;">Clear All Alerts</button>
 		</div>
+		<!-- OBJECT TREE PANEL -->
+      <div class="panel-section" id="panelObjects">
+        <div class="section-header">
+          Object Tree
+          <span id="objCount" style="float:right;color:var(--text-secondary);">0</span>
+        </div>
+        <div class="ot-actions">
+          <button class="btn btn-outline btn-sm" onclick="objTreeToggleAll()">Hide / Show all</button>
+          <button class="btn btn-outline btn-sm" onclick="deleteAllDrawings()">Delete all</button>
+        </div>
+        <div id="objectTree"></div>
+      </div>
     </div>
+	      
     <!-- BALANCE BAR -->
     <div class="balance-bar">
       <div class="balance-row">
@@ -4014,7 +4048,7 @@ function setupEvents() {
     const { x, y } = getCanvasCoords(e);
     
     // Check if we're clicking on a selected drawing's handle point
-    if (state.selectedDrawing && state.selectedDrawing.points && state.selectedDrawing.points.length >= 2) {
+    if (state.selectedDrawing && !state.selectedDrawing.locked && state.selectedDrawing.points && state.selectedDrawing.points.length >= 2) {
       const pointIndex = getPointAtPosition(state.selectedDrawing, x, y);
       if (pointIndex !== -1) {
         isDraggingFib = true;
@@ -4112,7 +4146,7 @@ function setupEvents() {
     }
 
     // Check if clicking on a selected drawing's handle point
-    if (state.selectedDrawing && state.selectedDrawing.points && state.selectedDrawing.points.length >= 2) {
+    if (state.selectedDrawing && !state.selectedDrawing.locked && state.selectedDrawing.points && state.selectedDrawing.points.length >= 2) {
         const pointIndex = getPointAtPosition(state.selectedDrawing, x, y);
         if (pointIndex !== -1) {
             isDraggingFib = true;
@@ -4425,7 +4459,7 @@ function getCursorForTool(tool) {
 
 function redrawDrawingsOverlay(target) {
     const isC2 = target === 2;
-    if (!isC2) scheduleOverlay2();
+        if (!isC2) { scheduleOverlay2(); scheduleObjectTree(); }
     const overlay = document.getElementById(isC2 ? 'drawingOverlay2' : 'drawingOverlay');
     if (!overlay || !candleSeries) return;
     if (isC2 && (state.layout === '1' || !lwChart2 || !candleSeries2)) { overlay.style.display = 'none'; return; }
@@ -6810,6 +6844,103 @@ function distanceToLineSegment(px, py, x1, y1, x2, y2) {
   const projY = y1 + t * by;
   return Math.hypot(px - projX, py - projY);
 }
+// ===== OBJECT TREE =====
+const OT_NAMES = { hline:'Horizontal line', vline:'Vertical line', trendline:'Trend line', arrow:'Arrow', rect:'Rectangle', circle:'Circle', ellipse:'Ellipse', triangle:'Triangle', channel:'Parallel channel', path:'Path', flag:'Flag', text:'Text', measure:'Measure', fib:'Fib retracement', fibext:'Fib extension' };
+const OT_SVG = {
+  eye:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  unlock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 7.5-1.9"/></svg>',
+  del:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13M10 11v6M14 11v6"/></svg>'
+};
+var _otRaf = 0, _otSig = '';
+function otName(d) {
+  if (d.name) return d.name;
+  let n = OT_NAMES[d.type] || d.type;
+  if (d.type === 'text' && d.text) n += ' · ' + d.text;
+  if (d.type === 'hline' && typeof d.price === 'number') n += ' · ' + d.price.toFixed(2);
+  return n;
+}
+function otIcon(d) {
+  const src = document.querySelector('.tool-btn[data-tool="' + d.type + '"] svg');
+  return src ? src.outerHTML : '<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="3" fill="currentColor"/></svg>';
+}
+function scheduleObjectTree() {
+  if (_otRaf) return;
+  _otRaf = requestAnimationFrame(() => { _otRaf = 0; renderObjectTree(); });
+}
+function renderObjectTree(force) {
+  const box = document.getElementById('objectTree');
+  const sec = document.getElementById('panelObjects');
+  if (!box || !sec || (!force && !sec.classList.contains('active'))) return;
+  const ae = document.activeElement;
+  if (!force && ae && ae.type === 'color' && box.contains(ae)) return;   // don't kill an open colour picker
+  const selId = state.selectedDrawing ? state.selectedDrawing.id : '';
+  const sig = state.drawings.map(d => [d.id, d.type, d.hidden ? 1 : 0, d.locked ? 1 : 0, d.color || '', d.name || '', d.text || ''].join('|')).join(';') + '#' + selId;
+  if (!force && sig === _otSig) return;
+  _otSig = sig;
+  const cnt = document.getElementById('objCount');
+  if (cnt) cnt.textContent = state.drawings.length;
+  if (!state.drawings.length) { box.innerHTML = '<div class="ot-empty">No drawings yet.</div>'; return; }
+  box.innerHTML = '';
+  for (let i = state.drawings.length - 1; i >= 0; i--) {          // newest on top
+    const d = state.drawings[i];
+    const row = document.createElement('div');
+    row.className = 'ot-row' + (selId === d.id ? ' selected' : '') + (d.hidden ? ' is-hidden' : '');
+    row.dataset.id = String(d.id);
+    row.innerHTML =
+      '<span class="ot-ico">' + otIcon(d) + '</span>' +
+      '<span class="ot-name" title="Double-click to rename"></span>' +
+      (d.type === 'measure' ? '' : '<input type="color" class="ot-color" data-act="color" title="Color" value="' + (/^#[0-9a-f]{6}$/i.test(d.color || '') ? d.color : '#2196F3') + '">') +
+      '<button class="ot-btn' + (d.locked ? ' on' : '') + '" data-act="lock" title="' + (d.locked ? 'Unlock' : 'Lock') + '">' + (d.locked ? OT_SVG.lock : OT_SVG.unlock) + '</button>' +
+      '<button class="ot-btn" data-act="hide" title="' + (d.hidden ? 'Show' : 'Hide') + '">' + (d.hidden ? OT_SVG.eyeOff : OT_SVG.eye) + '</button>' +
+      '<button class="ot-btn" data-act="del" title="Delete">' + OT_SVG.del + '</button>';
+    row.querySelector('.ot-name').textContent = otName(d);
+    box.appendChild(row);
+  }
+}
+function objTreeToggleAll() {
+  const anyVisible = state.drawings.some(d => !d.hidden);
+  state.drawings.forEach(d => { d.hidden = anyVisible; });
+  redrawDrawingsOverlay();
+}
+function objTreeDelete(d) {
+  state.drawings = state.drawings.filter(x => x.id !== d.id);
+  if (state.selectedDrawing && state.selectedDrawing.id === d.id) closeDrawingEditor();
+  state.undoStack.push({ action: 'delete', drawing: d });
+  state.redoStack = [];
+  renderChart();
+}
+(function initObjectTree() {
+  const box = document.getElementById('objectTree');
+  if (!box) return;
+  const find = el => { const r = el.closest('.ot-row'); return r ? state.drawings.find(x => String(x.id) === r.dataset.id) : null; };
+  box.addEventListener('click', e => {
+    const d = find(e.target); if (!d) return;
+    const act = e.target.closest('[data-act]');
+    if (act && act.dataset.act === 'color') return;
+    if (act && act.dataset.act === 'del') return objTreeDelete(d);
+    if (act && act.dataset.act === 'hide') { d.hidden = !d.hidden; return redrawDrawingsOverlay(); }
+    if (act && act.dataset.act === 'lock') { d.locked = !d.locked; return redrawDrawingsOverlay(); }
+    if (state.selectedDrawing && state.selectedDrawing.id === d.id) closeDrawingEditor();
+    else selectDrawing(d);
+  });
+  box.addEventListener('input', e => {
+    if (e.target.dataset.act !== 'color') return;
+    const d = find(e.target); if (!d) return;
+    d.color = e.target.value;
+    redrawDrawingsOverlay();
+  });
+  box.addEventListener('dblclick', e => {
+    if (!e.target.classList.contains('ot-name')) return;
+    const d = find(e.target); if (!d) return;
+    const v = prompt('Rename object (empty = default name):', d.name || otName(d));
+    if (v === null) return;
+    d.name = v.trim() || undefined;
+    _otSig = ''; renderObjectTree(true);
+  });
+})();
+
 function selectDrawing(drawing) {
   state.selectedDrawing = drawing;
   redrawDrawingsOverlay();
