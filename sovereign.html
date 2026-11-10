@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SOVEREIGN 5 // EMPIRE ENGINE v4.0 // Complete Edition</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#020905;--panel:rgba(5,18,8,.82);--border:rgba(0,255,80,.25);--green:#00ff55;
+  --green-dark:#00aa33;--amber:#ffb300;--red:#ff3355;--blue:#00aaff;--purple:#aa55ff;
+  --text:#b8ffcc;--text-dim:#5aff8888;--font-mono:'Share Tech Mono',monospace;
+  --font-ui:'Rajdhani',sans-serif;--font-title:'Orbitron',sans-serif;
+  --glow:0 0 20px rgba(0,255,80,.15);--glow-hot:0 0 30px rgba(0,255,80,.4);
+}
+*{box-sizing:border-box;user-select:none;margin:0;padding:0}
+html,body{min-height:100vh;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:15px;position:relative}
+#matrix-canvas{position:fixed;inset:0;width:100%;height:100%;opacity:.04;pointer-events:none;z-index:0}
+.scanlines{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,80,.02) 2px,rgba(0,255,80,.02) 4px);pointer-events:none;z-index:1}
+.vignette{position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.7) 100%);pointer-events:none;z-index:1}
+.app-wrapper{position:relative;z-index:2;max-width:1250px;margin:0 auto;padding:16px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;backdrop-filter:blur(12px);box-shadow:var(--glow);transition:border-color .3s,box-shadow .3s}
+.panel:hover{border-color:var(--green-dark);box-shadow:var(--glow-hot)}
+.panel-hdr{font-family:var(--font-mono);font-size:.78rem;letter-spacing:2px;color:var(--green);text-transform:uppercase;padding:12px 16px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.panel-body{padding:14px 16px}
+button{font-family:var(--font-ui);font-weight:700;background:rgba(0,255,80,.08);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 14px;cursor:pointer;transition:all .18s;font-size:.9rem}
+button:hover{background:rgba(0,255,80,.18);border-color:var(--green);color:#fff;box-shadow:0 0 10px rgba(0,255,80,.3)}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.35;cursor:not-allowed}
+.btn-primary{background:var(--green);color:#000;font-weight:900;border-color:var(--green)}
+.btn-primary:hover{background:#00ff99;box-shadow:0 0 20px rgba(0,255,80,.6)}
+.btn-danger{background:rgba(255,51,85,.12);border-color:rgba(255,51,85,.4);color:var(--red)}
+.btn-amber{background:rgba(255,179,0,.1);border-color:rgba(255,179,0,.35);color:var(--amber)}
+.btn-blue{background:rgba(0,170,255,.1);border-color:rgba(0,170,255,.35);color:var(--blue)}
+select,input[type="text"],input[type="number"]{font-family:var(--font-mono);background:rgba(0,20,5,.9);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 12px;font-size:.85rem;width:100%}
+select:focus,input:focus{outline:none;border-color:var(--green)}
+input[type="range"]{-webkit-appearance:none;width:100%;height:4px;background:rgba(0,255,80,.2);border-radius:2px;outline:none;border:none;padding:0;cursor:pointer}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--green);border-radius:50%;cursor:pointer;box-shadow:0 0 6px var(--green)}
+input[type="checkbox"]{accent-color:var(--green);width:15px;height:15px;cursor:pointer}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.flex{display:flex;align-items:center;gap:8px}
+.flex-wrap{display:flex;flex-wrap:wrap;gap:8px}
+.flex-between{display:flex;justify-content:space-between;align-items:center}
+.game-header{display:flex;justify-content:space-between;align-items:center;padding:12px 0;margin-bottom:14px;border-bottom:1px solid var(--border)}
+.header-title{font-family:var(--font-title);font-size:1.1rem;letter-spacing:3px;color:var(--green)}
+.header-meta{font-family:var(--font-mono);font-size:.78rem;color:var(--text-dim)}
+.kpi-strip{display:flex;margin-bottom:14px;background:rgba(0,10,3,.6);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.kpi-cell{flex:1;padding:10px 14px;border-right:1px solid var(--border);font-family:var(--font-mono)}
+.kpi-cell:last-child{border-right:none}
+.kpi-label{font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
+.kpi-val{font-size:1.25rem;font-weight:900;font-family:var(--font-title);color:var(--green);line-height:1.1}
+.kpi-val.neg{color:var(--red)}.kpi-val.amber{color:var(--amber)}
+.kpi-delta{font-size:.7rem;color:var(--text-dim)}
+.tab-bar{display:flex;gap:4px;margin-bottom:14px;background:rgba(0,10,3,.5);border:1px solid var(--border);border-radius:8px;padding:4px;flex-wrap:wrap}
+.tab-btn{background:transparent;border:1px solid transparent;color:var(--text-dim);font-size:.8rem;border-radius:5px;padding:7px 12px;font-family:var(--font-mono)}
+.tab-btn:hover{background:rgba(0,255,80,.08);color:var(--text);border-color:var(--border)}
+.tab-btn.active{background:rgba(0,255,80,.15);color:var(--green);border-color:var(--green-dark)}
+.tab-content{display:none}.tab-content.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.bar-track{background:rgba(0,255,80,.06);border-radius:3px;height:6px;overflow:hidden;margin:4px 0;border:1px solid rgba(0,255,80,.1)}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s ease;background:linear-gradient(90deg,var(--green-dark),var(--green))}
+.bar-fill.amber{background:linear-gradient(90deg,#cc8800,var(--amber))}
+.bar-fill.red{background:linear-gradient(90deg,#aa0020,var(--red))}
+.bar-fill.blue{background:linear-gradient(90deg,#0055aa,var(--blue))}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(0,255,80,.06);font-size:.88rem}
+.stat-row:last-child{border-bottom:none}
+.stat-lbl{color:var(--text-dim);font-family:var(--font-mono);font-size:.8rem}
+.stat-val{font-weight:700;color:var(--text)}
+.pos{color:var(--green)!important}.neg{color:var(--red)!important}.amb{color:var(--amber)!important}
+.log-area{background:rgba(0,5,2,.9);border:1px solid var(--border);border-radius:8px;padding:12px;height:200px;overflow-y:auto;font-family:var(--font-mono);font-size:.78rem;margin-top:14px}
+.log-area::-webkit-scrollbar{width:4px}.log-area::-webkit-scrollbar-thumb{background:var(--green-dark);border-radius:2px}
+.log-line{padding:2px 0;border-bottom:1px solid rgba(0,255,80,.05)}
+.log-err{color:var(--red)}.log-warn{color:var(--amber)}.log-good{color:var(--green)}.log-info{color:var(--blue)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:9000;display:flex;align-items:center;justify-content:center}
+.modal-box{background:rgba(3,15,6,.98);border:1px solid var(--green);border-radius:16px;padding:28px;max-width:560px;width:92%;box-shadow:0 0 40px rgba(0,255,80,.2);max-height:85vh;overflow-y:auto}
+.modal-title{font-family:var(--font-title);font-size:1.2rem;color:var(--green);margin-bottom:12px}
+.modal-desc{font-size:.9rem;line-height:1.6;color:var(--text-dim);margin-bottom:18px}
+.modal-choices{display:flex;flex-direction:column;gap:8px}
+.modal-choice{background:rgba(0,255,80,.05);border:1px solid var(--border);border-radius:8px;padding:12px 16px;cursor:pointer;text-align:left;font-size:.9rem;color:var(--text);font-family:var(--font-ui)}
+.modal-choice:hover{background:rgba(0,255,80,.15);border-color:var(--green)}
+.modal-choice.danger{border-color:rgba(255,51,85,.4);color:var(--red)}
+.modal-choice.danger:hover{background:rgba(255,51,85,.15);border-color:var(--red)}
+#toast-container{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:rgba(3,20,8,.98);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-family:var(--font-mono);font-size:.8rem;min-width:240px;animation:slideIn .3s ease;display:flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.toast.success{border-color:var(--green);color:var(--green)}
+.toast.error{border-color:var(--red);color:var(--red)}
+.toast.warning{border-color:var(--amber);color:var(--amber)}
+.toast.info{border-color:var(--blue);color:var(--blue)}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+@keyframes slideOut{from{opacity:1}to{opacity:0;transform:translateX(20px)}}
+#setup-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.setup-title{font-family:var(--font-title);font-size:2.2rem;color:var(--green);letter-spacing:6px;text-shadow:0 0 30px rgba(0,255,80,.5);margin-bottom:4px;text-align:center}
+.setup-sub{font-family:var(--font-mono);color:var(--text-dim);font-size:.8rem;letter-spacing:3px;margin-bottom:28px;text-align:center}
+.setup-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:720px;width:100%}
+.setup-field label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:1px;color:var(--text-dim);display:block;margin-bottom:5px}
+.diff-btns{display:flex;gap:6px;flex-wrap:wrap}
+.diff-btn{flex:1;min-width:70px;font-size:.8rem;padding:7px;text-align:center}
+.diff-btn.sel{background:var(--green);color:#000}
+.res-tree{display:flex;flex-wrap:wrap;gap:8px}
+.res-node{background:rgba(0,255,80,.04);border:1px solid var(--border);border-radius:8px;padding:10px 12px;min-width:160px;cursor:pointer;transition:all .15s}
+.res-node:hover:not(.locked){background:rgba(0,255,80,.1);border-color:var(--green)}
+.res-node.unlocked{background:rgba(0,255,80,.12);border-color:var(--green)}
+.res-node.locked{opacity:.4;cursor:not-allowed}
+.res-name{font-weight:700;font-size:.85rem;color:var(--text)}
+.res-cost{font-family:var(--font-mono);font-size:.72rem;color:var(--amber)}
+.res-bonus{font-size:.72rem;color:var(--green)}
+.comp-card{background:rgba(0,10,3,.6);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.comp-name{font-weight:700;font-size:.9rem}
+.comp-bar-wrap{display:flex;align-items:center;gap:8px;font-size:.75rem}
+.mission-card{background:rgba(255,179,0,.04);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px;margin-bottom:8px}
+.mission-card.done{border-color:rgba(0,255,80,.4);background:rgba(0,255,80,.05)}
+.mission-title{font-weight:700;font-size:.88rem;color:var(--amber)}
+.mission-card.done .mission-title{color:var(--green)}
+.mission-reward{font-family:var(--font-mono);font-size:.75rem;color:var(--text-dim)}
+.supplier-card{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.2);border-radius:8px;padding:12px;cursor:pointer;transition:all .15s;margin-bottom:8px}
+.supplier-card:hover{border-color:var(--blue)}
+.supplier-card.selected{border-color:var(--blue);background:rgba(0,170,255,.1)}
+.stock-ticker{background:rgba(0,0,0,.5);border-bottom:1px solid var(--border);padding:6px 0;overflow:hidden;white-space:nowrap;font-family:var(--font-mono);font-size:.75rem}
+.ticker-inner{display:inline-block;animation:scroll 24s linear infinite}
+@keyframes scroll{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+.ach-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ach-badge{width:76px;height:80px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:1.5rem;border:1px solid var(--border);background:rgba(0,20,5,.8);position:relative;cursor:default;transition:all .15s;padding:4px}
+.ach-badge:hover .ach-tooltip{display:block}
+.ach-badge.earned{border-color:var(--green);box-shadow:0 0 12px rgba(0,255,80,.25)}
+.ach-badge.locked{opacity:.3;filter:grayscale(100%)}
+.ach-label{font-size:.55rem;font-family:var(--font-mono);color:var(--text-dim);text-align:center;margin-top:3px;line-height:1.1}
+.ach-tooltip{display:none;position:absolute;bottom:84px;left:50%;transform:translateX(-50%);background:rgba(0,10,3,.98);border:1px solid var(--green);border-radius:6px;padding:6px 10px;font-size:.72rem;white-space:nowrap;z-index:100;font-family:var(--font-mono);color:var(--text)}
+.emp-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.emp-table th{font-family:var(--font-mono);font-size:.68rem;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--border);text-align:left}
+.emp-table td{padding:5px 8px;border-bottom:1px solid rgba(0,255,80,.04)}
+.emp-table tr:hover td{background:rgba(0,255,80,.04)}
+canvas{border-radius:8px;background:rgba(0,5,2,.6);max-width:100%;height:auto!important}
+hr{border:none;border-top:1px solid var(--border);margin:10px 0}
+.text-green{color:var(--green)}.text-red{color:var(--red)}.text-amber{color:var(--amber)}
+.text-mono{font-family:var(--font-mono)}
+.badge{display:inline-block;font-family:var(--font-mono);font-size:.7rem;padding:2px 8px;border-radius:4px;background:rgba(0,255,80,.1);border:1px solid var(--border);color:var(--green)}
+.warn-badge{background:rgba(255,179,0,.12);border-color:rgba(255,179,0,.4);color:var(--amber)}
+.danger-badge{background:rgba(255,51,85,.12);border-color:rgba(255,51,85,.4);color:var(--red)}
+.ledger-table{width:100%;border-collapse:collapse;font-size:.82rem;font-family:var(--font-mono)}
+.ledger-table th{font-size:.68rem;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;padding:5px 8px;border-bottom:1px solid var(--border);text-align:right}
+.ledger-table th:first-child{text-align:left}
+.ledger-table td{padding:4px 8px;border-bottom:1px solid rgba(0,255,80,.05);text-align:right}
+.ledger-table td:first-child{text-align:left;color:var(--text-dim)}
+.ledger-table tr.total td{border-top:1px solid var(--green);font-weight:900;color:var(--green)}
+.ledger-table tr.section td{color:var(--green);font-weight:700;padding-top:10px;border-bottom:1px solid var(--border)}
+@media(max-width:900px){.grid-3,.grid-2,.setup-grid{grid-template-columns:1fr}.kpi-strip{flex-wrap:wrap}.kpi-cell{min-width:33%}.setup-title{font-size:1.5rem}}
+</style>
+</head>
+<body>
+<canvas id="matrix-canvas"></canvas>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+<div id="toast-container"></div>
+
+<!-- SETUP -->
+<div id="setup-screen">
+  <div class="setup-title">SOVEREIGN 5</div>
+  <div class="setup-sub">// EMPIRE ENGINE v4.0 // KOSOVO BUSINESS SIMULATOR //</div>
+  <div class="setup-grid panel" style="padding:22px;gap:18px;">
+    <div class="setup-field">
+      <label>▸ HEADQUARTERS CITY</label>
+      <select id="s-city">
+        <option value="Prishtina">🏙 Prishtina — Capital hub</option>
+        <option value="Prizren">🏔 Prizren — Tourism & culture</option>
+        <option value="Peja">🌿 Peja — Agriculture & nature</option>
+        <option value="Mitrovica">⚠ Mitrovica — High risk, high reward</option>
+        <option value="Gjilan">🚗 Gjilan — Transport advantage</option>
+        <option value="Ferizaj">🛤 Ferizaj — Logistics corridor</option>
+        <option value="Gjakova">🏘 Gjakova — Manufacturing base</option>
+        <option value="Podujeva">🌾 Podujeva — Agriculture & trade</option>
+      </select>
+    </div>
+    <div class="setup-field">
+      <label>▸ BUSINESS SECTOR</label>
+      <select id="s-sector">
+        <option value="Tech">💻 Technology</option>
+        <option value="Hospitality">🏨 Hospitality</option>
+        <option value="Manufacturing">🏭 Manufacturing</option>
+        <option value="Retail">🛒 Retail</option>
+        <option value="Agriculture">🌾 Agriculture</option>
+        <option value="Construction">🏗 Construction</option>
+        <option value="Logistics">🚚 Logistics</option>
+        <option value="Healthcare">⚕ Healthcare</option>
+      </select>
+    </div>
+    <div class="setup-field">
+      <label>▸ INITIAL STAFF</label>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><label>Youth</label><select id="s-youth"><option>2</option><option selected>4</option><option>6</option><option>8</option></select></div>
+        <div style="flex:1;"><label>Veterans</label><select id="s-vet"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
+        <div style="flex:1;"><label>Managers</label><select id="s-mgr"><option>0</option><option selected>1</option><option>2</option></select></div>
+      </div>
+    </div>
+    <div class="setup-field">
+      <label>▸ PROPERTY TIER</label>
+      <select id="s-tier">
+        <option value="1">Tier 1 — Rented garage (€0)</option>
+        <option value="2" selected>Tier 2 — Office suite (−€10,000)</option>
+        <option value="3">Tier 3 — Business center (−€25,000)</option>
+        <option value="4">Tier 4 — HQ tower (−€45,000)</option>
+      </select>
+    </div>
+    <div class="setup-field" style="grid-column:1/-1;">
+      <label>▸ DIFFICULTY</label>
+      <div class="diff-btns">
+        <button class="diff-btn" onclick="setDiff('easy')">EASY</button>
+        <button class="diff-btn sel" onclick="setDiff('normal')">NORMAL</button>
+        <button class="diff-btn" onclick="setDiff('hard')">HARD</button>
+        <button class="diff-btn" onclick="setDiff('realistic')">REALISTIC</button>
+      </div>
+    </div>
+    <div class="setup-field" style="grid-column:1/-1;">
+      <label>▸ GAME OPTIONS</label>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:.85rem;">
+        <label class="flex"><input type="checkbox" id="opt-events" checked> Random Events</label>
+        <label class="flex"><input type="checkbox" id="opt-competitors" checked> AI Competitors</label>
+        <label class="flex"><input type="checkbox" id="opt-inflation" checked> Inflation</label>
+        <label class="flex"><input type="checkbox" id="opt-taxes" checked> Tax System</label>
+        <label class="flex"><input type="checkbox" id="opt-selftest" checked> Run self-test on load</label>
+      </div>
+    </div>
+    <div style="grid-column:1/-1;display:flex;gap:10px;">
+      <button class="btn-primary" style="flex:2;font-size:1rem;padding:14px;" onclick="startGame()">▶ INITIALIZE EMPIRE</button>
+      <button onclick="loadGame()" style="flex:1;font-size:.85rem;"><i class="fas fa-upload"></i> LOAD SAVE</button>
+    </div>
+  </div>
+  <div style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-dim);margin-top:12px;text-align:center;">
+    Phase 1: Financial Engine v4.0 — 3 statements, amortized loans, split taxes, compounded inflation
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game-screen" style="display:none;" class="app-wrapper">
+  <div class="stock-ticker"><span class="ticker-inner" id="ticker-text">// ENGINE ONLINE //</span></div>
+  <div class="game-header">
+    <div>
+      <div class="header-title" id="h-company">EMPIRE CORP</div>
+      <div class="header-meta" id="h-meta">Q1 Y1 · —</div>
+    </div>
+    <div class="flex" style="gap:8px;flex-wrap:wrap;">
+      <span id="h-econ-badge" class="badge">EXPANSION</span>
+      <span id="h-overdraft-badge" class="badge warn-badge" style="display:none;">OVERDRAFT</span>
+      <button onclick="saveGame()" style="font-size:.8rem;padding:5px 10px;"><i class="fas fa-save"></i> Save</button>
+      <button onclick="loadGame()" style="font-size:.8rem;padding:5px 10px;"><i class="fas fa-upload"></i> Load</button>
+    </div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi-cell"><div class="kpi-label">CASH (€)</div><div class="kpi-val" id="k-cash">€0</div><div class="kpi-delta" id="k-cash-d">—</div></div>
+    <div class="kpi-cell"><div class="kpi-label">REVENUE/Q</div><div class="kpi-val" id="k-rev">€0</div><div class="kpi-delta" id="k-rev-d">—</div></div>
+    <div class="kpi-cell"><div class="kpi-label">NET PROFIT</div><div class="kpi-val" id="k-profit">€0</div><div class="kpi-delta" id="k-profit-d">—</div></div>
+    <div class="kpi-cell"><div class="kpi-label">EBITDA</div><div class="kpi-val" id="k-ebitda">€0</div><div class="kpi-delta" id="k-ebitda-d">—</div></div>
+    <div class="kpi-cell"><div class="kpi-label">STAFF</div><div class="kpi-val" id="k-staff">0</div><div class="kpi-delta" id="k-staff-d">—</div></div>
+    <div class="kpi-cell"><div class="kpi-label">MKT SHARE</div><div class="kpi-val" id="k-mkt">0%</div><div class="kpi-delta" id="k-mkt-d">—</div></div>
+    <div class="kpi-cell"><div class="kpi-label">EQUITY</div><div class="kpi-val" id="k-equity">€0</div><div class="kpi-delta" id="k-equity-d">—</div></div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('ops',event)"><i class="fas fa-cogs"></i> OPS</button>
+    <button class="tab-btn" onclick="switchTab('finance',event)"><i class="fas fa-file-invoice-dollar"></i> FINANCE</button>
+    <button class="tab-btn" onclick="switchTab('statements',event)"><i class="fas fa-scroll"></i> STATEMENTS</button>
+    <button class="tab-btn" onclick="switchTab('hr',event)"><i class="fas fa-users"></i> HR</button>
+    <button class="tab-btn" onclick="switchTab('research',event)"><i class="fas fa-flask"></i> R&D</button>
+    <button class="tab-btn" onclick="switchTab('market',event)"><i class="fas fa-globe"></i> MARKET</button>
+    <button class="tab-btn" onclick="switchTab('supply',event)"><i class="fas fa-boxes"></i> SUPPLY</button>
+    <button class="tab-btn" onclick="switchTab('missions',event)"><i class="fas fa-crosshairs"></i> MISSIONS</button>
+    <button class="tab-btn" onclick="switchTab('achievements',event)"><i class="fas fa-trophy"></i> ACHS</button>
+    <button class="tab-btn" onclick="switchTab('selftest',event)"><i class="fas fa-vial"></i> TESTS</button>
+  </div>
+
+  <!-- OPS -->
+  <div id="tab-ops" class="tab-content active">
+    <div class="grid-3">
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-chart-simple"></i> COMMAND CENTER</div>
+        <div class="panel-body">
+          <div class="setup-field" style="margin-bottom:10px;">
+            <label style="font-family:var(--font-mono);font-size:.7rem;letter-spacing:1px;color:var(--text-dim);">STRATEGY</label>
+            <select id="strategy">
+              <option value="standard">📌 Standard Operations</option>
+              <option value="blitz">⚡ Blitz Growth (+demand, −morale)</option>
+              <option value="austerity">📉 Austerity (−15% costs, −rep)</option>
+              <option value="quality">🏆 Quality First (+rating, −output)</option>
+              <option value="diaspora">🌍 Diaspora Push (summer ×1.8)</option>
+              <option value="lobbying">🏛 Lobbying (−€6k, −city risk)</option>
+              <option value="overtime">⏱ Weekend Shifts (+output, −morale)</option>
+              <option value="automation">🤖 Automation Mode</option>
+              <option value="research">🔬 Deep R&D</option>
+              <option value="export">✈ Export Drive</option>
+            </select>
+          </div>
+          <div class="flex-between" style="font-size:.8rem;margin-bottom:4px;"><span class="text-mono" style="color:var(--text-dim);">MARKETING</span><span class="text-mono" id="v-mkt">€2,000</span></div>
+          <input type="range" id="sl-mkt" min="0" max="30000" step="500" value="2000" oninput="sliderSync()">
+          <div class="flex-between" style="font-size:.8rem;margin:8px 0 4px;"><span class="text-mono" style="color:var(--text-dim);">R&D BUDGET</span><span class="text-mono" id="v-rd">€1,500</span></div>
+          <input type="range" id="sl-rd" min="0" max="25000" step="500" value="1500" oninput="sliderSync()">
+          <div class="flex-between" style="font-size:.8rem;margin:8px 0 4px;"><span class="text-mono" style="color:var(--text-dim);">CSR FUND</span><span class="text-mono" id="v-csr">€0</span></div>
+          <input type="range" id="sl-csr" min="0" max="12000" step="500" value="0" oninput="sliderSync()">
+          <div class="flex-between" style="font-size:.8rem;margin:8px 0 4px;"><span class="text-mono" style="color:var(--text-dim);">SUPPLY BUDGET</span><span class="text-mono" id="v-sup">€0</span></div>
+          <input type="range" id="sl-sup" min="0" max="20000" step="500" value="0" oninput="sliderSync()">
+          <hr>
+          <div style="font-family:var(--font-mono);font-size:.75rem;color:var(--text-dim);margin-bottom:8px;">PROJECTED SPEND: <span id="proj-cost" class="text-amber">€0</span></div>
+          <button class="btn-primary" style="width:100%;padding:13px;font-size:1rem;" onclick="runQuarter()" id="btn-quarter">▶ EXECUTE QUARTER</button>
+          <div class="flex-wrap" style="margin-top:8px;">
+            <button onclick="repairProp()" style="flex:1;font-size:.8rem;"><i class="fas fa-wrench"></i> Repair (€4k)</button>
+            <button onclick="upgradeProp()" style="flex:1;font-size:.8rem;" class="btn-amber"><i class="fas fa-arrow-up"></i> Upgrade (€18k)</button>
+          </div>
+          <div class="flex-wrap" style="margin-top:6px;">
+            <button onclick="takeLoan()" style="flex:1;font-size:.8rem;" class="btn-blue"><i class="fas fa-hand-holding-usd"></i> Loan (€20k)</button>
+            <button onclick="repayLoan()" style="flex:1;font-size:.8rem;"><i class="fas fa-money-bill"></i> Repay</button>
+          </div>
+          <div class="flex-wrap" style="margin-top:6px;">
+            <button onclick="takeOverdraft()" style="flex:1;font-size:.8rem;" class="btn-amber"><i class="fas fa-bolt"></i> Overdraft (€10k)</button>
+            <button onclick="clearOverdraft()" style="flex:1;font-size:.8rem;"><i class="fas fa-times"></i> Clear OD</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-users"></i> HUMAN CAPITAL</div>
+        <div class="panel-body">
+          <div id="staff-stats"></div>
+          <hr>
+          <div class="stat-row"><span class="stat-lbl">MORALE</span><span class="stat-val" id="v-morale">--</span></div>
+          <div class="bar-track"><div class="bar-fill" id="bar-morale" style="width:80%"></div></div>
+          <div class="stat-row"><span class="stat-lbl">TURNOVER</span><span class="stat-val" id="v-turnover">--</span></div>
+          <div class="stat-row"><span class="stat-lbl">WK/LIFE BALANCE</span><span class="stat-val" id="v-wlb">--</span></div>
+          <div class="bar-track"><div class="bar-fill amber" id="bar-wlb" style="width:75%"></div></div>
+          <hr>
+          <div class="flex-wrap">
+            <button onclick="hireStaff('youth')" style="flex:1;font-size:.75rem;"><i class="fas fa-user-plus"></i> Youth (€1.4k)</button>
+            <button onclick="hireStaff('veteran')" style="flex:1;font-size:.75rem;" class="btn-amber"><i class="fas fa-user-astronaut"></i> Vet (€2.9k)</button>
+            <button onclick="hireStaff('manager')" style="flex:1;font-size:.75rem;" class="btn-blue"><i class="fas fa-user-tie"></i> Mgr (€4.5k)</button>
+          </div>
+          <div class="flex-wrap" style="margin-top:6px;">
+            <button onclick="trainStaff()" style="flex:1;font-size:.75rem;"><i class="fas fa-chalkboard"></i> Train (€2k)</button>
+            <button onclick="teamBuild()" style="flex:1;font-size:.75rem;"><i class="fas fa-users-cog"></i> Team (€3k)</button>
+            <button onclick="wellnessProgram()" style="flex:1;font-size:.75rem;"><i class="fas fa-spa"></i> Wellness (€5k)</button>
+          </div>
+          <button onclick="fireStaff()" class="btn-danger" style="width:100%;margin-top:6px;font-size:.8rem;"><i class="fas fa-user-minus"></i> Fire 1 Employee</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-building"></i> FACILITIES & MARKET</div>
+        <div class="panel-body">
+          <div id="facility-stats"></div>
+          <hr>
+          <div class="stat-row"><span class="stat-lbl">MARKET SHARE</span><span class="stat-val" id="v-mktshare">0%</span></div>
+          <div class="bar-track"><div class="bar-fill blue" id="bar-mktshare" style="width:10%"></div></div>
+          <div class="stat-row"><span class="stat-lbl">PRODUCT QUALITY</span><span class="stat-val" id="v-quality">0</span></div>
+          <div class="bar-track"><div class="bar-fill" id="bar-quality" style="width:60%"></div></div>
+          <div class="stat-row"><span class="stat-lbl">CUSTOMER SAT.</span><span class="stat-val" id="v-custsat">0%</span></div>
+          <div class="bar-track"><div class="bar-fill amber" id="bar-custsat" style="width:65%"></div></div>
+          <div class="stat-row"><span class="stat-lbl">BRAND STRENGTH</span><span class="stat-val" id="v-brand">0</span></div>
+          <hr>
+          <canvas id="mini-chart" height="120"></canvas>
+          <div style="margin-top:8px;"><button onclick="openLocation()" style="width:100%;font-size:.8rem;" class="btn-blue"><i class="fas fa-plus"></i> Open New Location (€35k)</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINANCE -->
+  <div id="tab-finance" class="tab-content">
+    <div class="grid-3">
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-file-invoice-dollar"></i> P&L (LAST QUARTER)</div>
+        <div class="panel-body">
+          <table class="ledger-table" style="width:100%;">
+            <tr><td>Revenue</td><td id="fin-rev">€0</td></tr>
+            <tr><td>Cost of Goods Sold</td><td id="fin-cogs" class="neg">€0</td></tr>
+            <tr class="total"><td>Gross Profit</td><td id="fin-gross">€0</td></tr>
+            <tr><td>Operating Expenses</td><td id="fin-opex" class="neg">€0</td></tr>
+            <tr><td>&nbsp;&nbsp;• Salaries</td><td id="fin-sal" class="neg">€0</td></tr>
+            <tr><td>&nbsp;&nbsp;• Rent & Maint.</td><td id="fin-rent" class="neg">€0</td></tr>
+            <tr><td>&nbsp;&nbsp;• Marketing</td><td id="fin-mkt" class="neg">€0</td></tr>
+            <tr><td>&nbsp;&nbsp;• R&D</td><td id="fin-rd" class="neg">€0</td></tr>
+            <tr><td>&nbsp;&nbsp;• CSR</td><td id="fin-csr" class="neg">€0</td></tr>
+            <tr class="total"><td>EBITDA</td><td id="fin-ebitda">€0</td></tr>
+            <tr><td>Depreciation & Amort.</td><td id="fin-da" class="neg">€0</td></tr>
+            <tr class="total"><td>EBIT</td><td id="fin-ebit">€0</td></tr>
+            <tr><td>Interest Expense</td><td id="fin-int" class="neg">€0</td></tr>
+            <tr><td>Taxable Profit</td><td id="fin-taxable">€0</td></tr>
+            <tr><td>Corporate Tax</td><td id="fin-tax" class="neg">€0</td></tr>
+            <tr class="total"><td>Net Profit</td><td id="fin-net">€0</td></tr>
+          </table>
+          <hr>
+          <div class="stat-row"><span class="stat-lbl">Gross Margin</span><span id="fin-gm" class="stat-val">0%</span></div>
+          <div class="stat-row"><span class="stat-lbl">EBITDA Margin</span><span id="fin-ebitdam" class="stat-val">0%</span></div>
+          <div class="stat-row"><span class="stat-lbl">Net Margin</span><span id="fin-nm" class="stat-val">0%</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-chart-area"></i> TRENDS</div>
+        <div class="panel-body">
+          <canvas id="finance-chart" height="150"></canvas>
+          <hr style="margin:10px 0;">
+          <canvas id="profit-chart" height="110"></canvas>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-map-marked-alt"></i> LOCATIONS & RATES</div>
+        <div class="panel-body">
+          <div id="locations-list"></div>
+          <hr>
+          <div class="stat-row"><span class="stat-lbl">Corporate Tax</span><span id="fin-taxrate" class="stat-val">15%</span></div>
+          <div class="stat-row"><span class="stat-lbl">VAT</span><span id="fin-vat" class="stat-val">18%</span></div>
+          <div class="stat-row"><span class="stat-lbl">Payroll Contrib.</span><span id="fin-payroll" class="stat-val">15%</span></div>
+          <div class="stat-row"><span class="stat-lbl">Annual Inflation</span><span id="fin-inflation" class="stat-val">2.5%</span></div>
+          <div class="stat-row"><span class="stat-lbl">Loan (Principal)</span><span id="fin-loan" class="stat-val">€0</span></div>
+          <div class="stat-row"><span class="stat-lbl">Overdraft Drawn</span><span id="fin-od" class="stat-val">€0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATEMENTS -->
+  <div id="tab-statements" class="tab-content">
+    <div class="grid-3">
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-file-invoice"></i> INCOME STATEMENT</div>
+        <div class="panel-body">
+          <table class="ledger-table" style="width:100%;" id="stmt-is"></table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-balance-scale"></i> BALANCE SHEET</div>
+        <div class="panel-body">
+          <table class="ledger-table" style="width:100%;" id="stmt-bs"></table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-water"></i> CASH FLOW</div>
+        <div class="panel-body">
+          <table class="ledger-table" style="width:100%;" id="stmt-cf"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HR -->
+  <div id="tab-hr" class="tab-content">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-sitemap"></i> DEPARTMENTS</div>
+        <div class="panel-body">
+          <div id="dept-stats"></div>
+          <hr>
+          <div class="panel-hdr" style="border:none;padding:8px 0;"><i class="fas fa-user-graduate"></i> HIRE SPECIALISTS</div>
+          <div class="flex-wrap">
+            <button onclick="recruitSpec('engineer')" style="flex:1;font-size:.8rem;" class="btn-blue"><i class="fas fa-laptop-code"></i> Engineer (€5k)</button>
+            <button onclick="recruitSpec('analyst')" style="flex:1;font-size:.8rem;"><i class="fas fa-chart-bar"></i> Analyst (€4.5k)</button>
+            <button onclick="recruitSpec('director')" style="flex:1;font-size:.8rem;" class="btn-amber"><i class="fas fa-user-tie"></i> Director (€9k)</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-heart"></i> WORKFORCE HEALTH</div>
+        <div class="panel-body">
+          <canvas id="skill-chart" height="160"></canvas>
+          <div id="wellness-stats" style="margin-top:12px;"></div>
+        </div>
+      </div>
+      <div class="panel" style="grid-column:1/-1;">
+        <div class="panel-hdr"><i class="fas fa-id-badge"></i> EMPLOYEE ROSTER</div>
+        <div class="panel-body" style="overflow-x:auto;">
+          <table class="emp-table">
+            <thead><tr><th>NAME</th><th>TYPE</th><th>SKILL</th><th>TENURE</th><th>DEPT</th><th>MOOD</th></tr></thead>
+            <tbody id="emp-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESEARCH -->
+  <div id="tab-research" class="tab-content">
+    <div class="panel">
+      <div class="panel-hdr"><i class="fas fa-project-diagram"></i> TECHNOLOGY TREE</div>
+      <div class="panel-body">
+        <div class="flex-between" style="margin-bottom:12px;">
+          <div>
+            <span class="text-mono" style="color:var(--text-dim);">RESEARCH POINTS: </span>
+            <span id="v-rpts" class="text-amber text-mono">0</span>
+            &nbsp;&nbsp;
+            <span class="text-mono" style="color:var(--text-dim);">R&D LEVEL: </span>
+            <span id="v-rndlv" class="text-green text-mono">0</span>
+          </div>
+        </div>
+        <div id="research-tree" class="res-tree"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARKET -->
+  <div id="tab-market" class="tab-content">
+    <div class="grid-3">
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-chess"></i> COMPETITORS</div>
+        <div class="panel-body"><div id="comp-list"></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-chart-bar"></i> MARKET TRENDS</div>
+        <div class="panel-body">
+          <canvas id="market-chart" height="150"></canvas>
+          <hr style="margin:10px 0;">
+          <div id="market-indicators"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-newspaper"></i> MARKET INTEL</div>
+        <div class="panel-body">
+          <div id="market-news" style="font-size:.8rem;max-height:260px;overflow-y:auto;"></div>
+          <hr style="margin:10px 0;">
+          <div class="panel-hdr" style="border:none;padding:4px 0;"><i class="fas fa-globe"></i> EXPORT MARKETS</div>
+          <div id="export-markets"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUPPLY -->
+  <div id="tab-supply" class="tab-content">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-truck"></i> SUPPLIER SELECTION</div>
+        <div class="panel-body">
+          <div id="supplier-list"></div>
+          <hr style="margin:12px 0;">
+          <div class="stat-row"><span class="stat-lbl">ACTIVE SUPPLIER</span><span id="v-supplier" class="stat-val">None</span></div>
+          <div class="stat-row"><span class="stat-lbl">STOCK LEVEL</span><span id="v-stock" class="stat-val">0 units</span></div>
+          <div class="stat-row"><span class="stat-lbl">SUPPLY RELIABILITY</span><span id="v-suprel" class="stat-val">—</span></div>
+          <div class="stat-row"><span class="stat-lbl">QUALITY BONUS</span><span id="v-supqual" class="stat-val">—</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-warehouse"></i> INVENTORY CONTROL</div>
+        <div class="panel-body">
+          <canvas id="supply-chart" height="150"></canvas>
+          <div id="supply-events" style="margin-top:12px;font-size:.8rem;max-height:140px;overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MISSIONS -->
+  <div id="tab-missions" class="tab-content">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-crosshairs"></i> ACTIVE MISSIONS</div>
+        <div class="panel-body"><div id="active-missions"></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><i class="fas fa-check-double"></i> COMPLETED</div>
+        <div class="panel-body">
+          <div id="completed-missions" style="max-height:300px;overflow-y:auto;"></div>
+          <hr style="margin:10px 0;">
+          <div class="stat-row"><span class="stat-lbl">TOTAL COMPLETED</span><span id="v-mcount" class="stat-val text-green">0</span></div>
+          <div class="stat-row"><span class="stat-lbl">BONUS EARNED</span><span id="v-mearned" class="stat-val text-amber">€0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div id="tab-achievements" class="tab-content">
+    <div class="panel">
+      <div class="panel-hdr"><i class="fas fa-trophy"></i> ACHIEVEMENTS — <span id="ach-count">0</span> / <span id="ach-total">0</span></div>
+      <div class="panel-body"><div id="ach-grid" class="ach-grid"></div></div>
+    </div>
+  </div>
+
+  <!-- SELFTEST -->
+  <div id="tab-selftest" class="tab-content">
+    <div class="panel">
+      <div class="panel-hdr"><i class="fas fa-vial"></i> SELF-TEST RESULTS</div>
+      <div class="panel-body">
+        <div style="font-family:var(--font-mono);font-size:.8rem;line-height:1.6;" id="selftest-output"></div>
+        <hr>
+        <button onclick="runSelfTests()" class="btn-primary"><i class="fas fa-play"></i> Re-run Tests</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="log-area" id="log-area"><div class="log-line text-mono" style="color:var(--text-dim);">// SOVEREIGN 5 ENGINE READY //</div></div>
+</div>
+
+<!-- EVENT MODAL -->
+<div id="event-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div id="evt-icon" style="font-size:2.5rem;margin-bottom:10px;"></div>
+    <div class="modal-title" id="evt-title"></div>
+    <div class="modal-desc" id="evt-desc"></div>
+    <div class="modal-choices" id="evt-choices"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+// ══════════════════════════════════════════════════════════════════
+//  MATRIX BG
+// ══════════════════════════════════════════════════════════════════
+(function(){
+  const c=document.getElementById('matrix-canvas'),ctx=c.getContext('2d');
+  function resize(){c.width=innerWidth;c.height=innerHeight}
+  resize();addEventListener('resize',resize);
+  const chars='01アイウエオカキクケコABCDEFGHIJ€▲▼◆';const cols=Math.floor(innerWidth/16);const drops=Array(cols).fill(1);
+  setInterval(()=>{
+    ctx.fillStyle='rgba(0,5,2,0.05)';ctx.fillRect(0,0,c.width,c.height);
+    ctx.fillStyle='#00ff55';ctx.font='14px Share Tech Mono';
+    drops.forEach((y,i)=>{ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*16,y*16);if(y*16>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;});
+  },50);
+})();
+
+// ══════════════════════════════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const clamp=(v,mn,mx)=>Math.max(mn,Math.min(mx,v));
+const rnd=(a,b)=>Math.random()*(b-a)+a;
+const rndi=(a,b)=>Math.floor(rnd(a,b+1));
+function fmt(n){
+  if(n===undefined||n===null||isNaN(n))return '€0';
+  const abs=Math.abs(n),sign=n<0?'-':'';
+  if(abs>=1e6)return sign+'€'+(abs/1e6).toFixed(2)+'M';
+  if(abs>=1e3)return sign+'€'+(abs/1e3).toFixed(1)+'k';
+  return sign+'€'+Math.round(abs);
+}
+function fmtFull(n){
+  if(n===undefined||n===null||isNaN(n))return '€0';
+  const neg=n<0;return (neg?'-':'')+'€'+Math.round(Math.abs(n)).toLocaleString('en-US');
+}
+function pct(n){return (n*100).toFixed(1)+'%'}
+function pctInt(n){return Math.round(n)+'%'}
+function deltaStr(d){return (d>=0?'▲ +':'▼ ')+fmt(Math.abs(d))}
+
+// ══════════════════════════════════════════════════════════════════
+//  CENTRALIZED FORMULAS (per §22)
+// ══════════════════════════════════════════════════════════════════
+const FORMULAS = {
+  // Quarterly compounding: annual_rate → quarterly effective
+  quarterlyRate(annualRate){return Math.pow(1+annualRate,0.25)-1;},
+  // Annual inflation → quarterly effective
+  quarterlyInflation(annualInf){return Math.pow(1+annualInf,0.25)-1;},
+  // Amortized loan payment per quarter (PMT)
+  loanPayment(principal,annualRate,quarters){
+    if(principal<=0||quarters<=0)return 0;
+    const r=FORMULAS.quarterlyRate(annualRate);
+    if(r===0)return principal/quarters;
+    return principal*r/(1-Math.pow(1+r,-quarters));
+  },
+  // Remaining balance after n payments
+  loanBalance(principal,annualRate,quarters,paid){
+    if(principal<=0)return 0;
+    if(paid>=quarters)return 0;
+    const r=FORMULAS.quarterlyRate(annualRate);
+    const pmt=FORMULAS.loanPayment(principal,annualRate,quarters);
+    if(r===0)return principal-pmt*paid;
+    return principal*Math.pow(1+r,paid)-pmt*(Math.pow(1+r,paid)-1)/r;
+  },
+  // Straight-line depreciation per quarter
+  depreciation(assetValue,lifeQuarters){return assetValue/lifeQuarters;},
+  // Productivity (per §22)
+  productivity(skill,motivation,equipment,opEff){
+    return skill*(0.5+motivation/200)*equipment*opEff;
+  },
+  // Market share = company / total (guard div0)
+  marketShare(companySales,totalSales){
+    if(totalSales<=0)return 0;
+    return clamp(companySales/totalSales*100,0,100);
+  },
+  // Corporate tax on taxable profit (never on revenue)
+  corporateTax(taxableProfit,rate){
+    if(taxableProfit<=0)return 0;
+    return taxableProfit*rate;
+  },
+  // Business valuation: EBITDA multiple + assets - liabilities
+  valuation(ebitda,multiplier,assets,liabilities){
+    return Math.max(0,ebitda*multiplier+assets-liabilities);
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════
+//  SELF-TESTS (per §23 — runs on load, logs to console + tab)
+// ══════════════════════════════════════════════════════════════════
+const SELF_TEST_RESULTS=[];
+function assert(name,cond,detail=''){
+  SELF_TEST_RESULTS.push({name,pass:!!cond,detail});
+  if(!cond)console.error('[SELFTEST FAIL]',name,detail);
+  else console.log('[SELFTEST PASS]',name);
+}
+function runSelfTests(){
+  SELF_TEST_RESULTS.length=0;
+  // 1. Quarterly compounding: 9% annual → 4 payments should total 9%
+  const qr=FORMULAS.quarterlyRate(0.09);
+  assert('Quarterly rate compounding',Math.abs(Math.pow(1+qr,4)-1.09)<1e-9,'4 quarters = 1 annual');
+  // 2. Loan amortization: 20k @ 9% over 8 quarters
+  const pmt=FORMULAS.loanPayment(20000,0.09,8);
+  assert('Loan payment positive',pmt>0,'pmt='+pmt.toFixed(2));
+  assert('Loan payment > principal/quarters',pmt>20000/8-1,'amortized > straight');
+  // 3. Balance after all payments = 0
+  const bal=FORMULAS.loanBalance(20000,0.09,8,8);
+  assert('Loan fully paid after term',Math.abs(bal)<1e-6,'balance='+bal);
+  // 4. Balance after 0 payments = principal
+  assert('Loan balance at start = principal',Math.abs(FORMULAS.loanBalance(20000,0.09,8,0)-20000)<1e-6);
+  // 5. Inflation compounding
+  const qi=FORMULAS.quarterlyInflation(0.025);
+  assert('Quarterly inflation compounding',Math.abs(Math.pow(1+qi,4)-1.025)<1e-9);
+  // 6. Tax on negative = 0
+  assert('Corporate tax on loss = 0',FORMULAS.corporateTax(-5000,0.15)===0);
+  // 7. Tax on profit
+  assert('Corporate tax on profit',Math.abs(FORMULAS.corporateTax(10000,0.15)-1500)<1e-9);
+  // 8. Market share bounds
+  assert('Market share can be 50%',Math.abs(FORMULAS.marketShare(500,1000)-50)<1e-9);
+  assert('Market share guard div0',FORMULAS.marketShare(100,0)===0);
+  // 9. Valuation not negative
+  assert('Valuation floor zero',FORMULAS.valuation(1000,5,100,5000)===0);
+  // 10. Depreciation
+  assert('Straight-line dep',Math.abs(FORMULAS.depreciation(40000,16)-2500)<1e-9);
+  // 11. 3-statement consistency check (uses current sim if running)
+  if(sim.city){
+    const is=lastIncomeStatement();
+    const bs=lastBalanceSheet();
+    const cf=lastCashFlow();
+    // Accounting identity: Assets = Liabilities + Equity
+    if(bs.assets!==undefined){
+      const diff=Math.abs(bs.assets-(bs.liabilities+bs.equity));
+      assert('Balance sheet balances (A=L+E)',diff<1,'diff='+diff.toFixed(2));
+    }
+    // Cash flow reconciles to cash change
+    if(cf.netChange!==undefined && sim.cashHistory.length>=2){
+      const actual=sim.cashHistory[sim.cashHistory.length-1]-sim.cashHistory[sim.cashHistory.length-2];
+      const diff=Math.abs(actual-cf.netChange);
+      assert('Cash flow reconciles to cash change',diff<2,'diff='+diff.toFixed(2)+' cf='+cf.netChange+' actual='+actual);
+    }
+    // Net income flows to retained earnings
+    if(is.netProfit!==undefined){
+      assert('Net income is number',typeof is.netProfit==='number');
+    }
+  }
+  renderSelfTest();
+  return SELF_TEST_RESULTS;
+}
+function renderSelfTest(){
+  const el=$('selftest-output');if(!el)return;
+  const pass=SELF_TEST_RESULTS.filter(t=>t.pass).length;
+  const total=SELF_TEST_RESULTS.length;
+  el.innerHTML=`<div style="margin-bottom:10px;color:${pass===total?'var(--green)':'var(--amber)'};font-weight:700;">
+    ${pass===total?'✓ ALL PASS':'⚠ '+pass+' / '+total+' PASS'} — ${total} tests
+  </div>`+SELF_TEST_RESULTS.map(t=>`<div style="padding:3px 0;border-bottom:1px solid rgba(0,255,80,.06);">
+    <span style="color:${t.pass?'var(--green)':'var(--red)'};">${t.pass?'✓':'✗'}</span> ${t.name}
+    ${t.detail?`<span style="color:var(--text-dim);font-size:.72rem;"> (${t.detail})</span>`:''}
+  </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  GAME STATE (extended per Phase 1)
+// ══════════════════════════════════════════════════════════════════
+let sim = {
+  // Identity
+  city:'',sector:'',difficulty:'normal',soundEnabled:false,
+  // Time
+  quarter:1,year:1,
+  // ── FINANCIAL ENGINE (Phase 1) ──
+  cash:45000,
+  // Loan (amortized)
+  loanPrincipal:0,loanAnnualRate:0.09,loanQuarters:8,loanPaid:0,
+  // Overdraft (per §2C — explicit facility)
+  overdraftLimit:0,overdraftDrawn:0,overdraftAnnualRate:0.24,
+  // Tax rates (Kosovo reference)
+  taxRate:0.15,vatRate:0.18,payrollRate:0.15,
+  // Inflation (annual)
+  annualInflation:0.025,
+  // ── WORKING CAPITAL (Phase 1) ──
+  accountsReceivable:0,
+  accountsPayable:0,
+  inventoryUnits:0,
+  inventoryValue:0,
+  rawMaterials:0,
+  finishedGoods:0,
+  warehouseCapacity:200,
+  // ── FIXED ASSETS ──
+  propValue:0,propHealth:100,propTier:2,locations:[],
+  equipmentValue:0,equipmentLife:16,
+  accumulatedDepreciation:0,
+  // ── EQUITY ──
+  shareCapital:20000,
+  retainedEarnings:0,
+  investorEquity:0,
+  // ── FINANCIAL TOTALS ──
+  totalRevenue:0,totalProfit:0,
+  lastQ:{},
+  // ── STAFF ──
+  youth:4,vet:2,managers:1,
+  youthSkill:0.68,vetSkill:1.15,mgrSkill:1.7,
+  motivation:82,turnover:5,wlb:75,
+  specialists:[],employees:[],
+  // ── MARKET ──
+  marketShare:9,customerSatisfaction:62,quality:55,
+  reputation:48,brandStrength:30,
+  // ── SUPPLY ──
+  activeSupplier:'standard',stockLevel:0,supplyEvents:[],
+  // ── ECONOMY ──
+  econCycle:'expansion',econCycleStrength:0.5,
+  marketGrowthRate:0.032,globalDemandMod:1.0,
+  // ── COMPETITORS ──
+  competitors:[],
+  // ── RESEARCH ──
+  rndLevel:0,researchPoints:0,researchUnlocked:[],
+  marketingEffect:0.5,marketingEfficiency:1.0,
+  // ── DEPARTMENTS (per §2 — now wired) ──
+  departments:{development:0,marketing:0,operations:0,rd:0},
+  // ── MISSIONS ──
+  activeMissions:[],completedMissions:[],totalMissionBonus:0,
+  // ── ACHIEVEMENTS ──
+  achievements:[],
+  // ── HISTORY ──
+  cashHistory:[],revenueHistory:[],profitHistory:[],marketHistory:[],supplyHistory:[],
+  equityHistory:[],
+  // ── FLAGS ──
+  enableEvents:true,enableCompetitors:true,enableInflation:true,enableTaxes:true,tutorialMode:false,
+  eventPending:false,
+  // ── EXPORT ──
+  exportTier:0,exportRevenue:0,
+  // ── CITY ──
+  cityMod:{rentBase:5200,demandBase:28000,riskMod:0.07},
+  cityRisk:0.07,
+  autoSaveEnabled:true,
+  // ── DEPRECIATION TRACKING ──
+  qDepreciation:0,
+  // ── PENDING COST MODIFIERS (per §21A) ──
+  pendingCostMod:1.0,pendingCostModQuarters:0,
+};
+
+// ══════════════════════════════════════════════════════════════════
+//  DATA TABLES
+// ══════════════════════════════════════════════════════════════════
+const CITY_DATA = {
+  "Prishtina":  {rentBase:3500,demandBase:30000,riskMod:0.07,pop:200000,purchPower:1.15,avgSalary:620,desc:"Capital hub"},
+  "Prizren":    {rentBase:3000,demandBase:22000,riskMod:0.05,pop:110000,purchPower:0.95,avgSalary:540,desc:"Tourism & culture"},
+  "Peja":       {rentBase:2800,demandBase:19000,riskMod:0.09,pop:95000,purchPower:0.85,avgSalary:510,desc:"Agriculture & nature"},
+  "Mitrovica":  {rentBase:2500,demandBase:17000,riskMod:0.23,pop:80000,purchPower:0.78,avgSalary:470,desc:"High risk, high reward"},
+  "Gjilan":     {rentBase:2800,demandBase:20500,riskMod:0.10,pop:90000,purchPower:0.88,avgSalary:500,desc:"Transport corridor"},
+  "Ferizaj":    {rentBase:2200,demandBase:19500,riskMod:0.11,pop:105000,purchPower:0.82,avgSalary:480,desc:"Logistics gateway"},
+  "Gjakova":    {rentBase:2400,demandBase:18000,riskMod:0.10,pop:85000,purchPower:0.80,avgSalary:490,desc:"Manufacturing base"},
+  "Podujeva":   {rentBase:2000,demandBase:15000,riskMod:0.12,pop:70000,purchPower:0.75,avgSalary:450,desc:"Agriculture & trade"},
+};
+const SECTOR_DATA = {
+  "Tech":         {baseMargin:0.42,demandMod:1.2,staffCost:1.3,growthPot:1.5,cogsPct:0.30,opexPct:0.15},
+  "Hospitality":  {baseMargin:0.28,demandMod:1.0,staffCost:0.9,growthPot:1.2,cogsPct:0.45,opexPct:0.18},
+  "Manufacturing":{baseMargin:0.22,demandMod:0.9,staffCost:1.0,growthPot:1.0,cogsPct:0.55,opexPct:0.14},
+  "Retail":       {baseMargin:0.15,demandMod:1.1,staffCost:0.85,growthPot:0.9,cogsPct:0.65,opexPct:0.12},
+  "Agriculture":  {baseMargin:0.20,demandMod:0.8,staffCost:0.75,growthPot:1.1,cogsPct:0.50,opexPct:0.15},
+  "Construction": {baseMargin:0.32,demandMod:0.7,staffCost:1.1,growthPot:1.4,cogsPct:0.60,opexPct:0.13},
+  "Logistics":    {baseMargin:0.25,demandMod:0.95,staffCost:1.0,growthPot:1.2,cogsPct:0.52,opexPct:0.16},
+  "Healthcare":   {baseMargin:0.30,demandMod:0.85,staffCost:1.2,growthPot:1.3,cogsPct:0.40,opexPct:0.18},
+};
+
+// Research tree — 18 entries, all bonuses wired in executeQuarter
+const RESEARCH_TREE = [
+  {id:'auto1',name:'Basic Automation',cat:'automation',cost:15,req:[],bonus:'+10% capacity'},
+  {id:'auto2',name:'Smart Automation',cat:'automation',cost:30,req:['auto1'],bonus:'+22% capacity'},
+  {id:'auto3',name:'Full Robotics',cat:'automation',cost:55,req:['auto2'],bonus:'+35% capacity'},
+  {id:'qual1',name:'Quality Control',cat:'quality',cost:20,req:[],bonus:'+5 quality'},
+  {id:'qual2',name:'Six Sigma',cat:'quality',cost:38,req:['qual1'],bonus:'+12 quality'},
+  {id:'qual3',name:'ISO Certification',cat:'quality',cost:65,req:['qual2'],bonus:'+8 quality, +15 rep'},
+  {id:'mkt1',name:'Digital Marketing',cat:'marketing',cost:18,req:[],bonus:'+15% mkt eff'},
+  {id:'mkt2',name:'AI Campaigns',cat:'marketing',cost:35,req:['mkt1'],bonus:'+30% mkt eff'},
+  {id:'mkt3',name:'Brand Authority',cat:'marketing',cost:60,req:['mkt2'],bonus:'+45% mkt eff, +20 brand'},
+  {id:'hr1',name:'HR Analytics',cat:'hr',cost:22,req:[],bonus:'−2% turnover'},
+  {id:'hr2',name:'Talent Pipeline',cat:'hr',cost:45,req:['hr1'],bonus:'−15% hire cost'},
+  {id:'hr3',name:'Culture OS',cat:'hr',cost:70,req:['hr2'],bonus:'+10 morale, +10 WLB'},
+  {id:'fin1',name:'Financial Planning',cat:'finance',cost:25,req:[],bonus:'−1% loan rate'},
+  {id:'fin2',name:'Tax Optimization',cat:'finance',cost:50,req:['fin1'],bonus:'−3% tax rate'},
+  {id:'exp1',name:'Export License',cat:'export',cost:30,req:[],bonus:'Export EU access'},
+  {id:'exp2',name:'Global Network',cat:'export',cost:60,req:['exp1'],bonus:'Export Global access'},
+  {id:'inn1',name:'Innovation Lab',cat:'innovation',cost:35,req:[],bonus:'+20% R&D eff'},
+  {id:'inn2',name:'Patent Portfolio',cat:'innovation',cost:70,req:['inn1'],bonus:'+40% R&D eff'},
+];
+
+const ACHIEVEMENTS = [
+  {id:'first_profit',name:'First Profit',icon:'💰',desc:'Positive net profit'},
+  {id:'cash_100k',name:'Six Figures',icon:'💵',desc:'€100k cash'},
+  {id:'cash_500k',name:'Half Million',icon:'💎',desc:'€500k cash'},
+  {id:'millionaire',name:'Millionaire',icon:'👑',desc:'€1M cash'},
+  {id:'mkt_20',name:'Market Force',icon:'📈',desc:'20% share'},
+  {id:'mkt_40',name:'Dominator',icon:'🏆',desc:'40% share'},
+  {id:'staff_20',name:'Growing Team',icon:'🏢',desc:'20+ staff'},
+  {id:'staff_50',name:'Major Employer',icon:'🏭',desc:'50+ staff'},
+  {id:'research_5',name:'Innovator',icon:'🔬',desc:'5 research'},
+  {id:'research_all',name:'Tech Titan',icon:'🚀',desc:'All research'},
+  {id:'year_3',name:'Survivor',icon:'🛡',desc:'3 years'},
+  {id:'year_7',name:'Veteran',icon:'⚔',desc:'7 years'},
+  {id:'qual_90',name:'Quality King',icon:'⭐',desc:'Quality 90+'},
+  {id:'rep_90',name:'Beloved',icon:'❤',desc:'Rep 90+'},
+  {id:'locations_3',name:'Multi-Site',icon:'🗺',desc:'3+ locations'},
+  {id:'debt_free',name:'Debt Free',icon:'✅',desc:'Clear all debt'},
+  {id:'perfect_q',name:'Perfect Q',icon:'🎯',desc:'€50k+ profit'},
+  {id:'missions_5',name:'Mission Spec',icon:'🎖',desc:'5 missions'},
+  {id:'missions_15',name:'Mission Cmd',icon:'🌟',desc:'15 missions'},
+  {id:'export_pro',name:'Export Pro',icon:'✈',desc:'EU export'},
+];
+
+const SUPPLIERS = [
+  {id:'budget',name:'Local Bazaar',quality:0,reliability:0.70,costMod:-0.15,desc:'Cheap, inconsistent'},
+  {id:'standard',name:'Regional Co-op',quality:5,reliability:0.88,costMod:0,desc:'Balanced'},
+  {id:'premium',name:'EU Direct Import',quality:15,reliability:0.97,costMod:0.25,desc:'Premium inputs'},
+];
+
+const EXPORT_MARKETS = [
+  {id:'regional',name:'Regional Markets',rev:3000,req:null,desc:'AL, MK, RS'},
+  {id:'eu',name:'EU Markets',rev:8000,req:'exp1',desc:'DE, AT, SI'},
+  {id:'global',name:'Global Markets',rev:18000,req:'exp2',desc:'USA, UAE, ME'},
+];
+
+const ECON_CYCLES = ['recession','slowdown','expansion','boom'];
+
+// ══════════════════════════════════════════════════════════════════
+//  RANDOM EVENTS (8 base, all affordability-checked per §21)
+// ══════════════════════════════════════════════════════════════════
+const RANDOM_EVENTS = [
+  {id:'e_tax',icon:'🏛',title:'TAX AUDIT',desc:'Government inspectors want to audit your books.',
+    choices:[
+      {text:'Cooperate — transparent books',effect:g=>{g.reputation+=5;toast('Audit passed.','success')}},
+      {text:'Hire lawyers (€4,000)',cost:4000,effect:g=>{g.taxRate=Math.max(0.10,g.taxRate-0.02);toast('Legal fees paid. Tax rate reduced.','warning')}},
+      {text:'Ignore (risky)',effect:g=>{if(Math.random()<0.5){const fine=Math.min(g.cash+50,9000);g.cash-=fine;toast(`Fined ${fmt(fine)}!`,'error')}else{toast('Got away with it.','warning')}}},
+    ]},
+  {id:'e_talent',icon:'🌟',title:'TALENT POACHING',desc:'Competitor offers your best veteran 30% more.',
+    choices:[
+      {text:'Counter-offer €5,000',cost:5000,effect:g=>{g.vetSkill=Math.min(1.9,g.vetSkill+0.05);toast('Retained.','success')}},
+      {text:'Let them go, hire 2 youth',effect:g=>{if(g.vet>0){g.vet--;g.youth+=2;toast('Vet left, 2 youth hired.','warning')}}},
+      {text:'Deny request',effect:g=>{if(Math.random()<0.4){g.vet=Math.max(0,g.vet-1);g.motivation-=8;toast('Lost employee.','error')}else{g.motivation+=5;toast('Loyalty proven.','success')}}},
+    ]},
+  {id:'e_media',icon:'📰',title:'MEDIA SPOTLIGHT',desc:'Regional outlet wants to feature you.',
+    choices:[
+      {text:'Full interview',effect:g=>{g.reputation+=12;g.brandStrength+=8;toast('Viral coverage.','success')}},
+      {text:'Decline',effect:g=>{toast('Privacy maintained.','info')}},
+      {text:'PR agency €3,000',cost:3000,effect:g=>{g.reputation+=20;g.brandStrength+=15;toast('Max brand impact!','success')}},
+    ]},
+  {id:'e_fire',icon:'🔥',title:'FACILITY FIRE',desc:'Small fire in ops area.',
+    choices:[
+      {text:'Emergency team €8,000',cost:8000,effect:g=>{g.propHealth=Math.max(50,g.propHealth-15);toast('Contained.','warning')}},
+      {text:'Self-manage',effect:g=>{g.propHealth=Math.max(5,g.propHealth-30);g.motivation-=15;if(Math.random()<0.3){const d=Math.min(g.cash+50,5000);g.cash-=d;toast(`Severe damage ${fmt(d)}.`,'error')}else{toast('Contained.','warning')}}},
+    ]},
+  {id:'e_recession',icon:'📉',title:'ECONOMIC HEADWINDS',desc:'Regional slowdown hits demand.',
+    choices:[
+      {text:'Temporary austerity (−15% costs, 1Q)',effect:g=>{g.pendingCostMod=0.85;g.pendingCostModQuarters=1;g.reputation-=5;toast('Cost-cutting active 1Q.','warning')}},
+      {text:'Invest €10,000 in marketing',cost:10000,effect:g=>{g.marketingEffect+=0.15;toast('Counter-cyclical push.','info')}},
+      {text:'R&D push',effect:g=>{g.rndLevel+=3;g.researchPoints+=5;toast('R&D accelerated.','success')}},
+    ]},
+  {id:'e_diaspora',icon:'🌍',title:'DIASPORA INVESTOR',desc:'Swiss-Albanian investor offers €25k for 10% equity.',
+    choices:[
+      {text:'Accept €25,000 for 10%',effect:g=>{g.cash+=25000;g.investorEquity+=0.10;g.reputation+=8;toast('Investment received.','success')}},
+      {text:'Negotiate €30k for 8%',effect:g=>{if(Math.random()<0.5){g.cash+=30000;g.investorEquity+=0.08;toast('Deal: €30k for 8%.','success')}else{toast('Negotiation failed.','error')}}},
+      {text:'Decline',effect:g=>{g.reputation+=3;toast('Independence kept.','info')}},
+    ]},
+  {id:'e_cyber',icon:'💻',title:'CYBER ATTACK',desc:'Ransomware demands €5,000.',
+    choices:[
+      {text:'Pay ransom €5,000',cost:5000,effect:g=>{toast('Ransom paid.','warning')}},
+      {text:'Rebuild from backup €3,000',cost:3000,effect:g=>{g.rndLevel=Math.max(0,g.rndLevel-1);toast('Restored.','warning')}},
+      {text:'Report to authorities',effect:g=>{if(Math.random()<0.4){g.reputation+=10;toast('Resolved cleanly.','success')}else{const d=Math.min(g.cash+50,8000);g.cash-=d;toast(`Data breach ${fmt(d)}.`,'error')}}},
+    ]},
+  {id:'e_boom',icon:'🚀',title:'SECTOR BOOM',desc:'Industry growth surge.',
+    choices:[
+      {text:'Hire 3 youth (€4,200)',cost:4200,effect:g=>{g.youth+=3;toast('Team expanded.','success')}},
+      {text:'Quality drive',effect:g=>{g.quality=Math.min(100,g.quality+8);g.customerSatisfaction+=10;toast('Quality positioned.','success')}},
+      {text:'Infrastructure €12,000',cost:12000,effect:g=>{g.propHealth=Math.min(100,g.propHealth+20);g.propTier=Math.min(4,g.propTier+1);toast('Infrastructure upgraded!','success')}},
+    ]},
+];
+
+const MISSION_POOL = [
+  {id:'m_cash50',title:'Cash Reserve',desc:'€50k+ cash',check:g=>g.cash>=50000,reward:3000,rp:2},
+  {id:'m_profit30',title:'Profit Target',desc:'€30k net profit this quarter',check:g=>g.lastQ.profit>=30000,reward:5000,rp:3},
+  {id:'m_qual75',title:'Quality Drive',desc:'Quality 75+',check:g=>g.quality>=75,reward:2500,rp:4},
+  {id:'m_rep70',title:'Reputation Rise',desc:'Reputation 70+',check:g=>g.reputation>=70,reward:2000,rp:3},
+  {id:'m_staff15',title:'Workforce Growth',desc:'15+ employees',check:g=>totalStaff()>=15,reward:4000,rp:2},
+  {id:'m_mkt25',title:'Market Presence',desc:'25% market share',check:g=>g.marketShare>=25,reward:6000,rp:5},
+  {id:'m_research3',title:'R&D Sprint',desc:'3 research items',check:g=>g.researchUnlocked.length>=3,reward:3500,rp:6},
+  {id:'m_morale80',title:'Happy Team',desc:'Morale 80+',check:g=>g.motivation>=80,reward:2000,rp:2},
+  {id:'m_2locs',title:'Expand Territory',desc:'2+ total locations',check:g=>g.locations.length>=1,reward:5000,rp:4},
+  {id:'m_zeroloan',title:'Debt Clear',desc:'Zero loan balance',check:g=>g.loanPrincipal<=0,reward:4000,rp:3},
+  {id:'m_custsat80',title:'Delight Customers',desc:'Satisfaction 80%+',check:g=>g.customerSatisfaction>=80,reward:3000,rp:3},
+  {id:'m_export',title:'Go International',desc:'EU export unlocked',check:g=>g.researchUnlocked.includes('exp1'),reward:7000,rp:5},
+];
+
+// ══════════════════════════════════════════════════════════════════
+//  TOAST / LOG / SFX
+// ══════════════════════════════════════════════════════════════════
+function toast(msg,type='info'){
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  const icon={success:'✓',error:'✗',warning:'⚠',info:'ℹ'}[type]||'•';
+  el.innerHTML=`<span>${icon}</span><span>${msg}</span>`;
+  $('toast-container').appendChild(el);
+  setTimeout(()=>{el.style.animation='slideOut .3s ease forwards';setTimeout(()=>el.remove(),300)},3200);
+}
+function logMsg(msg,cls=''){
+  const area=$('log-area');if(!area)return;
+  const d=document.createElement('div');
+  d.className=`log-line text-mono ${cls?'log-'+cls:''}`;
+  d.textContent=`[Q${sim.quarter}Y${sim.year}] ${msg}`;
+  area.appendChild(d);area.scrollTop=area.scrollHeight;
+  while(area.children.length>200)area.removeChild(area.firstChild);
+}
+function sliderSync(){
+  if(!$('v-mkt'))return;
+  $('v-mkt').textContent=fmt(+$('sl-mkt').value);
+  $('v-rd').textContent=fmt(+$('sl-rd').value);
+  $('v-csr').textContent=fmt(+$('sl-csr').value);
+  $('v-sup').textContent=fmt(+$('sl-sup').value);
+  const total=+$('sl-mkt').value+ +$('sl-rd').value+ +$('sl-csr').value+ +$('sl-sup').value;
+  $('proj-cost').textContent=fmt(total);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  CORE CALCULATIONS (centralized per §22)
+// ══════════════════════════════════════════════════════════════════
+function totalStaff(){return sim.youth+sim.vet+sim.managers+sim.specialists.length;}
+
+function getTotalCapacity(){
+  let base=(sim.youth*sim.youthSkill+sim.vet*sim.vetSkill+sim.managers*sim.mgrSkill)*2000;
+  base+=sim.specialists.reduce((a,s)=>a+s.skill*2500,0);
+  if(sim.researchUnlocked.includes('auto1'))base*=1.10;
+  if(sim.researchUnlocked.includes('auto2'))base*=1.22;
+  if(sim.researchUnlocked.includes('auto3'))base*=1.35;
+  base*=[0.7,1.0,1.3,1.6][sim.propTier-1]||1;
+  base*=sim.propHealth/100;
+  base*=(0.8+sim.wlb/250); // WLB contributes to capacity
+  base*=(0.7+sim.motivation/200); // motivation contributes
+  sim.locations.forEach(l=>{base+=l.capacity;});
+  return Math.round(base);
+}
+function getCurrentDemand(){
+  let base=sim.cityMod.demandBase*(SECTOR_DATA[sim.sector]?.demandMod||1);
+  base*=(1+sim.marketingEffect*0.6);
+  base*=(1+(sim.brandStrength-30)/200);
+  base*=sim.globalDemandMod;
+  const q=sim.quarter%4;
+  if(sim.sector==='Hospitality'&&(q===2||q===3))base*=1.55;
+  if(sim.sector==='Agriculture'&&q===2)base*=1.3;
+  if(sim.sector==='Construction'&&q===1)base*=0.75;
+  return Math.round(base);
+}
+function getOpCosts(){
+  const rentBase=sim.cityMod.rentBase*[0.6,1,1.4,1.9][sim.propTier-1];
+  const baseSalaries=sim.youth*1000+sim.vet*1600+sim.managers*2000;
+  const specSal=sim.specialists.reduce((a,s)=>a+s.salary,0);
+  const maint=800+sim.propTier*400;
+  const quarterlyInf=sim.enableInflation?FORMULAS.quarterlyInflation(sim.annualInflation):0;
+  const inflFactor=Math.pow(1+quarterlyInf,sim.quarter); // cumulative inflation since Q1
+  let salaries=(baseSalaries+specSal)*(SECTOR_DATA[sim.sector]?.staffCost||1)*inflFactor;
+  salaries*=1+sim.payrollRate; // payroll contributions per §2E
+  let total=rentBase*inflFactor+salaries+maint*inflFactor;
+  // Location rents
+  sim.locations.forEach(l=>{total+=l.rent;});
+  // Depreciation (straight-line, already accumulated per quarter)
+  const dep=FORMULAS.depreciation(sim.propValue+sim.equipmentValue,sim.equipmentLife);
+  sim.qDepreciation=dep;
+  return{total:Math.round(total),salaries:Math.round(salaries),rent:Math.round(rentBase*inflFactor),maint:Math.round(maint*inflFactor),dep:Math.round(dep),interest:0};
+}
+function calcTaxes(taxableProfit){
+  if(!sim.enableTaxes||taxableProfit<=0)return 0;
+  let rate=sim.taxRate;
+  if(sim.researchUnlocked.includes('fin2'))rate=Math.max(0.09,rate-0.03);
+  return FORMULAS.corporateTax(taxableProfit,rate);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  QUARTER ENGINE
+// ══════════════════════════════════════════════════════════════════
+function runQuarter(){
+  if(sim.eventPending){toast('Resolve event first.','error');return;}
+  if(sim.enableEvents&&Math.random()<0.30&&sim.quarter>1){
+    const evt=RANDOM_EVENTS[Math.floor(Math.random()*RANDOM_EVENTS.length)];
+    showEventModal(evt,executeQuarter);
+  }else executeQuarter();
+}
+function executeQuarter(){
+  const strat=$('strategy').value;
+  let mktSpend=+$('sl-mkt').value;
+  let rdSpend=+$('sl-rd').value;
+  let csrSpend=+$('sl-csr').value;
+  let supSpend=+$('sl-sup').value;
+  const totalSpend=mktSpend+rdSpend+csrSpend+supSpend;
+  if(totalSpend>sim.cash+sim.overdraftLimit-sim.overdraftDrawn){
+    toast('Insufficient cash (and overdraft) for this budget.','error');return;
+  }
+  // Draw from cash first, then overdraft
+  if(totalSpend<=sim.cash){sim.cash-=totalSpend;}
+  else{const od=totalSpend-sim.cash;sim.cash=0;sim.overdraftDrawn=Math.min(sim.overdraftLimit,sim.overdraftDrawn+od);}
+
+  // ── SUPPLY ──
+  const sup=SUPPLIERS.find(s=>s.id===sim.activeSupplier);
+  let supQualBonus=sup?sup.quality:0,supReliability=sup?sup.reliability:0.5;
+  if(supSpend>0){sim.stockLevel=Math.min(sim.warehouseCapacity,sim.stockLevel+Math.floor(supSpend/500));}
+  const stockUsed=Math.min(sim.stockLevel,50);sim.stockLevel-=stockUsed;
+  if(Math.random()>supReliability){const short=rndi(3,12);sim.stockLevel=Math.max(0,sim.stockLevel-short);logMsg(`Supply disruption: −${short} units`,'warn')}
+  sim.supplyHistory.push(sim.stockLevel);if(sim.supplyHistory.length>20)sim.supplyHistory.shift();
+
+  // Phase 2: procure raw inputs and convert them into sellable finished goods.
+  const productionRecipes={Tech:.4,Hospitality:.7,Manufacturing:1,Retail:.9,Agriculture:.8,Construction:1.2,Logistics:.5,Healthcare:.6};
+  const rawPerUnit=productionRecipes[sim.sector]||1;
+  const rawUnitCost=40*(sim.supplierContract?.priceMod||1);
+  const rawOrdered=Math.floor(supSpend/rawUnitCost);
+  const rawDelivered=Math.random()<supReliability?rawOrdered:Math.floor(rawOrdered*(1-supReliability)*.5);
+  sim.rawMaterials=Math.min(sim.warehouseCapacity,(sim.rawMaterials||0)+rawDelivered);
+  const productionCapacity=getTotalCapacity()*.6;
+  const produced=Math.floor(Math.min(sim.rawMaterials/rawPerUnit,productionCapacity));
+  sim.rawMaterials=Math.max(0,sim.rawMaterials-produced*rawPerUnit);
+  sim.finishedGoods=Math.min(sim.warehouseCapacity,(sim.finishedGoods||0)+produced);
+  let effectiveSpoilage=sim.spoilageRate||.02;
+  if(sim.researchUnlocked.includes('qual6'))effectiveSpoilage*=.7;
+  if(sim.researchUnlocked.includes('log4'))effectiveSpoilage*=.5;
+  if(sim.researchUnlocked.includes('sus2'))effectiveSpoilage*=.8;
+  const spoiled=Math.floor(sim.finishedGoods*effectiveSpoilage);
+  sim.finishedGoods=Math.max(0,sim.finishedGoods-spoiled);
+  if(spoiled)logMsg(`Spoilage: ${spoiled} finished units lost.`,'warn');
+
+  // ── R&D ──
+  if(rdSpend>0){
+    let eff=1;if(sim.researchUnlocked.includes('inn1'))eff*=1.2;if(sim.researchUnlocked.includes('inn2'))eff*=1.4;
+    sim.rndLevel=clamp(sim.rndLevel+(rdSpend/1200)*eff,0,80);
+    sim.researchPoints+=Math.floor((rdSpend/1000)*eff);
+  }
+  if(strat==='research'){sim.rndLevel+=2.5;sim.researchPoints+=4;}
+
+  // ── CSR ──
+  if(csrSpend>0){sim.reputation=clamp(sim.reputation+csrSpend/2000,0,100);sim.motivation=clamp(sim.motivation+csrSpend/3500,0,100);}
+
+  // ── MARKETING ──
+  let mktEff=sim.marketingEfficiency||1;
+  if(sim.researchUnlocked.includes('mkt1'))mktEff*=1.15;
+  if(sim.researchUnlocked.includes('mkt2'))mktEff*=1.30;
+  if(sim.researchUnlocked.includes('mkt3'))mktEff*=1.45;
+  sim.marketingEffect=clamp((mktSpend/12000)*0.7*mktEff+0.3,0.3,1.8);
+
+  // ── CAPACITY & DEMAND ──
+  let cap=getTotalCapacity();
+  let dem=getCurrentDemand();
+  if(strat==='blitz')dem*=1.45;
+  if(strat==='quality'){dem*=0.82;cap*=0.92;}
+  if(strat==='overtime'){cap*=1.25;sim.motivation-=12;sim.wlb=clamp(sim.wlb-10,20,100);}
+  if(strat==='diaspora'&&(sim.quarter%4===2||sim.quarter%4===3))dem*=1.8;
+
+  // ── REVENUE ──
+  const sector=SECTOR_DATA[sim.sector]||{baseMargin:0.3,cogsPct:0.5,demandMod:1};
+  const qualMod=1+(sim.quality+supQualBonus-50)/200;
+  const stockMod=1+stockUsed*0.005;
+  const unitsSold=Math.min(cap,dem,sim.finishedGoods);
+  sim.finishedGoods=Math.max(0,sim.finishedGoods-unitsSold);
+  sim.stockLevel=sim.finishedGoods;
+  const unitPrice=1.0+sim.marketingEffect*0.2; // price premium from marketing
+  let revenue=unitsSold*(0.9+sector.baseMargin)*qualMod*stockMod*unitPrice;
+  // Export (demand-based per §13 / §21H)
+  if(strat==='export'&&sim.exportTier>0){
+    const exportCap=Math.min(unitsSold*0.2,sim.exportTier*500);
+    sim.exportRevenue=exportCap*50;
+    revenue+=sim.exportRevenue;
+  }else sim.exportRevenue=0;
+
+  // ── COGS ── (per §2B — explicit, not muddled)
+  const cogsPct=sector.cogsPct||0.5;
+  const cogs=revenue*cogsPct;
+  const grossProfit=revenue-cogs;
+
+  // ── OPEX ──
+  const costs=getOpCosts();
+  let opex=costs.salaries+costs.rent+costs.maint;
+  if(strat==='austerity'){opex*=0.85;sim.reputation-=4;}
+  if(strat==='lobbying'&&sim.cash>=6000){sim.cash-=6000;sim.cityRisk=Math.max(0.03,sim.cityRisk-0.05);}
+  // Apply pending cost modifier (austerity event — per §21A)
+  if(sim.pendingCostModQuarters>0){
+    opex*=sim.pendingCostMod;
+    sim.pendingCostModQuarters--;
+    if(sim.pendingCostModQuarters===0)sim.pendingCostMod=1.0;
+  }
+
+  // ── DEPRECIATION ──
+  const dep=costs.dep;
+  sim.accumulatedDepreciation+=dep;
+
+  // ── INTEREST ──
+  // Loan (amortized)
+  let loanInterest=0;
+  let loanPrincipalPaid=0;
+  if(sim.loanPrincipal>0){
+    const qRate=FORMULAS.quarterlyRate(sim.loanAnnualRate);
+    const pmt=FORMULAS.loanPayment(sim.loanPrincipal,sim.loanAnnualRate,sim.loanQuarters);
+    const remaining=FORMULAS.loanBalance(sim.loanPrincipal,sim.loanAnnualRate,sim.loanQuarters,sim.loanPaid);
+    loanInterest=remaining*qRate;
+    loanPrincipalPaid=Math.min(pmt-loanInterest,remaining);
+    sim.loanPaid++;
+    if(sim.loanPaid>=sim.loanQuarters){sim.loanPrincipal=0;sim.loanPaid=0;logMsg('Loan fully repaid!','good');toast('Loan paid off!','success')}
+  }
+  // Overdraft interest
+  let odInterest=0;
+  if(sim.overdraftDrawn>0){
+    odInterest=sim.overdraftDrawn*FORMULAS.quarterlyRate(sim.overdraftAnnualRate);
+    sim.overdraftDrawn+=odInterest;
+  }
+  const totalInterest=loanInterest+odInterest;
+
+  // ── EBITDA / EBIT / TAXABLE / NET (per §2B) ──
+  const ebitda=grossProfit-opex;
+  const ebit=ebitda-dep;
+  const taxable=ebit-totalInterest;
+  const taxes=calcTaxes(taxable);
+  const netProfit=taxable-taxes;
+
+  // ── CASH MOVEMENT ──
+  sim.cash+=netProfit;
+  if(sim.loanPrincipal>0){sim.cash-=loanPrincipalPaid;}
+  if(sim.cash<0&&sim.overdraftLimit>0){
+    sim.overdraftDrawn=Math.min(sim.overdraftLimit,sim.overdraftDrawn+Math.abs(sim.cash));
+    sim.cash=0;
+  }
+  if(sim.cash<0&&sim.overdraftLimit===0){
+    if(typeof showBankruptcyModal==='function'){showBankruptcyModal();return;}
+    logMsg('BANKRUPTCY — negative cash with no overdraft','err');
+    toast('BANKRUPTCY! Game over.','error');
+    $('btn-quarter').disabled=true;
+    return;
+  }
+
+  // ── WORKING CAPITAL (simplified: AR=30% of revenue, AP=20% of cogs) ──
+  sim.accountsReceivable=revenue*0.30;
+  sim.accountsPayable=cogs*0.20;
+
+  // ── INVENTORY VALUATION ──
+  sim.inventoryUnits=sim.stockLevel;
+  sim.inventoryValue=sim.stockLevel*50;
+
+  // ── EQUITY / RETAINED EARNINGS ──
+  sim.retainedEarnings+=netProfit;
+
+  // ── MORALE / WLB / TURNOVER ──
+  let motShift=strat==='blitz'?-10:strat==='overtime'?-8:2;
+  if(netProfit>20000)motShift+=6;if(netProfit<-5000)motShift-=10;
+  sim.motivation=clamp(sim.motivation+motShift,15,100);
+  sim.wlb=clamp(sim.wlb+(strat==='overtime'?-8:2),20,100);
+  sim.turnover=clamp(10-(sim.motivation-70)/5,2,30);
+  if(sim.researchUnlocked.includes('hr1'))sim.turnover=Math.max(2,sim.turnover-2);
+
+  // ── TURNOVER EVENT ──
+  if(Math.random()<sim.turnover/100&&sim.youth>0){sim.youth--;logMsg('Employee resigned.','warn')}
+
+  // ── SKILL GROWTH ──
+  if(Math.random()<0.10&&sim.youth>0)sim.youthSkill=clamp(sim.youthSkill+0.02,0,1.5);
+  if(Math.random()<0.09&&sim.vet>0)sim.vetSkill=clamp(sim.vetSkill+0.015,0,2.0);
+  if(Math.random()<0.07&&sim.managers>0)sim.mgrSkill=clamp(sim.mgrSkill+0.01,0,2.5);
+
+  // ── QUALITY / REP / BRAND ──
+  sim.quality=clamp(sim.quality+rdSpend/4000+supQualBonus*0.1+(strat==='blitz'?-1.5:0)+rnd(-0.5,1.5),20,100);
+  sim.reputation=clamp(sim.reputation+netProfit/10000+sim.quality/90+csrSpend/3000,5,100);
+  sim.customerSatisfaction=clamp(sim.customerSatisfaction+(sim.quality-65)/12+(netProfit>10000?3:-2),25,100);
+  sim.brandStrength=clamp(sim.brandStrength+(mktSpend/8000)+(sim.reputation>70?0.5:0)-(sim.reputation<40?1:0),0,100);
+
+  // ── MARKET SHARE (formula-based per §22) ──
+  if(sim.enableCompetitors)updateCompetitors();
+  const totalMarketSales=unitsSold*(1+sim.competitors.filter(c=>c.alive).reduce((a,c)=>a+c.share/100,0.1));
+  const newShare=FORMULAS.marketShare(unitsSold,totalMarketSales);
+  sim.marketShare=clamp(sim.marketShare*0.8+newShare*0.2,1,80);
+
+  // ── TIME ──
+  sim.quarter++;if(sim.quarter%4===1)sim.year++;
+
+  // ── HISTORY ──
+  sim.cashHistory.push(Math.round(sim.cash));
+  sim.revenueHistory.push(Math.round(revenue));
+  sim.profitHistory.push(Math.round(netProfit));
+  sim.marketHistory.push(parseFloat(sim.marketShare.toFixed(1)));
+  const equity=calcEquity();
+  sim.equityHistory.push(Math.round(equity));
+  [sim.cashHistory,sim.revenueHistory,sim.profitHistory,sim.marketHistory,sim.equityHistory].forEach(a=>{if(a.length>24)a.shift();});
+
+  sim.totalRevenue+=revenue;sim.totalProfit+=netProfit;
+  sim.lastQ={revenue:Math.round(revenue),cogs:Math.round(cogs),grossProfit:Math.round(grossProfit),
+    opex:Math.round(opex),salaries:Math.round(costs.salaries),rent:Math.round(costs.rent),
+    mkt:mktSpend,rd:rdSpend,csr:csrSpend,sup:supSpend,
+    ebitda:Math.round(ebitda),dep:Math.round(dep),ebit:Math.round(ebit),
+    interest:Math.round(totalInterest),taxable:Math.round(taxable),
+    taxes:Math.round(taxes),profit:Math.round(netProfit)};
+
+  // ── MISSIONS / ACHIEVEMENTS ──
+  checkMissions();checkAchievements();
+  if(sim.quarter%3===1)refreshMissions();
+
+  updateUI();updateCharts();
+  logMsg(`Q${sim.quarter-1}Y${sim.year} → Rev:${fmt(revenue)} | Gross:${fmt(grossProfit)} | EBITDA:${fmt(ebitda)} | Net:${fmt(netProfit)}`,netProfit>=0?'good':'err');
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  COMPETITORS
+// ══════════════════════════════════════════════════════════════════
+function initCompetitors(){
+  const names=[['Apex','Dynamics'],['Nova','Solutions'],['Klan','Ventures'],['Breza','Group']];
+  sim.competitors=names.map(([a,b],i)=>({
+    name:`${a} ${b}`,strategy:['aggressive','quality','cost','balanced'][i],
+    share:rnd(8,22),quality:rnd(40,70),rep:rnd(40,75),cash:rnd(40000,120000),alive:true,age:0
+  }));
+}
+function updateCompetitors(){
+  sim.competitors.forEach(c=>{
+    if(!c.alive)return;
+    c.age++;
+    const g={aggressive:rnd(0.3,1.5),quality:rnd(-0.2,0.8),cost:rnd(0.1,1.0),balanced:rnd(0,1.2)}[c.strategy];
+    c.share=clamp(c.share+g-rnd(0,0.5)*sim.marketShare/30,1,50);
+    c.quality=clamp(c.quality+rnd(-1,1.5),20,95);
+    c.cash+=rnd(-8000,20000);
+    if(c.cash<-30000){c.alive=false;c.share=0;logMsg(`${c.name} bankrupt!`,'good')}
+  });
+  const totalComp=sim.competitors.filter(c=>c.alive).reduce((a,c)=>a+c.share,0);
+  const available=100-sim.marketShare;
+  if(totalComp>available&&totalComp>0){const scale=available/totalComp;sim.competitors.forEach(c=>{if(c.alive)c.share*=scale});}
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  FINANCIAL STATEMENTS (§2A — 3 linked statements)
+// ══════════════════════════════════════════════════════════════════
+function calcEquity(){
+  const assets=sim.cash+sim.accountsReceivable+sim.inventoryValue+sim.propValue+sim.equipmentValue-sim.accumulatedDepreciation;
+  const liabilities=sim.loanPrincipal+sim.overdraftDrawn+sim.accountsPayable;
+  return assets-liabilities;
+}
+function lastIncomeStatement(){
+  const q=sim.lastQ;
+  return{
+    revenue:q.revenue||0,cogs:q.cogs||0,grossProfit:q.grossProfit||0,
+    opex:q.opex||0,ebitda:q.ebitda||0,dep:q.dep||0,ebit:q.ebit||0,
+    interest:q.interest||0,taxable:q.taxable||0,taxes:q.taxes||0,netProfit:q.profit||0
+  };
+}
+function lastBalanceSheet(){
+  const assets=sim.cash+sim.accountsReceivable+sim.inventoryValue+sim.propValue+sim.equipmentValue-sim.accumulatedDepreciation;
+  const liabilities=sim.loanPrincipal+sim.overdraftDrawn+sim.accountsPayable;
+  const equity=sim.shareCapital+sim.retainedEarnings;
+  return{assets,liabilities,equity,cash:sim.cash,ar:sim.accountsReceivable,inv:sim.inventoryValue,
+    fixedAssets:sim.propValue+sim.equipmentValue-sim.accumulatedDepreciation,
+    loan:sim.loanPrincipal,od:sim.overdraftDrawn,ap:sim.accountsPayable,
+    shareCapital:sim.shareCapital,retainedEarnings:sim.retainedEarnings,
+    investorEquity:sim.investorEquity};
+}
+function lastCashFlow(){
+  const q=sim.lastQ;
+  const netIncome=q.profit||0;
+  const dep=q.dep||0;
+  const wcChange=(sim.accountsReceivable||0)+(sim.accountsPayable||0); // simplified
+  const operating=netIncome+dep-wcChange;
+  const investing=-(sim.equipmentValue>0?0:0); // no equipment purchases this quarter in Phase 1
+  const financing=-(sim.loanPrincipal>0?0:0); // simplified
+  return{operating,investing,financing,netChange:operating+investing+financing,netIncome,dep};
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  UI UPDATE
+// ══════════════════════════════════════════════════════════════════
+function set(id,val,cls=''){
+  const el=$(id);if(!el)return;
+  el.textContent=val;
+  if(cls)el.className=el.className.replace(/\b(pos|neg|amb)\b/g,'').trim()+' '+cls;
+}
+function barSet(id,val,extra='',override=''){
+  const el=$(id);if(!el)return;
+  el.style.width=clamp(val,0,100)+'%';
+  el.className='bar-fill '+(override||extra);
+}
+function updateUI(){
+  if(!sim.city)return;
+  const q=sim.lastQ;
+  // KPIs
+  set('k-cash',fmt(sim.cash),sim.cash<0?'neg':'');
+  const prevCash=sim.cashHistory.length>1?sim.cashHistory[sim.cashHistory.length-2]:sim.cash;
+  set('k-cash-d',deltaStr(sim.cash-prevCash));
+  set('k-rev',fmt(q.revenue||0));
+  set('k-profit',fmt(q.profit||0),(q.profit||0)>=0?'pos':'neg');
+  set('k-ebitda',fmt(q.ebitda||0),(q.ebitda||0)>=0?'pos':'neg');
+  set('k-staff',totalStaff());
+  set('k-mkt',sim.marketShare.toFixed(1)+'%');
+  const eq=calcEquity();set('k-equity',fmt(eq),eq>=0?'pos':'neg');
+  set('h-meta',`Q${sim.quarter} Y${sim.year} · ${sim.city} · ${sim.sector}`);
+  $('h-econ-badge').textContent=sim.econCycle.toUpperCase();
+  $('h-overdraft-badge').style.display=sim.overdraftDrawn>0?'inline-block':'none';
+  // OPS
+  const cap=getTotalCapacity(),dem=getCurrentDemand();
+  const staffEl=$('staff-stats');
+  if(staffEl)staffEl.innerHTML=`
+    <div class="stat-row"><span class="stat-lbl">Youth (×${sim.youth})</span><span class="stat-val">Skill ${sim.youthSkill.toFixed(2)}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Veterans (×${sim.vet})</span><span class="stat-val amb">Skill ${sim.vetSkill.toFixed(2)}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Managers (×${sim.managers})</span><span class="stat-val pos">Skill ${sim.mgrSkill.toFixed(2)}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Specialists</span><span class="stat-val">${sim.specialists.length}</span></div>
+    <div class="stat-row"><span class="stat-lbl">TOTAL</span><span class="stat-val">${totalStaff()}</span></div>`;
+  set('v-morale',Math.round(sim.motivation)+'%');
+  barSet('bar-morale',sim.motivation,sim.motivation<50?'red':sim.motivation<70?'amber':'');
+  set('v-turnover',sim.turnover.toFixed(1)+'%');
+  set('v-wlb',Math.round(sim.wlb)+'%');
+  barSet('bar-wlb',sim.wlb,sim.wlb<40?'red':sim.wlb<65?'amber':'');
+  const facEl=$('facility-stats');
+  if(facEl)facEl.innerHTML=`
+    <div class="stat-row"><span class="stat-lbl">Tier</span><span class="stat-val">T${sim.propTier} (${['Garage','Office','Biz Ctr','HQ'][sim.propTier-1]})</span></div>
+    <div class="stat-row"><span class="stat-lbl">Health</span><span class="stat-val ${sim.propHealth<40?'neg':sim.propHealth<65?'amb':''}">${Math.round(sim.propHealth)}%</span></div>
+    <div class="stat-row"><span class="stat-lbl">Capacity</span><span class="stat-val">${cap.toLocaleString()}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Demand</span><span class="stat-val">${dem.toLocaleString()}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Utilization</span><span class="stat-val">${Math.round(Math.min(cap,dem)/cap*100)}%</span></div>`;
+  set('v-mktshare',sim.marketShare.toFixed(1)+'%');
+  barSet('bar-mktshare',sim.marketShare,'','blue');
+  set('v-quality',Math.round(sim.quality));
+  barSet('bar-quality',sim.quality);
+  set('v-custsat',Math.round(sim.customerSatisfaction)+'%');
+  barSet('bar-custsat',sim.customerSatisfaction,sim.customerSatisfaction<50?'red':sim.customerSatisfaction<70?'amber':'');
+  set('v-brand',Math.round(sim.brandStrength));
+  // FINANCE
+  set('fin-rev',fmt(q.revenue||0));
+  set('fin-cogs','-'+fmt(q.cogs||0));
+  set('fin-gross',fmt(q.grossProfit||0));
+  set('fin-opex','-'+fmt(q.opex||0));
+  set('fin-sal','-'+fmt(q.salaries||0));
+  set('fin-rent','-'+fmt(q.rent||0));
+  set('fin-mkt','-'+fmt(q.mkt||0));
+  set('fin-rd','-'+fmt(q.rd||0));
+  set('fin-csr','-'+fmt(q.csr||0));
+  set('fin-ebitda',fmt(q.ebitda||0),(q.ebitda||0)>=0?'pos':'neg');
+  set('fin-da','-'+fmt(q.dep||0));
+  set('fin-ebit',fmt(q.ebit||0),(q.ebit||0)>=0?'pos':'neg');
+  set('fin-int','-'+fmt(q.interest||0));
+  set('fin-taxable',fmt(q.taxable||0));
+  set('fin-tax','-'+fmt(q.taxes||0));
+  set('fin-net',fmt(q.profit||0),(q.profit||0)>=0?'pos':'neg');
+  const rev=q.revenue||0;
+  set('fin-gm',rev?pct((q.grossProfit||0)/rev):'0%');
+  set('fin-ebitdam',rev?pct((q.ebitda||0)/rev):'0%');
+  set('fin-nm',rev?pct((q.profit||0)/rev):'0%');
+  set('fin-taxrate',Math.round(sim.taxRate*100)+'%');
+  set('fin-vat',Math.round(sim.vatRate*100)+'%');
+  set('fin-payroll',Math.round(sim.payrollRate*100)+'%');
+  set('fin-inflation',(sim.annualInflation*100).toFixed(1)+'%');
+  set('fin-loan',fmt(sim.loanPrincipal));
+  set('fin-od',fmt(sim.overdraftDrawn));
+  // Locations
+  const locEl=$('locations-list');
+  if(locEl){
+    locEl.innerHTML=`<div style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
+      <span style="font-weight:700;">🏢 ${sim.city} HQ</span>
+      <span style="font-size:.8rem;color:var(--text-dim);">T${sim.propTier}</span></div>`;
+    sim.locations.forEach(l=>{locEl.innerHTML+=`<div style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
+      <span>📍 ${l.city}</span><span style="font-size:.8rem;color:var(--text-dim);">Cap ${l.capacity.toLocaleString()}</span></div>`});
+  }
+  // Statements
+  renderStatements();
+  // HR
+  const deptEl=$('dept-stats');
+  if(deptEl)deptEl.innerHTML=`
+    <div class="stat-row"><span class="stat-lbl">Development</span><span class="stat-val">${Math.floor(sim.vet*0.5+sim.specialists.filter(s=>s.type==='engineer').length)}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Marketing</span><span class="stat-val">${Math.floor((sim.youth+sim.vet)/5+sim.specialists.filter(s=>s.type==='analyst').length)}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Operations</span><span class="stat-val">${sim.youth+sim.managers}</span></div>
+    <div class="stat-row"><span class="stat-lbl">R&D</span><span class="stat-val">${Math.floor(sim.vet*0.3+sim.specialists.filter(s=>s.type==='analyst').length)}</span></div>`;
+  updateEmpRoster();
+  renderCompetitors();updateMarketNews();updateMarketIndicators();
+  renderSupply();renderMissions();renderAchievements();renderResearch();updateTicker();
+  sliderSync();
+}
+function renderStatements(){
+  const is=lastIncomeStatement(),bs=lastBalanceSheet(),cf=lastCashFlow();
+  const isEl=$('stmt-is');
+  if(isEl)isEl.innerHTML=`
+    <tr><td>Revenue</td><td>${fmt(is.revenue)}</td></tr>
+    <tr><td>COGS</td><td class="neg">(${fmt(is.cogs)})</td></tr>
+    <tr class="total"><td>Gross Profit</td><td>${fmt(is.grossProfit)}</td></tr>
+    <tr><td>Operating Expenses</td><td class="neg">(${fmt(is.opex)})</td></tr>
+    <tr class="total"><td>EBITDA</td><td>${fmt(is.ebitda)}</td></tr>
+    <tr><td>D&A</td><td class="neg">(${fmt(is.dep)})</td></tr>
+    <tr class="total"><td>EBIT</td><td>${fmt(is.ebit)}</td></tr>
+    <tr><td>Interest</td><td class="neg">(${fmt(is.interest)})</td></tr>
+    <tr><td>Taxable</td><td>${fmt(is.taxable)}</td></tr>
+    <tr><td>Tax</td><td class="neg">(${fmt(is.taxes)})</td></tr>
+    <tr class="total"><td>Net Profit</td><td>${fmt(is.netProfit)}</td></tr>`;
+  const bsEl=$('stmt-bs');
+  if(bsEl)bsEl.innerHTML=`
+    <tr class="section"><td colspan="2">ASSETS</td></tr>
+    <tr><td>Cash</td><td>${fmt(bs.cash)}</td></tr>
+    <tr><td>Accounts Receivable</td><td>${fmt(bs.ar)}</td></tr>
+    <tr><td>Inventory</td><td>${fmt(bs.inv)}</td></tr>
+    <tr><td>Fixed Assets (net)</td><td>${fmt(bs.fixedAssets)}</td></tr>
+    <tr class="total"><td>Total Assets</td><td>${fmt(bs.assets)}</td></tr>
+    <tr class="section"><td colspan="2">LIABILITIES</td></tr>
+    <tr><td>Loan</td><td>${fmt(bs.loan)}</td></tr>
+    <tr><td>Overdraft</td><td>${fmt(bs.od)}</td></tr>
+    <tr><td>Accounts Payable</td><td>${fmt(bs.ap)}</td></tr>
+    <tr class="total"><td>Total Liabilities</td><td>${fmt(bs.liabilities)}</td></tr>
+    <tr class="section"><td colspan="2">EQUITY</td></tr>
+    <tr><td>Share Capital</td><td>${fmt(bs.shareCapital)}</td></tr>
+    <tr><td>Retained Earnings</td><td>${fmt(bs.retainedEarnings)}</td></tr>
+    <tr class="total"><td>Total Equity</td><td>${fmt(bs.equity)}</td></tr>`;
+  const cfEl=$('stmt-cf');
+  if(cfEl)cfEl.innerHTML=`
+    <tr class="section"><td colspan="2">OPERATING</td></tr>
+    <tr><td>Net Income</td><td>${fmt(cf.netIncome)}</td></tr>
+    <tr><td>D&A</td><td>${fmt(cf.dep)}</td></tr>
+    <tr class="total"><td>Operating CF</td><td>${fmt(cf.operating)}</td></tr>
+    <tr class="section"><td colspan="2">INVESTING</td></tr>
+    <tr class="total"><td>Investing CF</td><td>${fmt(cf.investing)}</td></tr>
+    <tr class="section"><td colspan="2">FINANCING</td></tr>
+    <tr class="total"><td>Financing CF</td><td>${fmt(cf.financing)}</td></tr>
+    <tr class="total"><td>Net Change</td><td>${fmt(cf.netChange)}</td></tr>`;
+}
+function updateEmpRoster(){
+  const tbody=$('emp-tbody');if(!tbody)return;
+  sim.employees.forEach(e=>{e.tenure++;e.mood=clamp(e.mood+Math.round(rnd(-3,3)+((sim.motivation-70)/20)),25,100)});
+  tbody.innerHTML=sim.employees.slice(-20).reverse().map(e=>`<tr>
+    <td>${e.name}</td><td><span class="badge" style="font-size:.65rem;">${e.type}</span></td>
+    <td>${e.skill.toFixed(2)}</td><td>${e.tenure}Q</td><td>${e.dept}</td>
+    <td style="color:${e.mood>=70?'var(--green)':e.mood>=50?'var(--amber)':'var(--red)'};">${e.mood}%</td></tr>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  RENDERERS
+// ══════════════════════════════════════════════════════════════════
+function renderCompetitors(){
+  const el=$('comp-list');if(!el)return;
+  el.innerHTML='';
+  sim.competitors.filter(c=>c.alive).forEach(c=>{
+    el.innerHTML+=`<div class="comp-card">
+      <div class="flex-between"><span class="comp-name">${c.name}</span><span class="badge">${c.strategy}</span></div>
+      <div class="comp-bar-wrap" style="margin-top:6px;"><span style="color:var(--text-dim);min-width:55px;">Share</span>
+        <div class="bar-track" style="flex:1;"><div class="bar-fill" style="width:${c.share}%"></div></div>
+        <span style="color:var(--amber);min-width:38px;">${c.share.toFixed(1)}%</span></div>
+      <div class="comp-bar-wrap"><span style="color:var(--text-dim);min-width:55px;">Quality</span>
+        <div class="bar-track" style="flex:1;"><div class="bar-fill blue" style="width:${c.quality}%"></div></div>
+        <span style="color:var(--blue);min-width:38px;">${Math.round(c.quality)}</span></div>
+    </div>`;
+  });
+  const bankrupt=sim.competitors.filter(c=>!c.alive);
+  if(bankrupt.length)el.innerHTML+=`<div style="font-size:.75rem;color:var(--text-dim);margin-top:8px;">☠ Bankrupt: ${bankrupt.map(c=>c.name).join(', ')}</div>`;
+}
+function renderResearch(){
+  const el=$('research-tree');if(!el)return;
+  const cats=[...new Set(RESEARCH_TREE.map(r=>r.cat))];
+  el.innerHTML='';
+  cats.forEach(cat=>{
+    const items=RESEARCH_TREE.filter(r=>r.cat===cat);
+    const div=document.createElement('div');div.style.cssText='margin-bottom:14px;width:100%;';
+    div.innerHTML=`<div style="font-family:var(--font-mono);font-size:.7rem;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;">${cat}</div>`;
+    const row=document.createElement('div');row.style.cssText='display:flex;gap:8px;flex-wrap:wrap;';
+    items.forEach(r=>{
+      const unlocked=sim.researchUnlocked.includes(r.id);
+      const canUnlock=!unlocked&&r.req.every(req=>sim.researchUnlocked.includes(req))&&sim.researchPoints>=r.cost;
+      const locked=!unlocked&&!canUnlock;
+      const node=document.createElement('div');
+      node.className=`res-node ${unlocked?'unlocked':locked?'locked':''}`;
+      node.innerHTML=`<div class="res-name">${unlocked?'✓ ':''}${r.name}</div>
+        <div class="res-cost">${unlocked?'OWNED':r.cost+' RP'}</div>
+        <div class="res-bonus">${r.bonus}</div>`;
+      if(!unlocked&&!locked)node.onclick=()=>researchItem(r.id);
+      row.appendChild(node);
+    });
+    div.appendChild(row);el.appendChild(div);
+  });
+  if($('v-rpts'))$('v-rpts').textContent=sim.researchPoints;
+  if($('v-rndlv'))$('v-rndlv').textContent=sim.rndLevel.toFixed(1);
+}
+function researchItem(id){
+  const r=RESEARCH_TREE.find(x=>x.id===id);if(!r)return;
+  if(sim.researchUnlocked.includes(id)){toast('Already researched.','warning');return;}
+  if(!r.req.every(req=>sim.researchUnlocked.includes(req))){toast('Prerequisites missing.','error');return;}
+  if(sim.researchPoints<r.cost){toast(`Need ${r.cost} RP`,'error');return;}
+  sim.researchPoints-=r.cost;sim.researchUnlocked.push(id);
+  logMsg(`Research: ${r.name}`,'good');toast(`🔬 ${r.name}`,'success');
+  if(id==='qual1')sim.quality=clamp(sim.quality+5,0,100);
+  if(id==='qual2')sim.quality=clamp(sim.quality+12,0,100);
+  if(id==='qual3'){sim.quality=clamp(sim.quality+8,0,100);sim.reputation=clamp(sim.reputation+15,0,100);}
+  if(id==='hr3'){sim.motivation=clamp(sim.motivation+10,0,100);sim.wlb=clamp(sim.wlb+10,0,100);}
+  if(id==='mkt3')sim.brandStrength=clamp(sim.brandStrength+20,0,100);
+  checkAchievements();renderResearch();updateUI();
+}
+function refreshMissions(){
+  const pool=MISSION_POOL.filter(m=>!sim.activeMissions.find(a=>a.id===m.id)&&!sim.completedMissions.find(c=>c.id===m.id));
+  while(sim.activeMissions.length<3&&pool.length){
+    const idx=Math.floor(Math.random()*pool.length);
+    sim.activeMissions.push({...pool[idx],startQ:sim.quarter});pool.splice(idx,1);
+  }
+  renderMissions();
+}
+function checkMissions(){
+  const done=[];
+  sim.activeMissions.forEach(m=>{
+    if(m.check(sim)){
+      done.push(m);sim.cash+=m.reward;sim.researchPoints+=m.rp||0;sim.totalMissionBonus+=m.reward;
+      logMsg(`MISSION: ${m.title} +${fmt(m.reward)}`,'good');toast(`Mission: ${m.title} (+${fmt(m.reward)})`,'success');
+    }
+  });
+  done.forEach(m=>{sim.activeMissions=sim.activeMissions.filter(a=>a.id!==m.id);sim.completedMissions.push(m)});
+  checkAchievements();renderMissions();
+}
+function renderMissions(){
+  const act=$('active-missions'),comp=$('completed-missions');
+  if(!act)return;
+  act.innerHTML='';
+  sim.activeMissions.forEach(m=>{act.innerHTML+=`<div class="mission-card"><div class="mission-title">🎯 ${m.title}</div>
+    <div style="font-size:.83rem;margin:4px 0;">${m.desc}</div>
+    <div class="mission-reward">Reward: ${fmt(m.reward)} + ${m.rp||0} RP</div></div>`});
+  if(!sim.activeMissions.length)act.innerHTML='<div style="color:var(--text-dim);font-size:.85rem;">No active missions.</div>';
+  if(comp){comp.innerHTML='';sim.completedMissions.slice().reverse().forEach(m=>{comp.innerHTML+=`<div class="mission-card done"><div class="mission-title">✓ ${m.title}</div><div class="mission-reward">${fmt(m.reward)}</div></div>`})}
+  if($('v-mcount'))$('v-mcount').textContent=sim.completedMissions.length;
+  if($('v-mearned'))$('v-mearned').textContent=fmt(sim.totalMissionBonus);
+}
+function checkAchievements(){
+  const checks={
+    first_profit:()=>sim.lastQ.profit>0,cash_100k:()=>sim.cash>=100000,cash_500k:()=>sim.cash>=500000,
+    millionaire:()=>sim.cash>=1000000,mkt_20:()=>sim.marketShare>=20,mkt_40:()=>sim.marketShare>=40,
+    staff_20:()=>totalStaff()>=20,staff_50:()=>totalStaff()>=50,research_5:()=>sim.researchUnlocked.length>=5,
+    research_all:()=>sim.researchUnlocked.length>=RESEARCH_TREE.length,year_3:()=>sim.year>=3,year_7:()=>sim.year>=7,
+    qual_90:()=>sim.quality>=90,rep_90:()=>sim.reputation>=90,locations_3:()=>sim.locations.length>=3,
+    debt_free:()=>sim.loanPrincipal<=0&&sim.overdraftDrawn<=0,perfect_q:()=>sim.lastQ.profit>=50000,
+    missions_5:()=>sim.completedMissions.length>=5,missions_15:()=>sim.completedMissions.length>=15,
+    export_pro:()=>sim.researchUnlocked.includes('exp2'),
+  };
+  ACHIEVEMENTS.forEach(a=>{
+    if(!sim.achievements.includes(a.id)&&checks[a.id]&&checks[a.id]()){
+      sim.achievements.push(a.id);logMsg(`🏆 ${a.name}!`,'good');toast(`🏆 ${a.name}`,'success');
+    }
+  });
+  renderAchievements();
+}
+function renderAchievements(){
+  const grid=$('ach-grid');if(!grid)return;
+  grid.innerHTML='';
+  ACHIEVEMENTS.forEach(a=>{
+    const earned=sim.achievements.includes(a.id);
+    grid.innerHTML+=`<div class="ach-badge ${earned?'earned':'locked'}" title="${a.desc}">
+      <span>${a.icon}</span><span class="ach-label">${a.name}</span><span class="ach-tooltip">${a.desc}</span></div>`;
+  });
+  if($('ach-count'))$('ach-count').textContent=sim.achievements.length;
+  if($('ach-total'))$('ach-total').textContent=ACHIEVEMENTS.length;
+}
+function renderSupply(){
+  const el=$('supplier-list');if(!el)return;
+  el.innerHTML='';
+  SUPPLIERS.forEach(s=>{
+    const sel=sim.activeSupplier===s.id;
+    el.innerHTML+=`<div class="supplier-card ${sel?'selected':''}" onclick="selectSupplier('${s.id}')">
+      <div class="flex-between"><span style="font-weight:700;">${s.name}</span>${sel?'<span class="badge">ACTIVE</span>':''}</div>
+      <div style="font-size:.82rem;color:var(--text-dim);margin:4px 0;">${s.desc}</div>
+      <div style="font-size:.78rem;" class="flex-wrap">
+        <span class="text-mono" style="color:var(--green);">+Quality ${s.quality}</span>
+        <span class="text-mono" style="color:var(--amber);">Rel ${Math.round(s.reliability*100)}%</span>
+        <span class="text-mono" style="color:${s.costMod>0?'var(--red)':'var(--green)'};">Cost ${s.costMod>=0?'+':''}${Math.round(s.costMod*100)}%</span>
+      </div></div>`;
+  });
+  if($('v-supplier'))$('v-supplier').textContent=SUPPLIERS.find(s=>s.id===sim.activeSupplier)?.name||'None';
+  if($('v-stock'))$('v-stock').textContent=`${sim.stockLevel} units`;
+  if($('v-suprel'))$('v-suprel').textContent=SUPPLIERS.find(s=>s.id===sim.activeSupplier)?Math.round(SUPPLIERS.find(s=>s.id===sim.activeSupplier).reliability*100)+'%':'—';
+  if($('v-supqual'))$('v-supqual').textContent=`+${SUPPLIERS.find(s=>s.id===sim.activeSupplier)?.quality||0} quality`;
+}
+function selectSupplier(id){sim.activeSupplier=id;toast(`Supplier: ${SUPPLIERS.find(s=>s.id===id).name}`,'info');renderSupply();}
+
+const NEWS_POOL=[
+  'EU-Kosovo trade agreement update: Tech exports duty-free.',
+  'Kosovo IT sector grew 18% YoY.',
+  'Diaspora remittances hit €1.1B.',
+  'New industrial zone announced in Pristina.',
+  'Tourism surges 35% YoY.',
+  'Energy costs rising 12% this quarter.',
+  'Youth unemployment falls to 22%.',
+  'Inflation at 6.8%.',
+  'Regional competitors eye Kosovo market.',
+  'Government infrastructure fund approved.',
+];
+let newsItems=[];
+function updateMarketNews(){
+  if(Math.random()<0.6){newsItems.unshift({q:`Q${sim.quarter}Y${sim.year}`,text:NEWS_POOL[Math.floor(Math.random()*NEWS_POOL.length)]});newsItems=newsItems.slice(0,10);}
+  const el=$('market-news');if(!el)return;
+  el.innerHTML=newsItems.map(n=>`<div style="padding:5px 0;border-bottom:1px solid rgba(0,255,80,.06);">
+    <span style="font-family:var(--font-mono);font-size:.68rem;color:var(--text-dim);">[${n.q}]</span> ${n.text}</div>`).join('');
+  const expEl=$('export-markets');if(!expEl)return;
+  expEl.innerHTML=EXPORT_MARKETS.map(m=>{
+    const avail=!m.req||sim.researchUnlocked.includes(m.req);
+    return `<div style="padding:5px 0;display:flex;justify-content:space-between;font-size:.82rem;opacity:${avail?1:0.4}">
+      <span>${avail?'✓':'🔒'} ${m.name}</span>
+      <span class="${avail?'text-green':'text-mono'}">${avail?fmt(m.rev)+'/Q':'Req '+m.req}</span></div>`;
+  }).join('');
+}
+function updateMarketIndicators(){
+  const el=$('market-indicators');if(!el)return;
+  el.innerHTML=`
+    <div class="stat-row"><span class="stat-lbl">ECON CYCLE</span><span class="stat-val ${sim.econCycle==='boom'?'pos':sim.econCycle==='recession'?'neg':'amb'}">${sim.econCycle.toUpperCase()}</span></div>
+    <div class="stat-row"><span class="stat-lbl">MKT GROWTH</span><span class="stat-val pos">+${(sim.marketGrowthRate*100).toFixed(1)}%</span></div>
+    <div class="stat-row"><span class="stat-lbl">DEMAND MOD</span><span class="stat-val">${(sim.globalDemandMod*100).toFixed(0)}%</span></div>
+    <div class="stat-row"><span class="stat-lbl">INFLATION</span><span class="stat-val amb">${(sim.annualInflation*100).toFixed(1)}%</span></div>
+    <div class="stat-row"><span class="stat-lbl">CITY RISK</span><span class="stat-val ${sim.cityRisk>0.15?'neg':'amb'}">${(sim.cityRisk*100).toFixed(0)}%</span></div>`;
+}
+function updateTicker(){
+  const el=$('ticker-text');if(!el)return;
+  const live=[
+    `CASH: ${fmt(sim.cash)}`, `REV: ${fmt(sim.lastQ.revenue||0)}/Q`,
+    `NET: ${fmt(sim.lastQ.profit||0)}`, `EBITDA: ${fmt(sim.lastQ.ebitda||0)}`,
+    `MKT: ${sim.marketShare.toFixed(1)}%`, `QUALITY: ${Math.round(sim.quality)}`,
+    `MORALE: ${Math.round(sim.motivation)}%`, `STAFF: ${totalStaff()}`,
+    `Q${sim.quarter} Y${sim.year}`,
+  ];
+  el.textContent='// '+live.join(' // ')+' //';
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  CHARTS
+// ══════════════════════════════════════════════════════════════════
+let charts={};
+function mkChart(id,type,labels,datasets,opts={}){
+  const ctx=$(id)?.getContext('2d');if(!ctx)return null;
+  if(charts[id])charts[id].destroy();
+  charts[id]=new Chart(ctx,{type,data:{labels,datasets},options:Object.assign({
+    responsive:true,maintainAspectRatio:true,
+    plugins:{legend:{labels:{color:'#5aff88',font:{family:"'Share Tech Mono'",size:9}}}},
+    scales:type!=='pie'&&type!=='doughnut'?{
+      x:{ticks:{color:'#5aff88',font:{family:"'Share Tech Mono'",size:9}},grid:{color:'rgba(0,255,80,.06)'}},
+      y:{ticks:{color:'#5aff88',font:{family:"'Share Tech Mono'",size:9}},grid:{color:'rgba(0,255,80,.08)'}}
+    }:{}
+  },opts)});
+  return charts[id];
+}
+function initCharts(){
+  const qs=sim.cashHistory.map((_,i)=>`Q${i+1}`);
+  mkChart('mini-chart','line',qs,[{label:'Cash',data:sim.cashHistory,borderColor:'#00ff55',backgroundColor:'rgba(0,255,80,.08)',tension:.4,fill:true,pointRadius:2}]);
+  mkChart('finance-chart','line',qs,[
+    {label:'Revenue',data:sim.revenueHistory,borderColor:'#00aaff',tension:.4,pointRadius:2},
+    {label:'Cash',data:sim.cashHistory,borderColor:'#00ff55',tension:.4,pointRadius:2},
+  ]);
+  mkChart('profit-chart','bar',qs,[{label:'Net Profit',data:sim.profitHistory,backgroundColor:sim.profitHistory.map(v=>v>=0?'rgba(0,255,80,.4)':'rgba(255,51,85,.4)'),borderColor:sim.profitHistory.map(v=>v>=0?'#00ff55':'#ff3355'),borderWidth:1}]);
+  mkChart('skill-chart','doughnut',['Youth','Vets','Mgrs','Specs'],[{data:[sim.youth,sim.vet,sim.managers,sim.specialists.length],backgroundColor:['rgba(0,170,255,.6)','rgba(0,255,80,.6)','rgba(255,179,0,.6)','rgba(170,85,255,.6)'],borderColor:'rgba(0,0,0,.3)',borderWidth:1}]);
+  mkChart('market-chart','line',qs,[{label:'Mkt %',data:sim.marketHistory,borderColor:'#ffb300',tension:.4,pointRadius:2}]);
+  mkChart('supply-chart','line',sim.supplyHistory.map((_,i)=>`Q${i+1}`),[{label:'Stock',data:sim.supplyHistory,borderColor:'#00aaff',backgroundColor:'rgba(0,170,255,.1)',tension:.3,fill:true,pointRadius:2}]);
+}
+function updateCharts(){
+  const qs=sim.cashHistory.map((_,i)=>`Q${i+1}`);
+  if(charts['mini-chart']){charts['mini-chart'].data.labels=qs;charts['mini-chart'].data.datasets[0].data=sim.cashHistory;charts['mini-chart'].update('none');}
+  if(charts['finance-chart']){charts['finance-chart'].data.labels=qs;charts['finance-chart'].data.datasets[0].data=sim.revenueHistory;charts['finance-chart'].data.datasets[1].data=sim.cashHistory;charts['finance-chart'].update('none');}
+  if(charts['profit-chart']){charts['profit-chart'].data.labels=qs;charts['profit-chart'].data.datasets[0].data=sim.profitHistory;charts['profit-chart'].data.datasets[0].backgroundColor=sim.profitHistory.map(v=>v>=0?'rgba(0,255,80,.4)':'rgba(255,51,85,.4)');charts['profit-chart'].update('none');}
+  if(charts['skill-chart']){charts['skill-chart'].data.datasets[0].data=[sim.youth,sim.vet,sim.managers,sim.specialists.length];charts['skill-chart'].update('none');}
+  if(charts['market-chart']){charts['market-chart'].data.labels=qs;charts['market-chart'].data.datasets[0].data=sim.marketHistory;charts['market-chart'].update('none');}
+  if(charts['supply-chart']){charts['supply-chart'].data.labels=sim.supplyHistory.map((_,i)=>`Q${i+1}`);charts['supply-chart'].data.datasets[0].data=sim.supplyHistory;charts['supply-chart'].update('none');}
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  EVENT MODAL
+// ══════════════════════════════════════════════════════════════════
+function showEventModal(evt,callback){
+  sim.eventPending=true;
+  const modal=$('event-modal');
+  $('evt-icon').textContent=evt.icon;$('evt-title').textContent=evt.title;$('evt-desc').textContent=evt.desc;
+  const ch=$('evt-choices');ch.innerHTML='';
+  evt.choices.forEach(c=>{
+    const affordable=!c.cost||(sim.cash>=c.cost);
+    const btn=document.createElement('button');
+    btn.className='modal-choice'+(affordable?'':' danger');
+    btn.textContent=c.text+(c.cost?` (${fmt(c.cost)})`:'');
+    if(!affordable)btn.disabled=true;
+    btn.onclick=()=>{
+      if(c.cost&&sim.cash<c.cost){toast('Cannot afford.','error');return;}
+      if(c.cost)sim.cash-=c.cost;
+      c.effect(sim);
+      modal.style.display='none';sim.eventPending=false;
+      callback();
+    };
+    ch.appendChild(btn);
+  });
+  modal.style.display='flex';
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  STAFF ACTIONS
+// ══════════════════════════════════════════════════════════════════
+function hireStaff(type){
+  const costs={youth:1400,veteran:2900,manager:4500};
+  let cost=costs[type];if(sim.researchUnlocked.includes('hr2'))cost=Math.round(cost*0.85);
+  if(sim.cash<cost){toast(`Need ${fmt(cost)}`,'error');return;}
+  sim.cash-=cost;
+  if(type==='youth')sim.youth++;else if(type==='veteran')sim.vet++;else sim.managers++;
+  sim.employees.push(makeEmployee(type));
+  logMsg(`Hired ${type}.`,'good');toast(`${type} hired`,'success');updateUI();
+}
+const NAMES=['Alex','Besa','Artan','Drita','Fatos','Gresa','Ilir','Jehona','Kelmend','Lendita','Muharrem','Njomza','Omer','Pranvera','Qendrim','Rina','Shpend','Teuta','Uran','Vjosa'];
+let empIdCounter=1;
+function makeEmployee(type){
+  const name=NAMES[Math.floor(Math.random()*NAMES.length)]+' '+String.fromCharCode(65+Math.floor(Math.random()*26))+'.';
+  const skill={youth:clamp(rnd(0.5,0.9),0,2),veteran:clamp(rnd(1.0,1.4),0,2),manager:clamp(rnd(1.5,2.0),0,3)}[type];
+  const depts=['Development','Marketing','Operations','R&D'];
+  return{id:empIdCounter++,name,type,skill:parseFloat(skill.toFixed(2)),tenure:0,dept:depts[Math.floor(Math.random()*depts.length)],mood:Math.round(rnd(65,90))};
+}
+function fireStaff(){
+  if(totalStaff()<=1){toast('Cannot fire last employee.','error');return;}
+  // §21 fix: remove a specific employee, not just pop
+  const target=sim.employees.find(e=>['youth','veteran','manager'].includes(e.type));
+  if(target){
+    sim.employees=sim.employees.filter(e=>e.id!==target.id);
+    if(target.type==='youth')sim.youth--;else if(target.type==='veteran')sim.vet--;else sim.managers--;
+  }
+  sim.motivation=clamp(sim.motivation-8,15,100);
+  logMsg('Employee fired.','warn');toast('Fired.','warning');updateUI();
+}
+function trainStaff(){
+  if(sim.cash<2000){toast('Need €2k','error');return;}
+  sim.cash-=2000;
+  sim.youthSkill=clamp(sim.youthSkill+0.04,0,1.5);sim.vetSkill=clamp(sim.vetSkill+0.03,0,2.0);sim.mgrSkill=clamp(sim.mgrSkill+0.025,0,2.5);
+  sim.motivation=clamp(sim.motivation+5,0,100);
+  logMsg('Staff trained.','good');toast('Training complete!','success');updateUI();
+}
+function teamBuild(){
+  if(sim.cash<3000){toast('Need €3k','error');return;}
+  sim.cash-=3000;sim.motivation=clamp(sim.motivation+14,0,100);sim.wlb=clamp(sim.wlb+8,0,100);
+  logMsg('Team building.','good');toast('Morale boosted!','success');updateUI();
+}
+function wellnessProgram(){
+  if(sim.cash<5000){toast('Need €5k','error');return;}
+  sim.cash-=5000;sim.motivation=clamp(sim.motivation+12,0,100);sim.wlb=clamp(sim.wlb+15,0,100);sim.turnover=clamp(sim.turnover-2,2,30);
+  logMsg('Wellness program.','good');toast('Wellness launched!','success');updateUI();
+}
+function recruitSpec(type){
+  const data={engineer:{cost:5000,name:'Engineer',salary:4800,skill:1.6},analyst:{cost:4500,name:'Analyst',salary:4200,skill:1.4},director:{cost:9000,name:'Director',salary:7500,skill:2.1}};
+  const d=data[type];if(!d)return;
+  if(sim.cash<d.cost){toast(`Need ${fmt(d.cost)}`,'error');return;}
+  sim.cash-=d.cost;
+  sim.specialists.push({type,name:d.name,salary:d.salary,skill:d.skill});
+  sim.employees.push({id:empIdCounter++,name:NAMES[Math.floor(Math.random()*NAMES.length)]+' '+String.fromCharCode(65+Math.floor(Math.random()*26))+'.',type:`spec-${type}`,skill:d.skill,tenure:0,dept:type==='engineer'?'Development':type==='analyst'?'R&D':'Operations',mood:Math.round(rnd(70,95))});
+  logMsg(`Specialist: ${d.name}`,'good');toast(`${d.name} hired!`,'success');updateUI();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  PROPERTY / FINANCE ACTIONS
+// ══════════════════════════════════════════════════════════════════
+function repairProp(){
+  if(sim.cash<4000){toast('Need €4k','error');return;}
+  sim.cash-=4000;sim.propHealth=clamp(sim.propHealth+35,0,100);
+  logMsg('Property repaired.','good');toast('Repaired!','success');updateUI();
+}
+function upgradeProp(){
+  if(sim.propTier>=4){toast('Max tier.','warning');return;}
+  if(sim.cash<18000){toast('Need €18k','error');return;}
+  sim.cash-=18000;sim.propTier++;sim.propHealth=100;sim.propValue+=15000;
+  logMsg(`Property T${sim.propTier}.`,'good');toast(`Upgraded to T${sim.propTier}!`,'success');updateUI();
+}
+function takeLoan(){
+  if(sim.loanPrincipal>0){toast('Repay existing loan first.','error');return;}
+  const principal=20000;
+  sim.loanPrincipal=principal;sim.loanPaid=0;sim.loanQuarters=8;
+  sim.loanAnnualRate=0.09+(sim.difficulty==='hard'?0.02:sim.difficulty==='realistic'?0.04:0);
+  sim.cash+=principal;
+  logMsg(`Loan: €20k @ ${(sim.loanAnnualRate*100).toFixed(0)}% annual, 8 quarters.`,'info');
+  toast('€20k loan secured.','info');updateUI();
+}
+function repayLoan(){
+  if(sim.loanPrincipal<=0){toast('No active loan.','warning');return;}
+  const payoff=FORMULAS.loanBalance(sim.loanPrincipal,sim.loanAnnualRate,sim.loanQuarters,sim.loanPaid);
+  if(sim.cash<payoff){toast(`Need ${fmt(payoff)} to clear.`,'error');return;}
+  sim.cash-=payoff;sim.loanPrincipal=0;sim.loanPaid=0;
+  logMsg('Loan cleared.','good');toast('Loan repaid!','success');checkAchievements();updateUI();
+}
+function takeOverdraft(){
+  if(sim.overdraftLimit>=10000){toast('Overdraft already at max.','warning');return;}
+  sim.overdraftLimit=10000;sim.overdraftAnnualRate=0.24;
+  logMsg('Overdraft facility: €10k @ 24% annual.','info');toast('Overdraft active.','info');updateUI();
+}
+function clearOverdraft(){
+  if(sim.overdraftDrawn>0){toast('Repay drawn overdraft first.','error');return;}
+  sim.overdraftLimit=0;toast('Overdraft closed.','info');updateUI();
+}
+function openLocation(){
+  if(sim.cash<35000){toast('Need €35k','error');return;}
+  const cities=Object.keys(CITY_DATA).filter(c=>c!==sim.city&&!sim.locations.find(l=>l.city===c));
+  if(!cities.length){toast('No cities available.','warning');return;}
+  sim.cash-=35000;
+  const city=cities[Math.floor(Math.random()*cities.length)];
+  const cd=CITY_DATA[city];
+  sim.locations.push({city,capacity:Math.round(cd.demandBase*0.4),rent:Math.round(cd.rentBase*0.6),health:100});
+  sim.propValue+=20000;
+  logMsg(`Opened in ${city}!`,'good');toast(`Location: ${city}!`,'success');updateUI();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  TAB SYSTEM (§21 fix: explicit event, no global)
+// ══════════════════════════════════════════════════════════════════
+function switchTab(name,event){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  const tc=$('tab-'+name);if(tc)tc.classList.add('active');
+  if(event&&event.target)event.target.classList.add('active');
+  if(name==='finance'||name==='market'||name==='statements')setTimeout(()=>{updateCharts();renderStatements()},50);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  DIFFICULTY
+// ══════════════════════════════════════════════════════════════════
+let selectedDiff='normal';
+function setDiff(d){
+  selectedDiff=d;
+  document.querySelectorAll('.diff-btn').forEach(b=>{
+    b.classList.remove('sel');
+    if(b.textContent.toLowerCase()===d)b.classList.add('sel');
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  START GAME
+// ══════════════════════════════════════════════════════════════════
+function startGame(){
+  sim.city=$('s-city').value;
+  // §21 fix: sector parsed from value, not split (old bug: emoji was captured)
+  sim.sector=$('s-sector').value;
+  sim.youth=parseInt($('s-youth').value);
+  sim.vet=parseInt($('s-vet').value);
+  sim.managers=parseInt($('s-mgr').value);
+  sim.propTier=parseInt($('s-tier').value);
+  sim.difficulty=selectedDiff;
+  sim.soundEnabled=false;
+  sim.enableEvents=$('opt-events').checked;
+  sim.enableCompetitors=$('opt-competitors').checked;
+  sim.enableInflation=$('opt-inflation').checked;
+  sim.enableTaxes=$('opt-taxes').checked;
+
+  const startCash={easy:70000,normal:45000,hard:32000,realistic:22000}[sim.difficulty];
+  const setupCost=sim.youth*1400+sim.vet*2900+sim.managers*4500;
+  const propCost=[0,0,10000,25000,45000][sim.propTier];
+  sim.cash=startCash-setupCost-propCost;
+  sim.cityMod=CITY_DATA[sim.city]||CITY_DATA['Prishtina'];
+  sim.cityRisk=sim.cityMod.riskMod;
+
+  // Reset
+  sim.quarter=1;sim.year=1;
+  sim.youthSkill=0.68;sim.vetSkill=1.15;sim.mgrSkill=1.7;
+  sim.motivation=82;sim.reputation=48;sim.quality=55;
+  sim.marketShare=9;sim.customerSatisfaction=60;sim.brandStrength=25;
+  sim.rndLevel=0;sim.researchPoints=0;sim.researchUnlocked=[];
+  sim.loanPrincipal=0;sim.loanPaid=0;sim.loanQuarters=8;sim.loanAnnualRate=0.09;
+  sim.overdraftLimit=0;sim.overdraftDrawn=0;
+  sim.achievements=[];sim.locations=[];sim.specialists=[];sim.employees=[];
+  sim.activeMissions=[];sim.completedMissions=[];sim.totalMissionBonus=0;
+  sim.cashHistory=[Math.max(0,Math.round(sim.cash))];sim.revenueHistory=[];sim.profitHistory=[];sim.marketHistory=[sim.marketShare];sim.supplyHistory=[0];sim.equityHistory=[];
+  sim.activeSupplier='standard';
+  sim.econCycle='expansion';sim.globalDemandMod=1.0;sim.lastQ={};
+  sim.totalRevenue=0;sim.totalProfit=0;sim.exportTier=0;sim.exportRevenue=0;
+  sim.annualInflation=0.025;sim.taxRate=0.15;sim.vatRate=0.18;sim.payrollRate=0.15;
+  sim.accountsReceivable=0;sim.accountsPayable=0;sim.inventoryUnits=0;sim.inventoryValue=0;
+  sim.rawMaterials=0;sim.finishedGoods=0;sim.stockLevel=0;
+  sim.propValue=propCost;sim.equipmentValue=0;sim.accumulatedDepreciation=0;
+  sim.shareCapital=20000;sim.retainedEarnings=0;sim.investorEquity=0;
+  sim.qDepreciation=0;sim.pendingCostMod=1.0;sim.pendingCostModQuarters=0;
+  sim.warehouseCapacity=200;
+  sim.departments={development:0,marketing:0,operations:0,rd:0};
+
+  for(let i=0;i<sim.youth;i++)sim.employees.push(makeEmployee('youth'));
+  for(let i=0;i<sim.vet;i++)sim.employees.push(makeEmployee('veteran'));
+  for(let i=0;i<sim.managers;i++)sim.employees.push(makeEmployee('manager'));
+
+  if(sim.enableCompetitors)initCompetitors();
+
+  $('setup-screen').style.display='none';
+  $('game-screen').style.display='block';
+
+  setTimeout(()=>{
+    initCharts();updateUI();updateCharts();
+    renderResearch();refreshMissions();renderMissions();
+    renderCompetitors();renderAchievements();renderSupply();
+    if($('opt-selftest').checked)runSelfTests();
+  },100);
+
+  logMsg(`Empire launched in ${sim.city} (${sim.sector}) · ${sim.difficulty.toUpperCase()} · Cash: ${fmt(sim.cash)}`,'good');
+  toast(`Welcome to ${sim.city}.`,'success');
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  SAVE / LOAD
+// ══════════════════════════════════════════════════════════════════
+const SAVE_KEY='sovereign5_v4_save';
+function saveGame(auto=false){
+  try{
+    localStorage.setItem(SAVE_KEY,JSON.stringify(sim));
+    if(!auto){toast('Saved.','success');logMsg('Game saved.')}
+  }catch(e){toast('Save failed!','error')}
+}
+function loadGame(){
+  try{
+    const s=localStorage.getItem(SAVE_KEY);
+    if(!s){toast('No save found.','warning');return;}
+    Object.assign(sim,JSON.parse(s));
+    $('setup-screen').style.display='none';
+    $('game-screen').style.display='block';
+    setTimeout(()=>{
+      initCharts();updateUI();updateCharts();
+      renderResearch();refreshMissions();renderMissions();
+      renderCompetitors();renderAchievements();renderSupply();
+    },100);
+    toast('Save loaded.','success');
+  }catch(e){toast('Load failed!','error');console.error(e)}
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  KEYBOARD
+// ══════════════════════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if($('game-screen').style.display==='none')return;
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.code==='Space'&&!e.shiftKey){e.preventDefault();runQuarter()}
+  if(e.code==='KeyS'&&e.shiftKey){e.preventDefault();saveGame()}
+  if(e.code==='KeyL'&&e.shiftKey){e.preventDefault();loadGame()}
+});
+
+// ══════════════════════════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════════════════════════
+sliderSync();
+</script>
+<script src="phase2.js"></script>
+<script src="phase3.js"></script>
+<script src="phase4.js"></script>
+</body>
+</html>
+
+
