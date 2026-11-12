@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plan Quest: Strategjia, plani dhe ditari</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ece6ff;--gr:#dcd2ff;--cd:#fff;--ink:#1a1033;--bd:#1a1033;--sh:#1a1033;--mu:#5b4a8a;--bg2:#f5f1ff;--y:#ffe14d;--pk:#ff4fa3;--cy:#22d3ee;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#150c2b;--gr:#241446;--cd:#241446;--ink:#f6f0ff;--bd:#c4a7ff;--sh:#000;--mu:#b9a6e8;--bg2:#1b0f38}}
+:root[data-theme="dark"]{--bg:#150c2b;--gr:#241446;--cd:#241446;--ink:#f6f0ff;--bd:#c4a7ff;--sh:#000;--mu:#b9a6e8;--bg2:#1b0f38}
+body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);background-image:linear-gradient(var(--gr) 1px,transparent 1px),linear-gradient(90deg,var(--gr) 1px,transparent 1px);background-size:28px 28px}
+.w{max-width:640px;margin:auto;padding:14px}
+.px{font-family:"Press Start 2P",ui-monospace,monospace}
+.hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hd h1{font-size:16px;margin:0;flex:1;min-width:140px;line-height:1.4}
+.pill{background:var(--y);color:#1a1033;border:3px solid var(--bd);border-radius:6px;padding:5px 9px;font-size:11px;box-shadow:0 3px 0 var(--sh)}
+#dots{display:flex;gap:3px;margin:12px 0}
+.dot{flex:1;height:20px;border:2px solid var(--bd);border-radius:4px;background:var(--cd);padding:0;cursor:pointer}
+.dot.d{background:var(--cy)}.dot.c{background:var(--pk);transform:translateY(-4px)}.dot:disabled{opacity:.3;cursor:not-allowed}
+.coach{display:flex;gap:10px;align-items:center;background:var(--cd);border:3px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-weight:700}
+.coach span{font-size:30px}.coach b{display:inline-block;animation:pop .35s}
+@keyframes pop{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+.cd{background:var(--cd);border:4px solid var(--bd);border-radius:12px;box-shadow:6px 6px 0 var(--pk);padding:18px}
+h2{font-size:15px;line-height:1.6;margin:6px 0 12px}h3{font-size:12px;line-height:1.6;margin:18px 0 6px}
+p{margin:0 0 10px}small{color:var(--mu);font-weight:700}
+.key{background:var(--bg2);border:3px dashed var(--cy);padding:10px 14px;border-radius:8px;margin:12px 0;font-weight:700}
+.ch{width:100%;display:block;background:var(--bg2);border:3px solid var(--bd);border-radius:8px;margin:8px 0}
+.btn,.opt{border:3px solid var(--bd);box-shadow:0 4px 0 var(--sh);border-radius:6px;cursor:pointer}
+.btn{padding:12px 16px;font:11px "Press Start 2P",ui-monospace,monospace;background:var(--y);color:#1a1033}
+.opt{display:block;width:100%;text-align:left;padding:12px 14px;margin:10px 0;background:var(--cd);color:var(--ink);font:700 16px system-ui,sans-serif}
+.btn:active,.opt:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sh)}
+.btn:disabled,.opt:disabled{opacity:.5;cursor:not-allowed}
+.opt.ok{background:#34d399;color:#06281c}.opt.no{background:var(--pk);color:#fff}
+.row{display:flex;gap:12px;margin-top:16px}.row .btn{flex:1}.alt{background:var(--cd)!important;color:var(--ink)!important}
+.msg{min-height:24px;font-weight:700;margin-top:8px}
+.card{background:#ffe14d44;border:3px dashed var(--bd);border-radius:10px;padding:12px;margin-top:12px;font-weight:700}
+.al{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tile{background:var(--bg2);border:2px solid var(--bd);border-radius:8px;padding:10px;font-size:14px;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--pk);margin:12px 0 6px}
+.big{font:20px "Press Start 2P",ui-monospace,monospace}
+label{display:block;margin:8px 0 2px;font-size:14px}
+select,.tx{width:100%;padding:10px;margin:2px 0 6px;border:3px solid var(--bd);border-radius:6px;background:var(--cd);color:var(--ink);font:700 15px system-ui,sans-serif;box-sizing:border-box}
+.jf{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cf{position:fixed;top:55%;width:8px;height:12px;z-index:9;pointer-events:none;animation:cf 1.1s ease-out forwards}
+@keyframes cf{40%{transform:translate(calc(var(--dx)*.6),var(--dy))}100%{transform:translate(var(--dx),300px) rotate(540deg);opacity:0}}
+</style>
+</head>
+<body>
+<div class="w">
+  <div class="hd"><h1 class="px">PLAN QUEST</h1><span class="pill px">⭐ <span id="st">0</span></span><span class="pill px">🔥 <span id="sk">0</span></span><span class="pill px" id="rk"></span></div>
+  <div id="dots"></div>
+  <div class="coach"><span>🤖</span><div id="cb"></div></div>
+  <div class="cd" id="cd"></div>
+  <div class="row"><button class="btn alt" id="pv" onclick="G(-1)">← Mbrapa</button><button class="btn" id="nx" onclick="G(1)">Tjetri →</button></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const GR='#34d399',RD='#ff4fa3',BL='#22d3ee',YL='#ffe14d';
+const bar=(p,c)=>`<div style="height:14px;border:3px solid var(--bd);border-radius:6px;overflow:hidden;margin:6px 0"><i style="display:block;height:100%;width:${Math.max(0,Math.min(100,p))}%;background:${c}"></i></div>`;
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const CO={ok:['Boom! 🔥','Pikërisht kështu!','Mendje trajneri! 🧠','Nivel i pastër!','Je në zjarr!'],no:['Hmm, provo prapë 🤔','Afër! Lexo çelësin sërish','Gabimi është mësim, jo fund']};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const say=t=>{$('#cb').innerHTML=`<b>${t}</b>`};
+function CF(){if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  for(let k=0;k<28;k++){const e=document.createElement('i');e.className='cf';
+    e.style.cssText=`left:${50+(Math.random()-.5)*30}%;background:${[RD,BL,YL,GR][k%4]};--dx:${(Math.random()-.5)*320}px;--dy:${-80-Math.random()*200}px`;
+    document.body.appendChild(e);setTimeout(()=>e.remove(),1200)}}
+
+function chart(d,V=[]){
+  const W=320,H=170,P=16,ys=[...d,...V.map(l=>l.y)],lo=Math.min(...ys),hi=Math.max(...ys),pd=(hi-lo)*.12||5,mn=lo-pd,mx=hi+pd;
+  const X=k=>P+k*(W-2*P)/(d.length-1),Y=v=>H-P-(v-mn)/(mx-mn)*(H-2*P);let s=`<svg class="ch" viewBox="0 0 ${W} ${H}">`;
+  V.forEach(l=>{const y=Y(l.y);s+=(l.z?`<rect x="0" y="${y-10}" width="${W}" height="20" fill="${l.c}" opacity=".3"/>`:`<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="${l.c}" stroke-width="2.5" stroke-dasharray="6 4"/>`)+`<text x="${W-6}" y="${y-5}" text-anchor="end" font-size="11" font-weight="800" fill="${l.c}">${l.n}</text>`});
+  return s+`<polyline fill="none" style="stroke:var(--ink)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" points="${d.map((v,k)=>X(k)+','+Y(v)).join(' ')}"/><circle cx="${X(d.length-1)}" cy="${Y(d[d.length-1])}" r="6" fill="${YL}" stroke="#1a1033" stroke-width="2"/></svg>`}
+
+const SLP=[4000,4040,4020,4070,4045,4090,4060],RR2=[3992,3996,3994,4000,4004,4002];
+const BD=[
+ {n:'Trendi që kërkoj',o:['Uptrend: blej pullback','Downtrend: shes pullback','Range: blej Support, shes Resistance'],g:[0,1,2]},
+ {n:'Rregulli i hyrjes',o:['Çmimi prek nivel dhe del qiri konfirmues','Kur më duket mirë','Kur të gjithë po blejnë'],g:[0]},
+ {n:'Stop Loss',o:['Pas Swing Low ose High të fundit','Pa Stop Loss','Shumë larg, për siguri'],g:[0]},
+ {n:'Rreziku për tregti',o:['1%','2%','5%','10%'],g:[0,1]},
+ {n:'Risk:Reward minimal',o:['1:1','1:2','1:3'],g:[1,2]},
+ {n:'Limiti ditor',o:['3%','5%','10%','Pa limit'],g:[0]},
+ {n:'Kur nuk tregtoj',o:['Pa sinjal, i lodhur ose i nervozuar','Kurrë, tregtoj çdo ditë'],g:[0]}];
+
+const L=[
+{ic:'⚽',t:'Pse të duhet strategji',x:'Ekipi pa taktikë luan sipas gjendjes së çastit. Tregtari pa strategji klikon sipas emocionit.',k:'Strategji = rregulla të shkruara që të thonë çka të bësh kur tregu lëviz.',q:'Çka i jep strategjia një tregtari?',a:['Rregulla të qarta, pa u mbështetur te emocioni','Garanci për fitim','Aftësi për të parë të ardhmen'],r:0,m:'Pa taktikë ekipi lëviz rastësisht ⚽'},
+{ic:'🧩',t:'Rendi i një tregtie',x:'Çdo tregti ka rend, si një lojë me hapa. Rendisi nga e para te e fundit.',k:'Analizë → nivel → sinjal → rrezik → hyrje → ditar.',q:'Shtyp hapat në rendin e saktë.',o:['Analizoj trendin','Gjej nivelin (Support ose Resistance)','Pres sinjalin','Llogaris rrezikun, SL dhe TP','Hyj në tregti','Menaxhoj dhe shkruaj ditarin'],m:'6 hapa: analizë, nivel, sinjal, rrezik, hyrje, ditar 🧩'},
+{ic:'⚡',t:'Edge: avantazhi yt',x:'Edge të jep gjasa pak më të mira se rastësia, mbi shumë tregti. Si lojtari që shënon më shumë penallti se sa humb.',k:'Edge nuk është garanci. Është avantazh i vogël, i përsëritur shumë herë.',q:'Çka është edge?',a:['Avantazh statistikor që duket mbi shumë tregti','Garanci që tregtia do të fitojë','Ndjenjë e fortë se do të ngrihet'],r:0,m:'Edge = pak më shumë gjasa, shumë herë ⚡'},
+{ic:'🌦️',t:'Kushtet e tregut',x:'Strategjia funksionon në mot të caktuar. Dielli ka një lojë, shiu një tjetër.',k:'Shkruaj kur strategjia lejohet: në trend, në range, ose vetëm në disa orë.',q:'Strategjia është “blej pullback”. Kur përshtatet më mirë?',a:['Në Uptrend','Në Downtrend të fortë','Në çdo kusht, pa kontrollim'],r:0,m:'Çdo strategji ka motin e vet 🌦️'},
+{ic:'🎯',t:'Rregulli i hyrjes',x:'Hyrja duhet të jetë e matshme: dy njerëz që e lexojnë duhet të bëjnë të njëjtën gjë.',k:'Rregull i mirë = kusht i qartë + sinjal konfirmues. Jo “më duket mirë”.',c:SLP,o2:[{y:4045,z:1,c:BL,n:'Support'}],q:'Cili është rregull hyrjeje i mirë?',a:['Blej kur çmimi prek Support në Uptrend dhe del qiri gjelbër','Blej kur më duket mirë','Blej kur të gjithë po blejnë'],r:0,m:'Hyrja e mirë = rregull që e mat çdokush 🎯'},
+{ic:'🚪',t:'Rregulli i daljes',x:'Dalja planifikohet para hyrjes: ku ke gabuar (SL) dhe ku e merr fitimin (TP).',k:'SL dhe TP vendosen para se të hysh, jo kur çmimi është duke lëvizur.',c:RR2,o2:[{y:4000,n:'Hyrja',c:BL},{y:3990,n:'SL',c:RD},{y:4030,n:'TP',c:GR}],q:'Kur i vendos SL dhe TP?',a:['Para se të hysh','Pasi çmimi lëviz','Kur frikësohem'],r:0,m:'Dalja planifikohet para hyrjes 🚪'},
+{ic:'💶',t:'Rreziku brenda planit',x:'Plani përfshin sa rrezikon. Rregulli yt: 1% e llogarisë për tregti.',k:'Rreziku është pjesë e planit, jo gjë që vendoset në çast.',q:'Llogaria 1,000€, rreziku 1%. Sa je gati të humbasësh në këtë tregti?',a:['10€','100€','500€'],r:0,m:'1% nga 1,000€ = 10€ 💶'},
+{ic:'📐',t:'Matematika e strategjisë',x:'Me R:R 1:2, çdo humbje është −1R dhe çdo fitore +2R. Sa duhet të fitosh që mesatarja të mos jetë negative?',k:'Mesatarja për tregti (në R) = fitorja × 2 − humbja × 1.',q:'Gjej përqindjen më të ulët të fitoreve ku rezultati nuk është më i vogël se zero.',s:{min:10,max:70,v:50,st:1,f:v=>{const e=3*v/100-1;return`Fitore ${v}%: mesatarisht <span class="big" style="color:${e>=0?'#34d399':RD}">${e>=0?'+':'−'}${Math.abs(e).toFixed(2)}R</span> për tregti`+bar(v,e>=0?GR:RD)},ok:v=>v==34},m:'R:R 1:2 → mjafton rreth 34% fitore 📐'},
+{ic:'🔬',t:'Backtesti',x:'Para se të përdorësh para, kontrollon strategjinë në grafikë të vjetër: çka do të kishte ndodhur?',k:'Një test me 3 tregti nuk tregon asgjë. Duhen shumë tregti.',q:'Sa tregti duhen për ta besuar një test?',a:['Shumë: të paktën dhjetëra','Vetëm 1, nëse fitoi','2 ose 3'],r:0,m:'3 tregti nuk bëjnë test 🔬'},
+{ic:'🎮',t:'Demo para parave',x:'Demo është si stërvitja para ndeshjes. Provon planin pa rrezik real dhe gjen ku gabon.',k:'Demo nuk jep emocionin real, por i provon rregullat dhe zakonet.',q:'Pse përdoret demo?',a:['Të provoj planin pa rrezik real','Sepse demo fiton gjithmonë','Që të mos i mësoj rregullat'],r:0,m:'Demo = stërvitje para ndeshjes 🎮'},
+{ic:'🔒',t:'Mos e ndrysho planin pas humbjes',x:'Dy humbje nuk e vërtetojnë se strategjia është e keqe. Nëse e ndërron çdo herë, nuk e di kurrë a funksionon.',k:'Ndrysho planin vetëm pas shumë tregtive dhe me të dhëna nga ditari.',q:'Strategjia humbi 2 tregti. Çka bën?',a:['Shoh ditarin dhe e mbaj planin deri sa kam mjaft tregti','E ndërroj plotësisht','E braktis'],r:0,m:'Dy humbje nuk e prishin planin 🔒'},
+{ic:'🛑',t:'Kur nuk tregtoj',x:'Plani më i mirë përfshin ditët kur nuk bën asgjë.',k:'Rregull “mos tregto”: nuk ka sinjal të qartë, jam i lodhur ose i nervozuar.',q:'Cili është rregull i mirë “mos tregto”?',a:['Nuk tregtoj kur s’ka sinjal ose jam i lodhur','Tregtoj çdo ditë pa përjashtim','Tregtoj kur jam i mërzitur'],r:0,m:'Ditë pa tregti është ditë pa gabim 🛑'},
+{ic:'✈️',t:'Checklist para hyrjes',x:'Piloti kontrollon listën para ngritjes. Edhe tregtari duhet ta bëjë.',k:'Nëse një pikë mungon, nuk hyn.',q:'Checklist-a ka 5 pika dhe njëra mungon. Çka bën?',a:['Nuk hyj','Hyj gjithsesi','Hyj më i madh sepse të tjerat janë mirë'],r:0,m:'Piloti nuk ngrihet pa checklist ✈️'},
+{ic:'📓',t:'Pse ditar',x:'Pa ditar harron çka bëre dhe i përsërit gabimet. Ditari është video e ndeshjes.',k:'Vlen kur plotësohet pas çdo tregtie, me ndershmëri.',q:'Çka e bën ditarin të vlefshëm?',a:['E plotësoj pas çdo tregtie, sinqerisht','E plotësoj vetëm kur fitoj','E plotësoj një herë në vit'],r:0,m:'Ditari = video e ndeshjes 📓'},
+{ic:'✍️',t:'Çka shkruhet në ditar',x:'Ditari i mirë ka pak fusha, por të dobishme.',k:'Pse hyra · rezultati në R · si u ndjeva · a e ndoqa planin · çka mësova.',q:'Cili rresht është më i dobishëm në ditar?',a:['Hyra sipas planit, +2R, u ndjeva i qetë, mësova të pres','Fitova dhe jam fantastik','Çmimi ishte 4,000'],r:0,m:'Ditari = pse, sa, si u ndjeva, çka mësova ✍️'},
+{ic:'🔢',t:'Rezultati në R',x:'Në vend të euros, shkruan rezultatin në R: 1R është rreziku yt. Kështu krahason tregti të ndryshme.',k:'Humbje = −1R. Fitim 2 herë më i madh se rreziku = +2R.',q:'Rrezikove 10€ dhe fitove 30€. Sa R është?',a:['+3R','+30R','+1R'],r:0,m:'1R = rreziku yt 🔢'},
+{ic:'🔍',t:'Rishikimi javor',x:'Çdo fundjavë shikon ditarin si trajner: çka përsëritet?',k:'Kërko modele: ora, emocioni, lloji i gabimit.',q:'Çka bën çdo fundjavë me ditarin?',a:['E rishikoj për modele që përsëriten','E fshij për ta nisur nga e para','Nuk e shoh kurrë'],r:0,m:'Rishikimi = analiza e javës 🔍'},
+{ic:'🏷️',t:'Humbje normale dhe gabim',x:'Jo çdo humbje është gabim. Humbja që ndoqi planin është kosto e biznesit. Humbja që shkeli planin është gabim.',k:'Shëno dy kategori: humbje normale dhe gabim procesi.',q:'Humbe sepse e hoqe Stop Loss-in. Si e shënon?',a:['Gabim procesi, e korrigjoj','Fat i keq','Faji i tregut'],r:0,m:'Humbje normale ≠ gabim procesi 🏷️'},
+{ic:'🛠️',t:'Ndërto planin tënd',x:'Tani e bën vetë. Zgjidh çdo pjesë të planit. Plani duhet të jetë i mençur, jo vetëm i guximshëm.',k:'Plani yt ka 7 pjesë. Zgjidhi me kujdes.',q:'Plotëso planin dhe shtyp Kontrollo.',bd:1,m:'Plani i shkruar = harta e lojës 🛠️'},
+{ic:'👑',t:'Boss: Arkitekti i strategjisë',x:'5 pyetje të përziera nga level-et e mëparshme. Duhen 3 të sakta për ta fituar kupën. Pas saj hapet ditari yt.',k:'Pa tekst ndihmës. Vetëm mendja jote.',boss:1,m:''}
+];
+const BANK=[0,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17];
+
+let i=0,S={},tr=0,sk=0,bs=null,sv=0,od=[],plan=[],jl=[];
+try{plan=JSON.parse(localStorage.getItem('pq_plan')||'[]');jl=JSON.parse(localStorage.getItem('pq_j')||'[]')}catch(e){}
+const tot=()=>Object.values(S).reduce((a,b)=>a+b,0),RK=['Rezervë','Planifikues','Strateg','Kapiten','Arkitekt'],rk=()=>RK[Math.min(4,Math.floor(tot()/12))];
+const unl=()=>{let k=0;while(S[k]!==undefined&&k<L.length-1)k++;return k};
+const shuf=n=>{let a;do{a=[...Array(n).keys()].sort(()=>Math.random()-.5)}while(n>2&&a.every((v,k)=>v==k));return a};
+
+function draw(){const l=L[i];tr=0;sv=l.s?l.s.v:0;od=[];
+  if(l.o)l.sh=shuf(l.o.length);if(l.bd)l.sh=BD.map(f=>shuf(f.o.length));
+  $('#cd').innerHTML=`<small>${l.ic} Level ${i+1} nga ${L.length}</small><h2 class="px">${l.t}</h2><p>${l.x}</p><div class="key">${l.k}</div><div id="gm"></div>`;
+  if(l.boss){if(S[i]===undefined){bs={q:[...BANK].sort(()=>Math.random()-.5).slice(0,5),n:0,ok:0};BR()}else{$('#gm').innerHTML=ALB();JV()}}else gm();
+  say(S[i]!==undefined?'Ky level është i kryer ✅':'Gati? Lexo çelësin dhe luaj!');up();scrollTo(0,0)}
+function PC(){return`<div class="card">📋 <b>Plani im</b><br>${BD.map((f,j)=>`${f.n}: ${f.o[plan[j]]}`).join('<br>')}</div>`}
+function gm(){const l=L[i],dn=S[i]!==undefined;
+  let h=`<h3 class="px">🎮 ${l.q}</h3>`+(l.c?chart(l.c,l.o2):'');
+  if(l.s)h+=`<input type="range" id="rg" min="${l.s.min}" max="${l.s.max}" step="${l.s.st}" ${dn?'disabled':''}><div id="o"></div>`;
+  if(l.o)h+=l.sh.map(k=>{const on=dn||od.includes(k);return`<button class="opt ${on?'ok':''}" ${on?'disabled':''} onclick="OD(${k})">${on?(k+1)+'. ':''}${l.o[k]}</button>`}).join('');
+  if(l.bd)h+=BD.map((f,j)=>`<label><b>${f.n}</b></label><select id="f${j}" ${dn?'disabled':''}><option value="-1">— zgjidh —</option>${l.sh[j].map(k=>`<option value="${k}" ${dn&&plan[j]==k?'selected':''}>${f.o[k]}</option>`).join('')}</select>`).join('');
+  if(!dn&&(l.s||l.bd))h+='<button class="btn" onclick="CK()">Kontrollo ✔</button>';
+  if(!dn&&l.a)h+=l.a.map((o,k)=>`<button class="opt" onclick="C(${k},this)">${o}</button>`).join('');
+  h+='<div class="msg" id="ms"></div>';
+  if(dn)h+=`<div class="card">✅ Saktë! ${'⭐'.repeat(S[i])}${'☆'.repeat(3-S[i])}<br>🃏 Kartela e kujtesës: ${l.m}</div>`+(l.bd?PC():'');
+  $('#gm').innerHTML=h;
+  if(l.s){const r=$('#rg'),u=()=>$('#o').innerHTML=l.s.f(sv);r.value=sv;r.oninput=()=>{sv=+r.value;u()};u()}
+  up()}
+function CK(){const l=L[i];
+  if(l.bd){const v=BD.map((_,j)=>+$('#f'+j).value);if(v.includes(-1)){$('#ms').textContent='Plotëso të gjitha fushat.';return}
+    const bad=BD.filter((f,j)=>!f.g.includes(v[j]));
+    if(!bad.length){plan=v;try{localStorage.setItem('pq_plan',JSON.stringify(v))}catch(e){}return win()}
+    tr++;say(pick(CO.no));$('#ms').textContent='Rishiko këto pjesë: '+bad.map(f=>f.n).join(', ');return}
+  if(l.s.ok(sv))return win();tr++;say(pick(CO.no));$('#ms').textContent='Jo ende. Provo një vlerë tjetër.'}
+function C(k,b){if(k==L[i].r)return win();tr++;say(pick(CO.no));b.classList.add('no');b.disabled=true}
+function OD(k){if(k==od.length){od.push(k);if(od.length==L[i].o.length)win();else{say('Mirë, vazhdo!');gm()}}else{tr++;say(pick(CO.no));$('#ms').textContent='Ky hap vjen më vonë.'}}
+function win(){const r0=rk();S[i]=Math.max(1,3-tr);sk=tr?0:sk+1;gm();CF();say(pick(CO.ok));if(rk()!=r0)say('RANK I RI: '+rk()+' 🎉')}
+function up(){$('#st').textContent=tot();$('#sk').textContent=sk;$('#rk').textContent=rk();
+  $('#dots').innerHTML=L.map((l,k)=>`<button class="dot ${S[k]!==undefined?'d':''} ${k==i?'c':''}" ${k>unl()?'disabled':''} onclick="i=${k};draw()" aria-label="Level ${k+1}"></button>`).join('');
+  $('#pv').disabled=i==0;$('#nx').style.display=i==L.length-1?'none':'';$('#nx').disabled=S[i]===undefined}
+function G(d){i+=d;draw()}
+
+function BR(){const l=L[bs.q[bs.n]];
+  $('#gm').innerHTML=`<h3 class="px">👑 Pyetja ${bs.n+1} nga 5</h3>`+(l.c?chart(l.c,l.o2):'')+`<p><b>${l.q}</b></p>`+l.a.map((o,k)=>`<button class="opt" onclick="BA(${k},this)">${o}</button>`).join('')+'<div class="msg" id="ms"></div>'}
+function BA(k,b){const l=L[bs.q[bs.n]],ok=k==l.r;b.classList.add(ok?'ok':'no');if(ok){bs.ok++;say(pick(CO.ok))}else say(pick(CO.no));
+  document.querySelectorAll('#gm .opt').forEach(x=>x.disabled=true);$('#ms').textContent=ok?'✅ Saktë!':'❌ Përgjigja: '+l.a[l.r];
+  setTimeout(()=>{if(!L[i].boss)return;if(++bs.n<5)BR();else BE()},1200)}
+function BE(){if(bs.ok>=3){const r0=rk();S[i]=bs.ok>=5?3:bs.ok==4?2:1;$('#gm').innerHTML=`<p><b>${bs.ok} nga 5 të sakta!</b></p>`+ALB();JV();up();CF();say('KUPA ËSHTË E JUAJA! 🏆'+(rk()!=r0?' Rank: '+rk():''))}
+  else $('#gm').innerHTML=`<div class="card">${bs.ok} nga 5. Duhen 3. Rishiko level-et dhe provo prapë.</div><div class="row"><button class="btn" onclick="draw()">Provo prapë</button></div>`}
+const ALB=()=>`<div class="card">👑 Arkitekt strategjie! Pikët: ${tot()} / 60 · Rank: ${rk()}</div>${plan.length?PC():''}<div id="jv"></div><h3 class="px">🃏 Albumi yt</h3><div class="al">${L.slice(0,19).map(l=>`<div class="tile">${l.ic} ${l.m}</div>`).join('')}</div>`;
+
+function JV(){const n=jl.length,w=jl.filter(x=>x.r>0).length,R=jl.reduce((a,x)=>a+x.r,0),pf=jl.filter(x=>x.p).length;
+  $('#jv').innerHTML=`<h3 class="px">📓 Ditari yt</h3><p><small>Provoje: shto një tregti (edhe virtuale).</small></p><div class="jf"><select id="j1"><option>BUY</option><option>SELL</option></select><select id="j2"><option>Sinjal sipas planit</option><option>FOMO</option><option>Hakmarrje</option><option>Mërzi</option></select><select id="j3">${[-1,0,1,2,3].map(r=>`<option value="${r}" ${r==1?'selected':''}>${r>0?'+':''}${r}R</option>`).join('')}</select><select id="j4"><option>😎</option><option>😬</option><option>😤</option><option>😱</option></select></div><input id="j5" class="tx" placeholder="Çka mësova?" maxlength="80"><button class="btn" onclick="JA()">Shto</button>`
+  +(n?`<div class="card">Tregti ${n} · Fitore ${Math.round(w/n*100)}% · Total ${R>0?'+':''}${R}R · Sipas planit ${Math.round(pf/n*100)}%</div>`:'')
+  +jl.slice(-5).reverse().map(x=>`<div class="tile" style="margin-top:6px">${esc(x.d)} · ${esc(x.a)} · ${esc(x.q)} · ${x.r>0?'+':''}${x.r}R · ${esc(x.e)} ${esc(x.l)}</div>`).join('')}
+function JA(){const q=$('#j2').value;jl.push({a:$('#j1').value,q,p:q=='Sinjal sipas planit',r:+$('#j3').value,e:$('#j4').value,l:$('#j5').value,d:new Date().toLocaleDateString('sq')});
+  try{localStorage.setItem('pq_j',JSON.stringify(jl))}catch(e){}JV()}
+
+say('Mirë se erdhe! Unë jam Koç Bot. Ndërtojmë planin tënd.');draw();
+</script>
+</body>
+</html>
