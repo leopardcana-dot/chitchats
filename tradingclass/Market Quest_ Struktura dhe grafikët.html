@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Market Quest: Struktura dhe grafikët</title>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#bfe3ff;--dt:#9fd0f5;--cd:#fff;--ink:#14213d;--bd:#14213d;--sh:#14213d;--mu:#4a5875;--bg2:#eef6ff;--y:#ffd23f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101a3a;--dt:#1b2750;--cd:#1b2750;--ink:#f4f6ff;--bd:#8ea2ff;--sh:#000;--mu:#aab6e0;--bg2:#121c40}}
+:root[data-theme="dark"]{--bg:#101a3a;--dt:#1b2750;--cd:#1b2750;--ink:#f4f6ff;--bd:#8ea2ff;--sh:#000;--mu:#aab6e0;--bg2:#121c40}
+body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg) radial-gradient(var(--dt) 1.5px,transparent 1.5px) 0 0/22px 22px}
+.w{max-width:640px;margin:auto;padding:14px}
+.hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hd h1{font:400 28px "Lilita One",Impact,sans-serif;margin:0;flex:1;min-width:150px}
+.pill{background:var(--cd);border:3px solid var(--bd);border-radius:20px;padding:2px 12px;font:400 18px "Lilita One",Impact,sans-serif;box-shadow:0 3px 0 var(--sh)}
+#dots{display:flex;gap:4px;margin:12px 0}
+.dot{flex:1;height:26px;border:2px solid var(--bd);border-radius:8px;background:var(--cd);color:var(--ink);font:700 11px system-ui;padding:0;cursor:pointer}
+.dot.d{background:#22b573;color:#fff}.dot.c{background:var(--y);color:#14213d;transform:translateY(-3px)}.dot:disabled{opacity:.35;cursor:not-allowed}
+.cd{background:var(--cd);border:3px solid var(--bd);border-radius:18px;box-shadow:5px 5px 0 var(--sh);padding:18px}
+h2{font:400 32px/1.1 "Lilita One",Impact,sans-serif;margin:4px 0 10px}h3{font:400 20px "Lilita One",Impact,sans-serif;margin:16px 0 4px}
+p{margin:0 0 10px}small{color:var(--mu);font-weight:700}
+.key{background:#ffd23f33;border-left:6px solid var(--y);padding:10px 14px;border-radius:4px 12px 12px 4px;margin:12px 0;font-weight:700}
+.ch{width:100%;display:block;background:var(--bg2);border:2px solid var(--bd);border-radius:14px;margin:8px 0;touch-action:manipulation}
+.btn,.opt{border:3px solid var(--bd);box-shadow:0 4px 0 var(--sh);border-radius:14px;padding:12px 16px;font:400 19px "Lilita One",Impact,sans-serif;cursor:pointer}
+.btn{background:var(--y);color:#14213d}.opt{display:block;width:100%;text-align:left;margin:10px 0;background:var(--cd);color:var(--ink);font-family:inherit;font-weight:700;font-size:16px}
+.btn:active,.opt:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sh)}
+.btn:disabled,.opt:disabled{opacity:.45;cursor:not-allowed}
+.opt.ok{background:#22b573;color:#fff}.opt.no{background:#ef476f;color:#fff}
+.row{display:flex;gap:12px;margin-top:16px}.row .btn{flex:1}.alt{background:var(--cd)!important;color:var(--ink)!important}
+.msg{min-height:24px;font-weight:700;margin-top:8px}
+.card{background:#ffd23f44;border:3px dashed var(--bd);border-radius:14px;padding:12px;margin-top:12px;font-weight:700}
+.al{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tile{background:var(--bg2);border:2px solid var(--bd);border-radius:12px;padding:10px;font-size:14px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="w">
+  <div class="hd"><h1>Market Quest</h1><span class="pill">⭐ <span id="st">0</span></span><span class="pill">🔥 <span id="sk">0</span></span><span class="pill" id="rk"></span></div>
+  <div id="dots"></div>
+  <div class="cd" id="cd"></div>
+  <div class="row"><button class="btn alt" id="pv" onclick="G(-1)">← Mbrapa</button><button class="btn" id="nx" onclick="G(1)">Level tjetër →</button></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const GR='#22b573',RD='#ef476f',BL='#3b82f6',YL='#ffd23f';
+
+function chart(d,o={}){
+  const C=Array.isArray(d[0]),W=320,H=180,P=C?24:16,V=o.lv||[],tl=o.tl,f=d.flat();
+  const ys=[...f,...V.map(l=>l.y),...(tl?[tl[0][1],tl[1][1]]:[])],lo=Math.min(...ys),hi=Math.max(...ys),pd=(hi-lo)*.12||5,mn=lo-pd,mx=hi+pd;
+  const X=k=>P+k*(W-2*P)/(d.length-1||1),Y=v=>H-P-(v-mn)/(mx-mn)*(H-2*P);
+  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}">`;
+  V.forEach(l=>{const y=Y(l.y);
+    s+=l.z?`<rect x="0" y="${y-10}" width="${W}" height="20" fill="${l.c}" opacity=".3"/>`:`<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="${l.c}" stroke-width="2.5" stroke-dasharray="6 4"/>`;
+    s+=`<text x="${W-6}" y="${y-6}" text-anchor="end" font-size="11" font-weight="800" fill="${l.c}">${l.n}</text>`});
+  if(tl)s+=`<line x1="${X(tl[0][0])}" y1="${Y(tl[0][1])}" x2="${X(tl[1][0])}" y2="${Y(tl[1][1])}" stroke="#f59e0b" stroke-width="3" stroke-dasharray="8 4"/><text x="${X(tl[0][0])+4}" y="${Y(tl[0][1])-6}" font-size="11" font-weight="800" fill="#f59e0b">Trendline</text>`;
+  if(C){const cw=(W-2*P)/d.length*.6;d.forEach(([a,h,l,c],k)=>{const col=c>=a?GR:RD;
+    s+=`<line x1="${X(k)}" x2="${X(k)}" y1="${Y(h)}" y2="${Y(l)}" stroke="${col}" stroke-width="2"/><rect x="${X(k)-cw/2}" y="${Y(Math.max(a,c))}" width="${cw}" height="${Math.max(2,Math.abs(Y(a)-Y(c)))}" fill="${col}" stroke="#14213d" stroke-width="1.5"/>`})}
+  else s+=`<polyline fill="none" style="stroke:var(--ink)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" points="${d.map((v,k)=>X(k)+','+Y(v)).join(' ')}"/>`;
+  if(o.pk)d.forEach((_,k)=>{const on=o.pk.has(k);
+    s+=C?`<rect x="${X(k)-17}" y="2" width="34" height="${H-4}" rx="8" fill="${on?YL:'#0000'}" fill-opacity="${on?.4:1}" stroke="${on?'#14213d':'#0000'}" stroke-width="2" style="cursor:pointer" onclick="P(${k})"/>`
+    :`<circle cx="${X(k)}" cy="${Y(d[k])}" r="${on?11:10}" fill="${on?YL:'#0000'}" stroke="var(--ink)" stroke-width="2.5" ${on?'':'stroke-dasharray="3 3"'} style="cursor:pointer" onclick="P(${k})"/>`});
+  return s+'</svg>'}
+
+const A=[20,26,22,30,24,28,21,27,23],B=[30,24,28,21,26,19,25,22],UP=[10,16,13,20,16,24,20,28],DN=[28,22,25,18,21,14,17,10];
+const RG=[4000,4090,4010,4095,4005,4092,4012,4098,4003],BS=[10,18,14,20,16,19,15,23,19],CH=[10,18,14,22,17,26,21,24,16,19];
+const FL=[4000,4040,4080,4098,4060,4092,4130,4160,4120,4104,4140,4180],TS=[10,18,16,24,22,30,28,36];
+const C10=[[10,14,9,13],[13,15,10,11],[11,16,10,15],[15,17,13,14],[14,15,9,10],[10,13,9,12]];
+const C11=[[20,21,18,19],[19,20,16,17],[17,18,14,15],[14,15.5,10,15]],C12=[[20,21,18,19],[19,20,17,18],[18,19,16,17],[16.5,24,16,23],[23,25,22,24]];
+const FK=[4000,4040,4090,4060,4020,4070,4095,4125,4085,4050,4030],PB=[4000,4060,4030,4100,4066,4140,4072];
+
+const L=[
+{ic:'🌊',t:'Çmimi lëviz si dallgë',x:'Çmimi nuk shkon drejt. Ngrihet e bie si dallgët e detit. Çdo majë dhe çdo fund quhet swing.',k:'Swing High = maja e dallgës. Swing Low = fundi i saj.',q:'Shtyp të gjitha majat (Swing High).',c:A,p:[1,3,5,7],m:'Swing High = maja e malit ⛰️'},
+{ic:'🕳️',t:'Swing Low',x:'Pas çdo maje vjen një rënie. Fundi i rënies është një gropë, dhe aty blerësit hyjnë.',k:'Swing Low = pika më e ulët midis dy majave.',q:'Shtyp të gjitha fundet (Swing Low).',c:B,p:[1,3,5],m:'Swing Low = gropa ku blerësit ndalojnë rënien'},
+{ic:'🚀',t:'Uptrend: HH dhe HL',x:'Në Uptrend çdo majë është më e lartë se e mëparshmja (HH) dhe çdo fund më i lartë (HL). Si shkallë që ngjitet.',k:'HH + HL = blerësit kontrollojnë lojën.',q:'Çfarë trendi është ky?',c:UP,a:['Uptrend','Downtrend','Range (anash)'],r:0,m:'HH + HL = shkallë lart ⬆️'},
+{ic:'🪂',t:'Downtrend: LH dhe LL',x:'Në Downtrend çdo majë është më e ulët (LH) dhe çdo fund më i ulët (LL). Shkallë që zbret.',k:'LH + LL = shitësit kontrollojnë lojën.',q:'Çfarë trendi është ky?',c:DN,a:['Uptrend','Downtrend','Range (anash)'],r:1,m:'LH + LL = shkallë poshtë ⬇️'},
+{ic:'🥅',t:'Range: çmimi në kafaz',x:'Ndonjëherë çmimi rri mes dy nivelesh dhe asnjë palë nuk fiton: si ndeshje 0:0.',k:'Range = çmimi lëviz anash mes një Support dhe një Resistance.',q:'Çfarë po ndodh këtu?',c:RG,o:{lv:[{y:4100,n:'Resistance',c:RD},{y:4000,n:'Support',c:BL}]},a:['Uptrend','Downtrend','Range (anash)'],r:2,m:'Range = 0:0, çmimi në kafaz 🥅'},
+{ic:'💥',t:'Break of Structure (BOS)',x:'Kur çmimi kalon mbi majën e fundit në Uptrend, trendi vazhdon. Kjo quhet thyerje strukture.',k:'BOS = çmimi kalon majën e mëparshme dhe trendi vazhdon.',q:'Shtyp pikën ku çmimi thyen vijën e kuqe.',c:BS,o:{lv:[{y:20,n:'Maja e fundit',c:RD}]},p:[7],m:'BOS = thyen derën 🚪 dhe vazhdon'},
+{ic:'🚨',t:'Ndryshimi i karakterit (CHoCH)',x:'Në Uptrend, nëse çmimi bie nën fundin e fundit më të lartë, blerësit po humbin forcën.',k:'CHoCH = alarmi i parë se trendi po ndryshon. Alarm, jo garanci.',q:'Çmimi ra nën vijën e kuqe. Çka sinjalizon?',c:CH,o:{lv:[{y:21,n:'HL i fundit',c:RD}]},a:['Trendi mund të kthehet','Trendi vazhdon pa problem','Asgjë nuk ka ndodhur'],r:0,m:'CHoCH = alarm zjarri 🚨 trendi lëkundet'},
+{ic:'🔁',t:'Roli ndërrohet',x:'Kur çmimi thyen një Resistance, ajo shpesh bëhet Support. Si një portë që pas thyerjes të mban lart.',k:'Resistance e thyer → Support i ri.',q:'Çmimi e thyen 4,100 dhe kthehet te ajo. Çka është 4,100 tani?',c:FL,o:{lv:[{y:4100,z:1,c:BL,n:'4,100'}]},a:['Support','Resistance','Asgjë'],r:0,m:'Dyshemeja e re është tavani i vjetër 🏠'},
+{ic:'📏',t:'Trendline',x:'Një vijë që lidh fundet në Uptrend (ose majat në Downtrend). Çmimi shpesh e respekton.',k:'Trendline = shina që çmimi ndjek. Sa më shumë prekje, aq më e fortë.',q:'Çmimi po zbret te vija për herë të tretë. Çka kërkon trader?',c:TS,o:{tl:[[0,10],[7,31]]},a:['BUY afër vijës, me Stop Loss poshtë saj','SELL sepse çmimi preku vijën','Mos e shikon vijën'],r:0,m:'Trendline = shina e trenit 🚂'},
+{ic:'🕯️',t:'Qiri: gjelbër dhe kuq',x:'Qiri është një copë histori. Trupi tregon Hapjen dhe Mbylljen, fitilat tregojnë majën dhe fundin.',k:'Gjelbër = blerësit e fituan periudhën (mbyllet më lart). Kuq = shitësit.',q:'Shtyp të gjithë qirinjtë gjelbër.',c:C10,p:[0,2,5],m:'Gjelbër = golat e blerësve 🟢 Kuq = golat e shitësve 🔴'},
+{ic:'🧤',t:'Fitili i gjatë',x:'Fitili tregon ku shkoi çmimi dhe u kthye. Fitil i gjatë poshtë = dikush e hodhi çmimin përsëri lart.',k:'Fitili i gjatë te Support = refuzim i rënies.',q:'Qiri i fundit ra te Support, por u kthye me fitil të gjatë. Çka tregon?',c:C11,o:{lv:[{y:10,z:1,c:BL,n:'Support'}]},a:['Blerësit e refuzuan rënien','Shitësit po fitojnë','Grafiku ka gabim'],r:0,m:'Fitili i gjatë = portieri e bllokoi golin 🧤'},
+{ic:'🐊',t:'Qiri Engulfing',x:'Kur një qiri i madh e mbulon plotësisht trupin e qirit para tij, pala e re ka marrë kontrollin.',k:'Engulfing gjelbër pas të kuqit = blerësit po hyjnë fort.',q:'Shtyp qiriun që e gëlltit qiriun e kuq para tij.',c:C12,p:[3],m:'Engulfing = krokodili që gëlltit të voglin 🐊'},
+{ic:'🪤',t:'Breakout dhe Fakeout',x:'Ndonjëherë çmimi del mbi një nivel për të të joshur të blesh, e pastaj kthehet poshtë.',k:'Breakout i vërtetë mbahet mbi nivel. Fakeout kthehet poshtë.',q:'Çmimi doli mbi Resistance, por u kthye poshtë. Çka ishte?',c:FK,o:{lv:[{y:4100,n:'Resistance',c:RD}]},a:['Fakeout (thyerje e rreme)','Breakout i vërtetë','Uptrend i ri'],r:0,m:'Fakeout = kurth 🪤 del dhe kthehet'},
+{ic:'🏄',t:'Pullback: pritja e valës',x:'Në Uptrend çmimi bën një rënie të vogël para se të ngjitet prapë. Trader i mirë nuk vrapon pas çmimit, ai pret valën.',k:'Pullback = rënie e vogël brenda trendit, zakonisht te Support ose HL.',q:'Uptrend. Çmimi sapo ra te fundi i mëparshëm. Çka bën trader i qetë?',c:PB,o:{lv:[{y:4068,z:1,c:BL,n:'Support'}]},a:['Pret shenjë blerësish aty dhe vë Stop Loss poshtë','Blen në majë nga frika se e humbet','SELL kundër trendit pa arsye'],r:0,m:'Pullback = pret valën 🏄 nuk vrapon pas saj'},
+{ic:'👑',t:'Boss: Kampionati',x:'5 pyetje të përziera nga level-et e mëparshme. Duhen 3 të sakta për ta fituar kupën.',k:'Pa tekst ndihmës. Vetëm sytë e tu.',boss:1,m:''}
+];
+const BANK=[2,3,4,6,7,8,10,12,13];
+
+let i=0,S={},tr=0,sel=new Set(),sk=0,bs=null;
+const tot=()=>Object.values(S).reduce((a,b)=>a+b,0),RK=['Fillestar','Skaut','Analist','Strateg','Maestro'];
+const unl=()=>{let k=0;while(S[k]!==undefined&&k<L.length-1)k++;return k};
+
+function draw(){const l=L[i];sel=new Set();tr=0;
+  $('#cd').innerHTML=`<small>${l.ic} Level ${i+1} nga ${L.length}</small><h2>${l.t}</h2><p>${l.x}</p><div class="key">${l.k}</div><div id="gm"></div>`;
+  if(l.boss){if(S[i]===undefined){bs={q:[...BANK].sort(()=>Math.random()-.5).slice(0,5),n:0,ok:0};BR()}else $('#gm').innerHTML=ALB()}else gm();
+  up();scrollTo(0,0)}
+function gm(){const l=L[i],dn=S[i]!==undefined;
+  let h=`<h3>🎮 ${l.q}</h3>`+chart(l.c,{...(l.o||{}),pk:l.p?(dn?new Set(l.p):sel):null});
+  if(!dn&&l.p)h+='<button class="btn" onclick="CK()">Kontrollo ✔</button>';
+  if(!dn&&l.a)h+=l.a.map((o,k)=>`<button class="opt" onclick="C(${k},this)">${o}</button>`).join('');
+  h+='<div class="msg" id="ms"></div>';
+  if(dn)h+=`<div class="card">✅ Saktë! ${'⭐'.repeat(S[i])}${'☆'.repeat(3-S[i])}<br>🃏 Kartela e kujtesës: ${l.m}</div>`;
+  $('#gm').innerHTML=h;up()}
+function P(k){if(S[i]!==undefined)return;sel.has(k)?sel.delete(k):sel.add(k);gm()}
+function CK(){const p=L[i].p,hit=p.filter(k=>sel.has(k)).length,bad=sel.size-hit,miss=p.length-hit;
+  if(!bad&&!miss)return win();tr++;gm();$('#ms').textContent=`Ke ${hit} të sakta, ${bad} gabim, mungojnë ${miss}. Provo prapë.`}
+function C(k,b){if(k==L[i].r)return win();tr++;b.classList.add('no');b.disabled=true;$('#ms').textContent='Jo ende. Provo një tjetër.'}
+function win(){S[i]=Math.max(1,3-tr);sk=tr?0:sk+1;gm()}
+function up(){$('#st').textContent=tot();$('#sk').textContent=sk;$('#rk').textContent=RK[Math.min(4,Math.floor(tot()/9))];
+  $('#dots').innerHTML=L.map((l,k)=>`<button class="dot ${S[k]!==undefined?'d':''} ${k==i?'c':''}" ${k>unl()?'disabled':''} onclick="i=${k};draw()">${k+1}</button>`).join('');
+  $('#pv').disabled=i==0;$('#nx').style.display=i==L.length-1?'none':'';$('#nx').disabled=S[i]===undefined}
+function G(d){i+=d;draw()}
+
+function BR(){const l=L[bs.q[bs.n]];
+  $('#gm').innerHTML=`<h3>👑 Pyetja ${bs.n+1} nga 5</h3>`+chart(l.c,l.o||{})+`<p><b>${l.q}</b></p>`+l.a.map((o,k)=>`<button class="opt" onclick="BA(${k},this)">${o}</button>`).join('')+'<div class="msg" id="ms"></div>'}
+function BA(k,b){const l=L[bs.q[bs.n]],ok=k==l.r;b.classList.add(ok?'ok':'no');if(ok)bs.ok++;
+  document.querySelectorAll('#gm .opt').forEach(x=>x.disabled=true);$('#ms').textContent=ok?'✅ Saktë!':'❌ Përgjigja: '+l.a[l.r];
+  setTimeout(()=>{if(!L[i].boss)return;if(++bs.n<5)BR();else BE()},1200)}
+function BE(){if(bs.ok>=3){S[i]=bs.ok>=5?3:bs.ok==4?2:1;$('#gm').innerHTML=`<p><b>${bs.ok} nga 5 të sakta!</b></p>`+ALB();up()}
+  else $('#gm').innerHTML=`<div class="card">${bs.ok} nga 5. Duhen 3. Rishiko level-et dhe provo prapë.</div><div class="row"><button class="btn" onclick="draw()">Provo prapë</button></div>`}
+const ALB=()=>`<div class="card">👑 Kampion! Pikët: ${tot()} / 45 · Rank: ${RK[Math.min(4,Math.floor(tot()/9))]}</div><h3>🃏 Albumi yt</h3><div class="al">${L.slice(0,14).map(l=>`<div class="tile">${l.ic} ${l.m}</div>`).join('')}</div>`;
+
+draw();
+</script>
+</body>
+</html>

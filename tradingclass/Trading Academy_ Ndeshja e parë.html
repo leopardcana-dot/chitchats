@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trading Academy: Ndeshja e parë</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--pt:#1b6b3a;--pt2:#17602f;--cd:#fbfdf9;--ink:#10231a;--mu:#51665a;--ln:#d6e2d9;--bg2:#eaf3ec;--y:#facc15;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--pt:#0f3d21;--pt2:#0c3519;--cd:#12202b;--ink:#e8f1ec;--mu:#9bb0a4;--ln:#2a3d33;--bg2:#0b1822}}
+:root[data-theme="dark"]{--pt:#0f3d21;--pt2:#0c3519;--cd:#12202b;--ink:#e8f1ec;--mu:#9bb0a4;--ln:#2a3d33;--bg2:#0b1822}
+body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--pt) repeating-linear-gradient(0deg,var(--pt) 0 56px,var(--pt2) 56px 112px)}
+.w{max-width:640px;margin:auto;padding:14px}
+.sb{background:#0b1b2b;color:#fff;border-radius:16px;padding:10px 16px;display:flex;align-items:center;gap:14px;font-family:"Barlow Condensed",Impact,sans-serif}
+.sb .t{flex:1;font-size:22px;font-weight:800;line-height:1}.sb small{display:block;font:600 13px system-ui;color:#9fb3c8;margin-top:4px}
+.sc{font-size:30px;font-weight:800}.clk{font-size:30px;font-weight:800;color:var(--y);min-width:56px;text-align:right}
+.bar{height:8px;background:#fff4;border-radius:9px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;background:var(--y);transition:width .4s}
+.cd{background:var(--cd);border-radius:20px;padding:20px;margin-top:14px}
+h2{font:800 34px/1.05 "Barlow Condensed",Impact,sans-serif;margin:4px 0 10px}h3{margin:18px 0 6px;font-size:17px}
+p{margin:0 0 10px}small.st{color:var(--mu);font-weight:600}
+.key{background:var(--bg2);border-left:5px solid var(--y);padding:12px 14px;border-radius:4px 12px 12px 4px;margin:12px 0;font-weight:600}
+.ch{width:100%;display:block;background:var(--bg2);border-radius:14px;margin:10px 0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.tile{background:var(--bg2);border-radius:14px;padding:14px 8px;text-align:center;font-weight:700}
+.tile b{display:block;font:800 26px "Barlow Condensed",Impact,sans-serif}
+.big{font:800 40px "Barlow Condensed",Impact,sans-serif}
+.opt{display:block;width:100%;text-align:left;padding:12px 14px;margin:8px 0;border:2px solid var(--ln);border-radius:12px;background:var(--cd);color:var(--ink);font:inherit;cursor:pointer}
+.opt:hover{border-color:var(--y)}.opt.ok{border-color:#16a34a;background:#16a34a2a}.opt.no{border-color:#dc2626;background:#dc26262a}
+.chips{display:flex;gap:8px}.chips .opt{text-align:center;margin:6px 0}
+.row{display:flex;gap:10px;margin-top:14px}
+.btn{flex:1;border:0;border-radius:14px;padding:14px;font:800 20px "Barlow Condensed",Impact,sans-serif;background:var(--y);color:#10231a;cursor:pointer}
+.btn:disabled{opacity:.4;cursor:not-allowed}.btn.alt{background:#0b1b2b;color:#fff}
+input[type=range]{width:100%;accent-color:#16a34a;margin:10px 0}
+.goal{font-weight:800;color:#16a34a;min-height:24px}
+</style>
+</head>
+<body>
+<div class="w">
+  <div class="sb">
+    <div class="t">Trading Academy<small id="lv"></small></div>
+    <div class="sc">⚽ <span id="gl">0</span></div>
+    <div class="clk"><span id="mn">0</span>’</div>
+  </div>
+  <div class="bar"><i id="pg"></i></div>
+  <div class="cd" id="cd"></div>
+  <div class="row"><button class="btn alt" id="pv" onclick="G(-1)">← Mbrapa</button><button class="btn" id="nx" onclick="G(1)">Vazhdo →</button></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const sg=v=>(v>0?'+':v<0?'−':'')+Math.abs(v);
+const bar=(p,c)=>`<div class="bar" style="background:var(--ln)"><i style="width:${Math.max(0,Math.min(100,p))}%;background:${c}"></i></div>`;
+const GR='#16a34a',RD='#dc2626',BL='#2563eb';
+
+// ---------- CHARTS (SVG) ----------
+function chart(d,o={}){
+  const W=320,H=170,P=12,C=Array.isArray(d[0]),V=o.lv||[],f=d.flat();
+  const lo=Math.min(...f,...V.map(l=>l.y)),hi=Math.max(...f,...V.map(l=>l.y)),pd=(hi-lo)*.12||5,mn=lo-pd,mx=hi+pd;
+  const X=k=>P+k*(W-2*P)/(d.length-1||1),Y=v=>H-P-(v-mn)/(mx-mn)*(H-2*P);
+  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}">`;
+  V.forEach(l=>{const y=Y(l.y);
+    s+=l.z?`<rect x="0" y="${y-10}" width="${W}" height="20" fill="${l.c}" opacity=".25"/>`:`<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="${l.c}" stroke-width="2" stroke-dasharray="6 4"/>`;
+    s+=`<text x="${W-5}" y="${y-5}" text-anchor="end" font-size="11" font-weight="800" fill="${l.c}">${l.n}</text>`});
+  if(C){const cw=(W-2*P)/d.length*.62;d.forEach(([o,h,l,c],k)=>{const col=c>=o?GR:RD;
+    s+=`<line x1="${X(k)}" x2="${X(k)}" y1="${Y(h)}" y2="${Y(l)}" stroke="${col}" stroke-width="1.5"/><rect x="${X(k)-cw/2}" y="${Y(Math.max(o,c))}" width="${cw}" height="${Math.max(1.5,Math.abs(Y(o)-Y(c)))}" fill="${col}"/>`})}
+  else{s+=`<polyline fill="none" style="stroke:var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="${d.map((v,k)=>X(k)+','+Y(v)).join(' ')}"/><circle cx="${X(d.length-1)}" cy="${Y(d[d.length-1])}" r="5" fill="#facc15" stroke="#10231a" stroke-width="2"/>`}
+  return s+'</svg>'}
+
+// market data for timeframe lesson
+let sd=7;const rn=()=>(sd=sd*16807%2147483647)/2147483647;
+const M=[];let pr=4000;for(let k=0;k<600;k++){const o=pr;pr+=(rn()-.47)*5;M.push([o,Math.max(o,pr)+rn()*2,Math.min(o,pr)-rn()*2,pr])}
+const agg=n=>{const r=[];for(let k=0;k<M.length;k+=n){const g=M.slice(k,k+n);r.push([g[0][0],Math.max(...g.map(x=>x[1])),Math.min(...g.map(x=>x[2])),g[g.length-1][3]])}return r};
+function TF(n){$('#tf').innerHTML=`<div class="chips">${[1,5,15].map(x=>`<button class="opt ${x==n?'ok':''}" onclick="TF(${x})">${x}M</button>`).join('')}</div>`+chart(agg(n).slice(-40))}
+
+const tr=[3985,3992,3988,4000,4012,4005,4030,4050];
+const candleSvg=`<svg class="ch" viewBox="0 0 360 200"><g font-size="11" font-weight="700" style="fill:var(--ink)">
+<line x1="60" x2="60" y1="25" y2="165" stroke="#16a34a" stroke-width="3"/><rect x="42" y="60" width="36" height="70" fill="#16a34a"/>
+<text x="86" y="29">Maja (High)</text><text x="86" y="64">Mbyllja (Close)</text><text x="86" y="134">Hapja (Open)</text><text x="86" y="169">Fundi (Low)</text>
+<line x1="230" x2="230" y1="35" y2="160" stroke="#dc2626" stroke-width="3"/><rect x="212" y="70" width="36" height="55" fill="#dc2626"/>
+<text x="256" y="39">Maja</text><text x="256" y="74">Hapja</text><text x="256" y="129">Mbyllja</text><text x="256" y="164">Fundi</text>
+<text x="60" y="190" text-anchor="middle" fill="#16a34a">Rritje</text><text x="230" y="190" text-anchor="middle" fill="#dc2626">Rënie</text></g></svg>`;
+
+// ---------- LESSONS ----------
+const L=[
+{i:'🛒',t:'Çka është tradingu?',x:'Blen një kartelë lojtari në Roblox për 100 Robux, sepse mendon se do të bëhet më e kërkuar. Më vonë dikush e paguan 150.',k:'Trading = blen lirë, shit më shtrenjtë. Fitimi vjen nga diferenca.',
+ v:()=>`<div class="g2"><div class="tile">Blerja<b>100 R$</b></div><div class="tile">Shitja<b>150 R$</b></div></div><div class="tile" style="color:${GR}">Fitimi<b>+50 R$</b></div>`,
+ q:['Nga vjen fitimi në trading?',['Nga diferenca e çmimit','Nga fati','Nga dhurimi'],0]},
+{i:'🏟️',t:'Çka është tregu?',x:'Një stadium ku disa ekipe duan të blejnë lojtarë, ndërsa të tjerat duan t’i shesin.',k:'Tregu është vendi ku blerësit dhe shitësit takohen.',
+ v:()=>`<div class="g2"><div class="tile">💰<b>Blerësit</b>duan lirë</div><div class="tile">📦<b>Shitësit</b>duan shtrenjtë</div></div><p style="text-align:center"><small class="st">Çmimi lind aty ku ata pajtohen.</small></p>`,
+ q:['Kush takohen në treg?',['Vetëm shitësit','Blerësit dhe shitësit','Vetëm lojtarët'],1]},
+{i:'🥇',t:'Çka është një aset?',x:'Mbappé ka vlerë sepse shumë ekipe e duan. Një Limited Item në Roblox ka vlerë sepse shumë lojtarë e kërkojnë.',k:'Aset = diçka me vlerë që mund të tregtohet.',
+ v:()=>`<div class="g2"><div class="tile">🥇<b>Ari</b></div><div class="tile">🛢️<b>Nafta</b></div><div class="tile">💵<b>Valutat</b></div><div class="tile">📈<b>Aksionet</b></div></div>`,
+ q:['Çka është një aset?',['Diçka pa vlerë','Diçka me vlerë që tregtohet','Vetëm cash'],1]},
+{i:'🥇',t:'Ari dhe XAUUSD',x:'Ari është metal i çmuar që e blejnë njerëz, banka dhe institucione. Në trading e sheh si XAUUSD.',k:'XAU = ari, USD = dollar. Nga $4,000 në $4,100 çmimi u rrit +$100.',
+ v:()=>chart([3990,4010,4000,4040,4030,4100],{lv:[{y:4000,n:'Dje $4,000',c:BL},{y:4100,n:'Sot $4,100',c:GR}]}),
+ q:['Çka do të thotë XAUUSD?',['Çmimi i naftës','Çmimi i arit në dollarë','Një lojë Roblox'],1]},
+{i:'⚖️',t:'Oferta dhe kërkesa',x:'Një futbollist i ri shënon 5 gola dhe bëhet i famshëm. Shumë ekipe e duan, prandaj vlera e tij rritet.',k:'Shumë blerës + pak shitës = çmimi lart. Shumë shitës + pak blerës = çmimi poshtë. Luaje rrëshqitësin.',
+ s:{min:0,max:100,v:50,st:1,f:v=>`<span class="big">$${4000+(v-50)*3}</span> ${v>50?'📈 blerësit dominojnë':v<50?'📉 shitësit dominojnë':'⚖️ baraspeshë'}`+bar(v,GR)+`<small class="st">Blerës ${v}% · Shitës ${100-v}%</small>`},
+ q:['Shumë blerës, pak shitës. Çka ndodh?',['Çmimi bie','Çmimi rritet','Nuk ndryshon'],1]},
+{i:'📈',t:'Uptrend',x:'Ekipi që fiton vazhdimisht: ngrihet, pushon pak, ngrihet prapë.',k:'Maja dhe funde gjithnjë më të larta. Blerësit kanë fuqi.',
+ v:()=>chart([4000,4050,4030,4080,4060,4120,4100,4150]),
+ q:['Në Uptrend kush ka fuqi?',['Shitësit','Blerësit','Askush'],1]},
+{i:'📉',t:'Downtrend',x:'Ekipi që humb ndeshje pas ndeshjeje: çdo ngritje e vogël pasohet nga rënie më e madhe.',k:'Maja dhe funde gjithnjë më të ulëta. Shitësit kanë fuqi.',
+ v:()=>chart([4200,4150,4170,4100,4120,4050,4070,4000]),
+ q:['Në Downtrend kush ka fuqi?',['Blerësit','Shitësit','Askush'],1]},
+{i:'🛡️',t:'Support',x:'Ekipi humb 2:0, por në minutën 70 tifozët e shtyjnë dhe ai fillon të sulmojë.',k:'Support = zonë ku çmimi ka rënë disa herë, por blerësit e kanë ndalur rënien.',
+ v:()=>chart([4100,4060,4020,4003,4040,4080,4040,4006,4045,4090],{lv:[{y:4003,z:1,c:BL,n:'SUPPORT'}]}),
+ q:['Çka është Support?',['Zonë ku rënia ndalet nga blerësit','Zonë ku rritja ndalet','Lloj aseti'],0]},
+{i:'🧱',t:'Resistance',x:'Ekipi sulmon pa pushim, por mbrojtja kundërshtare nuk e lë të shënojë.',k:'Resistance = zonë ku çmimi është ngritur disa herë, por shitësit e kanë ndalur.',
+ v:()=>chart([4000,4040,4080,4097,4060,4020,4060,4094,4055,4020],{lv:[{y:4097,z:1,c:RD,n:'RESISTANCE'}]}),
+ q:['Çka është Resistance?',['Zonë ku rritja ndalet nga shitësit','Zonë ku rënia ndalet','Lloj grafiku'],0]},
+{i:'🕯️',t:'Grafiku dhe qirinjtë',x:'Grafiku është historia e çmimit. Çdo qiri (candlestick) tregon katër gjëra.',k:'Hapja, Maja, Fundi, Mbyllja. E gjelbër = mbyllet më lart se hapja. E kuqe = mbyllet më poshtë.',
+ v:()=>candleSvg,q:['Sa informata tregon një qiri?',['1','2','4'],2]},
+{i:'⏰',t:'Timeframe',x:'Ndeshjen mund ta analizosh në 90 minuta, ose vetëm 15 minutat e fundit.',k:'Timeframe = sa kohë përfaqëson një qiri. Shtyp butonat: i njëjti treg duket krejt ndryshe. Jo çdo detaj i vogël ka rëndësi.',
+ v:()=>'<div id="tf"></div>',h:()=>TF(5),q:['Çka është 15M?',['Një qiri për 15 minuta','Një qiri për 15 orë','15 qirinj'],0]},
+{i:'🎯',t:'Sinjali i tregtimit',x:'Para ndeshjes trajneri analizon kundërshtarin: ku është i dobët, kush është i lodhur. Pastaj vendos kur të sulmojë.',k:'Kur disa shenja përputhen, ka një mundësi. Por sinjali NUK është garanci. Shëno shenjat:',
+ c:{a:['Trend në rritje','Çmimi te Support','Qirinj të fortë blerës','Stop Loss i planifikuar'],m:'🎯 Mundësi e mirë, por jo garanci.'},
+ q:['A garanton sinjali fitim?',['Po, gjithmonë','Jo, nuk garanton','Vetëm në mëngjes'],1]},
+{i:'🛒',t:'BUY dhe SELL',x:'Trajneri sheh mbrojtje të dobët dhe sulmon. Në trading ke dy drejtime.',k:'BUY = pret që çmimi të rritet. SELL = pret që të bjerë. Hyrja është $4,000. Lëvize çmimin:',
+ s:{min:-50,max:50,v:0,st:5,f:v=>`<span class="big">$${4000+v}</span><div class="g2"><div class="tile" style="color:${v>0?GR:v<0?RD:'inherit'}">BUY<b>${sg(v)}$</b></div><div class="tile" style="color:${v<0?GR:v>0?RD:'inherit'}">SELL<b>${sg(-v)}$</b></div></div>`},
+ q:['Kur bën BUY?',['Kur pret rënie','Kur pret rritje','Kur je i mërzitur'],1]},
+{i:'🛑',t:'Stop Loss',x:'Trajneri e di: nëse kundërshtari kalon një vijë, tërhiqeni dhe ndryshoni planin.',k:'Stop Loss = humbja maksimale që e pranon paraprakisht. Hyrje $4,000, SL $3,980: humbja maksimale është $20.',
+ v:()=>chart(tr,{lv:[{y:4000,n:'Hyrja $4,000',c:BL},{y:3980,n:'Stop Loss $3,980',c:RD}]}),
+ q:['Nga çka të mbron Stop Loss?',['Nga humbje të mëdha','Nga fitimi','Nga interneti'],0]},
+{i:'💰',t:'Take Profit',x:'Ekipi fiton 3:0. Pse të rrezikojë gjithçka për edhe një gol?',k:'Take Profit = niveli ku e merr fitimin dhe mbyll pozicionin. Hyrje $4,000, TP $4,050: fitimi është +$50.',
+ v:()=>chart(tr,{lv:[{y:4000,n:'Hyrja $4,000',c:BL},{y:4050,n:'Take Profit $4,050',c:GR}]}),
+ q:['Pse vendos Take Profit?',['Për ta mbyllur me fitim të planifikuar','Për ta mbajtur përgjithmonë','Për të humbur'],0]},
+{i:'⚖️',t:'Position Size',x:'Ke 20 lojtarë. Nuk i dërgon të gjithë në sulm, sepse mbetesh pa mbrojtje.',k:'Position size = madhësia e pozicionit. Më e madhe = fitim më i madh, por edhe humbje më e madhe. Llogaria: 1,000€. Çmimi lëviz $20:',
+ s:{min:1,max:50,v:5,st:1,f:v=>`Nëse shkon ty: <b style="color:${GR}">+${v*20}€</b><br>Nëse shkon kundër: <b style="color:${RD}">−${v*20}€</b>`+bar(v*2,RD)+`<small class="st">Humbja = ${v*2}% e llogarisë${v>=50?' 💥 llogaria shkoi':''}</small>`},
+ q:['Rrit position size. Çka ndodh?',['Vetëm fitimi rritet','Vetëm humbja rritet','Të dyja rriten'],2]},
+{i:'🧠',t:'Risk Management',x:'Sezoni ka 30 ndeshje. Nëse i harxhon të gjitha forcat në të parën, çka bën në 29-at tjera?',k:'Rrezikon 1–2% për tregti. Qëllimi: të mbetesh në lojë edhe nesër. Shih çka mbetet nga 1,000€ pas 5 humbjeve radhazi:',
+ s:{min:1,max:50,v:2,st:1,f:v=>{const r=1000*Math.pow(1-v/100,5);return`Rrezik ${v}% për tregti. Mbeten <b class="big">€${r.toFixed(0)}</b>`+bar(r/10,r>800?GR:r>500?'#f59e0b':RD)}},
+ q:['Sa rrezikon në një tregti?',['50%','Vetëm 1–2%','Gjithçka'],1]},
+{i:'🔍',t:'Leverage',x:'Në Roblox kontrollon një objekt prej 1,000 Robux me vetëm 100 të tuat.',k:'Leverage = kontrollon pozicion shumë më të madh se kapitali. Fitimi dhe humbja shtohen njësoj. Kapitali 100€, çmimi lëviz 1% KUNDËR teje:',
+ s:{min:1,max:100,v:10,st:1,f:v=>`Leva ${v}x: humb <b class="big" style="color:${RD}">${v}€</b> nga 100€`+bar(v,RD)+(v>=100?'<b>💥 Llogaria u zhduk nga një lëvizje 1%.</b>':'')},
+ q:['Çka bën leverage?',['Rrit vetëm fitimin','Rrit fitimin dhe humbjen','Heq rrezikun'],1]},
+{i:'📋',t:'Strategjia',x:'Trajneri ka plan për çdo ndeshje: kur sulmon, kur mbrohet, kur tërhiqet.',k:'Strategji = rregulla të shkruara para tregtisë. Trader pa strategji është ekip pa trajner. Plani duhet t’u përgjigjet:',
+ c:{a:['Kur blej?','Kur shes?','Ku e vë Stop Loss?','Ku e marr fitimin?','Sa rrezikoj?','Kur nuk bëj asgjë?'],m:'📋 Kjo është strategjia: përgjigjet i ke PARA tregtisë.'},
+ q:['Kur i vendos rregullat?',['Para se të hysh','Pasi humb','Kurrë'],0]},
+{i:'🏆',t:'Çka e bën dikë trader të mirë?',x:'Lojtari 1 blen gjithçka që i pëlqen dhe nervozohet kur humb. Lojtari 2 analizon dhe nuk e rrezikon gjithë pasurinë në një vend.',k:'Trader i mirë nuk fiton çdo ndeshje. Ai e menaxhon gjithë kampionatin.',
+ v:()=>`<div class="g2"><div class="tile" style="color:${RD}">Lojtari 1<br>Nervozohet<br>Rrezikon gjithçka<br>Pa plan</div><div class="tile" style="color:${GR}">Lojtari 2<br>Ka plan<br>Di sa mund të humbë<br>Mëson nga gabimet</div></div>`,
+ q:['Çka e bën dikë trader të mirë?',['Fiton çdo tregti','Ka plan dhe menaxhon rrezikun','Rrezikon gjithçka'],1]},
+{i:'🏟️',t:'Ndeshja e parë (para virtuale)',sim:1,x:'Ke 1,000€ virtualë. Zgjidh rrezikun, pastaj BUY ose SELL. Stop Loss është $15, Take Profit $30.',k:'Provo 2% dhe pastaj 10%. Shih çka ndodh pas disa humbjeve. Ndonjëherë më e mira është të presësh.'}
+];
+
+// ---------- ENGINE ----------
+let i=0,g=0,done={};const T=['Rezervë','Titullar','Kapiten','Trajner','Legjendë'];
+function draw(){
+  const l=L[i];
+  let h=`<small class="st">${l.i} Hapi ${i+1} nga ${L.length}</small><h2>${l.t}</h2><p>${l.x}</p><div class="key">${l.k}</div>`;
+  if(l.v)h+=l.v();
+  if(l.s)h+=`<input type="range" id="rg" min="${l.s.min}" max="${l.s.max}" step="${l.s.st}" value="${l.s.v}"><div id="o"></div>`;
+  if(l.c)h+=`<div id="ck">${l.c.a.map(a=>`<button class="opt" data-t="${a}" onclick="K(this)">☐ ${a}</button>`).join('')}</div><div class="goal" id="cm"></div>`;
+  if(l.sim)h+='<div id="sim"></div>';
+  if(l.q)h+=`<h3>🧩 ${l.q[0]}</h3>`+l.q[1].map((o,k)=>`<button class="opt${done[i]&&k==l.q[2]?' ok':''}" onclick="A(${k},this)">${o}</button>`).join('')+`<div class="goal" id="gf">${done[i]?'⚽ GOOOL!':''}</div>`;
+  $('#cd').innerHTML=h;
+  if(l.s){const r=$('#rg'),u=()=>$('#o').innerHTML=l.s.f(+r.value);r.oninput=u;u()}
+  if(l.h)l.h();if(l.sim)SI();
+  up();scrollTo(0,0)}
+function up(){
+  $('#gl').textContent=g;$('#lv').textContent=T[Math.min(4,Math.floor(g/4))];
+  $('#mn').textContent=Math.round(i/(L.length-1)*90);$('#pg').style.width=(i+(done[i]?1:0))/L.length*100+'%';
+  $('#pv').disabled=i==0;$('#nx').style.display=i==L.length-1?'none':'';$('#nx').disabled=!(done[i]||L[i].sim)}
+function G(d){clearInterval(tm);i+=d;draw()}
+function A(k,b){const l=L[i];if(done[i])return;
+  if(k==l.q[2]){done[i]=1;g++;b.classList.add('ok');$('#gf').textContent='⚽ GOOOL! Vazhdo.';up()}
+  else{b.classList.add('no');$('#gf').style.color=RD;$('#gf').textContent='Jashtë! Provo përsëri.'}}
+function K(e){e.classList.toggle('ok');e.textContent=(e.classList.contains('ok')?'☑ ':'☐ ')+e.dataset.t;
+  $('#cm').textContent=[...document.querySelectorAll('#ck .opt')].every(x=>x.classList.contains('ok'))?L[i].c.m:''}
+
+// ---------- SIMULATOR ----------
+let sp,bal,pos,rk=2,tm,dr,msg,W=0,Ls=0;
+function SI(){clearInterval(tm);sp=[4000];dr=0;for(let k=0;k<39;k++)st();bal=1000;pos=null;msg='';W=Ls=0;SR()}
+function st(){dr=dr*.9+(Math.random()-.5)*3;sp.push(sp[sp.length-1]+dr+(Math.random()-.5)*10)}
+function tk(){st();const p=sp[sp.length-1];
+  if(pos){const u=pos.d*(p-pos.e);
+    if(u>=30||u<=-15){const w=u>=30;bal+=w?pos.r*2:-pos.r;w?W++:Ls++;
+      msg=w?`✅ Take Profit! +€${(pos.r*2).toFixed(0)}`:`🛑 Stop Loss. −€${pos.r.toFixed(0)}. Humbje e vogël, e planifikuar.`;pos=null;clearInterval(tm)}}
+  SR()}
+function go(d){const p=sp[sp.length-1];pos={d,e:p,r:bal*rk/100};msg='';clearInterval(tm);tm=setInterval(tk,450);SR()}
+function SR(){const s=$('#sim');if(!s){clearInterval(tm);return}
+  s.innerHTML=`<div class="g2"><div class="tile">💰<b>€${bal.toFixed(0)}</b></div><div class="tile">Fitore ${W} · Humbje ${Ls}<b></b></div></div>`
+  +chart(sp.slice(-40),{lv:pos?[{y:pos.e,n:'Hyrja',c:BL},{y:pos.e-pos.d*15,n:'Stop Loss',c:RD},{y:pos.e+pos.d*30,n:'Take Profit',c:GR}]:[]})
+  +`<p class="goal" style="color:var(--ink)">${msg||(pos?'Pozicioni është i hapur…':'Rrezik për tregti: '+rk+'%')}</p>`
+  +(pos?'':`<div class="chips">${[1,2,5,10].map(x=>`<button class="opt ${rk==x?'ok':''}" onclick="rk=${x};SR()">${x}%</button>`).join('')}</div>
+  <div class="row"><button class="btn" style="background:#16a34a;color:#fff" onclick="go(1)">BUY 📈</button><button class="btn" style="background:#dc2626;color:#fff" onclick="go(-1)">SELL 📉</button></div>
+  <div class="row"><button class="btn alt" onclick="tk()">⏳ Pres (nuk bëj asgjë)</button></div>`)
+  +(bal<30?'<p><b>Llogaria u shkatërrua.</b> Ja pse rreziku ka rëndësi.</p>':'')
+  +`<div class="row"><button class="btn alt" onclick="SI()">↺ Fillo nga e para</button></div>`}
+
+draw();
+</script>
+</body>
+</html>
