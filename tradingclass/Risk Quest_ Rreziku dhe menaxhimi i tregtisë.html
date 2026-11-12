@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Risk Quest: Rreziku dhe menaxhimi i tregtisë</title>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#bfe3ff;--dt:#9fd0f5;--cd:#fff;--ink:#14213d;--bd:#14213d;--sh:#14213d;--mu:#4a5875;--bg2:#eef6ff;--y:#ffd23f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101a3a;--dt:#1b2750;--cd:#1b2750;--ink:#f4f6ff;--bd:#8ea2ff;--sh:#000;--mu:#aab6e0;--bg2:#121c40}}
+:root[data-theme="dark"]{--bg:#101a3a;--dt:#1b2750;--cd:#1b2750;--ink:#f4f6ff;--bd:#8ea2ff;--sh:#000;--mu:#aab6e0;--bg2:#121c40}
+body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg) radial-gradient(var(--dt) 1.5px,transparent 1.5px) 0 0/22px 22px}
+.w{max-width:640px;margin:auto;padding:14px}
+.hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hd h1{font:400 28px "Lilita One",Impact,sans-serif;margin:0;flex:1;min-width:150px}
+.pill{background:var(--cd);border:3px solid var(--bd);border-radius:20px;padding:2px 12px;font:400 18px "Lilita One",Impact,sans-serif;box-shadow:0 3px 0 var(--sh)}
+#dots{display:flex;gap:4px;margin:12px 0}
+.dot{flex:1;height:26px;border:2px solid var(--bd);border-radius:8px;background:var(--cd);color:var(--ink);font:700 11px system-ui;padding:0;cursor:pointer}
+.dot.d{background:#22b573;color:#fff}.dot.c{background:var(--y);color:#14213d;transform:translateY(-3px)}.dot:disabled{opacity:.35;cursor:not-allowed}
+.cd{background:var(--cd);border:3px solid var(--bd);border-radius:18px;box-shadow:5px 5px 0 var(--sh);padding:18px}
+h2{font:400 32px/1.1 "Lilita One",Impact,sans-serif;margin:4px 0 10px}h3{font:400 20px "Lilita One",Impact,sans-serif;margin:16px 0 4px}
+p{margin:0 0 10px}small{color:var(--mu);font-weight:700}
+.key{background:#ffd23f33;border-left:6px solid var(--y);padding:10px 14px;border-radius:4px 12px 12px 4px;margin:12px 0;font-weight:700}
+.ch{width:100%;display:block;background:var(--bg2);border:2px solid var(--bd);border-radius:14px;margin:8px 0;touch-action:manipulation}
+.btn,.opt{border:3px solid var(--bd);box-shadow:0 4px 0 var(--sh);border-radius:14px;padding:12px 16px;font:400 19px "Lilita One",Impact,sans-serif;cursor:pointer}
+.btn{background:var(--y);color:#14213d}.opt{display:block;width:100%;text-align:left;margin:10px 0;background:var(--cd);color:var(--ink);font-family:inherit;font-weight:700;font-size:16px}
+.btn:active,.opt:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sh)}
+.btn:disabled,.opt:disabled{opacity:.45;cursor:not-allowed}
+.opt.ok{background:#22b573;color:#fff}.opt.no{background:#ef476f;color:#fff}
+.row{display:flex;gap:12px;margin-top:16px}.row .btn{flex:1}.alt{background:var(--cd)!important;color:var(--ink)!important}
+.msg{min-height:24px;font-weight:700;margin-top:8px}
+.card{background:#ffd23f44;border:3px dashed var(--bd);border-radius:14px;padding:12px;margin-top:12px;font-weight:700}
+.al{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tile{background:var(--bg2);border:2px solid var(--bd);border-radius:12px;padding:10px;font-size:14px;font-weight:700}
+input[type=range]{width:100%;accent-color:#ef476f;margin:12px 0 6px}
+.big{font:400 30px "Lilita One",Impact,sans-serif}
+</style>
+</head>
+<body>
+<div class="w">
+  <div class="hd"><h1>Risk Quest</h1><span class="pill">⭐ <span id="st">0</span></span><span class="pill">🔥 <span id="sk">0</span></span><span class="pill" id="rk"></span></div>
+  <div id="dots"></div>
+  <div class="cd" id="cd"></div>
+  <div class="row"><button class="btn alt" id="pv" onclick="G(-1)">← Mbrapa</button><button class="btn" id="nx" onclick="G(1)">Level tjetër →</button></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const GR='#22b573',RD='#ef476f',BL='#3b82f6',YL='#ffd23f',OR='#f59e0b';
+const bar=(p,c)=>`<div style="height:14px;border:2px solid var(--bd);border-radius:8px;overflow:hidden;margin:6px 0"><i style="display:block;height:100%;width:${Math.max(0,Math.min(100,p))}%;background:${c}"></i></div>`;
+
+function chart(d,o={}){
+  const C=Array.isArray(d[0]),W=320,H=180,P=C?24:16,V=o.lv||[],f=d.flat();
+  const ys=[...f,...V.map(l=>l.y)],lo=Math.min(...ys),hi=Math.max(...ys),pd=(hi-lo)*.12||5,mn=lo-pd,mx=hi+pd;
+  const X=k=>P+k*(W-2*P)/(d.length-1||1),Y=v=>H-P-(v-mn)/(mx-mn)*(H-2*P);
+  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}">`;
+  V.forEach(l=>{const y=Y(l.y);
+    s+=l.z?`<rect x="0" y="${y-10}" width="${W}" height="20" fill="${l.c}" opacity=".3"/>`:`<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="${l.c}" stroke-width="2.5" stroke-dasharray="6 4"/>`;
+    s+=`<text x="${W-6}" y="${y-5}" text-anchor="end" font-size="11" font-weight="800" fill="${l.c}">${l.n}</text>`});
+  s+=`<polyline fill="none" style="stroke:var(--ink)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" points="${d.map((v,k)=>X(k)+','+Y(v)).join(' ')}"/><circle cx="${X(d.length-1)}" cy="${Y(d[d.length-1])}" r="5" fill="${YL}" stroke="#14213d" stroke-width="2"/>`;
+  if(o.pk)d.forEach((_,k)=>{const on=o.pk.has(k);
+    s+=`<circle cx="${X(k)}" cy="${Y(d[k])}" r="${on?11:10}" fill="${on?YL:'#0000'}" stroke="var(--ink)" stroke-width="2.5" ${on?'':'stroke-dasharray="3 3"'} style="cursor:pointer" onclick="P(${k})"/>`});
+  return s+'</svg>'}
+
+const UP=[10,16,13,20,16,24,20,28],SLP=[4000,4040,4020,4070,4045,4090,4060],RR=[3992,3996,3994,4000,4004,4002];
+const BEV=[3992,3996,3994,4000,4010,4015,4020],PT=[3992,3996,3994,4000,4008,4014,4020];
+
+const L=[
+{ic:'🧤',t:'Mbro portën para golit',x:'Askush nuk fiton çdo tregti. Ata që mbijetojnë janë ata që humbasin pak kur gabojnë.',k:'Rregulli #1: mbroje kapitalin para se të ndjekësh fitimin.',q:'Loja A rrezikon 50% për tregti, loja B vetëm 1%. Të dy humbin 3 radhazi. Kush mbetet më mirë?',a:['A, ka më shumë guxim','B, i mbeten rreth 97%','Njëlloj'],r:1,m:'Mbro portën para se të shënosh 🧤'},
+{ic:'💶',t:'Rreziku për tregti',x:'Llogaria ka 1,000€. Para çdo tregtie vendos sa mund ta humbësh maksimalisht: 1% e llogarisë.',k:'Rreziku në € = kapitali × përqindja.',q:'Vendos rrezikun që humbja maksimale të jetë 10€.',s:{min:1,max:20,v:10,st:1,f:v=>`Rrezik ${v}% = <span class="big">€${v*10}</span>`+bar(v*5,v<=1?GR:RD),ok:v=>v==1},m:'1% për tregti. Jo më shumë!'},
+{ic:'🛑',t:'Ku e vë Stop Loss?',x:'Stop Loss nuk vihet rastësisht. Vendoset aty ku, nëse çmimi arrin, ideja jote nuk është më e vërtetë.',k:'Për BUY, SL shkon poshtë një Swing Low: jo shumë afër, jo shumë larg.',q:'Hyrje BUY në 4,060. Cili Stop Loss është më i mençur?',c:SLP,o:{lv:[{y:4060,n:'Hyrja',c:BL},{y:4056,n:'A',c:OR},{y:4038,n:'B',c:OR},{y:4000,n:'C',c:OR}]},a:['A: 4,056 (shumë afër)','B: 4,038 (poshtë fundit të fundit)','C: 4,000 (shumë larg)'],r:1,m:'SL = poshtë gropës, jo në buzë të saj 🕳️'},
+{ic:'🧮',t:'Sa njësi blej?',x:'Ke rrezikun (10€) dhe distancën e Stop Loss (10$). Tani llogarit madhësinë e pozicionit.',k:'Madhësia = rreziku në € ÷ distanca e SL. 1 njësi humb 1€ për çdo $1.',q:'Rreziku 10€, SL 10$ larg. Sa njësi hap?',s:{min:1,max:10,v:5,st:1,f:v=>`${v} njësi × 10$ = humbje <span class="big">€${v*10}</span> nëse prek SL`+bar(v*10,v*10<=10?GR:RD),ok:v=>v==1},m:'Madhësia = rreziku ÷ distanca. Numro para se të ndezësh motorin 🧮'},
+{ic:'⚖️',t:'Risk : Reward',x:'Risk:Reward krahason sa rrezikon me sa mund të fitosh. Këtu rrezikon 10$ për të fituar 30$.',k:'R:R 1:3 = fitimi i mundshëm është 3 herë rreziku.',q:'Hyrje 4,000. SL 3,990. TP 4,030. Sa është Risk:Reward?',c:RR,o:{lv:[{y:4000,n:'Hyrja',c:BL},{y:3990,n:'SL',c:RD},{y:4030,n:'TP',c:GR}]},a:['1:1','1:2','1:3'],r:2,m:'Rrezikon 1 gol për të shënuar 3 ⚽⚽⚽'},
+{ic:'🏆',t:'Nuk duhet të fitosh çdo herë',x:'Me R:R të mirë mjafton të fitosh një pjesë të tregtive. Rëndësi ka matematika e gjithë sezonit.',k:'Me R:R 1:2, edhe 40% fitore mund të sjellë fitim.',q:'10 tregti, rrezik 10€ secila, R:R 1:2. Fiton 4, humb 6. Rezultati?',a:['−20€','0€','+20€'],r:2,m:'Nuk fiton çdo ndeshje, por kampionatin 🏆'},
+{ic:'🚪',t:'Mos e largo Stop Loss',x:'Çmimi po afrohet te Stop Loss dhe ti ke dëshirë ta zhvendosësh poshtë “sa për pak”.',k:'Stop Loss nuk zgjerohet kurrë. Mund ta ngushtosh për të mbrojtur fitimin, por nuk e largon.',q:'E largon SL sepse shpreh shpresë. Çka po bën realisht?',a:['E ndërroj humbjen e vogël në humbje të madhe','E mbroj tregtinë','Po bëhem më i mençur'],r:0,m:'SL i larguar = portë pa portier 🚪'},
+{ic:'🟥',t:'Limiti ditor',x:'Dita ka limit. Kur arrin humbjen maksimale ditore, mbyll platformën.',k:'Humbje ditore maksimale, p.sh. 3%. E arrin, ndalon për sot.',q:'Limiti është 3%. Humbe 3 tregti radhazi me 1% (3% gjithsej). Çka bën?',a:['Ndalem për sot','Hyj më i madh për t’u rikuperuar','Heq Stop Loss-in'],r:0,m:'Karton i kuq 🟥: del nga fusha për sot'},
+{ic:'😤',t:'Revenge trading',x:'Pas humbjes ke dëshirë ta rimarrësh menjëherë. Atëherë vendos emocioni, jo plani.',k:'Revenge trading = tregtim i zemëruar për t’u hakmarrë ndaj tregut. Zakonisht humbet më shumë.',q:'Sapo humbe dhe hap menjëherë një tregti të madhe pa plan. Si quhet?',a:['Revenge trading','Strategji e re','Sinjal i fortë'],r:0,m:'Pas golit të humbur merr frymë, mos e shkel topin 😤'},
+{ic:'🦺',t:'Break-even',x:'Kur çmimi shkon në favorin tënd, mund ta zhvendosësh Stop Loss te hyrja.',k:'Break-even = SL te çmimi i hyrjes. Në rastin më të keq humbet 0€.',q:'BUY në 4,000. Çmimi shkoi në 4,020, gjysma e rrugës deri te TP. Si e mbron tregtinë?',c:BEV,o:{lv:[{y:4000,n:'Hyrja',c:BL},{y:3990,n:'SL',c:RD},{y:4040,n:'TP',c:GR}]},a:['SL te hyrja (break-even)','Heq SL-in fare','Mbyll gjithçka nga paniku'],r:0,m:'Break-even = jelek mbrojtës 🦺'},
+{ic:'🥈',t:'Fitim i pjesshëm',x:'Mund ta mbyllësh një pjesë të pozicionit kur arrin objektivin e parë, dhe pjesën tjetër ta lësh të vazhdojë.',k:'Partial profit = merr një pjesë të fitimit, lër një pjesë të vrapojë.',q:'Çmimi arriti objektivin e parë (TP1). Çka bën sipas planit?',c:PT,o:{lv:[{y:4000,n:'Hyrja',c:BL},{y:4020,n:'TP1',c:GR},{y:4040,n:'TP2',c:GR}]},a:['Mbyll gjysmën, SL te hyrja për pjesën tjetër','Mbyll gjithçka dhe harroj planin','Dyfishoj pozicionin nga euforia'],r:0,m:'Merr gjysmën e kupës, luaj për tjetrën 🥈'},
+{ic:'🧗',t:'Trailing Stop',x:'Ndërsa çmimi ngjitet, ngre Stop Loss-in pas çdo fundi të ri më të lartë, si një hije që të ndjek.',k:'SL ngjitet bashkë me çmimin dhe mbron fitimin që ke bërë.',q:'Shtyp fundet poshtë të cilave e ngre Stop Loss-in.',c:UP,p:[2,4,6],m:'SL ndjek çmimin si hije, lart e jo poshtë 🧗'},
+{ic:'🏎️',t:'Leverage dhe frenat',x:'Leverage e rrit pozicionin. Kapitali është 100€ dhe çmimi lëviz 5% KUNDËR teje.',k:'Humbja = lëvizja % × leverage. Zgjidh leva-n që humbja të mos kalojë 10€.',q:'Vendos leverage-in që humbja maksimale të jetë 10€ ose më pak.',s:{min:1,max:20,v:10,st:1,f:v=>`Leva ${v}x: humbje <span class="big">€${5*v}</span>`+bar(5*v,5*v<=10?GR:RD)+(5*v>=100?'<b>💥 Llogaria zhduket.</b>':''),ok:v=>5*v<=10},m:'Leva e lartë = makinë pa frena 🏎️'},
+{ic:'📹',t:'Ditari i tregtisë',x:'Lojtarët profesionistë rishikojnë ndeshjen në video. Tregtarët mbajnë ditar.',k:'Ditari: pse hyra, çka ndodhi, çka mësova.',q:'Çka shkruan në ditar pas çdo tregtie?',a:['Arsyen, rezultatin dhe mësimin','Vetëm tregtitë fituese','Asgjë, i mbaj mend të gjitha'],r:0,m:'Ditari = videoanaliza e ndeshjes 📹'},
+{ic:'👑',t:'Boss: Menaxheri i rrezikut',x:'5 pyetje të përziera nga level-et e mëparshme. Duhen 3 të sakta për ta fituar kupën.',k:'Pa tekst ndihmës. Vetëm mendja jote.',boss:1,m:''}
+];
+const BANK=[0,2,4,5,6,7,8,9,10,13];
+
+let i=0,S={},tr=0,sel=new Set(),sk=0,bs=null,sv=0;
+const tot=()=>Object.values(S).reduce((a,b)=>a+b,0),RK=['Rezervë','Mbrojtës','Strateg','Kapiten','Menaxher'];
+const unl=()=>{let k=0;while(S[k]!==undefined&&k<L.length-1)k++;return k};
+
+function draw(){const l=L[i];sel=new Set();tr=0;sv=l.s?l.s.v:0;
+  $('#cd').innerHTML=`<small>${l.ic} Level ${i+1} nga ${L.length}</small><h2>${l.t}</h2><p>${l.x}</p><div class="key">${l.k}</div><div id="gm"></div>`;
+  if(l.boss){if(S[i]===undefined){bs={q:[...BANK].sort(()=>Math.random()-.5).slice(0,5),n:0,ok:0};BR()}else $('#gm').innerHTML=ALB()}else gm();
+  up();scrollTo(0,0)}
+function gm(){const l=L[i],dn=S[i]!==undefined;
+  let h=`<h3>🎮 ${l.q}</h3>`+(l.c?chart(l.c,{...(l.o||{}),pk:l.p?(dn?new Set(l.p):sel):null}):'');
+  if(l.s)h+=`<input type="range" id="rg" min="${l.s.min}" max="${l.s.max}" step="${l.s.st}" ${dn?'disabled':''}><div id="o"></div>`;
+  if(!dn&&(l.p||l.s))h+='<button class="btn" onclick="CK()">Kontrollo ✔</button>';
+  if(!dn&&l.a)h+=l.a.map((o,k)=>`<button class="opt" onclick="C(${k},this)">${o}</button>`).join('');
+  h+='<div class="msg" id="ms"></div>';
+  if(dn)h+=`<div class="card">✅ Saktë! ${'⭐'.repeat(S[i])}${'☆'.repeat(3-S[i])}<br>🃏 Kartela e kujtesës: ${l.m}</div>`;
+  $('#gm').innerHTML=h;
+  if(l.s){const r=$('#rg'),u=()=>$('#o').innerHTML=l.s.f(sv);r.value=sv;r.oninput=()=>{sv=+r.value;u()};u()}
+  up()}
+function P(k){if(S[i]!==undefined)return;sel.has(k)?sel.delete(k):sel.add(k);gm()}
+function CK(){const l=L[i];
+  if(l.s){if(l.s.ok(sv))return win();tr++;$('#ms').textContent='Jo ende. Provo një vlerë tjetër.';return}
+  const hit=l.p.filter(k=>sel.has(k)).length,bad=sel.size-hit,miss=l.p.length-hit;
+  if(!bad&&!miss)return win();tr++;gm();$('#ms').textContent=`Ke ${hit} të sakta, ${bad} gabim, mungojnë ${miss}. Provo prapë.`}
+function C(k,b){if(k==L[i].r)return win();tr++;b.classList.add('no');b.disabled=true;$('#ms').textContent='Jo ende. Provo një tjetër.'}
+function win(){S[i]=Math.max(1,3-tr);sk=tr?0:sk+1;gm()}
+function up(){$('#st').textContent=tot();$('#sk').textContent=sk;$('#rk').textContent=RK[Math.min(4,Math.floor(tot()/9))];
+  $('#dots').innerHTML=L.map((l,k)=>`<button class="dot ${S[k]!==undefined?'d':''} ${k==i?'c':''}" ${k>unl()?'disabled':''} onclick="i=${k};draw()">${k+1}</button>`).join('');
+  $('#pv').disabled=i==0;$('#nx').style.display=i==L.length-1?'none':'';$('#nx').disabled=S[i]===undefined}
+function G(d){i+=d;draw()}
+
+function BR(){const l=L[bs.q[bs.n]];
+  $('#gm').innerHTML=`<h3>👑 Pyetja ${bs.n+1} nga 5</h3>`+(l.c?chart(l.c,l.o||{}):'')+`<p><b>${l.q}</b></p>`+l.a.map((o,k)=>`<button class="opt" onclick="BA(${k},this)">${o}</button>`).join('')+'<div class="msg" id="ms"></div>'}
+function BA(k,b){const l=L[bs.q[bs.n]],ok=k==l.r;b.classList.add(ok?'ok':'no');if(ok)bs.ok++;
+  document.querySelectorAll('#gm .opt').forEach(x=>x.disabled=true);$('#ms').textContent=ok?'✅ Saktë!':'❌ Përgjigja: '+l.a[l.r];
+  setTimeout(()=>{if(!L[i].boss)return;if(++bs.n<5)BR();else BE()},1200)}
+function BE(){if(bs.ok>=3){S[i]=bs.ok>=5?3:bs.ok==4?2:1;$('#gm').innerHTML=`<p><b>${bs.ok} nga 5 të sakta!</b></p>`+ALB();up()}
+  else $('#gm').innerHTML=`<div class="card">${bs.ok} nga 5. Duhen 3. Rishiko level-et dhe provo prapë.</div><div class="row"><button class="btn" onclick="draw()">Provo prapë</button></div>`}
+const ALB=()=>`<div class="card">👑 Menaxher rreziku! Pikët: ${tot()} / 45 · Rank: ${RK[Math.min(4,Math.floor(tot()/9))]}</div><h3>🃏 Albumi yt</h3><div class="al">${L.slice(0,14).map(l=>`<div class="tile">${l.ic} ${l.m}</div>`).join('')}</div>`;
+
+draw();
+</script>
+</body>
+</html>
