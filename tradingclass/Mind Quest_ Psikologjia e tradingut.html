@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mind Quest: Psikologjia e tradingut</title>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#bfe3ff;--dt:#9fd0f5;--cd:#fff;--ink:#14213d;--bd:#14213d;--sh:#14213d;--mu:#4a5875;--bg2:#eef6ff;--y:#ffd23f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101a3a;--dt:#1b2750;--cd:#1b2750;--ink:#f4f6ff;--bd:#8ea2ff;--sh:#000;--mu:#aab6e0;--bg2:#121c40}}
+:root[data-theme="dark"]{--bg:#101a3a;--dt:#1b2750;--cd:#1b2750;--ink:#f4f6ff;--bd:#8ea2ff;--sh:#000;--mu:#aab6e0;--bg2:#121c40}
+body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg) radial-gradient(var(--dt) 1.5px,transparent 1.5px) 0 0/22px 22px}
+.w{max-width:640px;margin:auto;padding:14px}
+.hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hd h1{font:400 28px "Lilita One",Impact,sans-serif;margin:0;flex:1;min-width:150px}
+.pill{background:var(--cd);border:3px solid var(--bd);border-radius:20px;padding:2px 12px;font:400 18px "Lilita One",Impact,sans-serif;box-shadow:0 3px 0 var(--sh)}
+#dots{display:flex;gap:4px;margin:12px 0}
+.dot{flex:1;height:26px;border:2px solid var(--bd);border-radius:8px;background:var(--cd);color:var(--ink);font:700 11px system-ui;padding:0;cursor:pointer}
+.dot.d{background:#22b573;color:#fff}.dot.c{background:var(--y);color:#14213d;transform:translateY(-3px)}.dot:disabled{opacity:.35;cursor:not-allowed}
+.cd{background:var(--cd);border:3px solid var(--bd);border-radius:18px;box-shadow:5px 5px 0 var(--sh);padding:18px}
+h2{font:400 32px/1.1 "Lilita One",Impact,sans-serif;margin:4px 0 10px}h3{font:400 20px "Lilita One",Impact,sans-serif;margin:16px 0 4px}
+p{margin:0 0 10px}small{color:var(--mu);font-weight:700}
+.key{background:#ffd23f33;border-left:6px solid var(--y);padding:10px 14px;border-radius:4px 12px 12px 4px;margin:12px 0;font-weight:700}
+.ch{width:100%;display:block;background:var(--bg2);border:2px solid var(--bd);border-radius:14px;margin:8px 0}
+.btn,.opt{border:3px solid var(--bd);box-shadow:0 4px 0 var(--sh);border-radius:14px;padding:12px 16px;font:400 19px "Lilita One",Impact,sans-serif;cursor:pointer}
+.btn{background:var(--y);color:#14213d}.opt{display:block;width:100%;text-align:left;margin:10px 0;background:var(--cd);color:var(--ink);font-family:inherit;font-weight:700;font-size:16px}
+.btn:active,.opt:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sh)}
+.btn:disabled,.opt:disabled{opacity:.45;cursor:not-allowed}
+.opt.ok{background:#22b573;color:#fff}.opt.no{background:#ef476f;color:#fff}
+.row{display:flex;gap:12px;margin-top:16px}.row .btn{flex:1}.alt{background:var(--cd)!important;color:var(--ink)!important}
+.msg{min-height:24px;font-weight:700;margin-top:8px}
+.card{background:#ffd23f44;border:3px dashed var(--bd);border-radius:14px;padding:12px;margin-top:12px;font-weight:700}
+.al{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tile{background:var(--bg2);border:2px solid var(--bd);border-radius:12px;padding:10px;font-size:14px;font-weight:700}
+input[type=range]{width:100%;accent-color:#ef476f;margin:12px 0 6px}
+.big{font:400 30px "Lilita One",Impact,sans-serif}
+.sm{margin:10px 0;min-height:30px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="w">
+  <div class="hd"><h1>Mind Quest</h1><span class="pill">⭐ <span id="st">0</span></span><span class="pill">🔥 <span id="sk">0</span></span><span class="pill" id="rk"></span></div>
+  <div id="dots"></div>
+  <div class="cd" id="cd"></div>
+  <div class="row"><button class="btn alt" id="pv" onclick="G(-1)">← Mbrapa</button><button class="btn" id="nx" onclick="G(1)">Level tjetër →</button></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const GR='#22b573',RD='#ef476f',YL='#ffd23f';
+const bar=(p,c)=>`<div style="height:14px;border:2px solid var(--bd);border-radius:8px;overflow:hidden;margin:6px 0"><i style="display:block;height:100%;width:${Math.max(0,Math.min(100,p))}%;background:${c}"></i></div>`;
+
+function chart(d){
+  const W=320,H=170,P=16,lo=Math.min(...d),hi=Math.max(...d),pd=(hi-lo)*.12||5,mn=lo-pd,mx=hi+pd;
+  const X=k=>P+k*(W-2*P)/(d.length-1),Y=v=>H-P-(v-mn)/(mx-mn)*(H-2*P);
+  return `<svg class="ch" viewBox="0 0 ${W} ${H}"><polyline fill="none" style="stroke:var(--ink)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" points="${d.map((v,k)=>X(k)+','+Y(v)).join(' ')}"/><circle cx="${X(d.length-1)}" cy="${Y(d[d.length-1])}" r="6" fill="${YL}" stroke="#14213d" stroke-width="2"/></svg>`}
+
+// dice: a series of trades with a given win chance
+function WS(){const w=L[i].w,r=Array.from({length:w.n},()=>Math.random()<w.p);let run=0,mx=0;
+  r.forEach(x=>{run=x?0:run+1;mx=Math.max(mx,run)});
+  $('#sm').innerHTML=r.map(x=>`<span style="display:inline-block;width:18px;height:18px;border-radius:50%;border:2px solid var(--bd);margin:2px;background:${x?GR:RD}"></span>`).join('')+`<br>Fitore ${r.filter(x=>x).length} · Humbje ${r.filter(x=>!x).length} · Seria më e gjatë e humbjeve: <b>${mx}</b>`}
+
+const FO=[4000,4008,4015,4050,4110,4170,4190];
+
+const L=[
+{ic:'🧠',t:'Grafiku është njësoj për të gjithë',x:'Dy tregtarë shohin të njëjtin grafik dhe kanë të njëjtën strategji. Pas një muaji, njëri fiton dhe tjetri humb.',k:'Pjesa më e vështirë e tradingut është mendja jote, jo grafiku.',q:'Pse rezultatet e tyre janë të ndryshme?',a:['Mendja dhe disiplina e tyre','Grafiku ishte i bukur për njërin','Njëri ka më shumë fat gjithmonë'],r:0,m:'Grafiku është njësoj për të gjithë, mendja jote e bën dallimin 🧠'},
+{ic:'🎲',t:'Tregtia e radhës është e panjohur',x:'Ideja e Mark Douglas: askush nuk e di çka ndodh në tregtinë tjetër. Ti ke vetëm gjasa, si lojtari që shënon 6 penallti nga 10.',k:'Strategjia e mirë jep avantazh mbi shumë tregti. Nuk garanton një tregti të vetme.',w:{p:.6,n:10,b:'Hidh 10 tregti (60% fitore)'},q:'Strategjia fiton 6 nga 10 herë. Tregtia e radhës do të jetë…',a:['Sigurisht fituese','E panjohur: mund të fitojë ose humbasë','Sigurisht humbëse'],r:1,m:'Penallti: 6 nga 10 është shumë mirë, por jo çdo herë ⚽'},
+{ic:'🌧️',t:'Humbjet radhazi janë normale',x:'Edhe me strategji të mirë vijnë humbje njëra pas tjetrës, si disa penallti të humbura rresht. Shtyp disa herë butonin dhe shih.',k:'Seria e humbjeve nuk do të thotë se strategjia ose ti jeni të prishur.',w:{p:.55,n:20,b:'Hidh 20 tregti (55% fitore)'},q:'Ke humbur 4 tregti radhazi me strategji që e ke testuar. Çka bën?',a:['Kontrolloj nëse i kam ndjekur rregullat dhe vazhdoj planin','E ndërroj strategjinë menjëherë','Dyfishoj madhësinë që të rimarr'],r:0,m:'4 humbje radhazi nuk e prishin strategjinë 🌧️'},
+{ic:'🎟️',t:'Humbësi më i mirë',x:'Tom Hougaard flet për “humbësin më të mirë”: tregtarët e mirë nuk janë ata që nuk humbin, por ata që humbin pak dhe pa dramë.',k:'Humbja e vogël e pranuar është çmimi i biletës për të luajtur.',q:'A mbyll në 10€ humbje. B pret “që do të kthehet” dhe humb 80€. Kush është humbësi më i mirë?',a:['A, humbi pak dhe shpejt','B, nuk dorëzohet','Të dy njëlloj'],r:0,m:'Humbësi më i mirë humb pak, shpejt dhe pa dramë 🎟️'},
+{ic:'🫣',t:'Frika',x:'Frika të bën ta mbyllësh tregtinë shumë herët ose të mos hysh fare, edhe kur plani të thotë të hysh.',k:'Kur rreziku është i vogël, frika është e vogël. Rreziku i vogël ta mban mendjen të qetë.',q:'Plani të jep sinjal, por ke frikë se do të humbasësh. Çka bën?',a:['Hyj sipas planit me rrezik 1%','Nuk hyj dhe e fajësoj tregun','Hyj me madhësi të madhe që ta fitoj frikën'],r:0,m:'Rrezik i vogël, frikë e vogël 🫣'},
+{ic:'🚌',t:'FOMO',x:'FOMO është frika se po e humbet një mundësi. Çmimi fluturon dhe të gjithë po blejnë.',k:'Mundësi ka çdo ditë. Autobusi i ikur nuk është arsye për të vrapuar pas tij.',c:FO,q:'Çmimi ka fluturuar 190$ dhe ti nuk ke hyrë. Çka bën?',a:['Blej tani nga frika se po e humbas','Pres një mundësi që përputhet me planin','Blej me leverage të madhe për të rimarrë'],r:1,m:'FOMO = të vrapuash pas autobusit që ikën 🚌'},
+{ic:'🦸',t:'Euforia pas fitoreve',x:'Pas disa fitoresh ndjen se je i pamposhtur dhe fillon të rrisësh rrezikun. Këtu shumë tregtarë humbasin atë që fituan.',k:'Rregullat vlejnë njësoj pas fitores, si pas humbjes.',q:'Fitove 4 tregti radhazi. Çka bën me madhësinë e pozicionit?',a:['E mbaj sipas planit (1% rrezik)','E dyfishoj sepse jam në ritëm','E rrit 10 herë'],r:0,m:'Pas 3 golave nuk e heq mbrojtjen 🛡️'},
+{ic:'⏸️',t:'Pauza pas humbjes',x:'Pas një humbjeje të madhe trupi është i nxehtë dhe mendja kërkon hakmarrje. Atëherë nuk është koha për të kliknuar.',k:'Ndal, merr frymë, shkruaj çka ndjen. Pastaj vendos.',q:'Çka e ndihmon më shumë mendjen pas një humbjeje të madhe?',a:['Pauzë, frymëmarrje dhe ditar','Tregtia e radhës menjëherë','Fshij ditarin që të mos e shoh'],r:0,m:'Pauza rivendos mendjen si pushimi mes dy pjesëve ⏸️'},
+{ic:'🌪️',t:'Disiplina është plan i bërë me mend të qetë',x:'Plani bëhet kur je i qetë. Ekzekutohet kur tregu bën stuhi. Stop Loss është 3,980.',k:'Rregullat nuk negociohen në mes të tregtisë.',q:'Çmimi është 3,981 dhe ti ke dëshirë ta heqësh Stop Loss-in. Çka bën?',a:['E lë, sepse plani u bë me mend të qetë','E heq, ndoshta kthehet','E zhvendos pak më poshtë'],r:0,m:'Plani është bërë në qetësi, ekzekutohet në stuhi 🌪️'},
+{ic:'😎',t:'Pranoje rrezikun para hyrjes',x:'Mark Douglas thotë se para se të hysh duhet ta pranosh plotësisht rrezikun. Nëse humbja të shqetëson, rreziku është shumë i madh.',k:'Llogaria 1,000€. Zgjidh rrezikun me të cilin do të rrish i qetë nëse humb.',q:'Vendos rrezikun me të cilin mund të rrish i qetë nëse humb.',s:{min:1,max:20,v:10,st:1,f:v=>`Rrezik ${v}% = humbje <span class="big">€${v*10}</span> ${v<=1?'😎 mund ta pranoj':v<=3?'😬 më shqetëson':'😱 nuk mund ta pranoj'}`+bar(v*5,v<=1?GR:RD),ok:v=>v<=1},m:'Nëse nuk e pranon humbjen, mos e hap tregtinë 😎'},
+{ic:'📱',t:'Mos krahaso veten',x:'Njerëzit tregojnë vetëm fitimet. Krahasimi të bën të nxitosh dhe të marrësh rrezik të tepërt.',k:'Garo me veten e djeshme, jo me ekranet e të tjerëve.',q:'Një shok thotë se bëri 200% në një javë. Çka mëson?',a:['Një rezultat i vetëm nuk tregon strategji dhe as rrezik','Duhet ta kopjoj sot','Strategjia ime është e keqe'],r:0,m:'Garo me veten e djeshme 🏃'},
+{ic:'📋',t:'Gjyko procesin, jo vetëm rezultatin',x:'Tregti e mirë është tregti që ndjek planin. Mund të humbasë dhe prapë të jetë e mirë.',k:'Pikët i jep për ndjekjen e rregullave, jo vetëm për golin.',q:'A: ndoqi planin dhe humbi 10€. B: shkeli planin dhe fitoi 50€. Cila ishte sjellja më e mirë?',a:['A, sepse ndoqi planin','B, sepse fitoi më shumë','Të dyja njëlloj'],r:0,m:'Pikë për procesin, jo vetëm për golin 📋'},
+{ic:'😴',t:'Gjendja e mendjes',x:'Lodhja, zemërimi dhe urrejtja për humbjen janë kundërshtarë të padukshëm. Një lojtar i lodhur gabon më shpesh.',k:'Disa ditë më e mira është të mos tregtosh.',q:'Je i lodhur dhe i nervozuar para tregtimit. Çka bën?',a:['Nuk tregtoj sot, pushoj','Tregtoj që të ndihem më mirë','Rrit rrezikun që ta rimarr ditën'],r:0,m:'Lodhja është kundërshtari i padukshëm 😴'},
+{ic:'🔁',t:'Konsistenca',x:'Rezultatet vijnë nga bërja e së njëjtës gjë e mirë shumë herë, jo nga një tregti e madhe.',k:'Konsistencë = ndjek të njëjtat rregulla në çdo tregti, pa përjashtime.',q:'Çka do të thotë të jesh konsistent?',a:['Ndjek të njëjtat rregulla çdo herë','Fitoj çdo ditë','Ndërroj strategjinë çdo javë'],r:0,m:'Konsistenca = stërvitja e përditshme, jo goli i fatit 🔁'},
+{ic:'👑',t:'Boss: Mjeshtri i mendjes',x:'5 pyetje të përziera nga level-et e mëparshme. Duhen 3 të sakta për ta fituar kupën.',k:'Pa tekst ndihmës. Vetëm mendja jote.',boss:1,m:''}
+];
+const BANK=[0,1,2,3,4,5,6,7,8,10,11,12,13];
+
+let i=0,S={},tr=0,sk=0,bs=null,sv=0;
+const tot=()=>Object.values(S).reduce((a,b)=>a+b,0),RK=['Rezervë','Qetësues','Strateg','Kapiten','Mjeshtër'];
+const unl=()=>{let k=0;while(S[k]!==undefined&&k<L.length-1)k++;return k};
+
+function draw(){const l=L[i];tr=0;sv=l.s?l.s.v:0;
+  $('#cd').innerHTML=`<small>${l.ic} Level ${i+1} nga ${L.length}</small><h2>${l.t}</h2><p>${l.x}</p><div class="key">${l.k}</div><div id="gm"></div>`;
+  if(l.boss){if(S[i]===undefined){bs={q:[...BANK].sort(()=>Math.random()-.5).slice(0,5),n:0,ok:0};BR()}else $('#gm').innerHTML=ALB()}else gm();
+  up();scrollTo(0,0)}
+function gm(){const l=L[i],dn=S[i]!==undefined;
+  let h=`<h3>🎮 ${l.q}</h3>`+(l.c?chart(l.c):'');
+  if(l.w)h+=`<button class="btn alt" onclick="WS()">🎲 ${l.w.b}</button><div class="sm" id="sm"></div>`;
+  if(l.s)h+=`<input type="range" id="rg" min="${l.s.min}" max="${l.s.max}" step="${l.s.st}" ${dn?'disabled':''}><div id="o"></div>`;
+  if(!dn&&l.s)h+='<button class="btn" onclick="CK()">Kontrollo ✔</button>';
+  if(!dn&&l.a)h+=l.a.map((o,k)=>`<button class="opt" onclick="C(${k},this)">${o}</button>`).join('');
+  h+='<div class="msg" id="ms"></div>';
+  if(dn)h+=`<div class="card">✅ Saktë! ${'⭐'.repeat(S[i])}${'☆'.repeat(3-S[i])}<br>🃏 Kartela e kujtesës: ${l.m}</div>`;
+  $('#gm').innerHTML=h;
+  if(l.s){const r=$('#rg'),u=()=>$('#o').innerHTML=l.s.f(sv);r.value=sv;r.oninput=()=>{sv=+r.value;u()};u()}
+  up()}
+function CK(){const l=L[i];if(l.s.ok(sv))return win();tr++;$('#ms').textContent='Jo ende. Provo një vlerë tjetër.'}
+function C(k,b){if(k==L[i].r)return win();tr++;b.classList.add('no');b.disabled=true;$('#ms').textContent='Jo ende. Provo një tjetër.'}
+function win(){S[i]=Math.max(1,3-tr);sk=tr?0:sk+1;const s=$('#sm')?$('#sm').innerHTML:'';gm();if(s)$('#sm').innerHTML=s}
+function up(){$('#st').textContent=tot();$('#sk').textContent=sk;$('#rk').textContent=RK[Math.min(4,Math.floor(tot()/9))];
+  $('#dots').innerHTML=L.map((l,k)=>`<button class="dot ${S[k]!==undefined?'d':''} ${k==i?'c':''}" ${k>unl()?'disabled':''} onclick="i=${k};draw()">${k+1}</button>`).join('');
+  $('#pv').disabled=i==0;$('#nx').style.display=i==L.length-1?'none':'';$('#nx').disabled=S[i]===undefined}
+function G(d){i+=d;draw()}
+
+function BR(){const l=L[bs.q[bs.n]];
+  $('#gm').innerHTML=`<h3>👑 Pyetja ${bs.n+1} nga 5</h3>`+(l.c?chart(l.c):'')+`<p><b>${l.q}</b></p>`+l.a.map((o,k)=>`<button class="opt" onclick="BA(${k},this)">${o}</button>`).join('')+'<div class="msg" id="ms"></div>'}
+function BA(k,b){const l=L[bs.q[bs.n]],ok=k==l.r;b.classList.add(ok?'ok':'no');if(ok)bs.ok++;
+  document.querySelectorAll('#gm .opt').forEach(x=>x.disabled=true);$('#ms').textContent=ok?'✅ Saktë!':'❌ Përgjigja: '+l.a[l.r];
+  setTimeout(()=>{if(!L[i].boss)return;if(++bs.n<5)BR();else BE()},1200)}
+function BE(){if(bs.ok>=3){S[i]=bs.ok>=5?3:bs.ok==4?2:1;$('#gm').innerHTML=`<p><b>${bs.ok} nga 5 të sakta!</b></p>`+ALB();up()}
+  else $('#gm').innerHTML=`<div class="card">${bs.ok} nga 5. Duhen 3. Rishiko level-et dhe provo prapë.</div><div class="row"><button class="btn" onclick="draw()">Provo prapë</button></div>`}
+const ALB=()=>`<div class="card">👑 Mjeshtër i mendjes! Pikët: ${tot()} / 45 · Rank: ${RK[Math.min(4,Math.floor(tot()/9))]}</div><h3>🃏 Albumi yt</h3><div class="al">${L.slice(0,14).map(l=>`<div class="tile">${l.ic} ${l.m}</div>`).join('')}</div><p style="margin-top:12px"><small>Ide të frymëzuara nga mësimet e Mark Douglas dhe Tom Hougaard, të thjeshtuara për fëmijë.</small></p>`;
+
+draw();
+</script>
+</body>
+</html>
