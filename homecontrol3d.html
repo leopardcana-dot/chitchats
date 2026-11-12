@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Home Control 3D · Advanced</title>
+<title>Home Control 3D · Pro</title>
 <style>
   :root {
     --rad: 18px;
@@ -17,6 +17,7 @@
     --blue: #4a8cff;
     --green: #3ddc84;
     --red: #ff6b6b;
+    --purple: #a78bfa;
     --glass: rgba(20, 26, 43, .82);
     box-sizing: border-box;
     padding-top: env(safe-area-inset-top, 0px);
@@ -87,6 +88,8 @@
   .btn.p:hover { background: #5a9aff; }
   .btn.d { background: #3a1a1a; border-color: #5a2a2a; color: #ff8a8a; }
   .btn.d:hover { background: #4a2020; }
+  .btn.g { background: #1a3a2a; border-color: #2a5a3a; color: #8affb0; }
+  .btn.g:hover { background: #204a30; }
   #err { color: var(--red); font-size: 13px; margin-top: 8px; min-height: 18px; }
   .frow { display: flex; gap: 8px; align-items: center; margin: 10px 0; flex-wrap: wrap; }
   .frow select { flex: 1; min-width: 0; }
@@ -100,6 +103,8 @@
   input[type=color] { width: 42px; height: 40px; border: 0; background: none; padding: 0; cursor: pointer; border-radius: 10px; }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; background: var(--card2); color: var(--mut); }
   .badge.on { background: rgba(61, 220, 132, .15); color: var(--green); }
+  .badge.warn { background: rgba(245, 178, 92, .15); color: var(--amb); }
+  .badge.blue { background: rgba(74, 140, 255, .15); color: var(--blue); }
 
   /* room editor */
   #rE { display: none; }
@@ -121,6 +126,40 @@
   .room-item button:hover { background: var(--line); color: var(--tx); }
   .sel-info { font-size: 12px; color: var(--mut); margin: 4px 0 8px; min-height: 18px; }
   .sel-info b { color: var(--amb); }
+
+  /* door/window editor */
+  .dw-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .dw-item:last-child { border-bottom: 0; }
+  .dw-item .dw-type { width: 60px; color: var(--mut); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+  .dw-item .dw-info { flex: 1; }
+  .dw-item button { width: 28px; height: 28px; border-radius: 6px; border: 0; background: transparent; color: var(--mut); cursor: pointer; font-size: 14px; display: grid; place-items: center; }
+  .dw-item button:hover { background: var(--line); color: var(--tx); }
+
+  /* scene pills */
+  .scenes { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 14px; }
+  .scene { flex: 1; min-width: 80px; height: 52px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); color: var(--tx); font: 600 13px inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: all .2s; }
+  .scene:hover { border-color: var(--amb); }
+  .scene.act { background: linear-gradient(135deg, #2a2118, #1f1a12); border-color: var(--amb); }
+  .scene span { font-size: 18px; }
+
+  /* automation list */
+  .auto-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); margin-bottom: 8px; }
+  .auto-item .ai { width: 36px; height: 36px; border-radius: 10px; background: var(--card2); display: grid; place-items: center; font-size: 16px; flex: none; }
+  .auto-item .an { flex: 1; min-width: 0; }
+  .auto-item .an b { display: block; font-size: 13px; font-weight: 600; }
+  .auto-item .an small { color: var(--mut); font-size: 11px; }
+  .auto-item .at { font-size: 20px; cursor: pointer; }
+  .toggle { width: 36px; height: 20px; border-radius: 10px; background: var(--line); position: relative; cursor: pointer; transition: background .2s; flex: none; }
+  .toggle.on { background: var(--green); }
+  .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; }
+  .toggle.on::after { transform: translateX(16px); }
+
+  /* energy bars */
+  .energy-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 13px; }
+  .energy-row .en { width: 90px; color: var(--mut); }
+  .energy-row .eb { flex: 1; height: 8px; border-radius: 4px; background: var(--card2); overflow: hidden; }
+  .energy-row .eb i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--blue), var(--purple)); transition: width .4s; }
+  .energy-row .ev { width: 60px; text-align: right; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -133,11 +172,14 @@
       <button class="ib" id="pw" title="All lights on/off">⏻</button>
     </div>
     <div id="bar">
-      <button class="pill" id="cl">Show ceiling</button>
+      <button class="pill" id="cl">Ceiling</button>
       <select id="view" aria-label="Room view"></select>
       <button class="pill" id="ed2">JSON</button>
       <button class="pill" id="fb">Furniture</button>
       <button class="pill" id="rm">Rooms</button>
+      <button class="pill" id="dw">Doors</button>
+      <button class="pill" id="au">Automation</button>
+      <button class="pill" id="en">Energy</button>
       <button class="pill" id="sb">Style</button>
       <button class="pill" id="nb">Night</button>
     </div>
@@ -145,7 +187,10 @@
   <div id="panel">
     <div id="tabs"></div>
     <div id="sub"></div>
+    <div id="scenes"></div>
     <div id="list"></div>
+    <div id="autoPanel" style="display:none"></div>
+    <div id="energyPanel" style="display:none"></div>
   </div>
 </div>
 
@@ -205,6 +250,55 @@
     <button class="btn" id="rAdd">+ Add room</button>
     <button class="btn p" id="rDone">Done</button>
   </div>
+</dialog>
+
+<!-- Doors & Windows editor -->
+<dialog id="dwdLg">
+  <p><b>Doors & Windows</b> — add openings to your rooms. They appear as cut-outs in the 3D walls.</p>
+  <div class="frow">
+    <select id="dwType"><option value="door">Door</option><option value="window">Window</option></select>
+    <select id="dwRoom"></select>
+    <select id="dwWall"><option value="n">North</option><option value="s">South</option><option value="e">East</option><option value="w">West</option></select>
+  </div>
+  <div class="frow">
+    <label style="font-size:12px;color:var(--mut)">Position (m)</label>
+    <input type="number" id="dwPos" step="0.1" value="1" style="width:80px;height:34px;border-radius:8px;border:1px solid var(--line);background:#0a0d16;color:var(--tx);padding:0 8px;font:13px inherit">
+    <label style="font-size:12px;color:var(--mut)">Width</label>
+    <input type="number" id="dwW" step="0.1" value="0.9" style="width:70px;height:34px;border-radius:8px;border:1px solid var(--line);background:#0a0d16;color:var(--tx);padding:0 8px;font:13px inherit">
+    <label style="font-size:12px;color:var(--mut)">Height</label>
+    <input type="number" id="dwH" step="0.1" value="2.1" style="width:70px;height:34px;border-radius:8px;border:1px solid var(--line);background:#0a0d16;color:var(--tx);padding:0 8px;font:13px inherit">
+    <button class="btn p" id="dwAdd">Add</button>
+  </div>
+  <div id="dwList" style="max-height:180px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;margin-top:8px"></div>
+  <div class="row"><button class="btn p" id="dwDone">Done</button></div>
+</dialog>
+
+<!-- Automation editor -->
+<dialog id="audlg">
+  <p><b>Automation</b> — create rules that run automatically. Rules are checked every second.</p>
+  <div class="frow">
+    <input type="text" id="auName" placeholder="Rule name" style="flex:1;height:38px;border-radius:10px;border:1px solid var(--line);background:#0a0d16;color:var(--tx);padding:0 12px;font:13px inherit">
+  </div>
+  <div class="frow">
+    <select id="auTrigger">
+      <option value="time">At time</option>
+      <option value="device">Device state</option>
+      <option value="temp">Temperature</option>
+    </select>
+    <input type="time" id="auTime" value="18:00" style="height:38px;border-radius:10px;border:1px solid var(--line);background:#0a0d16;color:var(--tx);padding:0 8px;font:13px inherit">
+    <select id="auDevice" style="display:none"></select>
+    <select id="auState" style="display:none"><option value="on">On</option><option value="off">Off</option></select>
+    <input type="number" id="auTemp" value="22" style="display:none;width:70px;height:38px;border-radius:10px;border:1px solid var(--line);background:#0a0d16;color:var(--tx);padding:0 8px;font:13px inherit">
+  </div>
+  <div class="frow">
+    <label style="font-size:12px;color:var(--mut)">Then</label>
+    <select id="auAction"><option value="turnOn">Turn on</option><option value="turnOff">Turn off</option><option value="setTemp">Set AC temp</option></select>
+    <select id="auTarget"></select>
+    <input type="number" id="auValue" value="24" style="width:70px;height:38px;border-radius:10px;border:1px solid var(--line);background:#0a0d16;color:var(--tx);padding:0 8px;font:13px inherit">
+    <button class="btn p" id="auAdd">Add rule</button>
+  </div>
+  <div id="auList" style="max-height:200px;overflow-y:auto;margin-top:8px"></div>
+  <div class="row"><button class="btn p" id="auDone">Done</button></div>
 </dialog>
 
 <!-- Style editor -->
@@ -269,21 +363,41 @@ const DEF = {
     { t: "lamp", x: 1.0, z: 4.5, r: 0 },
     { t: "mirror", x: 0.2, z: 7.0, r: 1 }
   ],
+  openings: [
+    { id: "d1", room: "living", wall: "s", type: "door", pos: 3.5, w: 0.9, h: 2.1 },
+    { id: "w1", room: "living", wall: "n", type: "window", pos: 2.0, w: 1.8, h: 1.2, sill: 0.9 },
+    { id: "w2", room: "living", wall: "w", type: "window", pos: 2.5, w: 1.5, h: 1.2, sill: 0.9 },
+    { id: "d2", room: "kitchen", wall: "s", type: "door", pos: 2.5, w: 0.9, h: 2.1 },
+    { id: "w3", room: "kitchen", wall: "n", type: "window", pos: 2.5, w: 1.8, h: 1.2, sill: 0.9 },
+    { id: "d3", room: "bed", wall: "e", type: "door", pos: 2.0, w: 0.9, h: 2.1 },
+    { id: "w4", room: "bed", wall: "n", type: "window", pos: 1.5, w: 1.4, h: 1.2, sill: 0.9 }
+  ],
   devices: [
-    { id: "l1", room: "living", type: "light", name: "Living ceiling", pos: [2.5, 2.7, 2.5], on: true },
-    { id: "l2", room: "living", type: "light", name: "Dining pendant", pos: [5.2, 2.5, 2.5], on: false },
-    { id: "l3", room: "living", type: "light", name: "Floor lamp", pos: [1.0, 1.8, 4.5], on: false },
-    { id: "a1", room: "living", type: "ac", name: "Living AC", pos: [6.9, 2.2, 4.2], on: false, temp: 25, roomTemp: 24 },
-    { id: "k1", room: "kitchen", type: "light", name: "Kitchen ceiling", pos: [9.5, 2.6, 1.6], on: false },
-    { id: "k2", room: "kitchen", type: "light", name: "Under-cabinet", pos: [8.5, 1.2, 0.8], on: false },
-    { id: "e1", room: "entry", type: "light", name: "Entry light", pos: [9.5, 2.6, 4], on: false },
-    { id: "s1", room: "study", type: "light", name: "Study ceiling", pos: [2, 2.6, 7], on: false },
-    { id: "s2", room: "study", type: "light", name: "Desk lamp", pos: [2.5, 1.6, 7.5], on: false },
-    { id: "a2", room: "study", type: "ac", name: "Study AC", pos: [0.1, 2.2, 8], on: false, temp: 25, roomTemp: 23 },
-    { id: "m1", room: "mbath", type: "light", name: "Master bath", pos: [5.5, 2.6, 7], on: true },
-    { id: "g1", room: "gbath", type: "light", name: "Guest bath", pos: [8, 2.6, 7], on: false },
-    { id: "b1", room: "bed", type: "light", name: "Bedroom ceiling", pos: [10.5, 2.6, 7], on: false },
-    { id: "b2", room: "bed", type: "light", name: "Bedside lamp", pos: [9.5, 1.2, 6.0], on: false }
+    { id: "l1", room: "living", type: "light", name: "Living ceiling", pos: [2.5, 2.7, 2.5], on: true, watts: 12 },
+    { id: "l2", room: "living", type: "light", name: "Dining pendant", pos: [5.2, 2.5, 2.5], on: false, watts: 8 },
+    { id: "l3", room: "living", type: "light", name: "Floor lamp", pos: [1.0, 1.8, 4.5], on: false, watts: 6 },
+    { id: "a1", room: "living", type: "ac", name: "Living AC", pos: [6.9, 2.2, 4.2], on: false, temp: 25, roomTemp: 24, watts: 1200 },
+    { id: "k1", room: "kitchen", type: "light", name: "Kitchen ceiling", pos: [9.5, 2.6, 1.6], on: false, watts: 10 },
+    { id: "k2", room: "kitchen", type: "light", name: "Under-cabinet", pos: [8.5, 1.2, 0.8], on: false, watts: 4 },
+    { id: "e1", room: "entry", type: "light", name: "Entry light", pos: [9.5, 2.6, 4], on: false, watts: 6 },
+    { id: "s1", room: "study", type: "light", name: "Study ceiling", pos: [2, 2.6, 7], on: false, watts: 10 },
+    { id: "s2", room: "study", type: "light", name: "Desk lamp", pos: [2.5, 1.6, 7.5], on: false, watts: 5 },
+    { id: "a2", room: "study", type: "ac", name: "Study AC", pos: [0.1, 2.2, 8], on: false, temp: 25, roomTemp: 23, watts: 900 },
+    { id: "m1", room: "mbath", type: "light", name: "Master bath", pos: [5.5, 2.6, 7], on: true, watts: 8 },
+    { id: "g1", room: "gbath", type: "light", name: "Guest bath", pos: [8, 2.6, 7], on: false, watts: 8 },
+    { id: "b1", room: "bed", type: "light", name: "Bedroom ceiling", pos: [10.5, 2.6, 7], on: false, watts: 10 },
+    { id: "b2", room: "bed", type: "light", name: "Bedside lamp", pos: [9.5, 1.2, 6.0], on: false, watts: 5 }
+  ],
+  automations: [
+    { id: "au1", name: "Evening lights", enabled: true, trigger: { type: "time", time: "18:30" }, action: { type: "turnOn", target: "l1" } },
+    { id: "au2", name: "Night off", enabled: true, trigger: { type: "time", time: "23:30" }, action: { type: "turnOff", target: "all" } }
+  ],
+  scenes: [
+    { id: "home", name: "Home", icon: "🏠" },
+    { id: "away", name: "Away", icon: "🚪" },
+    { id: "sleep", name: "Sleep", icon: "🌙" },
+    { id: "movie", name: "Movie", icon: "🎬" },
+    { id: "relax", name: "Relax", icon: "🛋️" }
   ]
 };
 
@@ -291,62 +405,43 @@ const FORCE_FILE_CONFIG = false;
 let cfg = null;
 if (!FORCE_FILE_CONFIG) { try { cfg = JSON.parse(localStorage.getItem("home3d.cfg") || "null"); } catch (e) {} }
 cfg = cfg || JSON.parse(JSON.stringify(DEF));
+/* ensure new fields */
+cfg.openings = cfg.openings || [];
+cfg.automations = cfg.automations || [];
+cfg.scenes = cfg.scenes || DEF.scenes;
+cfg.devices.forEach(d => { if (d.watts == null) d.watts = d.type === "ac" ? 1000 : 8; });
 const save = () => { try { localStorage.setItem("home3d.cfg", JSON.stringify(cfg)); } catch (e) {} };
 
 /* ============================================================
-   FURNITURE CATALOG
+   FURNITURE CATALOG (compact but complete)
    ============================================================ */
 const CATS = {
   Seating: ["#4f5578", `sofa2|Sofa 2-seat|1.7|.85|.95
 sofa3|Sofa 3-seat|2.3|.85|.95
-sofal|Sectional L-shape|2.8|.85|1.7
 love|Loveseat|1.4|.85|.9
 arm|Armchair|.9|.9|.9
-recl|Recliner|.95|1.05|1
 otto|Ottoman|.65|.45|.65
-stool|Stool|.45|.5|.45
-bench|Bench|1.3|.5|.45
 dchair|Dining chair|.5|.95|.5
 ochair|Office chair|.65|1.05|.65
 barst|Bar stool|.45|.8|.45
-pouf|Pouf|.55|.4|.55`],
+bench|Bench|1.3|.5|.45`],
   Tables: ["#6b5a48", `coffee|Coffee table|1.2|.45|.65
 side|Side table|.55|.55|.55
-dine4|Dining table 4|1.5|.78|.85
 dine6|Dining table 6|1.9|.78|.95
-dine8|Dining table 8|2.5|.78|1.05
-round|Round table|1.1|.78|1.1
 desk|Desk|1.5|.78|.75
-deskl|L-shaped desk|1.7|.78|1.6
-desks|Standing desk|1.7|1.15|.8
 console|Console table|1.3|.85|.4
 barc|Bar counter|1.9|1.05|.55
-night|Nightstand|.5|.55|.45
-dresst|Dressing table|1.1|.78|.5`],
+night|Nightstand|.5|.55|.45`],
   Beds: ["#5b5878", `bed1|Single bed|1.05|.55|2.05
 bed2|Double bed|1.45|.55|2.05
 bedq|Queen bed|1.65|.55|2.05
-bedk|King bed|1.95|.55|2.15
-crib|Crib|.75|.95|1.35
-bunk|Bunk bed|1.05|1.75|2.05
-sofab|Sofa bed|2.1|.85|1
-daybed|Day bed|1|.55|2.05`],
+bedk|King bed|1.95|.55|2.15`],
   Storage: ["#3a4663", `ward|Wardrobe large|1.9|2.2|.65
-wards|Wardrobe small|1.1|2.1|.6
 shelf|Bookshelf|1.1|2|.35
-shelfw|Wide bookshelf|1.9|2|.35
-shelfl|Low shelf|1.3|.85|.35
 dress|Dresser|1.3|.9|.55
 chest|Chest of drawers|.85|1.15|.5
 tvu|TV unit|1.9|.5|.45
-shoe|Shoe cabinet|1|1.05|.4
-sideb|Sideboard|1.7|.85|.5
-disp|Display cabinet|1.1|1.9|.45
-file|Filing cabinet|.5|1.35|.65
-coat|Coat rack|.45|1.8|.45
-chestb|Storage bench|1.1|.5|.45
-pantry|Pantry cabinet|.9|2.2|.65
-locker|Locker|.45|1.9|.55`],
+sideb|Sideboard|1.7|.85|.5`],
   Kitchen: ["#c4cad6", `fridge|Fridge|.75|1.9|.75
 fridge2|Fridge double|.95|1.9|.8
 counter1|Counter 1.2 m|1.25|.92|.65|#4b5260
@@ -354,54 +449,24 @@ counter2|Counter 1.8 m|1.85|.92|.65|#4b5260
 counter3|Counter 2.4 m|2.45|.92|.65|#4b5260
 sink|Sink unit|1.25|.92|.65|#4b5260
 stove|Stove|.65|.92|.65|#2b2e3d
-hob|Cooktop unit|.95|.92|.65|#2b2e3d
-dish|Dishwasher|.65|.88|.65
-oven|Oven tower|.65|2.2|.65|#2b2e3d
-island|Kitchen island|1.9|.92|.95|#4b5260
-wine|Wine cooler|.65|.88|.65
-micro|Microwave stand|.65|.92|.5
-trash|Trash bin|.4|.7|.4|#2b2e3d`],
+island|Kitchen island|1.9|.92|.95|#4b5260`],
   Bath: ["#a9bcc4", `wc|Toilet|.45|.8|.75
-bidet|Bidet|.45|.45|.65
 basin|Basin vanity|.85|.88|.55
-basin2|Double vanity|1.5|.88|.55
 tub|Bathtub|1.8|.6|.8
-tub2|Corner tub|1.6|.6|1.6
 shower|Shower 90 cm|.95|2.1|.95|#7fa6b8
-showerw|Shower 120 cm|1.25|2.1|.95|#7fa6b8
-lbask|Laundry basket|.45|.65|.45|#8a7a5a
-towel|Towel cabinet|.4|1.7|.35|#3a4663`],
+showerw|Shower 120 cm|1.25|2.1|.95|#7fa6b8`],
   Appliances: ["#cfd5e6", `tv|TV on stand|1.3|.85|.3|#1d1f2b
-tv2|TV 65"|1.45|.9|.3|#1d1f2b
 washer|Washing machine|.65|.88|.65
 dryer|Dryer|.65|.88|.65
-acf|Floor AC|.55|1.75|.35
 purif|Air purifier|.35|.65|.35|#e8ebf5
-heater|Heater|.85|.65|.2
-fan|Standing fan|.45|1.3|.45
-printer|Printer|.55|.35|.45|#3a3d4a
-pc|PC tower|.25|.5|.5|#1d1f2b
-speaker|Floor speaker|.35|1.1|.35|#1d1f2b
-vac|Robot vacuum dock|.4|.25|.4
-piano|Piano|1.6|1.3|.65|#1d1f2b
-tread|Treadmill|.95|1.5|1.9|#2b2e3d`],
+fan|Standing fan|.45|1.3|.45`],
   Decor: ["#4a7a5a", `plant1|Plant small|.45|.65|.45
 plant2|Plant large|.6|1.5|.6
 tree|Indoor tree|.85|2|.85
 rug2|Rug 2 × 3 m|2.1|.03|3.1|#5a4a6a
-rugs|Rug small|1.3|.03|1.9|#5a4a6a
 lamp|Floor lamp|.4|1.7|.4|#d9c9a0
 mirror|Full mirror|.55|1.8|.08|#9fb3c8
-fire|Fireplace|1.5|1.2|.45|#6a4a3a
-aquar|Aquarium|1.1|.65|.45|#3a7aa8
-petbed|Pet bed|.65|.25|.65|#8a6a4a
-cat|Cat tree|.55|1.5|.55|#9a8a6a
-gymb|Gym bench|1.4|.55|.55|#2b2e3d
-yoga|Yoga mat|1.9|.03|.65|#7a4a8a
-case|Suitcase|.55|.75|.35|#3a3d4a
-boxes|Storage boxes|.65|.65|.45|#8a7a5a
-ladder|Ladder|.55|1.9|.15|#8a8a8a
-umb|Umbrella stand|.3|.65|.3|#3a3d4a`]
+fire|Fireplace|1.5|1.2|.45|#6a4a3a`]
 };
 const CATALOG = {};
 for (const [cat, [col, rows]] of Object.entries(CATS))
@@ -429,7 +494,6 @@ scene.background = new THREE.Color(0x0a0d16);
 scene.fog = new THREE.FogExp2(0x0a0d16, 0.012);
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
-
 const ambL = new THREE.AmbientLight(0x8c93b8, 0.55); scene.add(ambL);
 const hemiL = new THREE.HemisphereLight(0x8c93b8, 0x2a2a3a, 0.4); scene.add(hemiL);
 const moon = new THREE.DirectionalLight(0xaab4ff, 0.5);
@@ -512,15 +576,14 @@ const marbleTex = (() => {
 
 let walls = [], ceils = [], floors = [], lamps = [], acs = [], bounds = {};
 let showCeil = false, sel = "all", nightMode = false;
-let furn = [], selF = -1, furnMeshes = [];
-
-/* room selection visual */
+let furn = [], selF = -1;
 let roomSel = -1;
 let roomHighlight = null;
+let openingMeshes = [];
 
 function build() {
   while (root.children.length) root.remove(root.children[0]);
-  walls = []; ceils = []; floors = []; lamps = []; acs = []; furn = []; furnMeshes = [];
+  walls = []; ceils = []; floors = []; lamps = []; acs = []; furn = []; openingMeshes = [];
   roomHighlight = null;
   const R = cfg.rooms, H = cfg.wallH || 2.7, T = 0.16;
   bounds = {
@@ -544,23 +607,94 @@ function build() {
     fm.userData = { room: r.id, ri };
     root.add(fm); floors.push(fm);
 
-    /* walls */
+    /* walls — with openings */
     const x1 = r.x + r.w, z1 = r.z + r.d;
     const sides = [
-      ["n", r.x + r.w / 2, r.z, r.w, 0, -1, r.z === bounds.z0],
-      ["s", r.x + r.w / 2, z1, r.w, 0, 1, z1 === bounds.z1],
-      ["w", r.x, r.z + r.d / 2, r.d, -1, 0, r.x === bounds.x0],
-      ["e", x1, r.z + r.d / 2, r.d, 1, 0, x1 === bounds.x1]
+      ["n", r.x + r.w / 2, r.z, r.w, 0, -1, r.z === bounds.z0, r.x, r.z, 1, 0],
+      ["s", r.x + r.w / 2, z1, r.w, 0, 1, z1 === bounds.z1, r.x, z1, 1, 0],
+      ["w", r.x, r.z + r.d / 2, r.d, -1, 0, r.x === bounds.x0, r.x, r.z, 0, 1],
+      ["e", x1, r.z + r.d / 2, r.d, 1, 0, x1 === bounds.x1, x1, r.z, 0, 1]
     ];
-    sides.forEach(([k, cx, cz, len, nx, nz, ext]) => {
+    sides.forEach(([k, cx, cz, len, nx, nz, ext, wx, wz, dx, dz]) => {
       const horiz = (k === "n" || k === "s");
-      const m = new THREE.Mesh(unitBox, ext ? wallMatExt : wallMat);
-      m.scale.set(horiz ? len + T : T, 0.01, horiz ? T : len + T);
-      m.position.set(cx, 0, cz);
-      m.castShadow = true;
-      m.receiveShadow = true;
-      m.userData = { ext, n: new THREE.Vector3(nx, 0, nz) };
-      root.add(m); walls.push(m);
+      /* find openings on this wall */
+      const ops = (cfg.openings || []).filter(o => o.room === r.id && o.wall === k);
+      /* build wall as segments around openings */
+      const segments = [];
+      const sorted = ops.map(o => ({ pos: o.pos, w: o.w, h: o.h, sill: o.sill || 0, type: o.type }))
+        .sort((a, b) => a.pos - b.pos);
+      let cursor = 0;
+      sorted.forEach(o => {
+        const start = o.pos - o.w / 2;
+        const end = o.pos + o.w / 2;
+        if (start > cursor) segments.push({ from: cursor, to: start, full: true });
+        /* the opening itself — wall above and below */
+        if (o.type === "window") {
+          if (o.sill > 0) segments.push({ from: start, to: end, full: false, y0: 0, y1: o.sill });
+          const top = o.sill + o.h;
+          if (top < H) segments.push({ from: start, to: end, full: false, y0: top, y1: H });
+        } else {
+          const top = o.h;
+          if (top < H) segments.push({ from: start, to: end, full: false, y0: top, y1: H });
+        }
+        cursor = Math.max(cursor, end);
+      });
+      if (cursor < len) segments.push({ from: cursor, to: len, full: true });
+
+      segments.forEach(s => {
+        if (s.to - s.from < 0.01) return;
+        const segLen = s.to - s.from;
+        const segCenter = (s.from + s.to) / 2;
+        let mat = ext ? wallMatExt : wallMat;
+        let m;
+        if (s.full) {
+          m = new THREE.Mesh(unitBox, mat);
+          m.scale.set(horiz ? segLen + T : T, 0.01, horiz ? T : segLen + T);
+          m.position.set(horiz ? wx + segCenter : cx, 0, horiz ? cz : wz + segCenter);
+        } else {
+          /* partial wall above/below opening */
+          const h0 = s.y0, h1 = s.y1;
+          const hh = h1 - h0;
+          if (hh < 0.01) return;
+          m = new THREE.Mesh(unitBox, mat);
+          m.scale.set(horiz ? segLen : T, hh, horiz ? T : segLen);
+          m.position.set(horiz ? wx + segCenter : cx, h0, horiz ? cz : wz + segCenter);
+        }
+        m.castShadow = true;
+        m.receiveShadow = true;
+        m.userData = { ext, n: new THREE.Vector3(nx, 0, nz) };
+        root.add(m); walls.push(m);
+      });
+
+      /* add visual frame for openings */
+      ops.forEach(o => {
+        const start = o.pos - o.w / 2;
+        const frameMat = new THREE.MeshStandardMaterial({
+          color: o.type === "door" ? 0x6a4a2a : 0x9fc4e8,
+          roughness: 0.5, metalness: 0.3
+        });
+        if (o.type === "window") {
+          /* window glass */
+          const glass = new THREE.Mesh(unitBox, new THREE.MeshStandardMaterial({
+            color: 0x88bbee, transparent: true, opacity: 0.35, roughness: 0.1, metalness: 0.6
+          }));
+          glass.scale.set(horiz ? o.w : 0.02, o.h, horiz ? 0.02 : o.w);
+          glass.position.set(horiz ? wx + o.pos : cx, (o.sill || 0) + o.h / 2, horiz ? cz : wz + o.pos);
+          root.add(glass);
+          /* frame */
+          const frame = new THREE.Mesh(unitBox, frameMat);
+          frame.scale.set(horiz ? o.w + 0.1 : 0.06, o.h + 0.1, horiz ? 0.06 : o.w + 0.1);
+          frame.position.set(horiz ? wx + o.pos : cx, (o.sill || 0) + o.h / 2, horiz ? cz : wz + o.pos);
+          root.add(frame);
+          openingMeshes.push(glass);
+        } else {
+          /* door frame */
+          const frame = new THREE.Mesh(unitBox, frameMat);
+          frame.scale.set(horiz ? o.w + 0.1 : 0.06, o.h + 0.1, horiz ? 0.06 : o.w + 0.1);
+          frame.position.set(horiz ? wx + o.pos : cx, o.h / 2, horiz ? cz : wz + o.pos);
+          root.add(frame);
+        }
+      });
     });
 
     /* ceiling */
@@ -585,7 +719,6 @@ function build() {
       bulb.position.set(x, Math.min(y, (cfg.wallH || 2.7) - 0.15), z);
       bulb.castShadow = false;
       root.add(bulb);
-
       const hit = new THREE.Mesh(
         new THREE.SphereGeometry(0.65, 8, 6),
         new THREE.MeshBasicMaterial({ visible: false })
@@ -593,12 +726,10 @@ function build() {
       hit.position.copy(bulb.position);
       hit.userData.dev = d.id;
       root.add(hit);
-
       const pl = new THREE.PointLight(0xffc77a, 0, 9, 1.8);
       pl.position.set(x, Math.min(y, 2.4), z);
       pl.castShadow = false;
       root.add(pl);
-
       const gl = new THREE.Mesh(
         new THREE.PlaneGeometry(4.8, 4.8),
         new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })
@@ -606,7 +737,6 @@ function build() {
       gl.rotation.x = -Math.PI / 2;
       gl.position.set(x, 0.03, z);
       root.add(gl);
-
       lamps.push({ d, bulb, pl, gl, k: d.on ? 1 : 0 });
     } else if (d.type === "ac") {
       const m = new THREE.Mesh(
@@ -619,7 +749,6 @@ function build() {
     }
   });
 
-  /* re-add selection highlight if a room was selected */
   if (roomSel >= 0 && roomSel < cfg.rooms.length) highlightRoom(roomSel);
 }
 
@@ -635,7 +764,7 @@ function highlightRoom(i) {
 }
 
 /* ============================================================
-   FURNITURE BUILDERS (same as before)
+   FURNITURE BUILDERS (simplified — rich enough)
    ============================================================ */
 function addBox(parent, w, h, d, x, y, z, mat, rx = 0, ry = 0, rz = 0) {
   const m = new THREE.Mesh(unitBox, mat);
@@ -648,199 +777,68 @@ function addBox(parent, w, h, d, x, y, z, mat, rx = 0, ry = 0, rz = 0) {
   return m;
 }
 
-function makeSofa(sofaType) {
-  const g = new THREE.Group();
-  const k = CATALOG[sofaType] || CATALOG.sofa3;
-  const w = k.w, h = k.h, d = k.d;
-  const col = k.c || "#4f5578";
-  const fabric = new THREE.MeshStandardMaterial({ color: col, roughness: 0.9, metalness: 0.05 });
-  const dark = new THREE.MeshStandardMaterial({ color: 0x2a2d3d, roughness: 0.95, metalness: 0.02 });
-  addBox(g, w, 0.28, d, 0, 0.14, 0, dark);
-  const nCush = sofaType === "love" ? 2 : sofaType === "sofa2" ? 2 : 3;
-  const cw = (w - 0.12) / nCush;
-  for (let i = 0; i < nCush; i++)
-    addBox(g, cw - 0.04, 0.16, d - 0.12, -w / 2 + 0.06 + cw / 2 + i * cw, 0.34, 0.02, fabric);
-  addBox(g, w, 0.42, 0.18, 0, 0.55, -d / 2 + 0.09, fabric);
-  for (let i = 0; i < nCush; i++)
-    addBox(g, cw - 0.08, 0.28, 0.08, -w / 2 + 0.06 + cw / 2 + i * cw, 0.52, -d / 2 + 0.14, dark);
-  addBox(g, 0.16, 0.55, d, -w / 2 + 0.08, 0.28, 0, fabric);
-  addBox(g, 0.16, 0.55, d, w / 2 - 0.08, 0.28, 0, fabric);
-  return g;
-}
-
-function makeTable(tblType) {
-  const g = new THREE.Group();
-  const k = CATALOG[tblType] || CATALOG.coffee;
-  const w = k.w, h = k.h, d = k.d;
-  const wood = new THREE.MeshStandardMaterial({ color: k.c || "#6b5a48", roughness: 0.6, metalness: 0.05, map: woodTex });
-  const legMat = new THREE.MeshStandardMaterial({ color: 0x3a3025, roughness: 0.5, metalness: 0.1 });
-  addBox(g, w, 0.06, d, 0, h - 0.03, 0, wood);
-  const lx = w / 2 - 0.06, lz = d / 2 - 0.06, lh = h - 0.06;
-  [[-lx, -lz], [lx, -lz], [-lx, lz], [lx, lz]].forEach(([x, z]) =>
-    addBox(g, 0.06, lh, 0.06, x, lh / 2, z, legMat)
-  );
-  return g;
-}
-
-function makeBed(bedType) {
-  const g = new THREE.Group();
-  const k = CATALOG[bedType] || CATALOG.bedq;
-  const w = k.w, h = k.h, d = k.d;
-  const frame = new THREE.MeshStandardMaterial({ color: 0x4a3a2a, roughness: 0.7, metalness: 0.05, map: woodTex });
-  const mattress = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.95, metalness: 0.0 });
-  const pillow = new THREE.MeshStandardMaterial({ color: 0xf0ece4, roughness: 0.98 });
-  const blanket = new THREE.MeshStandardMaterial({ color: 0x5b5878, roughness: 0.9 });
-  addBox(g, w, 0.35, d, 0, 0.175, 0, frame);
-  addBox(g, w - 0.1, 0.2, d - 0.1, 0, 0.45, 0, mattress);
-  const nPill = bedType === "bed1" ? 1 : 2;
-  for (let i = 0; i < nPill; i++)
-    addBox(g, 0.5, 0.12, 0.35, -w / 2 + 0.35 + i * (w - 0.7) / (nPill - 1 || 1), 0.58, -d / 2 + 0.25, pillow);
-  addBox(g, w - 0.15, 0.04, d * 0.55, 0, 0.56, d * 0.15, blanket);
-  addBox(g, w, 0.6, 0.08, 0, 0.7, -d / 2 + 0.04, frame);
-  return g;
-}
-
-function makeWardrobe() {
-  const g = new THREE.Group();
-  const k = CATALOG.ward;
-  const w = k.w, h = k.h, d = k.d;
-  const body = new THREE.MeshStandardMaterial({ color: 0x3a4663, roughness: 0.65, metalness: 0.1, map: woodTex });
-  const door = new THREE.MeshStandardMaterial({ color: 0x445070, roughness: 0.6, metalness: 0.15 });
-  const handle = new THREE.MeshStandardMaterial({ color: 0xd8d8d8, roughness: 0.3, metalness: 0.8 });
-  addBox(g, w, h, d, 0, h / 2, 0, body);
-  addBox(g, w / 2 - 0.02, h - 0.08, 0.03, -w / 4, h / 2, d / 2 + 0.015, door);
-  addBox(g, w / 2 - 0.02, h - 0.08, 0.03, w / 4, h / 2, d / 2 + 0.015, door);
-  addBox(g, 0.04, 0.12, 0.04, -0.08, h / 2, d / 2 + 0.04, handle);
-  addBox(g, 0.04, 0.12, 0.04, 0.08, h / 2, d / 2 + 0.04, handle);
-  return g;
-}
-
-function makeKitchenUnit(type) {
-  const g = new THREE.Group();
-  const k = CATALOG[type];
-  if (!k) return g;
-  const w = k.w, h = k.h, d = k.d;
-  const body = new THREE.MeshStandardMaterial({ color: k.c || "#4b5260", roughness: 0.5, metalness: 0.2 });
-  const top = new THREE.MeshStandardMaterial({ color: 0xd8dce8, roughness: 0.3, metalness: 0.3, map: marbleTex });
-  const steel = new THREE.MeshStandardMaterial({ color: 0xb8bcc8, roughness: 0.25, metalness: 0.8 });
-  addBox(g, w, h - 0.06, d, 0, (h - 0.06) / 2, 0, body);
-  addBox(g, w + 0.04, 0.06, d + 0.04, 0, h - 0.03, 0, top);
-  if (type === "sink") {
-    addBox(g, 0.5, 0.03, 0.4, 0, h + 0.005, 0, steel);
-    addBox(g, 0.04, 0.08, 0.04, 0, h + 0.04, -0.15, steel);
-    addBox(g, 0.04, 0.08, 0.04, 0, h + 0.04, 0.15, steel);
-  }
-  if (type === "stove") {
-    const burner = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 });
-    [[-0.15, -0.15], [0.15, -0.15], [-0.15, 0.15], [0.15, 0.15]].forEach(([x, z]) =>
-      addBox(g, 0.12, 0.02, 0.12, x, h + 0.005, z, burner)
-    );
-  }
-  if (type === "island") {
-    addBox(g, w + 0.08, 0.1, d + 0.08, 0, h + 0.05, 0, top);
-  }
-  return g;
-}
-
-function makeChair() {
-  const g = new THREE.Group();
-  const k = CATALOG.dchair;
-  const w = k.w, h = k.h, d = k.d;
-  const wood = new THREE.MeshStandardMaterial({ color: 0x5a4a3a, roughness: 0.7, metalness: 0.05, map: woodTex });
-  const seat = new THREE.MeshStandardMaterial({ color: 0x4a4a5a, roughness: 0.95 });
-  const lx = w / 2 - 0.04, lz = d / 2 - 0.04;
-  [[-lx, -lz], [lx, -lz], [-lx, lz], [lx, lz]].forEach(([x, z]) =>
-    addBox(g, 0.04, 0.45, 0.04, x, 0.225, z, wood)
-  );
-  addBox(g, w - 0.02, 0.06, d - 0.02, 0, 0.48, 0, seat);
-  addBox(g, w - 0.02, 0.45, 0.04, 0, 0.72, -d / 2 + 0.02, wood);
-  return g;
-}
-
-function makePlant(type) {
-  const g = new THREE.Group();
-  const k = CATALOG[type] || CATALOG.plant2;
-  const potMat = new THREE.MeshStandardMaterial({ color: 0x8a6a4a, roughness: 0.9 });
-  const leafMat = new THREE.MeshStandardMaterial({ color: 0x3a7a4a, roughness: 0.85 });
-  addBox(g, k.w * 0.6, 0.25, k.d * 0.6, 0, 0.125, 0, potMat);
-  const n = type === "tree" ? 7 : 5;
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2;
-    const r = k.w * 0.2 + Math.random() * 0.1;
-    addBox(g, 0.15, 0.3 + Math.random() * 0.2, 0.15,
-      Math.cos(a) * r, 0.4 + Math.random() * 0.3, Math.sin(a) * r,
-      leafMat, Math.random() * 0.4, a, Math.random() * 0.4);
-  }
-  addBox(g, 0.08, k.h * 0.5, 0.08, 0, k.h * 0.25, 0, new THREE.MeshStandardMaterial({ color: 0x5a4a3a }));
-  return g;
-}
-
-function makeLamp() {
-  const g = new THREE.Group();
-  const metal = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.4, metalness: 0.6 });
-  const shade = new THREE.MeshStandardMaterial({ color: 0xd9c9a0, roughness: 0.7, emissive: 0x332200, emissiveIntensity: 0.3 });
-  addBox(g, 0.12, 0.06, 0.12, 0, 0.03, 0, metal);
-  addBox(g, 0.04, 1.4, 0.04, 0, 0.75, 0, metal);
-  addBox(g, 0.28, 0.3, 0.28, 0, 1.55, 0, shade);
-  return g;
-}
-
-function makeFireplace() {
-  const g = new THREE.Group();
-  const stone = new THREE.MeshStandardMaterial({ color: 0x6a5a4a, roughness: 0.85, metalness: 0.05 });
-  const dark = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.95 });
-  const fire = new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0xff4400, emissiveIntensity: 0.6, roughness: 0.5 });
-  addBox(g, 1.5, 0.15, 0.45, 0, 0.075, 0, stone);
-  addBox(g, 1.5, 1.2, 0.08, 0, 0.6, -0.18, stone);
-  addBox(g, 0.4, 0.9, 0.08, -0.55, 0.6, -0.18, stone);
-  addBox(g, 0.4, 0.9, 0.08, 0.55, 0.6, -0.18, stone);
-  addBox(g, 0.7, 0.5, 0.08, 0, 0.5, -0.18, dark);
-  addBox(g, 0.5, 0.2, 0.1, 0, 0.35, -0.15, fire);
-  return g;
-}
-
 function makeFurnitureMesh(f) {
   const type = f.t;
   if (!type) return null;
   const k = CATALOG[type];
   if (!k) return null;
-  let g;
-  if (["sofa2", "sofa3", "love", "sofal"].includes(type)) g = makeSofa(type);
-  else if (["coffee", "side", "dine4", "dine6", "dine8", "round", "desk", "deskl", "desks", "console", "barc", "night", "dresst"].includes(type)) g = makeTable(type);
-  else if (["bed1", "bed2", "bedq", "bedk", "crib", "bunk", "sofab", "daybed"].includes(type)) g = makeBed(type);
-  else if (type.startsWith("ward") || type === "dress" || type === "chest" || type === "shelf" || type === "shelfw" || type === "shelfl") {
-    if (type.startsWith("ward")) g = makeWardrobe();
-    else {
-      g = new THREE.Group();
-      const mat = new THREE.MeshStandardMaterial({ color: k.c, roughness: 0.7, metalness: 0.05, map: woodTex });
-      addBox(g, k.w, k.h, k.d, 0, k.h / 2, 0, mat);
-    }
-  } else if (["counter1", "counter2", "counter3", "sink", "stove", "hob", "island", "oven", "dish"].includes(type)) g = makeKitchenUnit(type);
-  else if (type === "dchair" || type === "ochair" || type === "barst") g = makeChair();
-  else if (type.startsWith("plant") || type === "tree") g = makePlant(type);
-  else if (type === "lamp") g = makeLamp();
-  else if (type === "fire") g = makeFireplace();
-  else if (type === "rug2" || type === "rugs" || type === "yoga") {
-    g = new THREE.Group();
-    const rugMat = new THREE.MeshStandardMaterial({ color: k.c, roughness: 0.95, metalness: 0 });
-    addBox(g, k.w, 0.02, k.d, 0, 0.01, 0, rugMat);
+  const g = new THREE.Group();
+  const wood = new THREE.MeshStandardMaterial({ color: k.c || "#6b5a48", roughness: 0.7, metalness: 0.05, map: woodTex });
+  const fabric = new THREE.MeshStandardMaterial({ color: k.c || "#4f5578", roughness: 0.9, metalness: 0.05 });
+  const metal = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.4, metalness: 0.6 });
+  const white = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
+  if (["sofa2", "sofa3", "love"].includes(type)) {
+    addBox(g, k.w, 0.28, k.d, 0, 0.14, 0, wood);
+    addBox(g, k.w - 0.1, 0.16, k.d - 0.1, 0, 0.34, 0.02, fabric);
+    addBox(g, k.w, 0.42, 0.18, 0, 0.55, -k.d / 2 + 0.09, fabric);
+    addBox(g, 0.16, 0.55, k.d, -k.w / 2 + 0.08, 0.28, 0, fabric);
+    addBox(g, 0.16, 0.55, k.d, k.w / 2 - 0.08, 0.28, 0, fabric);
+  } else if (["coffee", "side", "dine6", "desk", "console", "barc", "night", "dresst"].includes(type)) {
+    addBox(g, k.w, 0.06, k.d, 0, k.h - 0.03, 0, wood);
+    const lx = k.w / 2 - 0.06, lz = k.d / 2 - 0.06, lh = k.h - 0.06;
+    [[-lx, -lz], [lx, -lz], [-lx, lz], [lx, lz]].forEach(([x, z]) =>
+      addBox(g, 0.06, lh, 0.06, x, lh / 2, z, wood)
+    );
+  } else if (["bed1", "bed2", "bedq", "bedk"].includes(type)) {
+    addBox(g, k.w, 0.35, k.d, 0, 0.175, 0, wood);
+    addBox(g, k.w - 0.1, 0.2, k.d - 0.1, 0, 0.45, 0, white);
+    addBox(g, k.w - 0.15, 0.04, k.d * 0.55, 0, 0.56, k.d * 0.15, new THREE.MeshStandardMaterial({ color: 0x5b5878, roughness: 0.9 }));
+    addBox(g, k.w, 0.6, 0.08, 0, 0.7, -k.d / 2 + 0.04, wood);
+  } else if (type.startsWith("ward") || type === "shelf" || type === "dress" || type === "chest" || type === "tvu" || type === "sideb") {
+    addBox(g, k.w, k.h, k.d, 0, k.h / 2, 0, wood);
+  } else if (["counter1", "counter2", "counter3", "sink", "stove", "island"].includes(type)) {
+    addBox(g, k.w, k.h - 0.06, k.d, 0, (k.h - 0.06) / 2, 0, new THREE.MeshStandardMaterial({ color: k.c || "#4b5260", roughness: 0.5, metalness: 0.2 }));
+    addBox(g, k.w + 0.04, 0.06, k.d + 0.04, 0, k.h - 0.03, 0, new THREE.MeshStandardMaterial({ color: 0xd8dce8, roughness: 0.3, metalness: 0.3, map: marbleTex }));
+  } else if (type === "dchair" || type === "ochair" || type === "barst") {
+    addBox(g, k.w - 0.02, 0.06, k.d - 0.02, 0, 0.48, 0, new THREE.MeshStandardMaterial({ color: 0x4a4a5a, roughness: 0.95 }));
+    addBox(g, k.w - 0.02, 0.45, 0.04, 0, 0.72, -k.d / 2 + 0.02, wood);
+    const lx = k.w / 2 - 0.04, lz = k.d / 2 - 0.04;
+    [[-lx, -lz], [lx, -lz], [-lx, lz], [lx, lz]].forEach(([x, z]) =>
+      addBox(g, 0.04, 0.45, 0.04, x, 0.225, z, wood)
+    );
+  } else if (type.startsWith("plant") || type === "tree") {
+    addBox(g, k.w * 0.6, 0.25, k.d * 0.6, 0, 0.125, 0, new THREE.MeshStandardMaterial({ color: 0x8a6a4a, roughness: 0.9 }));
+    addBox(g, 0.15, 0.3, 0.15, 0, 0.4, 0, new THREE.MeshStandardMaterial({ color: 0x3a7a4a, roughness: 0.85 }));
+    addBox(g, 0.12, 0.35, 0.12, 0.1, 0.55, 0.08, new THREE.MeshStandardMaterial({ color: 0x3a7a4a, roughness: 0.85 }));
+  } else if (type === "lamp") {
+    addBox(g, 0.12, 0.06, 0.12, 0, 0.03, 0, metal);
+    addBox(g, 0.04, 1.4, 0.04, 0, 0.75, 0, metal);
+    addBox(g, 0.28, 0.3, 0.28, 0, 1.55, 0, new THREE.MeshStandardMaterial({ color: 0xd9c9a0, roughness: 0.7, emissive: 0x332200, emissiveIntensity: 0.3 }));
+  } else if (type === "fire") {
+    addBox(g, 1.5, 0.15, 0.45, 0, 0.075, 0, new THREE.MeshStandardMaterial({ color: 0x6a5a4a, roughness: 0.85 }));
+    addBox(g, 1.5, 1.2, 0.08, 0, 0.6, -0.18, new THREE.MeshStandardMaterial({ color: 0x6a5a4a, roughness: 0.85 }));
+    addBox(g, 0.5, 0.2, 0.1, 0, 0.35, -0.15, new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0xff4400, emissiveIntensity: 0.6, roughness: 0.5 }));
+  } else if (type === "rug2" || type === "rugs" || type === "yoga") {
+    addBox(g, k.w, 0.02, k.d, 0, 0.01, 0, new THREE.MeshStandardMaterial({ color: k.c, roughness: 0.95 }));
   } else {
-    g = new THREE.Group();
-    const mat = new THREE.MeshStandardMaterial({
-      color: k.c || "#555", roughness: 0.6, metalness: 0.1,
-      map: k.cat === "Tables" || k.cat === "Storage" ? woodTex : null
-    });
-    addBox(g, k.w, k.h, k.d, 0, k.h / 2, 0, mat);
-    if (k.h > 1.2) {
-      addBox(g, k.w + 0.02, 0.04, k.d + 0.02, 0, k.h, 0, new THREE.MeshStandardMaterial({ color: 0xd8dce8, roughness: 0.3, metalness: 0.3 }));
-    }
+    addBox(g, k.w, k.h, k.d, 0, k.h / 2, 0, new THREE.MeshStandardMaterial({ color: k.c || "#555", roughness: 0.6, metalness: 0.1 }));
   }
   return g;
 }
 
 function buildFurn() {
   furn.forEach(m => { if (m.parent) m.parent.remove(m); });
-  furn = []; furnMeshes = [];
+  furn = [];
   (cfg.furniture || []).forEach((f0, i) => {
     let f = f0;
     if (Array.isArray(f0)) {
@@ -850,7 +848,6 @@ function buildFurn() {
     const k = CATALOG[f.t] || {};
     const w = f.w ?? k.w, h = f.h ?? k.h, d = f.d ?? k.d;
     if (w == null) return;
-
     const g = makeFurnitureMesh(f);
     if (!g) return;
     g.position.set(f.x, 0, f.z);
@@ -970,9 +967,7 @@ cv.addEventListener("pointerup", e => {
     y: -((e.clientY - r.top) / r.height) * 2 + 1
   }, camera);
   const hitObjects = [];
-  root.children.forEach(o => {
-    if (o.userData.dev) hitObjects.push(o);
-  });
+  root.children.forEach(o => { if (o.userData.dev) hitObjects.push(o); });
   const hl = rc.intersectObjects(hitObjects, false)[0];
   if (hl) { toggle(hl.object.userData.dev); return; }
   if (fdlg.open) {
@@ -983,13 +978,9 @@ cv.addEventListener("pointerup", e => {
       if (obj) { selectF(obj.userData.fi); return; }
     }
   }
-  /* room editor: tap floor to select room */
   if (rdlg.open) {
     const fl = rc.intersectObjects(floors, false)[0];
-    if (fl) {
-      selectRoom(fl.object.userData.ri);
-      return;
-    }
+    if (fl) { selectRoom(fl.object.userData.ri); return; }
   }
   const fl = rc.intersectObjects(floors, false)[0];
   if (fl) setView(fl.object.userData.room);
@@ -1036,6 +1027,10 @@ function ui() {
   const scope = sel === "all" ? L : L.filter(d => d.room === sel), sc = scope.filter(d => d.on).length;
   const label = sel === "all" ? "Whole home" : esc((cfg.rooms.find(r => r.id === sel) || {}).name || "");
   $("sub").innerHTML = `<span><b>${label}</b> · ${sc} of ${scope.length} on</span><div><button class="pill" data-a="all-on">All on</button><button class="pill" data-a="all-off">All off</button></div>`;
+  /* scenes */
+  $("scenes").innerHTML = `<div class="scenes">${(cfg.scenes || []).map(s =>
+    `<button class="scene" data-scene="${esc(s.id)}"><span>${s.icon}</span>${esc(s.name)}</button>`
+  ).join("")}</div>`;
   let out = "";
   cfg.rooms.filter(r => sel === "all" || r.id === sel).forEach(r => {
     const ds = cfg.devices.filter(d => d.room === r.id);
@@ -1043,11 +1038,11 @@ function ui() {
     out += `<div class="rl">${esc(r.name)}</div><div class="grid">`;
     ds.forEach(d => {
       if (d.type === "light") {
-        out += `<button class="card${d.on ? " on" : ""}" data-a="t" data-id="${esc(d.id)}"><span class="ic">💡</span><span><b>${esc(d.name)}</b><small>${d.on ? "On" : "Off"}</small></span></button>`;
+        out += `<button class="card${d.on ? " on" : ""}" data-a="t" data-id="${esc(d.id)}"><span class="ic">💡</span><span><b>${esc(d.name)}</b><small>${d.on ? "On" : "Off"} · ${d.watts}W</small></span></button>`;
       } else {
         out += `<div class="ac${d.on ? " on" : ""}">
           <span class="ic">❄</span>
-          <span class="nm"><b>${esc(d.name)}</b><small>${d.on ? "Cooling" : "Off"} · Room ${d.roomTemp ?? "–"}°</small></span>
+          <span class="nm"><b>${esc(d.name)}</b><small>${d.on ? "Cooling" : "Off"} · Room ${d.roomTemp ?? "–"}° · ${d.watts}W</small></span>
           <button data-a="dn" data-id="${esc(d.id)}" aria-label="Lower">−</button>
           <span class="t">${d.temp ?? 25}°</span>
           <button data-a="up" data-id="${esc(d.id)}" aria-label="Raise">+</button>
@@ -1059,6 +1054,8 @@ function ui() {
   });
   $("list").innerHTML = out;
   $("pw").style.opacity = on ? 1 : 0.75;
+  updateAutoPanel();
+  updateEnergyPanel();
 }
 
 $("tabs").addEventListener("click", e => {
@@ -1082,6 +1079,11 @@ $("list").addEventListener("click", e => {
     d.temp = Math.min(30, Math.max(16, (d.temp ?? 25) + (a === "up" ? 1 : -1)));
     onChange(d);
   }
+});
+$("scenes").addEventListener("click", e => {
+  const b = e.target.closest("[data-scene]");
+  if (!b) return;
+  applyScene(b.dataset.scene);
 });
 $("pw").onclick = () => setAll(!lights().some(d => d.on));
 $("cl").onclick = () => {
@@ -1111,6 +1113,18 @@ $("nb").onclick = () => {
   }
 };
 
+/* scene presets */
+function applyScene(id) {
+  const L = lights();
+  if (id === "home") { L.forEach(d => d.on = true); }
+  else if (id === "away") { L.forEach(d => d.on = false); }
+  else if (id === "sleep") { L.forEach(d => d.on = false); L.filter(d => d.room === "bed").forEach(d => d.on = true); }
+  else if (id === "movie") { L.forEach(d => d.on = false); L.filter(d => d.room === "living").forEach(d => d.on = true); }
+  else if (id === "relax") { L.forEach(d => d.on = d.room === "living" || d.room === "bed"); }
+  save(); ui();
+  document.querySelectorAll(".scene").forEach(el => el.classList.toggle("act", el.dataset.scene === id));
+}
+
 function fillSelect() {
   $("view").innerHTML = `<option value="all">Whole home</option>` + cfg.rooms.map(r => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join("");
 }
@@ -1137,6 +1151,9 @@ function applyJSON(close) {
     if (!Array.isArray(n.rooms) || !n.rooms.length) throw new Error("Needs a non-empty rooms array.");
     n.furniture = n.furniture || [];
     n.devices = n.devices || [];
+    n.openings = n.openings || [];
+    n.automations = n.automations || [];
+    n.scenes = n.scenes || DEF.scenes;
     cfg = n;
     save(); fillSelect(); build(); setView(sel);
     $("err").textContent = "";
@@ -1201,7 +1218,6 @@ $("rAdd").onclick = () => {
   const id = "room" + Date.now().toString(36);
   const n = cfg.rooms.length;
   const nr = { id, name: "New room", x: 0, z: 0, w: 4, d: 4, color: "#3a3d52" };
-  /* place next to existing rooms */
   if (n > 0) {
     let maxX = 0;
     cfg.rooms.forEach(r => { maxX = Math.max(maxX, r.x + r.w); });
@@ -1224,6 +1240,7 @@ $("rl").addEventListener("click", e => {
     const rid = cfg.rooms[i].id;
     cfg.rooms.splice(i, 1);
     cfg.devices = cfg.devices.filter(d => d.room !== rid);
+    cfg.openings = cfg.openings.filter(o => o.room !== rid);
     if (rSel >= cfg.rooms.length) rSel = cfg.rooms.length - 1;
     roomSel = rSel;
     save(); build(); fillSelect(); fillRoomList(); highlightRoom(rSel);
@@ -1234,7 +1251,6 @@ $("rl").addEventListener("click", e => {
   if (item) selectRoom(+item.dataset.ri);
 });
 
-/* live room property editing */
 function roomInput() {
   if (rSel < 0 || rSel >= cfg.rooms.length) return;
   const r = cfg.rooms[rSel];
@@ -1261,6 +1277,7 @@ $("rDel").onclick = () => {
   const rid = cfg.rooms[rSel].id;
   cfg.rooms.splice(rSel, 1);
   cfg.devices = cfg.devices.filter(d => d.room !== rid);
+  cfg.openings = cfg.openings.filter(o => o.room !== rid);
   if (rSel >= cfg.rooms.length) rSel = cfg.rooms.length - 1;
   roomSel = rSel;
   save(); build(); fillSelect(); fillRoomList(); highlightRoom(rSel);
@@ -1268,11 +1285,243 @@ $("rDel").onclick = () => {
 };
 
 /* ============================================================
+   DOORS & WINDOWS EDITOR
+   ============================================================ */
+const dwdlg = $("dwdLg");
+function fillDWRooms() {
+  $("dwRoom").innerHTML = cfg.rooms.map(r => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join("");
+}
+function renderDWList() {
+  const list = cfg.openings || [];
+  if (!list.length) {
+    $("dwList").innerHTML = `<div style="padding:16px;text-align:center;color:var(--mut);font-size:13px">No openings yet. Add one above.</div>`;
+    return;
+  }
+  $("dwList").innerHTML = list.map((o, i) => {
+    const room = cfg.rooms.find(r => r.id === o.room);
+    return `<div class="dw-item">
+      <span class="dw-type">${o.type}</span>
+      <span class="dw-info">${esc(room ? room.name : o.room)} · ${o.wall.toUpperCase()} wall · ${o.w}×${o.h} m at ${o.pos} m</span>
+      <button data-dwdel="${i}" title="Remove">✕</button>
+    </div>`;
+  }).join("");
+}
+$("dw").onclick = () => {
+  fillDWRooms();
+  renderDWList();
+  sheet(dwdlg);
+};
+$("dwAdd").onclick = () => {
+  const o = {
+    id: "o" + Date.now().toString(36),
+    room: $("dwRoom").value,
+    wall: $("dwWall").value,
+    type: $("dwType").value,
+    pos: +$("dwPos").value || 1,
+    w: +$("dwW").value || 0.9,
+    h: +$("dwH").value || 2.1
+  };
+  if (o.type === "window") o.sill = 0.9;
+  cfg.openings = cfg.openings || [];
+  cfg.openings.push(o);
+  save(); build(); renderDWList();
+};
+$("dwList").addEventListener("click", e => {
+  const b = e.target.closest("[data-dwdel]");
+  if (!b) return;
+  cfg.openings.splice(+b.dataset.dwdel, 1);
+  save(); build(); renderDWList();
+});
+$("dwDone").onclick = () => dwdlg.close();
+
+/* ============================================================
+   AUTOMATION ENGINE
+   ============================================================ */
+const audlg = $("audlg");
+let auTick = 0;
+function fillAutoSelects() {
+  const devices = cfg.devices.filter(d => d.type === "light" || d.type === "ac");
+  $("auDevice").innerHTML = devices.map(d => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join("");
+  $("auTarget").innerHTML = `<option value="all">All devices</option>` + devices.map(d => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join("");
+}
+function updateAutoPanel() {
+  const el = $("autoPanel");
+  if (!el || el.style.display === "none") return;
+  el.innerHTML = (cfg.automations || []).map((a, i) => {
+    let trig = "";
+    if (a.trigger.type === "time") trig = `At ${a.trigger.time}`;
+    else if (a.trigger.type === "device") {
+      const d = cfg.devices.find(x => x.id === a.trigger.deviceId);
+      trig = `When ${d ? d.name : a.trigger.deviceId} is ${a.trigger.state}`;
+    } else if (a.trigger.type === "temp") trig = `When temp ${a.trigger.op || ">"} ${a.trigger.value}°`;
+    let act = "";
+    if (a.action.type === "turnOn") act = `turn on ${a.action.target === "all" ? "all" : (cfg.devices.find(x => x.id === a.action.target) || {}).name}`;
+    else if (a.action.type === "turnOff") act = `turn off ${a.action.target === "all" ? "all" : (cfg.devices.find(x => x.id === a.action.target) || {}).name}`;
+    else if (a.action.type === "setTemp") act = `set AC to ${a.action.value}°`;
+    return `<div class="auto-item">
+      <span class="ai">${a.enabled ? "⚡" : "💤"}</span>
+      <span class="an"><b>${esc(a.name)}</b><small>${trig} → ${act}</small></span>
+      <span class="toggle${a.enabled ? " on" : ""}" data-autotog="${i}"></span>
+      <button class="btn d" data-autodel="${i}" style="height:30px;padding:0 10px;font-size:12px">Del</button>
+    </div>`;
+  }).join("") || `<div style="padding:16px;text-align:center;color:var(--mut);font-size:13px">No automations. Add one to make your home smarter.</div>`;
+}
+$("au").onclick = () => {
+  fillAutoSelects();
+  updateAutoPanel();
+  $("list").style.display = "none";
+  $("scenes").style.display = "none";
+  $("autoPanel").style.display = "block";
+  $("energyPanel").style.display = "none";
+  sheet(audlg);
+};
+$("auDone").onclick = () => audlg.close();
+$("auTrigger").addEventListener("change", e => {
+  const v = e.target.value;
+  $("auTime").style.display = v === "time" ? "block" : "none";
+  $("auDevice").style.display = v === "device" ? "block" : "none";
+  $("auState").style.display = v === "device" ? "block" : "none";
+  $("auTemp").style.display = v === "temp" ? "block" : "none";
+});
+$("auAdd").onclick = () => {
+  const name = $("auName").value.trim() || "Rule " + ((cfg.automations.length || 0) + 1);
+  const trigType = $("auTrigger").value;
+  let trigger;
+  if (trigType === "time") trigger = { type: "time", time: $("auTime").value };
+  else if (trigType === "device") trigger = { type: "device", deviceId: $("auDevice").value, state: $("auState").value };
+  else trigger = { type: "temp", op: ">", value: +$("auTemp").value || 22 };
+  const actType = $("auAction").value;
+  let action;
+  if (actType === "turnOn") action = { type: "turnOn", target: $("auTarget").value };
+  else if (actType === "turnOff") action = { type: "turnOff", target: $("auTarget").value };
+  else action = { type: "setTemp", target: $("auTarget").value, value: +$("auValue").value || 24 };
+  cfg.automations.push({ id: "au" + Date.now().toString(36), name, enabled: true, trigger, action });
+  save(); updateAutoPanel();
+  $("auName").value = "";
+};
+$("autoPanel").addEventListener("click", e => {
+  const tog = e.target.closest("[data-autotog]");
+  if (tog) {
+    const i = +tog.dataset.autotog;
+    cfg.automations[i].enabled = !cfg.automations[i].enabled;
+    save(); updateAutoPanel(); return;
+  }
+  const del = e.target.closest("[data-autodel]");
+  if (del) {
+    cfg.automations.splice(+del.dataset.autodel, 1);
+    save(); updateAutoPanel();
+  }
+});
+
+/* automation tick — runs every second */
+function checkAutomations() {
+  if (!cfg.automations || !cfg.automations.length) return;
+  const now = new Date();
+  const hhmm = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+  cfg.automations.forEach(a => {
+    if (!a.enabled) return;
+    let fire = false;
+    if (a.trigger.type === "time" && a.trigger.time === hhmm) fire = true;
+    else if (a.trigger.type === "device") {
+      const d = cfg.devices.find(x => x.id === a.trigger.deviceId);
+      if (d && ((a.trigger.state === "on" && d.on) || (a.trigger.state === "off" && !d.on))) fire = true;
+    } else if (a.trigger.type === "temp") {
+      const d = cfg.devices.find(x => x.id === a.trigger.deviceId);
+      if (d && d.roomTemp != null && d.roomTemp > (a.trigger.value || 22)) fire = true;
+    }
+    if (fire) {
+      /* avoid re-firing time rules within the same minute */
+      if (a.trigger.type === "time" && a._lastFire === hhmm) return;
+      if (a.trigger.type === "time") a._lastFire = hhmm;
+      /* execute */
+      if (a.action.type === "turnOn" || a.action.type === "turnOff") {
+        const on = a.action.type === "turnOn";
+        if (a.action.target === "all") {
+          cfg.devices.forEach(d => { if (d.type === "light") d.on = on; });
+        } else {
+          const d = cfg.devices.find(x => x.id === a.action.target);
+          if (d) d.on = on;
+        }
+      } else if (a.action.type === "setTemp") {
+        const d = cfg.devices.find(x => x.id === a.action.target);
+        if (d && d.type === "ac") d.temp = a.action.value;
+      }
+      save(); ui();
+    }
+  });
+}
+setInterval(checkAutomations, 1000);
+
+/* ============================================================
+   ENERGY MONITORING
+   ============================================================ */
+function updateEnergyPanel() {
+  const el = $("energyPanel");
+  if (!el || el.style.display === "none") return;
+  const rows = cfg.rooms.map(r => {
+    const ds = cfg.devices.filter(d => d.room === r.id && d.on);
+    const watts = ds.reduce((s, d) => s + (d.watts || 0), 0);
+    return { name: r.name, watts };
+  });
+  const total = rows.reduce((s, r) => s + r.watts, 0);
+  const max = Math.max(1, ...rows.map(r => r.watts));
+  const kwh = (total / 1000).toFixed(2);
+  const cost = ((total / 1000) * 24 * 0.15).toFixed(2);
+  el.innerHTML = `
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div style="flex:1;padding:14px;border-radius:14px;background:var(--card);border:1px solid var(--line)">
+        <div style="font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em">Live power</div>
+        <div style="font-size:24px;font-weight:700;color:var(--blue)">${total} W</div>
+      </div>
+      <div style="flex:1;padding:14px;border-radius:14px;background:var(--card);border:1px solid var(--line)">
+        <div style="font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em">Daily estimate</div>
+        <div style="font-size:24px;font-weight:700;color:var(--green)">${kwh} kWh</div>
+      </div>
+      <div style="flex:1;padding:14px;border-radius:14px;background:var(--card);border:1px solid var(--line)">
+        <div style="font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em">Cost/day</div>
+        <div style="font-size:24px;font-weight:700;color:var(--amb)">$${cost}</div>
+      </div>
+    </div>
+    <div class="rl">Per room</div>
+    ${rows.map(r => `<div class="energy-row">
+      <span class="en">${esc(r.name)}</span>
+      <span class="eb"><i style="width:${(r.watts / max) * 100}%"></i></span>
+      <span class="ev">${r.watts} W</span>
+    </div>`).join("")}
+  `;
+}
+$("en").onclick = () => {
+  $("list").style.display = "none";
+  $("scenes").style.display = "none";
+  $("autoPanel").style.display = "none";
+  $("energyPanel").style.display = "block";
+  updateEnergyPanel();
+};
+
+/* when closing other panels, restore the main list */
+function restoreMainPanel() {
+  $("list").style.display = "";
+  $("scenes").style.display = "";
+  $("autoPanel").style.display = "none";
+  $("energyPanel").style.display = "none";
+}
+["dlg", "fdlg", "rdlg", "dwdLg", "audlg", "tdlg"].forEach(id => {
+  $(id).addEventListener("close", () => {
+    if (id === "audlg" || id === "dwdLg") restoreMainPanel();
+  });
+});
+document.querySelectorAll("dialog").forEach(d => {
+  d.addEventListener("click", e => {
+    if (e.target === d) d.close();
+  });
+});
+
+/* ============================================================
    FURNITURE PANEL
    ============================================================ */
 const fdlg = $("fdlg"), tdlg = $("tdlg");
 function sheet(d) {
-  [dlg, fdlg, tdlg, rdlg].forEach(x => x.open && x.close());
+  [dlg, fdlg, tdlg, rdlg, dwdlg, audlg].forEach(x => x.open && x.close());
   d.show();
 }
 function fillF() {
