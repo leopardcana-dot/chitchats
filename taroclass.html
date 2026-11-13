@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#17232c">
+<title>Atlasi i Tarotit — Një udhëtim i ilustruar në Tarot</title>
+<style>
+:root{
+  --ink:#242b2d;--muted:#6d6a60;--navy:#17232c;--navy2:#22323c;
+  --paper:#eee5d2;--paper2:#e4d8bf;--paper3:#f6f0e4;
+  --gold:#b99b62;--gold2:#d6c08e;--wine:#75434a;--olive:#66705b;
+  --line:rgba(76,66,48,.22);--shadow:0 18px 50px rgba(0,0,0,.18);
+  --serif:Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--navy);color:var(--ink);font-family:var(--sans);line-height:1.6}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.app-shell{min-height:100vh;background:
+ radial-gradient(ellipse at 15% 0%,rgba(185,155,98,.09),transparent 34%),
+ linear-gradient(135deg,#17232c,#1d2a32 55%,#131e26)}
+.topbar{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,4vw,58px);border-bottom:1px solid rgba(214,192,142,.2);color:var(--paper)}
+.brand{display:flex;align-items:center;gap:13px;min-width:0}
+.brand-mark{width:38px;height:38px;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;color:var(--gold2);font-family:var(--serif);font-size:22px}
+.brand-name{font-family:var(--serif);font-size:17px;letter-spacing:.17em;text-transform:uppercase;white-space:nowrap}
+.brand-sub{font-size:9px;letter-spacing:.22em;color:#b9ad94;text-transform:uppercase}
+.top-meta{font-size:11px;letter-spacing:.15em;color:#c7b995;text-transform:uppercase}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);max-width:1600px;margin:auto;min-height:calc(100vh - 76px)}
+.sidebar{padding:30px 18px 40px 28px;border-right:1px solid rgba(214,192,142,.17);color:var(--paper);display:flex;flex-direction:column;gap:26px}
+.side-label{font-size:9px;text-transform:uppercase;letter-spacing:.2em;color:#b7a982;margin:0 0 10px 12px}
+.nav{display:grid;gap:5px}
+.nav button{border:0;background:transparent;color:#c9c2b3;text-align:left;padding:11px 12px;border-radius:4px;font-size:13px;display:flex;align-items:center;gap:12px;transition:.2s}
+.nav button:hover{background:rgba(238,229,210,.08);color:white}
+.nav button.active{background:rgba(185,155,98,.16);color:#f2e5c8;border-left:2px solid var(--gold)}
+.nav-icon{width:18px;text-align:center;color:var(--gold2);font-family:var(--serif);font-size:16px}
+.sidebar-note{margin-top:auto;border-top:1px solid rgba(214,192,142,.18);padding:18px 12px 0;color:#b9b09f;font-family:var(--serif);font-style:italic;font-size:13px}
+.main{padding:clamp(22px,4vw,58px);min-width:0}
+.view{display:none;animation:appear .28s ease}
+.view.active{display:block}
+@keyframes appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#8b7448;font-weight:700}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:400;line-height:1.12;margin:0}
+h1{font-size:clamp(38px,5.5vw,68px);letter-spacing:-.035em}
+h2{font-size:clamp(29px,3vw,42px)}
+h3{font-size:25px}
+h4{font-size:19px}
+p{margin:0 0 14px}
+.lead{font-family:var(--serif);font-size:clamp(17px,2vw,21px);line-height:1.55;color:#e0d4bb;max-width:700px}
+.hero{position:relative;overflow:hidden;border:1px solid rgba(185,155,98,.42);background:
+ linear-gradient(110deg,rgba(23,35,44,.97) 0%,rgba(31,46,54,.94) 62%,rgba(43,48,46,.9) 100%);
+ color:var(--paper);padding:clamp(28px,5vw,58px);box-shadow:var(--shadow);margin-bottom:36px}
+.hero:after{content:"✧";position:absolute;right:5%;top:8%;font-family:var(--serif);font-size:clamp(130px,24vw,280px);line-height:1;color:rgba(214,192,142,.10);pointer-events:none}
+.hero-content{position:relative;z-index:1;max-width:760px}
+.hero .eyebrow{color:var(--gold2);margin-bottom:18px}
+.hero h1{margin-bottom:18px;max-width:690px}
+.hero-actions{display:flex;gap:11px;flex-wrap:wrap;margin-top:27px}
+.btn{border:1px solid var(--gold);padding:11px 17px;background:var(--gold);color:#1e292e;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;border-radius:2px;transition:.2s}
+.btn:hover{background:var(--gold2);border-color:var(--gold2);transform:translateY(-1px)}
+.btn.secondary{background:transparent;color:var(--paper);border-color:rgba(214,192,142,.55)}
+.btn.secondary:hover{background:rgba(255,255,255,.08)}
+.btn.ink{background:var(--navy);color:var(--paper);border-color:var(--navy)}
+.btn.small{padding:8px 12px;font-size:10px}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin:34px 0 17px}
+.section-head h2{font-size:29px}
+.section-head p{color:var(--muted);font-size:12px;margin:5px 0 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 34px}
+.stat{background:var(--paper);border:1px solid var(--line);padding:18px 20px}
+.stat strong{display:block;font-family:var(--serif);font-size:31px;font-weight:400;color:#55472f}
+.stat span{font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:#766b57}
+.progress-track{height:5px;background:#cfc2a8;border-radius:5px;overflow:hidden;margin-top:10px}
+.progress-fill{height:100%;background:var(--gold);width:0;transition:width .25s}
+.weeks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.week-card{background:var(--paper);border:1px solid var(--line);padding:21px;position:relative;transition:.2s;cursor:pointer}
+.week-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.13)}
+.week-card .week-no{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8b7448}
+.week-card h3{font-size:22px;margin:8px 0}
+.week-card p{font-size:12px;color:#655f53;max-width:480px}
+.week-meta{display:flex;justify-content:space-between;align-items:center;margin-top:15px;padding-top:12px;border-top:1px solid var(--line);font-size:10px;color:#776d5b}
+.pill{display:inline-block;border:1px solid #b9a77f;padding:3px 7px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#705d38}
+.paper-panel{background:var(--paper);border:1px solid var(--line);padding:clamp(20px,3vw,34px);box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.dark-panel{background:#22323c;color:var(--paper);border:1px solid rgba(185,155,98,.35);padding:25px}
+.lesson-list{display:grid;gap:8px}
+.lesson-row{display:grid;grid-template-columns:42px 1fr auto;gap:14px;align-items:center;background:var(--paper);padding:14px 16px;border:1px solid var(--line);cursor:pointer;transition:.2s}
+.lesson-row:hover{border-color:#aa8c54;background:#f5eddd}
+.lesson-num{font-family:var(--serif);font-size:22px;color:#967a48}
+.lesson-row h4{font-size:17px}
+.lesson-row p{font-size:11px;color:#756d5f;margin:3px 0 0}
+.lesson-status{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#7b704f}
+.lesson-page{max-width:950px;margin:auto}
+.back-link{border:0;background:transparent;color:#d6c08e;padding:0;margin:0 0 22px;font-size:11px;text-transform:uppercase;letter-spacing:.13em}
+.lesson-header{background:#22323c;color:var(--paper);padding:clamp(25px,4vw,45px);border:1px solid rgba(185,155,98,.4);margin-bottom:18px}
+.lesson-header .eyebrow{color:var(--gold2);margin-bottom:13px}
+.lesson-header h1{font-size:clamp(34px,4.5vw,55px);margin-bottom:14px}
+.lesson-header p{color:#d7cbb3;max-width:700px;font-family:var(--serif);font-size:18px}
+.lesson-body{background:var(--paper);padding:clamp(22px,4vw,46px);border:1px solid var(--line)}
+.lesson-body h2{font-size:29px;margin:30px 0 13px;color:#423a2d}
+.lesson-body h2:first-child{margin-top:0}
+.lesson-body h3{font-size:21px;margin:23px 0 9px;color:#594a34}
+.lesson-body p,.lesson-body li{font-family:var(--serif);font-size:16px;line-height:1.75;color:#4d493f}
+.lesson-body ul{padding-left:22px}
+.note{border-left:3px solid var(--gold);background:#e5dac2;padding:16px 18px;margin:20px 0;color:#504838;font-family:var(--serif)}
+.exercise{background:#e3d7bf;border:1px solid #c5b38e;padding:20px;margin:25px 0}
+.exercise label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#655638;margin-bottom:8px}
+textarea,input[type=text],select{width:100%;border:1px solid #b9ad95;background:#f8f2e6;padding:11px;color:var(--ink);border-radius:2px}
+textarea{min-height:105px;resize:vertical}
+.quiz{border-top:1px solid var(--line);margin-top:25px;padding-top:22px}
+.quiz-question{font-family:var(--serif);font-size:19px;margin:0 0 12px}
+.option{display:block;padding:10px 12px;border:1px solid #c7baa0;margin:7px 0;background:#f4ecdd;cursor:pointer;font-size:13px}
+.option input{margin-right:9px}
+.feedback{padding:12px;background:#dce3d5;margin-top:12px;font-size:13px;display:none}
+.lesson-footer{display:flex;justify-content:space-between;gap:12px;margin-top:18px;flex-wrap:wrap}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+.filter-btn{border:1px solid #b8a985;background:transparent;color:#5c513e;padding:7px 11px;font-size:10px;text-transform:uppercase;letter-spacing:.1em}
+.filter-btn.active{background:var(--navy);color:var(--paper);border-color:var(--navy)}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px}
+.tarot-card{background:var(--paper);border:1px solid var(--line);padding:12px;cursor:pointer;text-align:center;transition:.2s}
+.tarot-card:hover{transform:translateY(-3px);box-shadow:0 10px 20px rgba(0,0,0,.13)}
+.card-art{aspect-ratio:3/4;background:linear-gradient(155deg,#24343d,#111b22);border:1px solid #a78c56;padding:9px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;position:relative;overflow:hidden}
+.card-art img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:2}
+.card-art:before{content:"";position:absolute;inset:7px;border:1px solid rgba(214,192,142,.55);z-index:1}
+.card-art:after{content:"✧";font-family:var(--serif);font-size:53px;color:rgba(214,192,142,.65);z-index:0}
+.card-glyph{position:absolute;z-index:1;color:#e0c98f;font-family:var(--serif);font-size:34px;text-shadow:0 2px 8px #000}
+.card-name{font-family:var(--serif);font-size:16px;line-height:1.2}
+.card-kind{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#84744f;margin-top:5px}
+.card-detail{max-width:760px;margin:0 auto}
+.card-detail-top{display:grid;grid-template-columns:minmax(160px,240px) 1fr;gap:25px;align-items:start}
+.card-detail .card-art{min-height:290px}
+.card-detail h2{margin:8px 0 12px}
+.card-detail p{font-family:var(--serif);font-size:16px;line-height:1.7}
+.journal-entry{border-bottom:1px solid var(--line);padding:14px 0}
+.journal-entry:last-child{border:0}
+.journal-entry h4{font-size:17px}
+.journal-entry p{font-family:var(--serif);font-size:14px;color:#5e584c;white-space:pre-wrap}
+.empty{padding:35px;text-align:center;color:#817762;font-family:var(--serif);font-style:italic}
+.practice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.practice-card{background:var(--paper);padding:22px;border:1px solid var(--line)}
+.practice-card h3{font-size:22px;margin:9px 0}
+.practice-card p{font-size:13px;color:#625b4f}
+.modal-backdrop{position:fixed;inset:0;background:rgba(6,12,16,.72);z-index:10;display:none;align-items:center;justify-content:center;padding:18px}
+.modal-backdrop.show{display:flex}
+.modal{background:var(--paper);width:min(680px,100%);max-height:90vh;overflow:auto;padding:28px;position:relative;box-shadow:var(--shadow)}
+.modal-close{position:absolute;right:15px;top:12px;border:0;background:transparent;font-size:24px;color:#6d6048}
+.footer{color:#b9ad94;text-align:center;font-family:var(--serif);font-style:italic;font-size:12px;padding:30px 0 8px}
+.mobile-menu{display:none}
+.upload-btn{background:var(--navy);color:var(--paper);border:none;padding:6px 10px;font-size:10px;text-transform:uppercase;cursor:pointer;border-radius:2px;margin-top:8px;display:inline-block;transition:.2s}
+.upload-btn:hover{background:var(--gold)}
+@media(max-width:850px){
+ .layout{grid-template-columns:1fr}
+ .sidebar{border-right:0;border-bottom:1px solid rgba(214,192,142,.17);padding:10px 16px;display:block}
+ .side-label,.sidebar-note{display:none}
+ .nav{display:flex;overflow-x:auto;gap:4px}
+ .nav button{white-space:nowrap;padding:9px 11px;font-size:11px}
+ .nav-icon{display:none}
+ .main{padding:22px 16px 40px}
+ .top-meta{display:none}
+}
+@media(max-width:560px){
+ .topbar{height:64px;padding:0 15px}
+ .brand-name{font-size:14px}
+ .brand-sub{font-size:8px}
+ .layout{min-height:calc(100vh - 64px)}
+ .weeks,.stats,.practice-grid{grid-template-columns:1fr}
+ .hero{padding:26px 22px}
+ .hero:after{right:-8%;top:15%}
+ .section-head{align-items:start;flex-direction:column}
+ .lesson-row{grid-template-columns:32px 1fr}
+ .lesson-status{grid-column:2}
+ .card-detail-top{grid-template-columns:1fr}
+ .card-detail .card-art{max-width:210px;min-height:270px}
+}
+@media print{
+ body,.app-shell{background:white}
+ .topbar,.sidebar,.hero-actions,.back-link,.btn,.lesson-footer{display:none!important}
+ .layout{display:block}.main{padding:0}.view{display:none!important}#lessonView{display:block!important}
+ .lesson-body,.lesson-header{box-shadow:none}
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">✧</div>
+    <div><div class="brand-name">Atlasi i Tarotit</div><div class="brand-sub">Një udhëtim i ilustruar në Tarot</div></div>
+  </div>
+  <div class="top-meta">Një udhëzues për gjuhën simbolike të Tarotit</div>
+</header>
+<div class="layout">
+<aside class="sidebar">
+  <div>
+    <p class="side-label">Studimi juaj</p>
+    <nav class="nav" aria-label="Main navigation">
+      <button class="active" data-view="home"><span class="nav-icon">⌂</span>Përmbledhje e kursit</button>
+      <button data-view="course"><span class="nav-icon">Ⅰ</span>Kursi 8-javor</button>
+      <button data-view="library"><span class="nav-icon">✧</span>Biblioteka e kartave</button>
+      <button data-view="practice"><span class="nav-icon">◇</span>Dhoma e praktikës</button>
+      <button data-view="journal"><span class="nav-icon">✎</span>Ditari i studimit</button>
+      <button data-view="progress"><span class="nav-icon">◷</span>Përparimi im</button>
+    </nav>
+  </div>
+  <div class="sidebar-note">“Imazhi nuk është përgjigjja. Është fillimi i një pyetjeje.”</div>
+</aside>
+<main class="main">
+<section class="view active" id="homeView">
+  <div class="hero">
+    <div class="hero-content">
+      <div class="eyebrow">Një kurs i ilustruar 8-javor · Nivel i ndërmjetëm</div>
+      <h1>Arti i leximit të Tarotit.</h1>
+      <p class="lead">Një studim i udhëhequr i 78 kartave, simboleve, arketipeve dhe marrëdhënieve të tyre. Mësoni të shkoni përtej fjalëve kyçe të memorizuara dhe të ndërtoni praktikën tuaj të menduar interpretuese.</p>
+      <div class="hero-actions">
+        <button class="btn" id="resumeBtn">Vazhdo studimin</button>
+        <button class="btn secondary" data-goto="course">Eksploro kursin</button>
+      </div>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><strong id="homeLessons">0 / 20</strong><span>Mësime të përfunduara<div class="progress-track"><div class="progress-fill" id="homeProgress"></div></div></span></div>
+    <div class="stat"><strong>8</strong><span>Javë studimi të udhëhequr</span></div>
+    <div class="stat"><strong>78</strong><span>Karta për të eksploruar</span></div>
+  </div>
+  <div class="section-head"><div><div class="eyebrow">Rruga e të mësuarit</div><h2>Tetë kapituj zbulimi</h2><p>Zgjidhni një kapitull për të parë mësimet dhe objektivat e tij.</p></div></div>
+  <div class="weeks" id="homeWeeks"></div>
+</section>
+
+<section class="view" id="courseView">
+  <div class="eyebrow">Kurrikula</div><h1 style="color:var(--paper);margin:8px 0 12px">Udhëtimi 8-javor</h1>
+  <p class="lead">Njëzet mësime, të renditura si një progresion i graduar nga kuptimi i sistemit të Tarotit deri te ndërtimi i leximeve të plota.</p>
+  <div id="courseWeeks" style="margin-top:30px"></div>
+</section>
+
+<section class="view" id="lessonView">
+  <div class="lesson-page">
+    <button class="back-link" id="backToCourse">← Kthehu te kursi</button>
+    <div class="lesson-header">
+      <div class="eyebrow" id="lessonWeek">JAVA 1 · THEMELET</div>
+      <h1 id="lessonTitle">Gjuha e Tarotit</h1>
+      <p id="lessonIntro"></p>
+    </div>
+    <article class="lesson-body" id="lessonContent"></article>
+    <div class="lesson-footer">
+      <button class="btn secondary" id="prevLesson">Mësimi i mëparshëm</button>
+      <button class="btn" id="completeLesson">Shëno mësimin si të përfunduar</button>
+      <button class="btn secondary" id="nextLesson">Mësimi tjetër →</button>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="libraryView">
+  <div class="eyebrow">Koleksioni referues</div><h1 style="color:var(--paper);margin:8px 0 12px">Biblioteka e Kartave</h1>
+  <p class="lead">Eksploroni 78 kartat si një sistem simbolik të lidhur. Zgjidhni një kartë për të studiuar arketipin, imazhin dhe gamën e saj interpretuese. Mund të ngrini imazhet tuaja për secilën kartë.</p>
+  <div class="paper-panel" style="margin-top:28px">
+    <input type="text" id="cardSearch" placeholder="Kërkoni një kartë, kostum ose fjalë kyçe…" aria-label="Search cards">
+    <div class="filters" id="cardFilters">
+      <button class="filter-btn active" data-filter="All">Të 78</button>
+      <button class="filter-btn" data-filter="Major Arcana">Arkana të Mëdha</button>
+      <button class="filter-btn" data-filter="Wands">Shkopinj</button>
+      <button class="filter-btn" data-filter="Cups">Kupa</button>
+      <button class="filter-btn" data-filter="Swords">Shpata</button>
+      <button class="filter-btn" data-filter="Pentacles">Pentakle</button>
+    </div>
+    <div class="card-grid" id="cardGrid"></div>
+  </div>
+</section>
+
+<section class="view" id="practiceView">
+  <div class="eyebrow">Zbato atë që keni mësuar</div><h1 style="color:var(--paper);margin:8px 0 12px">Dhoma e Praktikës</h1>
+  <p class="lead">Interpretimi zhvillohet përmes vëzhgimit, krahasimit dhe reflektimit. Këto ushtrime të shkurtra ju ndihmojnë të praktikoni metodën në vend që të memorizoni përkufizime të izoluara.</p>
+  <div class="practice-grid" style="margin-top:28px">
+    <div class="practice-card"><div class="eyebrow">Ushtrimi 01</div><h3>Lexo imazhin</h3><p>Praktikoni vëzhgimin e një karte përpara se të konsultoheni me kuptimin e saj tradicional. Ndani atë që shihni nga ajo që supozoni se do të thotë.</p><button class="btn ink small" id="imageExercise">Fillo ushtrimin</button></div>
+    <div class="practice-card"><div class="eyebrow">Ushtrimi 02</div><h3>Ndërto një histori me tre karta</h3><p>Eksploroni se si tre karta mund të krijojnë një sekuencë, kontrast ose zhvillim, në vend të tre përkufizimeve të shkëputura.</p><button class="btn ink small" id="storyExercise">Fillo ushtrimin</button></div>
+    <div class="practice-card"><div class="eyebrow">Ushtrimi 03</div><h3>Kostumi dhe elementi</h3><p>Testoni të kuptuarit tuaj për katër kostumet dhe llojet e përvojave që secili përfaqëson tradicionalisht.</p><button class="btn ink small" id="suitQuiz">Bëj kuizin</button></div>
+    <div class="practice-card"><div class="eyebrow">Ushtrimi 04</div><h3>Interpreto me kontekst</h3><p>Konsideroni se si e njëjta kartë mund të komunikojë ndryshe në varësi të pyetjes, kartave përreth dhe pozicionit të leximit.</p><button class="btn ink small" id="contextExercise">Fillo ushtrimin</button></div>
+  </div>
+  <div class="paper-panel" style="margin-top:18px">
+    <div class="eyebrow">Një disiplinë e dobishme</div><h3 style="margin:8px 0 10px">Vëzhgo së pari. Interpreto së dyti.</h3>
+    <p style="font-family:var(--serif);color:#5d5548">Përpara se të hapni një libër udhëzues, përshkruani skenën. Vini re qëndrimin, drejtimin, objektet, ngjyrën, distancën, motin dhe atmosferën emocionale. Pastaj krahasoni vëzhgimet tuaja me kuptimet tradicionale. Kjo ndihmon për të parandaluar që një fjalë kyçe e memorizuar të zëvendësojë vetë imazhin.</p>
+  </div>
+</section>
+
+<section class="view" id="journalView">
+  <div class="eyebrow">Rekordi juaj personal i studimit</div><h1 style="color:var(--paper);margin:8px 0 12px">Ditari i Studimit</h1>
+  <p class="lead">Regjistroni pyetje, vëzhgime dhe interpretime. Rishikojini ato më vonë për të parë se si zhvillohet praktika juaj e leximit.</p>
+  <div class="paper-panel" style="margin-top:28px">
+    <h3>Regjistrim i ri në ditar</h3>
+    <form id="journalForm" style="margin-top:17px;display:grid;gap:12px">
+      <div><label class="eyebrow" for="journalTitle">Titulli i regjistrimit</label><input id="journalTitle" type="text" required placeholder="p.sh. Çfarë vura re për Vetmitarin"></div>
+      <div><label class="eyebrow" for="journalCard">Karta ose mësimi (opsionale)</label><input id="journalCard" type="text" placeholder="p.sh. Vetmitari / Mësimi 06"></div>
+      <div><label class="eyebrow" for="journalText">Vëzhgimet dhe reflektimet tuaja</label><textarea id="journalText" required placeholder="Çfarë vure re? Çfarë interpretimi po shqyrton? Çfarë mbetet e pasigurt?"></textarea></div>
+      <button class="btn" type="submit">Ruaj regjistrimin</button>
+    </form>
+    <div class="section-head"><div><div class="eyebrow">Arkivi juaj</div><h2>Regjistrimet e mëparshme</h2></div></div>
+    <div id="journalEntries"><div class="empty">Ditari juaj po pret regjistrimin e parë.</div></div>
+  </div>
+</section>
+
+<section class="view" id="progressView">
+  <div class="eyebrow">Rekordi juaj i të mësuarit</div><h1 style="color:var(--paper);margin:8px 0 12px">Përparimi Im</h1>
+  <p class="lead">Një rekord i mësimeve të përfunduara dhe punës së ruajtur. Përparimi ruhet në këtë shfletues në këtë pajisje.</p>
+  <div class="paper-panel" style="margin-top:28px">
+    <div class="stats" style="margin:0">
+      <div class="stat"><strong id="progressCount">0 / 20</strong><span>Mësime të përfunduara</span></div>
+      <div class="stat"><strong id="journalCount">0</strong><span>Regjistrime në ditar</span></div>
+      <div class="stat"><strong id="completionPercent">0%</strong><span>Përparimi i kursit</span></div>
+    </div>
+    <div class="section-head"><div><div class="eyebrow">Përmbledhje e kursit</div><h2>Rekordi i kapitujve tuaj</h2></div></div>
+    <div id="progressWeeks"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:25px">
+      <button class="btn secondary" id="exportData">Eksporto të dhënat e studimit</button>
+      <button class="btn secondary" id="resetData">Rivendos të gjithë përparimin</button>
+    </div>
+    <p style="font-size:11px;color:#796f5d;margin-top:13px">Eksportimi krijon një kopje rezervë JSON të përparimit dhe ditarit tuaj. Rivendosja pastron përgjithmonë të dhënat e ruajtura të Atlasit të Tarotit në këtë shfletues pas konfirmimit.</p>
+  </div>
+</section>
+<div class="footer">Atlasi i Tarotit · Studioni me kuriozitet, maturi dhe kujdes.</div>
+</main>
+</div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+ <div class="modal"><button class="modal-close" id="modalClose" aria-label="Close">×</button><div id="modalContent"></div></div>
+</div>
+
+<script>
+"use strict";
+// ==========================================
+// TË DHËNAT E KURSIKULËS
+// ==========================================
+const WEEKS = [
+ {title:"Kuptimi i Tarotit",sub:"Themelet e një gjuhe simbolike",lessons:[1,2,3]},
+ {title:"Udhëtimi i Budallait · Pjesa I",sub:"Fillimet, identiteti, vullneti dhe zhvillimi i brendshëm",lessons:[4,5,6]},
+ {title:"Udhëtimi i Budallait · Pjesa II",sub:"Ndryshimi, dorëzimi, transformimi dhe përfundimi",lessons:[7,8]},
+ {title:"Katër Botët · Pjesa I",sub:"Zjarri dhe uji: veprimi, krijimtaria dhe emocionet",lessons:[9,10]},
+ {title:"Katër Botët · Pjesa II",sub:"Ajri dhe toka: mendimi, konflikti, puna dhe burimet",lessons:[11,12]},
+ {title:"Struktura nën Kartat",sub:"Numrat, Kartat e Oborrit dhe interpretimi i kthyerve",lessons:[13,14,15]},
+ {title:"Të mësuarit për të Interpretuar",sub:"Pyetjet, shtrirjet, sekuencat dhe kombinimet",lessons:[16,17,18]},
+ {title:"Bërja një Lexues i Pavarur",sub:"Intuita, sinteza, etika dhe metoda personale",lessons:[19,20]}
+];
+
+const LESSONS = [
+ {id:1,week:1,title:"Gjuha e Tarotit",intro:"Kuptoni Tarotin si një sistem simbolik të strukturuar: një grup imazhesh që ftojnë vëzhgimin, interpretimin dhe reflektimin.",sections:[
+ ["Çfarë është Taroti",`Taroti është një kuvertë me 78 karta të ilustruara që përdoret tradicionalisht për lojëra dhe, në tradita të mëvonshme, për fall dhe reflektim simbolik. Një lexim është një aktivitet interpretues: lexuesi shqyrton imazhet, kuptimet konvencionale, pyetjen dhe marrëdhëniet midis kartave për të ndërtuar një përgjigje koherente.\n\nTaroti nuk ka një teori universalisht të rënë dakord për mënyrën se si funksionon. Disa lexues i afrohen atij në mënyrë shpirtërore; të tjerë e përdorin atë si një gjuhë arketipash, tregimtarie ose introspeksioni. Një student i kujdesshëm mund të mësojë traditën pa u detyruar të miratojë një shpjegim të vetëm metafizik.`],
+ ["Kuptimi është një proces",`Një kartë nuk funksionon si një zë fjalori me një përkufizim të vetëm fiks. Kuptimi i saj shfaqet përmes disa shtresave: shoqatat tradicionale të kartës, detajet e saj vizuale, pyetja që bëhet, pozicioni i saj në një shtrirje dhe kartat përreth saj.\n\nPër shembull, Vetmitari mund të sugjerojë vetmi, studim, tërheqje ose kërkimin e udhëzimit të brendshëm. Në një pyetje për punën, ai mund të përshkruajë kërkimin e pavarur. Në një pyetje lidhjeje, ai mund të tregojë nevojën për hapësirë. Konteksti i ngushton mundësitë.`],
+ ["Një metodë praktike leximi",`Filloni me pyetjen. Vëzhgoni kartën përpara se të arrini te fjalët kyçe. Identifikoni veprimin qendror, figurat, objektet, mjedisin dhe tonin emocional. Kujtoni kuptimet tradicionale, pastaj pyesni se cilat kuptime përshtaten vërtet me pyetjen dhe pozicionin. Në fund, shprehni interpretimin në gjuhë të zakonshme dhe pranoni pasigurinë aty ku mbetet.`]
+ ],exercise:"Zgjidhni një kartë Taroti që tashmë e njihni. Shkruani tre gjëra që mund të shihni fjalë për fjalë në imazhin e saj, tre shoqata që sillni ju dhe një pyetje që do të bënit përpara se ta interpretonit.",quiz:{q:"Cila qasje është më e dobishme kur filloni të interpretoni një kartë?",opts:["Memorizoni një fjalë kyçe dhe zbatoni atë për çdo pyetje","Vëzhgoni imazhin, merrni parasysh kuptimet tradicionale dhe interpretoni në kontekst","Injoroni pyetjen dhe mbështetuni vetëm në intuitë"],correct:1,why:"Interpretimi kombinon vëzhgimin, traditën dhe kontekstin. Një fjalë kyçe e vetme ose një intuitë e paprovuar nuk mjafton."}},
+ {id:2,week:1,title:"Arkitektura e 78 kartave",intro:"Mësoni se si Arkanat e Mëdha dhe të Vogla formojnë një sistem të plotë dhe se si katër kostumet organizojnë përvojën e përditshme.",sections:[
+ ["Dy grupet e mëdha",`Një kuvertë standarde me 78 karta Tarot përmban 22 karta të Arkanave të Mëdha dhe 56 karta të Arkanave të Vogla. Arkanat e Mëdha numërohen nga 0, Budalla, deri në XXI, Bota. Ato shpesh lexohen si tema të mëdha arketipale, pika kthese ose modele të mëdha përvoje.\n\nArkanat e Vogla përmbajnë katër kostume me katërmbëdhjetë karta secili. Secili kostum ka dhjetë karta të numëruara, Asi deri në Dhjetë, dhe katër Karta Oborri: Faqja, Kalorësi, Mbretëresha dhe Mbreti.`],
+ ["Katër kostumet",`Shkopinjtë lidhen me zjarrin: energjinë, iniciativën, krijimtarinë dhe ambicjen. Kupat lidhen me ujin: ndjenjën, marrëdhëniet, imagjinatën dhe pritjen. Shpatat lidhen me ajrin: mendimin, gjuhën, vendimet dhe konfliktin. Pentaklet lidhen me tokën: trupin, burimet, punën, çështjet praktike dhe stabilitetin material.\n\nKëto janë tradita interpretuese, jo kategori të ngurta. Një kartë Pentakle mund të përshkruajë sigurinë emocionale; një kartë Kupe mund të shfaqet në një lexim pune. Kostumi tregon një lente, jo një burg.`],
+ ["Si funksionojnë pjesët së bashku",`Arkanat e Mëdha mund të ofrojnë një kornizë të gjerë tematike, ndërsa kartat e Arkanave të Vogla përshkruajnë se si përjetohet një temë në jetën e përditshme. Kartat e numëruara tregojnë faza ose cilësi brenda një kostumi. Kartat e Oborrit mund të përshkruajnë njerëz, role, qëndrime ose mënyra të afrimit ndaj një situate.\n\nTë mësuarit e arkitekturës ju ndihmon të njihni modelet në vend që t'i trajtoni 78 kartat si përkufizime të palidhura.`]
+ ],exercise:"Pa shikuar një udhëzues, listoni katër kostumet dhe shkruani një fushë përvoje që secili mund të ndriçojë. Pastaj shpjegoni pse një kostum nuk duhet të trajtohet si një etiketë fikse subjekti.",quiz:{q:"Sa karta ka në Arkanat e Vogla?",opts:["22","40","56"],correct:2,why:"Arkanat e Vogla përmbajnë katër kostume me katërmbëdhjetë karta: 56 karta gjithsej."}},
+ {id:3,week:1,title:"Leximi i imazhit",intro:"Zhvilloni shkrim-leximin vizual: mësoni të vini re përbërjen, gjestin, drejtimin, objektet, mjedisin dhe kontrastin vizual.",sections:[
+ ["Shikoni përpara se të etiketoni",`Një imazh Taroti është një skenë e kompozuar. Përpara se të konsultoheni me kuptimet, përshkruani atë që është e pranishme pa e interpretuar atë. Kush ose çfarë zë qendrën? Ku po shikon figura? A është trupi i hapur, i ruajtur, në lëvizje apo i palëvizshëm? Çfarë është lart ose poshtë? Çfarë përsëritet? Çfarë mungon?\n\nKy ndarje midis vëzhgimit dhe interpretimit është e vlefshme. “Një person mban një kupë dhe po e shikon atë” është një vëzhgim. “Personi është emocionalisht i zhgënjyer” është një interpretim që mund të mbështetet nga detaje të tjera.`],
+ ["Përbërja dhe lëvizja",`Vini re nëse një figurë përballet majtas, djathtas ose drejt shikuesit; nëse skena ndihet e qëndrueshme ose dinamike; dhe nëse përbërja krijon ekuilibër, tension, mbyllje ose hapje. Peizazhet, arkitektura, moti dhe distanca mund të kontribuojnë në atmosferë.\n\nAsnjë veçori e vetme vizuale nuk ka një kuptim universal në të gjitha kuvertat. Mësoni fjalorin e kuvertës suaj të zgjedhur dhe krahasoni variacionet në vend që të supozoni se çdo artist i përdor simbolet në mënyrë identike.`],
+ ["Ndërtoni një fjalor vizual",`Krijoni një sekuencë të përsëritshme vëzhgimi: figura qendrore, qëndrimi, shikimi, duart, objektet, ngjyrat, sfondi, lëvizja dhe atmosfera emocionale. Me kalimin e kohës, kjo ju jep një pikënisje të disiplinuar për interpretim dhe i bën leximet tuaja më specifike.`]
+ ],exercise:"Zgjidhni një kartë dhe shkruani një përshkrim vizual neutral prej 80–120 fjalësh. Nënvizoni fjalitë që janë vëzhgime dhe listoni veçmas interpretimet tuaja.",quiz:{q:"Cila fjali është një vëzhgim dhe jo një interpretim?",opts:["Figura ka frikë nga ndryshimi","Figura mban një fanar në dorën e ngritur","Figura dëshiron të shmangë përgjegjësinë"],correct:1,why:"Një fanar në një dorë të ngritur është drejtpërdrejt i dukshëm. Frika dhe motivimi janë interpretime që kërkojnë mbështetje."}},
+ {id:4,week:2,title:"Budalla: fillimi i udhëtimit",intro:"Studioni Budallain si hapje, potencial, rrezik dhe pragun midis të njohurës dhe të panjohurës.",sections:[
+ ["Arketipi dhe vendi në sekuencë",`Budalla numërohet 0 dhe shpesh qëndron jashtë sekuencës së zakonshme, ndërsa gjithashtu e fillon atë. Në traditën Rider–Waite–Smith, udhëtari i ri i afrohet buzës së një shkëmbi, duke mbajtur një tufë të vogël, i shoqëruar nga një qen, nën një diell të ndritshëm. Imazhi mban njëkohësisht mundësinë dhe rrezikun.\n\nBudalla mund të përfaqësojë një fillim, hapje, eksperimentim, pafajësi, spontanitet ose gatishmëri për të hyrë në pasiguri. Ai gjithashtu mund të ngrejë pyetje rreth përgatitjes, naivitetit dhe rrezikut të shmangshëm.`],
+ ["Lexoni simbolet si një përbërje",`Shkëmbi prezanton një prag. Tufa e vogël sugjeron bagazh ose burime të kufizuara. Qeni mund të lexohet si instinkt, shoqëri ose paralajmërim, në varësi të traditës interpretuese. Trëndafili i bardhë shpesh lidhet me pastërtinë ose dëshirën e paformësuar. Qielli i ndritshëm krijon një atmosferë mundësie, por nuk e heq rrezikun fizik të skajit.\n\nKëto janë lexime konvencionale të imazhit Rider–Waite–Smith, jo kuptime që duhet të zbatohen në mënyrë identike për çdo kuvertë.`],
+ ["Në një lexim",`Drejt, Budalla mund të inkurajojë eksplorimin, një fillim të ri ose gatishmërinë për të mësuar nga përvoja. I kthyer, ai mund të sugjerojë pamaturi, hezitim, përgatitje të dobët ose frikë për të filluar. Pyetja ka rëndësi: një ndërmarrje e re mund të kërkojë guxim, por guximi nuk është i njëjtë me injorimin e pasojave praktike.`]
+ ],exercise:"Imagjinoni që Budalla shfaqet në një lexim karriere për ndryshimin e punës. Shkruani një interpretim shpresëdhënës dhe një interpretim paralajmërues. Çfarë informacioni shtesë do t'ju ndihmonte të zgjidhnit midis tyre?",quiz:{q:"Cili është një interpretim i ekuilibruar i Budallait?",opts:["Çdo rrezik duhet të merret menjëherë","Një fillim i ri mund të jetë i mundur, por hapja duhet të balancohet me vetëdijen","Karta parashikon gjithmonë dështim"],correct:1,why:"Budalla mban potencialin dhe rrezikun së bashku. Konteksti përcakton nëse theksi është te hapja, naiviteti, hezitimi ose një fillim i ri."}},
+ {id:5,week:2,title:"Magjistari përmes Karrocës",intro:"Eksploroni sekuencën e parë të arketipeve aktive: potenciali që bëhet qëllim, të mësuarit, zgjedhja dhe lëvizja e drejtuar.",sections:[
+ ["Magjistari — agjenci e fokusuar",`Magjistari lidhet me aftësinë, iniciativën, komunikimin dhe aftësinë për të sjellë një ide në formë praktike. Në imazhin Rider–Waite–Smith, mjetet e katër kostumeve janë rregulluar në tavolinë, duke e lidhur figurën me burimet e sistemit Tarot. Drejt, karta mund të sugjerojë aftësi dhe veprim të qëllimshëm; e kthyer, përpjekje të shpërndara, manipulim ose potencial të papërdorur.`],
+ ["Priftëresha dhe Perandoresha",`Priftëresha përfaqëson njohuri të brendshme, mister, studim dhe atë që nuk është ende plotësisht e dukshme. Perandoresha lidhet me ushqyerjen, pjellorinë, krijimtarinë, mishërimin dhe bollëkun. Së bashku ato ftojnë një kontrast midis njohjes së brendshme dhe rritjes së jashtme. Kuptimet e tyre janë më të gjera se rolet gjinore fjalë për fjalë ose parashikimet e shtatzënisë.`],
+ ["Perandori, Hierofanti dhe Të Dashuruarit",`Perandori shpesh ka të bëjë me strukturën, kufijtë, autoritetin dhe përgjegjësinë. Hierofanti ka të bëjë me mësimdhënien, traditën, vlerat e përbashkëta dhe institucionet. Të Dashuruarit mund të përshkruajnë marrëdhënie dhe tërheqje, por gjithashtu përafrim, vlera dhe zgjedhje të rëndësishme. Shmangni reduktimin e këtyre kartave në “një shef”, “një mësues” ose “një shpirt binjak” në çdo lexim.`],
+ ["Karroca — lëvizje e drejtuar",`Karroca lidhet me vendosmërinë, disiplinën, drejtimin dhe koordinimin e forcave konkurruese. Ajo mund të sugjerojë përparim përmes përpjekjeve të fokusuara, por edhe nevojën për të menaxhuar impulse kundërshtare. E kthyer, ajo mund të tregojë humbje të drejtimit, forcë pa kontroll ose një përpjekje të ndalur.`]
+ ],exercise:"Zgjidhni dy karta nga kjo sekuencë që duket se shprehin qasje të kundërta ndaj një vendimi. Shpjegoni kontrastin duke përdorur imazhet dhe temat tradicionale.",quiz:{q:"Cila kartë lidhet më ngushtë me strukturën, kufijtë dhe autoritetin?",opts:["Perandori","Ylli","Hëna"],correct:0,why:"Perandori tradicionalisht lidhet me strukturën, autoritetin, rendin dhe përgjegjësinë."}},
+ {id:6,week:2,title:"Forca përmes Vetmitarit",intro:"Studioni fuqinë e brendshme, ekuilibrin, ciklet, drejtësinë dhe tërheqjen e qëllimshme.",sections:[
+ ["Forca — fuqi pa dominim",`Forca zakonisht lidhet me guximin, durimin, dhembshurinë dhe rregullimin e instinktit. Në imazhin Rider–Waite–Smith, një grua trajton me qetësi një luan. Skena sugjeron një formë force që funksionon përmes qëndrueshmërisë dhe jo forcës brutale. E kthyer, ajo mund të sugjerojë vetëdyshim, reagim ose vështirësi në menaxhimin e impulseve.`],
+ ["Vetmitari — vetmi e qëllimshme",`Vetmitari mban një fanar dhe qëndron larg turmës. Karta mund të tregojë studim, reflektim, mentorim, hetim të kujdesshëm ose një tërheqje të përkohshme. Vetmia nuk është automatikisht vetmi e dhimbshme dhe karta nuk rekomandon gjithmonë tërheqjen nga njerëzit. Konteksti i saj përcakton nëse distanca është rikuperuese ose shmangëse.`],
+ ["Rrota, Drejtësia dhe I Varuri",`Rrota e Fatit prezanton ciklet, kushtet e ndryshueshme dhe kufijtë e kontrollit. Drejtësia ka të bëjë me përgjegjshmërinë, drejtësinë, provat dhe pasojat. I Varuri sugjeron pauzë, dorëzim, këndvështrim të ndryshuar ose gatishmëri për të pezulluar veprimin e zakonshëm. Së bashku këto karta pyesin se si përgjigjet një person kur kontrolli, siguria ose vrulli ndryshojnë.`]
+ ],exercise:"Shkruani për një situatë ku këmbëngulja ndihmoi dhe një tjetër ku pauzimi do të kishte qenë më i mençur. Cili arketip nga ky mësim përshkruan më mirë secilin?",quiz:{q:"I Varuri më shpesh fton në çfarë lloj përgjigjeje?",opts:["Përshpejtim të menjëhershëm","Një pauzë dhe një këndvështrim të ndryshuar","Një shpërblim material të garantuar"],correct:1,why:"I Varuri lidhet me pezullimin, dorëzimin dhe shikimin e një situate ndryshe."}},
+ {id:7,week:3,title:"Rrota e Fatit përmes Përmbajtjes",intro:"Eksploroni ciklet, përgjegjshmërinë, pezullimin, transformimin, shpresën dhe integrimin.",sections:[
+ ["Ciklet dhe pasojat",`Rrota e Fatit sugjeron rrethana në ndryshim, cikle dhe pika kthese. Ajo mund t'i kujtojë lexuesit se jo çdo kusht është nën kontrollin personal. Drejtësia, në të kundërt, thekson dallimin, ekuilibrin, përgjegjësinë dhe pasojat e vendimeve. Të dyja kartat mund të krijojnë një kontrast të dobishëm midis asaj që ndryshon rreth nesh dhe asaj që mbetet përgjegjësia jonë.`],
+ ["I Varuri dhe Vdekja",`I Varuri pezullon sekuencën e zakonshme dhe fton në një këndvështrim tjetër. Vdekja në përgjithësi është një simbol i përfundimit, tranzicionit dhe transformimit, jo një parashikim fjalë për fjalë i vdekjes fizike. Në një lexim ajo mund të përshkruajë mbylljen e një faze, nevojën për të lëshuar një model të vjetër ose një ndryshim që e bën vazhdimin e mëtejshëm të pamundur.`],
+ ["Përmbajtja — integrimi",`Përmbajtja lidhet me moderimin, shërimin, përshtatjen dhe përzierjen e kujdesshme të elementeve të ndryshme. Ajo shpesh sugjeron që një rezultat i qëndrueshëm vjen përmes rregullimit dhe jo ekstremeve. E kthyer, ajo mund të tregojë tepricë, padurim, çekuilibër ose vështirësi për të gjetur një ritëm të zbatueshëm.`]
+ ],exercise:"Krijoni një sekuencë të shkurtër duke përdorur Rrotën e Fatit, Vdekjen dhe Përmbajtjen. Shpjegoni se si një situatë në ndryshim mund të çojë në një përfundim dhe më pas në një periudhë përshtatjeje.",quiz:{q:"Në një lexim konvencional Tarot, Vdekja qaset në mënyrë më të përgjegjshme si:",opts:["Një parashikim fjalë për fjalë i vdekjes fizike","Një simbol i përfundimit, tranzicionit dhe transformimit","Një garanci për sukses të menjëhershëm"],correct:1,why:"Vdekja interpretohet në mënyrë konvencionale si tranzicion, mbyllje dhe transformim. Ajo nuk duhet të përdoret për të bërë parashikime fjalë për fjalë për vdekjen."}},
+ {id:8,week:3,title:"Djalli përmes Botës",intro:"Përfundoni sekuencën e Arkanave të Mëdha përmes lidhjes, krizës, shpresës, pasigurisë, zbulesës dhe integrimit.",sections:[
+ ["Djalli dhe Kulla",`Djalli shpesh ka të bëjë me lidhjen, detyrimin, varësinë, fiksimin material ose modelet që ndihen të vështira për t'u lënë. Ai mund të pyesë se ku është ngushtuar zgjedhja. Kulla ka të bëjë me prishjen, zbulesën dhe shembjen e strukturave të paqëndrueshme. Ajo nuk është thjesht “fat i keq”; ajo mund të përshkruajë një të vërtetë që nuk mund të injorohet më.`],
+ ["Ylli dhe Hëna",`Ylli lidhet me përtëritjen, shpresën, hapjen dhe një kthim në perspektivë pas vështirësive. Hëna ka të bëjë me pasigurinë, ëndrrat, projeksionin, paqartësinë dhe kufijtë e asaj që mund të dihet aktualisht. Ylli mund të ofrojë orientim; Hëna kërkon durim dhe maturi kur peizazhi është i paqartë.`],
+ ["Dielli, Gjykimi dhe Bota",`Dielli shpesh përfaqëson qartësinë, vitalitetin, besimin dhe rritjen e dukshme. Gjykimi ka të bëjë me zgjimin, vlerësimin, një thirrje për llogari dhe mundësinë për t'u përgjigjur ndryshe. Bota lidhet me përfundimin, integrimin dhe arritjen e një cikli kuptimplotë. Përfundimi nuk do të thotë që jeta ndalon; ai krijon kushtet për një fillim tjetër.`]
+ ],exercise:"Zgjidhni një kartë nga ky mësim dhe shpjegoni si potencialin e saj konstruktiv ashtu edhe vështirësinë e mundshme. Shmangni përshkrimin e saj thjesht si pozitive ose negative.",quiz:{q:"Cila kartë lidhet më ngushtë me pasigurinë, projeksionin dhe të padukshmen?",opts:["Dielli","Hëna","Bota"],correct:1,why:"Hëna lidhet me paqartësinë, ëndrrat, intuitën, frikën dhe informacionin e paplotë."}},
+ {id:9,week:4,title:"Shkopinjtë: bota e zjarrit",intro:"Kuptoni Shkopinjtë si kostumin e energjisë, iniciativës, krijimtarisë, ambicjes dhe impulsit për të vepruar.",sections:[
+ ["Elementi i zjarrit",`Shkopinjtë tradicionalisht lidhen me zjarrin dhe fushën e veprimit: dëshirën, motivimin, ndërmarrjen, krijimtarinë dhe energjinë personale. Ata mund të përshkruajnë një shkëndijë inspirimi, një projekt që fiton vrull, konkurrencë ose sfidën e mbajtjes së entuziazmit.`],
+ ["Progresioni i numëruar",`Asi i Shkopinjve është një fillim ose shkëndijë krijuese. Dyshat shpesh prezantojnë planifikimin dhe drejtimin; Treshat zgjerimin dhe rezultatet e hershme; Katërshat stabilitetin ose festimin; Pesat konkurrencën ose fërkimin. Gjashtat mund të sugjerojnë njohje, Shtatat mbrojtjen e një pozicioni, Tetat shpejtësinë dhe lëvizjen, Nëntat elasticitetin dhe kufijtë, dhe Dhjetat barrën ose mbingarkesën.\n\nKëto janë modele të gjera mësimore. Imazhi dhe shoqatat tradicionale të secilës kartë shtojnë nuanca të rëndësishme.`],
+ ["Leximi i Shkopinjve në kontekst",`Në marrëdhënie, Shkopinjtë mund të përshkruajnë kiminë, entuziazmin, iniciativën ose konfliktin. Në punë, ata shpesh kanë të bëjnë me ambicjen, projektet krijuese dhe vrullin. Në një lexim personal, ata mund të pyesin se çfarë ju jep energji dhe nëse ajo energji po përdoret në mënyrë konstruktive.`]
+ ],exercise:"Zgjidhni një projekt aktual. Cila fazë e progresionit të Shkopinjve e përshkruan më mirë atë: shkëndijë, planifikim, rritje, konkurrencë, vrull apo mbingarkesë? Shpjegoni zgjedhjen tuaj.",quiz:{q:"Cili element lidhet tradicionalisht me Shkopinjtë?",opts:["Uji","Zjarri","Toka"],correct:1,why:"Shkopinjtë lidhen tradicionalisht me zjarrin, energjinë, krijimtarinë dhe veprimin."}},
+ {id:10,week:4,title:"Kupat: bota e ujit",intro:"Eksploroni emocionet, marrëdhëniet, imagjinatën, pritjen dhe jetën e ndryshueshme të ndjenjave.",sections:[
+ ["Elementi i ujit",`Kupat tradicionalisht lidhen me ujin dhe përvojën emocionale: dashurinë, intimitetin, imagjinatën, empatinë, kujtesën dhe pritjen. Ato mund të përshkruajnë marrëdhënie, por edhe përgjigjen e brendshme të një personi ndaj një përvoje ose atmosferën emocionale që rrethon një vendim.`],
+ ["Progresioni i numëruar",`Asi i Kupave shpesh sugjeron hapje ose përtëritje emocionale. Dyshat mund të tregojnë shkëmbim dhe lidhje; Treshat gëzim të përbashkët; Katërshat soditje ose stagnim emocional; Pesat zhgënjim ose pikëllim. Gjashtat mund të evokojnë kujtesën dhe njohjen; Shtatat zgjedhje ose fantazi; Tetat largim; Nëntat kënaqësi; Dhjetat përmbushje emocionale ose përkatësi.\n\nMos supozoni se çdo Kupë ka të bëjë me romancën. Kostumi është shumë më i gjerë se dashuria.`],
+ ["Leximi i Kupave në kontekst",`Një kartë Kupe në një lexim pune mund të përshkruajë moralin e ekipit, punën kuptimplotë, investimin emocional ose nevojën për kufij më të mirë. Në një lexim lidhjeje ajo mund të përshkruajë afërsinë, prekshmërinë ose pritshmëritë. Pyesni se çfarë lloj procesi emocional është i rëndësishëm për pyetjen.`]
+ ],exercise:"Shkruani dy interpretime të ndryshme të Tre Kupave: një për një pyetje miqësie dhe një për një pyetje vendi pune. Shpjegoni se si konteksti e ndryshon theksin.",quiz:{q:"Cila është shoqata më e dobishme e gjerë për Kupat?",opts:["Emocioni dhe lidhja","Rregullat dhe institucionet","Vetëm burimet materiale"],correct:0,why:"Kupat lidhen tradicionalisht me jetën emocionale, marrëdhëniet, imagjinatën dhe pritjen."}},
+ {id:11,week:5,title:"Shpatat: bota e ajrit",intro:"Studioni mendimin, komunikimin, vendimet, konfliktin dhe mënyrat se si besimet formësojnë përvojën.",sections:[
+ ["Elementi i ajrit",`Shpatat tradicionalisht lidhen me ajrin: mendimin, gjuhën, analizën, vendimet, konfliktin dhe modelet mendore. Ato mund të përshkruajnë arsyetim të qartë dhe komunikim të sinqertë, por edhe ankth, gjykim të ashpër, mendim të tepërt ose dhimbjen e të vërtetave të vështira.`],
+ ["Progresioni i numëruar",`Asi i Shpatave sugjeron qartësi ose një ide vendimtare. Dyshat mund të tregojnë ngërç ose zgjedhje të vështirë; Treshat pikëllim; Katërshat pushim; Pesat konflikt; Gjashtat tranzicion; Shtatat strategji ose fshehje; Tetat kufizim; Nëntat shqetësim; Dhjetat përfundime të dhimbshme ose përfundimin e një cikli të vështirë mendor.\n\nKëto janë modele të gjera, jo parashikime fikse. Shikoni me kujdes imazhin dhe pyetjen.`],
+ ["Leximi i Shpatave në kontekst",`Një kartë Shpatë në një lexim lidhjeje mund të ketë të bëjë me komunikimin, supozimet ose mosmarrëveshjen. Në punë, ajo mund të tregojë analizë, negociim ose presion. Në një lexim personal, ajo mund të ftojë një dallim midis fakteve, interpretimeve dhe frikërave.`]
+ ],exercise:"Mendoni për një mosmarrëveshje. Ndani një fakt të vëzhgueshëm, një interpretim që bëtë dhe një frikë ose supozim. Cila pjesë i përket më qartë fushës së Shpatave?",quiz:{q:"Cili dallim është veçanërisht i dobishëm kur interpretoni Shpatat?",opts:["Ndarja e fakteve nga supozimet","Trajtimi i çdo konflikti si të përhershëm","Injorimi i komunikimit"],correct:0,why:"Shpatat shpesh kanë të bëjnë me mendimin dhe komunikimin. Dallimi i provave nga interpretimi ndihmon për të shmangur kthimin e ankthit në siguri."}},
+ {id:12,week:5,title:"Pentaklet: bota e tokës",intro:"Eksploroni botën materiale: burimet, punën, trupin, aftësinë praktike, sigurinë dhe rritjen e qëndrueshme.",sections:[
+ ["Elementi i tokës",`Pentaklet tradicionalisht lidhen me tokën dhe përvojën materiale: paratë, punën, rutinat shëndetësore, trupin, zotërimet, burimet, aftësinë dhe stabilitetin praktik. Ato gjithashtu mund të kenë të bëjnë me durimin, kultivimin dhe kohën e nevojshme për të bërë diçka të qëndrueshme.`],
+ ["Progresioni i numëruar",`Asi i Pentakleve sugjeron një mundësi të prekshme. Dyshat mund të përfshijnë balancimin e kërkesave; Treshat mjeshtërinë dhe bashkëpunimin; Katërshat sigurinë ose posedueshmërinë; Pesat vështirësinë ose përjashtimin. Gjashtat shkëmbimin dhe mbështetjen; Shtatat durimin dhe vlerësimin; Tetat praktikën dhe mjeshtërinë; Nëntat vetë-mjaftueshmërinë; Dhjetat trashëgiminë, vazhdimësinë dhe burimet e përbashkëta.`],
+ ["Leximi i Pentakleve në kontekst",`Pentaklet nuk janë thjesht “karta parash”. Ato mund të pyesin se si një ide bëhet praktike, nëse një rutinë është e qëndrueshme, çfarë burimesh janë të disponueshme dhe çfarë lloj sigurie ka rëndësi. Në një lexim lidhjeje, ato mund të përshkruajnë besueshmërinë, përgjegjësitë e përbashkëta ose themelet praktike të një lidhjeje.`]
+ ],exercise:"Zgjidhni një qëllim dhe listoni kohën, aftësitë, paratë, mbështetjen dhe zakonet që kërkon. Cila temë e Pentakleve është më e rëndësishme për situatën tuaj?",quiz:{q:"Cila cilësi lidhet më ngushtë me Pentaklet?",opts:["Zhvillimi praktik dhe burimet materiale","Rrëfimi emocional i papritur","Vetëm debati abstrakt"],correct:0,why:"Pentaklet kanë të bëjnë me botën materiale dhe praktike, duke përfshirë punën, burimet, trupin dhe përpjekjet e qëndrueshme."}},
+ {id:13,week:6,title:"Numrat dhe progresioni: Asi deri në Dhjetë",intro:"Mësoni se si kartat e numëruara mund të lexohen si faza zhvillimi në të katër kostumet.",sections:[
+ ["Një kornizë fleksibël numerike",`Modelet e numrave mund të ndihmojnë në organizimin e Arkanave të Vogla. Asat shpesh sugjerojnë fillime ose potencial të përqendruar. Dyshat prezantojnë dualitetin, shkëmbimin ose zgjedhjen. Treshat sjellin zhvillim dhe shprehje. Katërshat mund të krijojnë strukturë ose stabilitet. Pesat prezantojnë prishjen, fërkimin ose ndryshimin. Gjashtat shpesh sugjerojnë përshtatje, mbështetje ose lëvizje drejt ekuilibrit. Shtatat testojnë përkushtimin dhe dallimin. Tetat intensifikojnë praktikën, lëvizjen ose kufizimin. Nëntat i afrohen kulmit. Dhjetat sjellin përfundim, pasojë ose tepricë.`],
+ ["Numri nuk është i gjithë kuptimi",`I njëjti numër shfaqet në katër kontekste të ndryshme elementare. Pesat e Kupave, Pesat e Shpatave, Pesat e Shkopinjve dhe Pesat e Pentakleve nuk nënkuptojnë të njëjtën gjë. Numri jep një të dhënë strukturore; kostumi dhe imazhi individual përcaktojnë se si shprehet ai model.`],
+ ["Një metodë krahasuese",`Vendosni të njëjtin numër nga të katër kostumet krah për krah. Së pari identifikoni një temë të përbashkët numerike. Pastaj përshkruani se si zjarri, uji, ajri dhe toka e shprehin atë ndryshe. Në fund, krahasoni vëzhgimet tuaja me një traditë referimi të besuar.`]
+ ],exercise:"Krahasoni katër Pesat. Shkruani një fjali për ndjenjën e përbashkët të sfidës ose prishjes, pastaj një fjali për secilin kostum duke treguar se si ndryshon.",quiz:{q:"Pse nuk duhet të interpretohet një numër i izoluar?",opts:["Sepse kostumi dhe imazhi i kartës formësojnë mënyrën se si shprehet numri","Sepse numrat nuk kanë përdorim në Tarot","Sepse çdo kartë me të njëjtin numër nënkupton saktësisht të njëjtën gjë"],correct:0,why:"Modelet numerike janë të dhëna të dobishme strukturore, por kostumi, imazhi dhe konteksti u japin atyre kuptim specifik."}},
+ {id:14,week:6,title:"Gjashtëmbëdhjetë Kartat e Oborrit",intro:"Kuptoni Faqet, Kalorësit, Mbretëreshat dhe Mbretërit si njerëz, role, qasje dhe cilësi zhvillimore.",sections:[
+ ["Katër gradë, katër qasje",`Faqet shpesh lidhen me të mësuarin, kuriozitetin, mesazhet dhe potencialin në zhvillim. Kalorësit sjellin lëvizje, ndjekje dhe shprehjen aktive të një kostumi. Mbretëreshat shpesh lidhen me kuptimin e pjekur, pritjen dhe komandën e brendshme të një kostumi. Mbretërit mund të përfaqësojnë autoritetin e jashtëm, drejtimin, përgjegjësinë dhe komandën e vendosur.\n\nKëto janë konventa interpretuese, jo rregulla për moshën, gjininë ose personalitetin.`],
+ ["Lexoni gradën me kostumin",`Një Faqe e Kupave mund të sugjerojë kuriozitet emocional ose një ndjeshmëri krijuese në zhvillim. Një Kalorës i Shpatave mund të tregojë mendim të shpejtë, komunikim të drejtpërdrejtë ose një ndjekje të fuqishme të një ideje. Një Mbretëreshë e Pentakleve mund të përshkruajë kujdes praktik dhe shpikje. Një Mbret i Shkopinjve mund të përfaqësojë udhëheqje vizionare dhe energji sipërmarrëse.`],
+ ["Person, rol apo qasje?",`Kartat e Oborrit mund të përfaqësojnë një person, por ato gjithashtu mund të përshkruajnë se si po sillet dikush ose çfarë qasje kërkon një situatë. Përpara se të vendosni që një kartë identifikon një individ tjetër, pyesni nëse ajo mund të përshkruajë në vend të kësaj qëndrimin e vetë pyetësit, një rol ose një aftësi për t'u zhvilluar.`]
+ ],exercise:"Zgjidhni një Kartë Oborri dhe shkruani tre lexime të mundshme: si person, si qëndrim dhe si këshillë. Shpjegoni se çfarë provash në pyetje do të mbështesnin secilin lexim.",quiz:{q:"Cili është një gabim i zakonshëm interpretues me Kartat e Oborrit?",opts:["Konsiderimi i tyre si qasje ose role","Supozimi se çdo Kartë Oborri duhet të identifikojë një person të vërtetë me gjini dhe moshë fikse","Shikimi i të dyjave: gradës dhe kostumit"],correct:1,why:"Kartat e Oborrit mund të përfaqësojnë njerëz, por ato gjithashtu mund të përshkruajnë role, qëndrime, aftësi ose qasje. Gjinia dhe mosha nuk janë identifikues të besueshëm fiks."}},
+ {id:15,week:6,title:"Kartat e drejta dhe të kthyera",intro:"Mësoni të interpretoni kartat e kthyera me nuanca, në vend që t'i trajtoni ato si të kundërta automatike ose shenja të këqija.",sections:[
+ ["Disa mënyra për të lexuar kthimin",`Një kartë e kthyer mund të interpretohet si e bllokuar, e vonuar, e brendshme, e tepruar, e dobësuar ose që ka nevojë për rishqyrtim. Disa lexues përdorin kthimin si të kundërtën e kuptimit të drejtë; të tjerë nuk përdorin fare kthime. Nuk ka një metodë të vetme të detyrueshme.\n\nZgjidhni një metodë, shpjegojeni qartë dhe zbatoni atë vazhdimisht.`],
+ ["Shmangni negativitetin automatik",`Një Yll i kthyer nuk nënkupton automatikisht fatkeqësi, dhe një Djall i kthyer nuk nënkupton automatikisht çlirim. Një kthim mund të tregojë se një cilësi është e vështirë për t'u arritur, e shprehur nga brenda, e ekzagjeruar ose që ka filluar të ndryshojë. Kartat përreth dhe pyetja ndihmojnë në përcaktimin se cila mundësi përshtatet.`],
+ ["Një listë praktike për kthimet",`Pyesni: Cila është tema qendrore e kartës së drejtë? A është kjo temë e bllokuar, e tepruar, e vonuar ose e brendshme? A e mbështet shtrirja përreth një nga këto mundësi? A do të mbetej interpretimi i dobishëm dhe proporcional nëse karta nuk do të ishte e kthyer? Shmangni pretendimet dramatike të pambështetura nga shtrirja.`]
+ ],exercise:"Zgjidhni një kartë dhe shkruani dy interpretime të mundshme të kthyera: një si energji e bllokuar dhe një si tepricë. Shpjegoni se çfarë konteksti do t'i dallonte ato.",quiz:{q:"Cila deklaratë për kartat e kthyera është më e ekuilibruar?",opts:["Ato janë gjithmonë negative","Ato duhet të nënkuptojnë gjithmonë saktësisht të kundërtën","Ato mund të lexohen në disa mënyra të qëndrueshme, në varësi të metodës së zgjedhur të lexuesit dhe kontekstit"],correct:2,why:"Kthimet kanë qasje të shumta të vendosura. Konsistenca dhe konteksti kanë më shumë rëndësi sesa trajtimi i tyre si shenja të këqija automatike."}},
+ {id:16,week:7,title:"Leximet me një kartë",intro:"Ndërtoni një lexim të disiplinuar me një kartë nga një pyetje e qartë në një interpretim konciz dhe kontekstual.",sections:[
+ ["Bëni një pyetje të dobishme",`Një pyetje e dobishme Tarot është mjaftueshëm e hapur për të ftuar reflektim dhe mjaftueshëm specifike për të qenë kuptimplotë. “Çfarë duhet të kuptoj për qasjen time ndaj këtij projekti?” është përgjithësisht më e dobishme sesa “A do të shkojë gjithçka mirë?” Shmangni pyetjet që kërkojnë siguri për mendimet private të një personi tjetër ose për një të ardhme të pashmangshme.`],
+ ["Një metodë me pesë hapa",`1. Tregoni qartë pyetjen. 2. Vëzhgoni kartën pa një libër udhëzues. 3. Kujtoni temat e saj tradicionale. 4. Lidhni kartën me pyetjen dhe identifikoni kuptimin më të rëndësishëm. 5. Përmblidhni leximin në gjuhë të zakonshme, duke përfshirë një reflektim ose hap tjetër praktik.`],
+ ["Mbani interpretimin proporcional",`Një kartë ofron një lente të fokusuar, jo një pasqyrë të plotë të një situate komplekse. Përdorni gjuhë të tillë si “Kjo mund të sugjerojë…” ose “Një mënyrë e dobishme për t'iu afruar kësaj është…” kur siguria nuk justifikohet. Qëllimi është depërtimi dhe reflektimi, jo dorëzimi i përgjegjësisë një karte.`]
+ ],exercise:"Shkruani një lexim me një kartë për pyetjen: “Çfarë cilësie do të më ndihmonte të afrohesha me një bisedë të vështirë?” Përfshini vëzhgimin tuaj, temën tradicionale, interpretimin kontekstual dhe përfundimin praktik.",quiz:{q:"Çfarë e bën një pyetje me një kartë më të dobishme?",opts:["Kërkon një garanci absolute","Është e hapur, e fokusuar dhe e lidhur me një fushë ku pyetësi mund të reflektojë","I kërkon kartës të vendosë gjithçka"],correct:1,why:"Një pyetje reflektuese e fokusuar mbështet një interpretim kuptimplotë duke e mbajtur agjencinë te pyetësi."}},
+ {id:17,week:7,title:"Leximet me tre karta",intro:"Mësoni të krijoni marrëdhënie midis kartave duke përdorur sekuencën, kontrastin, zhvillimin dhe pozicionin.",sections:[
+ ["Zgjidhni pozicionet me qëllim",`Një shtrirje me tre karta mund të përfaqësojë të kaluarën–të tashmen–të ardhmen, situatën–sfidën–këshillën, ose mendimin–ndjenjën–veprimin. Pozicionet duhet të përputhen me pyetjen. Mos përdorni një pozicion shtrirjeje në mënyrë mekanike nëse krijon konfuzion ose inkurajon parashikime të pambështetura.`],
+ ["Lexoni marrëdhënien",`Së pari merrni parasysh secilën kartë në pozicionin e saj. Pastaj kërkoni një sekuencë: a të çon një kartë në një tjetër? Kërkoni kontrast: a tërheqin kartat në drejtime të ndryshme? Kërkoni përsëritje: a po theksojnë disa karta të njëjtin kostum, numër ose temë? Kërkoni zhvillim: a e ndryshon ose kualifikon karta e fundit dy të parat?`],
+ ["Bëni sintezë në vend që të listoni",`Një lexim i dobët jep tre përkufizime të palidhura. Një lexim më i fortë shpjegon se si ndërveprojnë kartat. Përdorni gjuhë lidhëse: “Sepse…”, “Kjo ndërlikohet nga…”, “Ndryshimi duket të jetë…” dhe “Implikimi praktik mund të jetë…”. Një shtrirje duhet të bëhet një interpretim koherent, jo tre mini-lexime të shkëputura.`]
+ ],exercise:"Përdorni një shtrirje me tre pozicione: Situata / Sfida / Qasja e dobishme. Zgjidhni tre karta nga një kuvertë ose nga biblioteka. Shkruani një paragraf që i lidh ato në një interpretim të vetëm.",quiz:{q:"Cila është detyra kryesore pas interpretimit të secilës kartë në një shtrirje me tre karta?",opts:["Përsëritni të tre përkufizimet veçmas","Bëni sintezë se si lidhen kartat me njëra-tjetrën","Injoroni pozicionet e shtrirjes"],correct:1,why:"Lexuesi duhet të shpjegojë marrëdhëniet midis kartave, në mënyrë që shtrirja të bëhet një interpretim koherent."}},
+ {id:18,week:7,title:"Kombinimet e kartave dhe modelet",intro:"Njihni përforcimin, tensionin, përsëritjen dhe marrëdhëniet elementare pa shpikur rregulla të ngurta kombinimi.",sections:[
+ ["Përforcimi dhe kontrasti",`Dy karta mund të përforcojnë një temë, të tilla si dy karta lëvizjeje ose dy karta që kanë të bëjnë me reflektimin. Ato gjithashtu mund të krijojnë tension: një kartë veprimi të shpejtë pranë një karte pezullimi mund të sugjerojë impulse konfliktuale ose nevojën për të balancuar vrullin me durimin. Marrëdhënia është më e rëndësishme sesa memorizimi i një fraze fikse për çdo palë.`],
+ ["Kërkoni modele",`Vini re kostumet e përsëritura, numrat, gradat e Oborrit, kartat e Arkanave të Mëdha, motivet vizuale dhe lëvizjen drejtuese. Disa Shpata mund të theksojnë mendimin ose konfliktin; shumë Pentakle mund të sjellin çështje praktike përpara. Një grup kartash të Arkanave të Mëdha mund të sugjerojë që leximi ka të bëjë me tema të gjera, megjithëse nuk nënkupton automatikisht që një ngjarje është e faturuar ose e jashtëzakonshme.`],
+ ["Marrëdhëniet elementare",`Disa tradita përdorin korrespondencat elementare për të diskutuar harmoninë ose fërkimin midis kostumeve. Këto sisteme ndryshojnë. Trajtojini marrëdhëniet elementare si një lente shtesë interpretuese, jo si një ligj universal që anashkalon kartat aktuale dhe pyetjen.`]
+ ],exercise:"Zgjidhni çdo tre karta. Identifikoni një mënyrë se si ato përforcojnë njëra-tjetrën dhe një tension të mundshëm. Pastaj shkruani një sintezë të ekuilibruar që përfshin të dyja.",quiz:{q:"Cili është përdorimi më i mirë i kostumeve ose numrave të përsëritur në një shtrirje?",opts:["Trajtojini ato si modele që mund të theksojnë një temë, pastaj kontrolloni kundrejt kontekstit","Supozoni se ato garantojnë një ngjarje specifike","Injoroni pyetjen sepse modeli është i mjaftueshëm"],correct:0,why:"Modelet mund të ndihmojnë në identifikimin e theksit, por ato duhet të testohen kundrejt pyetjes, kuptimeve të kartave dhe pozicioneve të shtrirjes."}},
+ {id:19,week:8,title:"Intuita, psikologjia dhe simbolizmi",intro:"Zhvilloni një zë interpretues duke dalluar intuitën, traditën, projeksionin personal dhe provat.",sections:[
+ ["Intuita si pikënisje",`Një shoqatë e menjëhershme mund të jetë e dobishme. Ajo mund të tërheqë vëmendjen në një detaj ose ton emocional që një përkufizim i memorizuar e anashkalon. Por intuita duhet të ekzaminohet, jo të trajtohet si e vërtetë e padiskutueshme. Pyesni se çfarë në imazh ose pyetje e provokoi shoqatën.`],
+ ["Njihni projeksionin",`Lexuesit sjellin përvojat, frikërat dhe pritshmëritë e tyre në një lexim. Projeksioni ndodh kur lexuesi i vendos këto supozime mbi pyetësin ose kartën pa mbështetje të mjaftueshme. Një mbrojtje e dobishme është të dalloni: atë që sugjeron tradicionalisht karta; atë që është vizualisht e pranishme; atë që përcakton pyetja; dhe atë që është shoqata personale e lexuesit.`],
+ ["Ndërtoni një metodë personale",`Një metodë personale duhet të jetë transparente dhe e përsëritshme. Vendosni se si i përdorni kthimet, shtrirjet, gjuhën e kohës dhe korrespondencat elementare. Mbani shënime për interpretimet dhe rishikojini ato. Ndryshoni metodën tuaj kur reflektimi tregon se një rregull është i padobishëm, por shmangni ndryshimin e rregullave gjatë leximit thjesht për të detyruar një përgjigje të preferuar.`]
+ ],exercise:"Shkruani një përgjigje intuitive ndaj një karte. Pastaj listoni detajet vizuale, kuptimet tradicionale dhe faktet kontekstuale që e mbështesin ose e sfidojnë atë. Çfarë mbetet shoqatë personale?",quiz:{q:"Si duhet të përdoret intuita në një lexim të disiplinuar?",opts:["Si një fakt i padiskutueshëm","Si një pikënisje e dobishme që mund të ekzaminohet kundrejt imazheve, traditës dhe kontekstit","Si një zëvendësim për të mësuarin e kuptimeve të kartave"],correct:1,why:"Intuita mund të pasurojë interpretimin, por duhet të ekzaminohet dhe dallohet nga kuptimet e vendosura dhe provat kontekstuale."}},
+ {id:20,week:8,title:"Leximet e plota, etika dhe praktika personale",intro:"Bashkoni metodën: formuloni një pyetje, zgjidhni një shtrirje, interpretoni marrëdhëniet dhe komunikoni me përgjegjësi.",sections:[
+ ["Një rrjedhë e plotë leximi",`Filloni duke u marrë vesh për pyetjen dhe qëllimin e leximit. Zgjidhni një shtrirje që i shërben vërtet atij. Interpretoni secilën kartë në pozicionin e saj, pastaj shqyrtoni marrëdhëniet dhe modelet e përsëritura. Bëni sintezë të mesazhit në gjuhë të thjeshtë. Përfundoni me një reflektim praktik ose një pyetje që pyetësi mund ta mbajë përpara.`],
+ ["Kufijtë etikë",`Mos e paraqisni Tarotin si zëvendësues për profesionistët e shëndetësisë, ligjit, financave ose shëndetit mendor. Shmangni parashikimet e frikshme, pretendimet për siguri ose përpjekjet për të kontrolluar vendimet e një personi tjetër. Respektoni privatësinë dhe pëlqimin. Një lexues nuk duhet të krijojë varësi duke sugjeruar që pyetësi duhet të kthehet vazhdimisht për të marrë leje për zgjedhje të zakonshme.`],
+ ["Praktika juaj e vazhdueshme",`Mbani një rekord të leximeve, pyetjeve, interpretimeve dhe reflektimeve të mëvonshme. Vini re ku e teproni me sigurinë, mbështeteni në një fjalë kyçe të preferuar ose anashkaloni provat vizuale. Studioni kuverta dhe tradita të ndryshme duke qenë të qartë se cilin sistem po përdorni. Kompetenca vjen nga praktika e kujdesshme, jo nga memorizimi i një kuptimi dramatike për çdo kartë.`],
+ ["Një standard përfundimtar",`Një lexim i përgjegjshëm Tarot duhet të jetë i menduar, proporcional, transparent për pasigurinë dhe respektues ndaj agjencisë së pyetësit. Kartat mund të ofrojnë një mënyrë të strukturuar për të reflektuar mbi një pyetje. Ato nuk duhet të zëvendësojnë provat, gjykimin personal ose këshillat profesionale.`]
+ ],exercise:"Dizajnoni metodën tuaj të thjeshtë të leximit me tre karta. Tregoni se çfarë do të thotë secili pozicion, si do t'i trajtoni kthimet, si do t'i sintetizoni kartat dhe çfarë kufizimesh etike do të respektoni.",quiz:{q:"Cili është një parim thelbësor etik për praktikën e Tarotit?",opts:["Paraqitja e interpretimeve si rezultate të garantuara","Zëvendësimi i këshillave profesionale mjekësore ose ligjore","Respektimi i agjencisë së pyetësit dhe qartësia për pasigurinë"],correct:2,why:"Praktika etike shmang pretendimet për siguri, respekton autonominë dhe nuk zëvendëson këshillat e kualifikuara profesionale."}}
+];
+
+const majorNames=["Budalla","Magjistari","Priftëresha","Perandoresha","Perandori","Hierofanti","Të Dashuruarit","Karroca","Forca","Vetmitari","Rrota e Fatit","Drejtësia","I Varuri","Vdekja","Përmbajtja","Djalli","Kulla","Ylli","Hëna","Dielli","Gjykimi","Bota"];
+const majorKeywords=[
+["Fillimet","potenciali","spontaniteti","rreziku"],["Aftësia","agjencia","iniciativa","manifestimi"],["Intuita","misteri","njohja e brendshme","qetësia"],["Ushqyerja","krijimtaria","bollëku","rritja"],["Struktura","autoriteti","kufijtë","përgjegjësia"],["Tradita","mësimdhënia","besimi","institucionet"],["Zgjedhja","përafrimi","marrëdhënia","vlerat"],["Drejtimi","disiplina","vullneti","vrulli"],["Guximi","durimi","dhembshuria","vetë-kontrolli"],["Vetmia","reflektimi","studimi","udhëzimi"],["Ciklet","ndryshimi","pika kthese","fati"],["Drejtësia","përgjegjshmëria","dallimi","pasoja"],["Pauza","dorëzimi","perspektiva","pezullimi"],["Tranzicioni","përfundimi","lëshimi","transformimi"],["Ekuilibri","integrimi","moderimi","shërimi"],["Lidhja","detyrimi","varësia","kufizimi"],["Prishja","zbulesa","shembja","zgjimi"],["Shpresa","përtëritja","hapja","frymëzimi"],["Pasiguria","ëndrrat","projeksioni","intuita"],["Qartësia","vitaliteti","gëzimi","besimi"],["Zgjimi","vlerësimi","thirrja","llogaridhënia"],["Përfundimi","integrimi","arritja","tërësia"]];
+const suits={
+ Wands:{element:"Zjarri",theme:"energjia, iniciativa, krijimtaria dhe ambicia",glyph:"♣",words:["Frymëzimi","Planifikimi","Zgjerimi","Festimi","Konkurrenca","Njohja","Mbrojtja","Lëvizja","Elasticiteti","Barra"]},
+ Cups:{element:"Uji",theme:"emocioni, marrëdhëniet, imagjinata dhe pritja",glyph:"♡",words:["Hapja emocionale","Lidhja","Gëzimi i përbashkët","Soditja","Zhgënjimi","Kujtesa","Mundësia","Largimi","Kënaqësia","Përmbushja"]},
+ Swords:{element:"Ajri",theme:"mendimi, komunikimi, vendimet dhe konflikti",glyph:"⚔",words:["Qartësia","Zgjedhja e vështirë","Pikëllimi","Pushimi","Konflikti","Tranzicioni","Strategjia","Kufizimi","Shqetësimi","Përfundimi"]},
+ Pentacles:{element:"Toka",theme:"puna, burimet, trupi dhe stabiliteti praktik",glyph:"◇",words:["Mundësia","Ekuilibri","Mjeshtëria","Siguria","Vështirësia","Shkëmbimi","Vlerësimi","Praktika","Pavarësia","Trashëgimia"]}
+};
+const court=["Faqe","Kalorës","Mbretëreshë","Mbret"];
+const cardData=[];
+
+// Major Arcana
+majorNames.forEach((name,i)=>cardData.push({name,kind:"Major Arcana",index:i,keywords:majorKeywords[i],glyph:["☼","✧","☾","❀","♜","⌘","♡","⚑","♌","☷","☸","⚖","⌖","☥","⚗","♄","ϟ","☆","☽","☀","♢","◎"][i],description:majorKeywords[i][0]+" dhe lëvizja arketipale e "+name.toLowerCase()+"." ,upright:majorKeywords[i].slice(0,3).join(", ")+".",reversed:"Tema mund të jetë e bllokuar, e tepruar, e vonuar ose e vështirë për t'u integruar; përdorni pyetjen dhe kartat përreth për të përcaktuar se cili lexim përshtatet.",visual:"Studioni figurën, qëndrimin, objektet, mjedisin, drejtimin dhe kontrastet vizuale në kuvertën tuaj të zgjedhur. Tradita Rider–Waite–Smith ofron një referencë të përbashkët mësimore, por kuvertat e tjera mund ta shprehin arketipin ndryshe."}));
+
+// Minor Arcana
+Object.entries(suits).forEach(([suit,info])=>{
+ for(let n=1;n<=10;n++){
+  let label=n===1?"Asi":String(n);
+  let word=info.words[n-1];
+  cardData.push({name:label+" i "+suit,kind:suit,index:n,glyph:info.glyph,keywords:[word,info.element,info.theme.split(",")[0]],description:word+" e shprehur përmes "+info.element.toLowerCase()+" dhe kostumit të "+suit.toLowerCase()+".",upright:word+"; konsideroni se si "+info.theme+" zbatohet për pyetjen.",reversed:"Tema e kostumit mund të jetë e vonuar, e bllokuar, e tepruar ose e brendshme. Shmangni supozimin se kthimi nënkupton automatikisht të kundërtën.",visual:"Krahasoni numrin, simbolin e kostumit, objektet e përsëritura, figurat njerëzore dhe përbërjen me kartat e tjera në të njëjtin kostum. Kërkoni një model zhvillimi nga Asi në Dhjetë."});
+ }
+ court.forEach((rank,i)=>cardData.push({name:rank+" i "+suit,kind:suit,index:11+i,glyph:info.glyph,keywords:[["Të mësuarit","kurioziteti","mesazhi"],["Lëvizja","ndjekja","iniciativa"],["Pjekuria","pritja","kuptimi"],["Drejtimi","autoriteti","përgjegjësia"]][i],description:rank+" qasje ndaj "+info.theme.toLowerCase()+".",upright:"Mund të përshkruajë një person, rol, qëndrim ose qasje të shprehur përmes "+suit.toLowerCase()+".",reversed:"Cilësia mund të jetë e papjekur, e tepruar, e mbajtur ose e shprehur dobët. Konsideroni nëse karta përshkruan një person apo një mënyrë veprimi.",visual:"Lexoni gradën dhe kostumin së bashku. Vini re qëndrimin e figurës, mjedisin, objektet dhe marrëdhënien me shikuesin; shmangni caktimin e një gjinie ose moshe fikse."}));
+});
+
+// ==========================================
+// LOGJIKA E APLIKACIONIT
+// ==========================================
+const STORAGE="tarotAtlas.sq";
+let state=loadState(), currentLesson=1, currentFilter="All";
+
+function loadState(){
+  try{
+    var s=JSON.parse(localStorage.getItem(STORAGE));
+    if(!s || !Array.isArray(s.completed) || !Array.isArray(s.journal)) {
+      return {completed:[], journal:[], images:{}};
+    }
+    if(!s.images) s.images = {};
+    return s;
+  }catch(e){
+    return {completed:[], journal:[], images:{}};
+  }
+}
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE,JSON.stringify(state));
+  }catch(e){
+    alert("Shfletuesi juaj nuk mundi të ruante të dhënat. Mund të eksportoni një kopje rezervë nga Përparimi Im.");
+  }
+  updateProgress();
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function showView(name){document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));const el=document.getElementById(name+"View");if(el)el.classList.add("active");document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===name));window.scrollTo({top:0,behavior:"smooth"});if(name==="progress")renderProgress();if(name==="journal")renderJournal();if(name==="library")renderCards()}
+function weekFor(id){return WEEKS.findIndex(w=>w.lessons.includes(id))}
+
+function renderWeeks(target){
+  target.innerHTML=WEEKS.map((w,i)=>{
+    const done=w.lessons.filter(id=>state.completed.includes(id)).length;
+    return `<div class="week-card" data-week="${i}"><div class="week-no">JAVA ${String(i+1).padStart(2,"0")}</div><h3>${esc(w.title)}</h3><p>${esc(w.sub)}</p><div class="week-meta"><span>${w.lessons.length} mësime · ${done}/${w.lessons.length} të përfunduara</span><span class="pill">${done===w.lessons.length?"Përfunduar":"Eksploro kapitullin"}</span></div><div class="progress-track"><div class="progress-fill" style="width:${done/w.lessons.length*100}%"></div></div></div>`
+  }).join("");
+  target.querySelectorAll(".week-card").forEach(c=>c.addEventListener("click",()=>{showView("course");document.getElementById("weekBlock"+c.dataset.week)?.scrollIntoView({behavior:"smooth",block:"start"})}))
+}
+
+function renderCourse(){
+  const el=document.getElementById("courseWeeks");
+  el.innerHTML=WEEKS.map((w,i)=>`<div id="weekBlock${i}" style="margin-bottom:28px"><div class="section-head"><div><div class="eyebrow">JAVA ${String(i+1).padStart(2,"0")}</div><h2 style="color:var(--paper)">${esc(w.title)}</h2><p style="color:#bdb29d">${esc(w.sub)}</p></div><span class="pill" style="color:#d6c08e">${w.lessons.filter(id=>state.completed.includes(id)).length}/${w.lessons.length} përfunduar</span></div><div class="lesson-list">${w.lessons.map(id=>{const l=LESSONS[id-1];return `<div class="lesson-row" data-lesson="${id}"><div class="lesson-num">${String(id).padStart(2,"0")}</div><div><h4>${esc(l.title)}</h4><p>${esc(l.intro)}</p></div><div class="lesson-status">${state.completed.includes(id)?"✓ Përfunduar":"Hap mësimin →"}</div></div>`}).join("")}</div></div>`).join("");
+  el.querySelectorAll("[data-lesson]").forEach(row=>row.addEventListener("click",()=>openLesson(+row.dataset.lesson)))
+}
+
+function openLesson(id){
+  currentLesson=Math.max(1,Math.min(20,id));
+  const l=LESSONS[currentLesson-1],w=WEEKS[weekFor(currentLesson)];
+  document.getElementById("lessonWeek").textContent="JAVA "+l.week+" · "+w.title.toUpperCase();
+  document.getElementById("lessonTitle").textContent=String(l.id).padStart(2,"0")+" — "+l.title;
+  document.getElementById("lessonIntro").textContent=l.intro;
+  let content=l.sections.map(([heading,body],i)=>`<h2>${esc(heading)}</h2>${body.split(/\n\n/).map(p=>`<p>${esc(p)}</p>`).join("")}`).join("");
+  content+=`<div class="note"><strong>Parim studimi</strong><br>Kuptimet tradicionale janë një kornizë fillestare. Pyetja, imazhi, pozicioni i shtrirjes dhe kartat përreth formësojnë interpretimin.</div><div class="exercise"><div class="eyebrow">Ushtrimi juaj</div><p style="font-family:var(--serif);font-size:16px;margin:9px 0 13px">${esc(l.exercise)}</p><label for="lessonNote">Shënimet tuaja</label><textarea id="lessonNote" placeholder="Shkruani vëzhgimet dhe përgjigjen tuaj këtu…"></textarea><button class="btn ink small" id="saveLessonNote" style="margin-top:10px">Ruaj në ditar</button></div><div class="quiz"><div class="eyebrow">Test i njohurive</div><p class="quiz-question">${esc(l.quiz.q)}</p><div id="quizOptions">${l.quiz.opts.map((o,i)=>`<label class="option"><input type="radio" name="quiz" value="${i}"> ${esc(o)}</label>`).join("")}</div><button class="btn ink small" id="checkQuiz">Kontrollo përgjigjen</button><div class="feedback" id="quizFeedback"></div></div>`;
+  document.getElementById("lessonContent").innerHTML=content;
+  
+  document.getElementById("saveLessonNote").addEventListener("click",()=>{
+    const text=document.getElementById("lessonNote").value.trim();
+    if(!text){alert("Shkruani një shënim përpara se ta ruani.");return}
+    state.journal.unshift({title:"Mësimi "+l.id+": "+l.title,card:"Reflektim kursi",text,date:new Date().toISOString()});
+    saveState();
+    alert("Reflektimi juaj u ruajt në Ditarin e Studimit.");
+  });
+  
+  document.getElementById("checkQuiz").addEventListener("click",()=>{
+    const selected=document.querySelector('input[name="quiz"]:checked'),fb=document.getElementById("quizFeedback");
+    if(!selected){fb.style.display="block";fb.textContent="Zgjidhni një përgjigje fillimisht.";return}
+    const correct=+selected.value===l.quiz.correct;
+    fb.style.display="block";
+    fb.style.background=correct?"#dce5d7":"#eadbd1";
+    fb.innerHTML=(correct?"Saktë. ":"Jo plotësisht. ")+esc(l.quiz.why);
+  });
+  
+  document.getElementById("completeLesson").textContent=state.completed.includes(id)?"Mësimi i përfunduar ✓":"Shëno mësimin si të përfunduar";
+  document.getElementById("completeLesson").onclick=()=>{
+    if(!state.completed.includes(id))state.completed.push(id);
+    saveState();
+    document.getElementById("completeLesson").textContent="Mësimi i përfunduar ✓";
+    renderCourse();
+  };
+  document.getElementById("prevLesson").disabled=id===1;
+  document.getElementById("nextLesson").disabled=id===20;
+  showView("lesson");
+}
+
+function updateProgress(){
+  const n=state.completed.length,p=Math.round(n/20*100);
+  document.getElementById("homeLessons").textContent=n+" / 20";
+  document.getElementById("homeProgress").style.width=p+"%";
+  document.getElementById("progressCount").textContent=n+" / 20";
+  document.getElementById("journalCount").textContent=state.journal.length;
+  document.getElementById("completionPercent").textContent=p+"%";
+  if(document.getElementById("homeWeeks")) renderWeeks(document.getElementById("homeWeeks"));
+}
+
+function renderProgress(){
+  updateProgress();
+  document.getElementById("progressWeeks").innerHTML=WEEKS.map((w,i)=>{
+    let d=w.lessons.filter(id=>state.completed.includes(id)).length;
+    return `<div style="padding:12px 0;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between;gap:10px;font-family:var(--serif)"><span>${esc(w.title)}</span><span>${d}/${w.lessons.length}</span></div><div class="progress-track"><div class="progress-fill" style="width:${d/w.lessons.length*100}%"></div></div></div>`
+  }).join("");
+}
+
+function renderJournal(){
+  const el=document.getElementById("journalEntries");
+  if(!state.journal.length){el.innerHTML='<div class="empty">Ditari juaj po pret regjistrimin e parë.</div>';return}
+  el.innerHTML=state.journal.map((e,i)=>`<div class="journal-entry"><div style="display:flex;justify-content:space-between;gap:12px;align-items:start"><div><h4>${esc(e.title)}</h4><div class="eyebrow" style="margin:4px 0">${esc(e.card||"Reflektim personal")} · ${new Date(e.date).toLocaleDateString()}</div></div><button class="filter-btn" data-delete="${i}">Fshi</button></div><p>${esc(e.text)}</p></div>`).join("");
+  el.querySelectorAll("[data-delete]").forEach(b=>b.addEventListener("click",()=>{
+    if(confirm("Të fshihet ky regjistrim në ditar?")){
+      state.journal.splice(+b.dataset.delete,1);
+      saveState();
+      renderJournal();
+    }
+  }));
+}
+
+// ==========================================
+// BIBLIOTEKA E KARTAVE (ME NGARKIM IMAZHI)
+// ==========================================
+function renderCards(){
+  const q=(document.getElementById("cardSearch")?.value||"").toLowerCase();
+  const list=cardData.filter(c=>(currentFilter==="All"||c.kind===currentFilter)&&(c.name+" "+c.kind+" "+c.keywords.join(" ")).toLowerCase().includes(q));
+  
+  document.getElementById("cardGrid").innerHTML=list.map(c=>{
+    // Kontrollo nëse përdoruesi ka ngarkuar një imazh për këtë kartë
+    let imgHtml = '';
+    if(state.images && state.images[c.name]) {
+       imgHtml = `<img src="${state.images[c.name]}" alt="${esc(c.name)}">`;
+    }
+    return `<div class="tarot-card" data-card="${esc(c.name)}">
+      <div class="card-art">${imgHtml}<span class="card-glyph">${esc(c.glyph)}</span></div>
+      <div class="card-name">${esc(c.name)}</div>
+      <div class="card-kind">${esc(c.kind)}</div>
+    </div>`
+  }).join("")||'<div class="empty">Asnjë kartë nuk përputhet me atë kërkim.</div>';
+  
+  document.getElementById("cardGrid").querySelectorAll("[data-card]").forEach(el=>{
+    el.addEventListener("click",()=>openCard(el.dataset.card));
+  });
+}
+
+function openCard(name){
+  const c=cardData.find(x=>x.name===name);
+  if(!c)return;
+  
+  let imgHtml = '';
+  if(state.images && state.images[c.name]) {
+     imgHtml = `<img src="${state.images[c.name]}" alt="${esc(c.name)}" style="z-index:2;">`;
+  }
+
+  document.getElementById("modalContent").innerHTML=`<div class="card-detail">
+    <div class="card-detail-top">
+      <div class="card-art">${imgHtml}<span class="card-glyph">${esc(c.glyph)}</span></div>
+      <div>
+        <div class="eyebrow">${esc(c.kind)} · REFERENCË KARTE</div>
+        <h2 id="modalTitle">${esc(c.name)}</h2>
+        <p>${esc(c.description)}</p>
+        <div class="filters">${c.keywords.map(k=>`<span class="pill">${esc(k)}</span>`).join("")}</div>
+        
+        <!-- Butoni i ngarkimit të imazhit -->
+        <div style="margin-top:15px; border-top:1px solid var(--line); padding-top:15px;">
+          <label class="eyebrow" style="display:block; margin-bottom:5px;">Imazhi juaj (opsional)</label>
+          <input type="file" id="uploadCardImg" accept="image/*" style="font-size:12px; margin-bottom:8px; width:100%; border:1px solid #b9ad95; padding:5px; background:#f8f2e6;">
+          <button class="upload-btn" id="saveCardImg" data-name="${esc(c.name)}">Ngarko imazhin</button>
+          ${state.images && state.images[c.name] ? `<button class="upload-btn" id="removeCardImg" data-name="${esc(c.name)}" style="background:var(--wine); margin-left:5px;">Hiq imazhin</button>` : ''}
+        </div>
+
+      </div>
+    </div>
+    <h3 style="margin:25px 0 8px">Temat e drejta</h3><p>${esc(c.upright)}</p>
+    <h3 style="margin:20px 0 8px">Shprehja e kthyer ose e bllokuar</h3><p>${esc(c.reversed)}</p>
+    <h3 style="margin:20px 0 8px">Studim vizual</h3><p>${esc(c.visual)}</p>
+    <div class="note">Shënim studimi: ky është një regjistrim referues konciz, jo një zëvendësues për shqyrtimin e ilustrimit aktual në kuvertën tuaj të zgjedhur.</div>
+  </div>`;
+
+  document.getElementById("modalBackdrop").classList.add("show");
+
+  // Logjika për të ruajtur imazhin lokal
+  const saveBtn = document.getElementById("saveCardImg");
+  if(saveBtn) {
+    saveBtn.addEventListener("click", function() {
+      const fileInput = document.getElementById("uploadCardImg");
+      const cardName = this.dataset.name;
+      if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          if(!state.images) state.images = {};
+          state.images[cardName] = e.target.result;
+          saveState();
+          openCard(cardName); // Rifresko modalitetin
+          renderCards(); // Rifresko grid-in
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+      } else {
+        alert("Ju lutemi zgjidhni një skedar imazhi fillimisht.");
+      }
+    });
+  }
+
+  // Logjika për të hequr imazhin
+  const removeBtn = document.getElementById("removeCardImg");
+  if(removeBtn) {
+    removeBtn.addEventListener("click", function() {
+      const cardName = this.dataset.name;
+      if(state.images && state.images[cardName]) {
+        delete state.images[cardName];
+        saveState();
+        openCard(cardName);
+        renderCards();
+      }
+    });
+  }
+}
+
+// ==========================================
+// MODALET E PRAKTIKËS DHE EVENTET
+// ==========================================
+function modal(title,body){
+  document.getElementById("modalContent").innerHTML=`<div class="eyebrow">DHOMA E PRAKTIKËS</div><h2 id="modalTitle" style="margin:8px 0 18px">${title}</h2>${body}`;
+  document.getElementById("modalBackdrop").classList.add("show");
+}
+
+document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
+document.querySelectorAll("[data-goto]").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.goto)));
+
+document.getElementById("resumeBtn").addEventListener("click",()=>{
+  const next=LESSONS.find(l=>!state.completed.includes(l.id));
+  openLesson(next?next.id:20);
+});
+
+document.getElementById("backToCourse").addEventListener("click",()=>{showView("course");renderCourse()});
+document.getElementById("prevLesson").addEventListener("click",()=>openLesson(currentLesson-1));
+document.getElementById("nextLesson").addEventListener("click",()=>openLesson(currentLesson+1));
+document.getElementById("cardSearch").addEventListener("input",renderCards);
+
+document.querySelectorAll(".filter-btn[data-filter]").forEach(b=>b.addEventListener("click",()=>{
+  currentFilter=b.dataset.filter;
+  document.querySelectorAll(".filter-btn[data-filter]").forEach(x=>x.classList.toggle("active",x===b));
+  renderCards();
+}));
+
+document.getElementById("journalForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  state.journal.unshift({
+    title:document.getElementById("journalTitle").value.trim(),
+    card:document.getElementById("journalCard").value.trim(),
+    text:document.getElementById("journalText").value.trim(),
+    date:new Date().toISOString()
+  });
+  saveState();
+  e.target.reset();
+  renderJournal();
+});
+
+document.getElementById("modalClose").addEventListener("click",()=>document.getElementById("modalBackdrop").classList.remove("show"));
+document.getElementById("modalBackdrop").addEventListener("click",e=>{if(e.target.id==="modalBackdrop")e.currentTarget.classList.remove("show")});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("modalBackdrop").classList.remove("show")});
+
+document.getElementById("imageExercise").addEventListener("click",()=>modal("Lexo imazhin",`<p>Zgjidhni një kartë nga kuverta juaj. Mos konsultoni kuptimin e saj ende.</p><ol><li>Përshkruani figurën ose objektin qendror.</li><li>Regjistroni tre detaje të dukshme.</li><li>Përshkruani atmosferën në gjuhë neutrale.</li><li>Shkruani një interpretim dhe identifikoni provat vizuale që e mbështesin atë.</li></ol><label class="eyebrow" for="practiceNote">Vëzhgimet tuaja</label><textarea id="practiceNote" placeholder="Mund të shoh… / Vërej… / Një interpretim i mundshëm është…"></textarea><button class="btn ink" style="margin-top:12px" onclick="savePractice('Lexo imazhin')">Ruaj në ditar</button>`));
+
+document.getElementById("storyExercise").addEventListener("click",()=>modal("Ndërto një histori me tre karta",`<p>Përdorni tre karta nga kuverta juaj ose zgjidhni tre nga Biblioteka e Kartave. Jepuni këto pozicione:</p><ol><li>Situata — çfarë është e pranishme?</li><li>Sfida — çfarë e ndërlikon atë?</li><li>Qasja e dobishme — çfarë përgjigjeje mund të jetë e dobishme?</li></ol><label class="eyebrow" for="practiceNote">Sinteza juaj</label><textarea id="practiceNote" placeholder="Situata duket se… Kjo ndërlikohet nga… Një qasje e dobishme mund të jetë…"></textarea><button class="btn ink" style="margin-top:12px" onclick="savePractice('Lexim me tre karta')">Ruaj në ditar</button>`));
+
+document.getElementById("contextExercise").addEventListener("click",()=>modal("Interpreto me kontekst",`<p>Konsideroni Vetmitarin në dy pyetje të ndryshme:</p><p><strong>Pyetja A:</strong> Çfarë do të më ndihmonte të përfundoja një projekt kërkimor?</p><p><strong>Pyetja B:</strong> Si mund të përmirësoj komunikimin në marrëdhënien time?</p><p>Si mund të ketë theks të ndryshëm e njëjta kartë në secilën situatë?</p><label class="eyebrow" for="practiceNote">Krahasimi juaj</label><textarea id="practiceNote" placeholder="Në pyetjen A… Në pyetjen B…"></textarea><button class="btn ink" style="margin-top:12px" onclick="savePractice('Ushtrimi i kontekstit')">Ruaj në ditar</button>`));
+
+document.getElementById("suitQuiz").addEventListener("click",()=>modal("Kuizi i kostumeve dhe elementeve",`<div id="suitQuizArea"><p class="quiz-question">Cili kostum lidhet tradicionalisht me tokën dhe burimet praktike?</p>${["Shkopinj","Kupa","Shpata","Pentakle"].map((s,i)=>`<label class="option"><input type="radio" name="suitq" value="${i}">${s}</label>`).join("")}<button class="btn ink" id="suitCheck" style="margin-top:12px">Kontrollo përgjigjen</button><div class="feedback" id="suitFeedback"></div></div>`));
+
+document.getElementById("modalContent").addEventListener("click",e=>{
+  if(e.target && e.target.id==="suitCheck"){
+    const a=document.querySelector('input[name="suitq"]:checked');
+    const f=document.getElementById("suitFeedback");
+    if(!f) return;
+    f.style.display="block";
+    if(!a) f.textContent="Zgjidhni një përgjigje fillimisht.";
+    else {
+      const isCorrect = +a.value===3;
+      f.textContent=isCorrect?"Saktë. Pentaklet lidhen me tokën, çështjet praktike dhe burimet materiale.":"Jo plotësisht. Pentaklet janë kostumi i lidhur me tokën dhe burimet materiale.";
+      f.style.background=isCorrect?"#dce5d7":"#eadbd1";
+    }
+  }
+});
+
+function savePractice(title){
+  const t=document.getElementById("practiceNote")?.value.trim();
+  if(!t){alert("Shkruani përgjigjen tuaj fillimisht.");return}
+  state.journal.unshift({title,card:"Dhoma e Praktikës",text:t,date:new Date().toISOString()});
+  saveState();
+  document.getElementById("modalBackdrop").classList.remove("show");
+  alert("U ruajt në Ditarin tuaj të Studimit.");
+}
+
+document.getElementById("exportData").addEventListener("click",()=>{
+  const blob=new Blob([JSON.stringify({application:"Atlasi i Tarotit",version:1,exported:new Date().toISOString(),state},null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="atlasi-tarot-rezervë.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+document.getElementById("resetData").addEventListener("click",()=>{
+  if(confirm("Kjo do të fshijë përgjithmonë të gjithë përparimin dhe regjistrimet e ditarit të Atlasit të Tarotit të ruajtura në këtë shfletues. Të vazhdohet?")){
+    state={completed:[],journal:[],images:{}};
+    saveState();
+    renderProgress();
+    renderCourse();
+    renderJournal();
+    renderCards();
+  }
+});
+
+// Nisja
+renderWeeks(document.getElementById("homeWeeks"));
+renderCourse();
+renderCards();
+updateProgress();
+renderProgress();
+</script>
+</body>
+</html>
