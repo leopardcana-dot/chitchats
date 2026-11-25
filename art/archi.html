@@ -58,6 +58,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 .note{font-size:13px;color:var(--mute);margin:0 0 14px}
 .sw{display:flex;gap:8px;align-items:center}
 .sw input[type=color]{width:42px;height:34px;padding:0;border:1px solid var(--line);background:none}
+.pk{display:flex;gap:8px}.pk select{flex:1;min-width:0}
 .hide{display:none}
 .toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:3px;opacity:0;pointer-events:none;transition:opacity .2s}
 .toast.on{opacity:1}
@@ -126,7 +127,8 @@ const PROJ=[
 ["mood","Mood and atmosphere","text","Calm, warm, monumental yet intimate",["ext","int","full","det","study"]],
 ["det","Detail in focus","text","Junction of plaster arch, bronze threshold and stone step",["det"]],
 ["study","Concept study content","text","Massing diagram with site section and material palette",["study"]],
-["story","Hidden story and human trace","text","A half-read book, a worn stair edge, signs of a long-lived house",["ext","int","full","det"]]
+["story","Hidden story and human trace","text","A half-read book, a worn stair edge, signs of a long-lived house",["ext","int","full","det"]],
+["dir","Storytelling direction","text","",["ext","int","full","det","study"]]
 ];
 const CTRL=[
 ["ratio","Aspect ratio","Landscape 16:9|Square 1:1|Portrait 4:5|Cinematic 21:9"],
@@ -138,6 +140,16 @@ const CTRL=[
 ["style","Presentation style","Photorealistic architectural photography|Editorial magazine shoot|Hand-drawn concept render|Painterly visualization|Pencil and wash drawing|Clay model"],
 ["finish","Final rendering format","Fine-art print|High-resolution render|Competition board|Portfolio spread"]
 ];
+const OPTS={
+type:"Private Mediterranean villa|Cliffside holiday residence|Restored rural farmhouse|Contemporary coastal retreat|Historic townhouse|Minimalist desert residence|Mountain chalet|Seaside guesthouse|Private artist’s residence|Monastic retreat|Boutique hotel suite|Sculptural holiday home|Traditional stone courtyard house|Converted agricultural estate|Private wellness retreat|Mediterranean palazzo|Coastal restaurant|Private collector’s residence|Rural vineyard estate|Contemporary pavilion",
+loc:"Cliffside terrace overlooking the sea, Ibiza|Olive grove on a hillside, Puglia|Rocky coastline, Mallorca|Ancient village above the Mediterranean, Greece|Desert plateau, Morocco|Pine forest clearing, Corsica|Hillside vineyard, Tuscany|Remote beach, Menorca|Mountain ridge, Dolomites|Traditional fishing village, Portugal|Coastal landscape, Algarve|Rural countryside, Provence|Volcanic landscape, Lanzarote|Lakefront setting, Lake Como|Cypress-lined estate, Crete|Sandstone plateau, Jordan|Coastal farmland, Sicily|Forested hillside, Basque Country|Rocky island landscape, Cyclades|Historic urban courtyard, Marrakech",
+climate:"Late summer, dry heat, clear sky|Early autumn, warm breeze, golden afternoon|Mid-summer, intense sunlight, deep shadows|Spring, soft humidity, overcast sky|Winter, cold wind, pale sunlight|Late spring, warm air, scattered clouds|Autumn, dry atmosphere, amber light|Summer, coastal humidity, hazy horizon|Winter, gentle rain, wet stone|Early morning, cool air, soft mist|Late afternoon, warm wind, clear sky|Sunset, dry heat, orange horizon|Overcast summer, diffused natural light|Early autumn, fading heat, clear atmosphere|Winter, crisp air, low sunlight|Spring, fresh breeze, filtered sunshine|Summer storm approaching, dramatic clouds|Mediterranean winter, mild temperatures, bright sky|Late summer, dusty atmosphere, fading sunlight|Early summer, dry air, intense blue sky",
+furn:"Curved travertine banquette, bronze floor lamp, handmade rug|Low oak table, linen sofa, antique ceramic vessels|Sculptural stone bench, patinated brass lamp, woven wool rug|Vintage leather armchair, walnut side table, paper lantern|Built-in plaster sofa, carved wooden stool, textured linen cushions|Marble dining table, bentwood chairs, oversized pendant|Weathered teak daybed, woven jute rug, ceramic bowl|Bronze coffee table, curved bouclé sofa, antique floor lamp|Limestone console, handmade pottery, linen curtains|Vintage wooden bench, sculptural alabaster lamp, kilim rug|Modular sofa, blackened steel table, abstract artwork|Travertine dining table, woven chairs, suspended pendant|Antique writing desk, leather chair, brass reading lamp|Sculptural armchair, solid oak table, handmade wool textile|Built-in stone seating, bronze candleholders, natural linen|Low modular seating, smoked glass table, sculptural floor lamp|Carved wooden bench, antique mirror, ceramic sculptures|Limestone coffee table, vintage armchairs, oversized textile|Plaster side table, woven lounge chair, handmade pendant|Curved sofa, aged bronze lighting, antique Persian rug",
+mood:"Calm, warm, monumental yet intimate|Quiet, contemplative, understated|Raw, tactile, deeply grounded|Romantic, nostalgic, softly dramatic|Minimal, meditative, architectural|Warm, lived-in, quietly luxurious|Earthy, restrained, timeless|Sensual, sculptural, atmospheric|Intimate, shadowy, cinematic|Airy, serene, effortlessly elegant|Primitive, organic, elemental|Refined, austere, monumental|Soft, domestic, nostalgic|Mysterious, secluded, introspective|Sun-drenched, relaxed, Mediterranean|Quietly opulent, textured, timeless|Imperfect, authentic, deeply personal|Dramatic, sculptural, emotionally restrained|Gentle, poetic, contemplative|Monolithic, warm, human",
+det:"Junction of plaster arch, bronze threshold and stone step|Meeting of curved limestone wall and timber ceiling|Transition between rough stone flooring and smooth plaster|Recessed window sill with a deep architectural shadow|Junction of timber door and weathered stone frame|Curved plaster wall meeting a monolithic stone bench|Bronze handle embedded into a handmade wooden door|Staircase edge worn smooth by years of use|Thin shadow gap between ceiling and textured wall|Stone fireplace meeting a sculptural plaster volume|Junction of glass, limestone and aged bronze|Deep window reveal framing the Mediterranean landscape|Rounded plaster corner meeting a travertine floor|Hand-carved stone basin and wall connection|Timber ceiling intersecting with a curved plaster arch|Threshold between indoor stone flooring and outdoor terrace|Bronze floor lamp casting light across a textured wall|Sculptural staircase meeting a curved architectural wall|Irregular stone joints around a recessed doorway|Handmade ceramic tile meeting a raw plaster surface",
+story:"A half-read book, a worn stair edge, signs of a long-lived house|A forgotten glass of water beside an open window|Faded photographs resting against an old plaster wall|A linen curtain gently moving in the afternoon breeze|A pair of sandals left beside the entrance|A handwritten note tucked beneath a ceramic bowl|Sun-faded upholstery revealing years of use|A candle with melted wax beside an unfinished letter|Dust gathered along the edge of an antique mirror|A folded blanket left casually on a stone bench|An old key resting on a weathered wooden console|A small crack in the plaster carefully left unrepaired|A glass bottle catching the last afternoon sunlight|Faint watermarks on an aged limestone floor|A chair slightly pulled away from the dining table|A collection of stones gathered from the nearby shore|A book with handwritten annotations on the margins|Worn leather handles on an old wooden cabinet|A vase containing dried branches from the garden|Footprints in the dust near an open terrace door",
+dir:"Architecture shaped by erosion and time|A dialogue between ancient construction and contemporary intervention|The relationship between heavy stone and soft textiles|The contrast between monumental geometry and domestic objects|A house that feels gradually absorbed by the landscape|Spaces defined by indirect sunlight|A residence built around a single ancient tree|Imperfect craftsmanship as a form of luxury|Architecture that reveals its construction rather than concealing it|The passage of time expressed through patinated materials|A continuous transition between interior and exterior|The house as a collection of intimate architectural moments|Sculptural geometry softened by everyday life|The relationship between silence, shadow and material|A contemporary interpretation of vernacular architecture|Spaces that frame fragments of the landscape|A house designed around rituals of everyday living|Architecture that becomes more beautiful through aging|The tension between permanence and fragility|A timeless interior with traces of previous generations"
+};
 const PRESETS=[
 ["Mediterranean villa","Sea, terraces, warm light","ext",{type:"Private villa",loc:"Cliffside terrace above the sea",climate:"Late summer, dry heat"},{view:1,time:0,lens:0,style:0,ratio:0}],
 ["Brutalist retreat","Mass, shadow, restraint","ext",{type:"Mountain retreat",loc:"Rocky alpine slope",climate:"Early winter, low sun"},{view:2,time:4,lens:1,style:1,ratio:0}],
@@ -163,8 +175,8 @@ $("L0").innerHTML=`<p class="note">Permanent rules. Edit any category, lock it t
 ${SLIDERS.map((s,i)=>`<div class="sl"><span>${s[0]}</span><input type="range" min="0" max="100" data-s="${i}" aria-label="${s[0]} to ${s[1]}"><span>${s[1]}</span></div>`).join("")}</div>`+
 DNA.map(d=>`<div class="card" id="c-${d[0]}"><div class="ch"><b>${d[1]}</b><button class="lk" data-l="${d[0]}" aria-pressed="false">Lock</button></div><textarea data-d="${d[0]}" aria-label="${d[1]}"></textarea></div>`).join("");
 
-$("L1").innerHTML=`<p class="note">Fields shown depend on the output mode. Hidden fields stay out of the prompt.</p><div class="card"><div class="two">`+
-PROJ.map(p=>`<label class="f" data-modes="${p[4].join(" ")}">${p[1]}<input type="text" data-p="${p[0]}"></label>`).join("")+
+$("L1").innerHTML=`<p class="note">Fields shown depend on the output mode. Type freely, pick from 20 curated options, or shuffle.</p><div class="row" style="margin:0 0 14px"><button class="btn pri" id="shuf">Shuffle whole project</button></div><div class="card"><div class="two">`+
+PROJ.map(p=>`<label class="f" data-modes="${p[4].join(" ")}">${p[1]}<input type="text" data-p="${p[0]}">${OPTS[p[0]]?`<span class="pk"><select data-pk="${p[0]}" aria-label="${p[1]} options"><option value="">Choose from 20 options</option>${OPTS[p[0]].split("|").map((o,i)=>`<option value="${i}">${i+1}. ${o}</option>`).join("")}</select><button type="button" class="btn" data-rnd="${p[0]}">Random</button></span>`:""}</label>`).join("")+
 `</div><label class="f">Concept colour accent (optional)<span class="sw"><input type="color" id="col"><input type="text" id="colt" style="max-width:120px"></span></label></div>`;
 
 $("L2").innerHTML=`<p class="note">Presets set the mode, project hints and camera together. You can change any control afterwards.</p>
@@ -207,6 +219,7 @@ document.addEventListener("input",e=>{const t=e.target;
   if(t.dataset.d){if(!S.locks[t.dataset.d]||true)S.dna[t.dataset.d]=t.value}
   else if(t.dataset.s)S.sl[t.dataset.s]=+t.value;
   else if(t.dataset.p)S.proj[t.dataset.p]=t.value;
+  else if(t.dataset.pk){if(t.value!==""){S.proj[t.dataset.pk]=OPTS[t.dataset.pk].split("|")[+t.value];t.value="";sync()}}
   else if(t.dataset.c)S.ctl[t.dataset.c]=+t.value;
   else if(t.id=="col"){S.col=t.value;$("colt").value=t.value}
   else if(t.id=="colt")S.col=t.value;
@@ -217,6 +230,8 @@ document.addEventListener("click",e=>{const t=e.target.closest("button");if(!t)r
   if(t.dataset.m){S.mode=t.dataset.m;save();sync()}
   else if(t.dataset.t!==undefined){document.querySelectorAll("[data-t]").forEach(b=>b.setAttribute("aria-selected",b==t));[0,1,2].forEach(i=>$("L"+i).classList.toggle("hide",i!=t.dataset.t))}
   else if(t.dataset.l){S.locks[t.dataset.l]=!S.locks[t.dataset.l];save();sync()}
+  else if(t.dataset.rnd){const a=OPTS[t.dataset.rnd].split("|");S.proj[t.dataset.rnd]=a[Math.floor(Math.random()*a.length)];save();sync()}
+  else if(t.id=="shuf"){Object.keys(OPTS).forEach(k=>{const a=OPTS[k].split("|");S.proj[k]=a[Math.floor(Math.random()*a.length)]});save();sync();toast("Project shuffled")}
   else if(t.dataset.pr!==undefined){const p=PRESETS[t.dataset.pr];S.mode=p[2];Object.assign(S.proj,p[3]);Object.assign(S.ctl,p[4]);save();sync();toast("Preset applied")}
 });
 $("reset").onclick=()=>{const old=S,n=blank();DNA.forEach(d=>{if(old.locks[d[0]])n.dna[d[0]]=old.dna[d[0]]});if(old.locks.sl)n.sl=old.sl;n.locks=old.locks;S=n;save();sync();toast("Reset. Locked categories kept")};
