@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Architecture DNA Studio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Karla:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#f1ece2;--panel:#faf6ee;--ink:#2a251d;--mute:#7a7060;--line:#d8cfbd;--gold:#9a7424;--teal:#1f7a78;--field:#fffdf8;--lock:#e7dcc2;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14120e;--panel:#1c1913;--ink:#ece3d0;--mute:#9b917c;--line:#3a3427;--gold:#c9a24a;--teal:#4fb8b2;--field:#17150f;--lock:#2d2718;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14120e;--panel:#1c1913;--ink:#ece3d0;--mute:#9b917c;--line:#3a3427;--gold:#c9a24a;--teal:#4fb8b2;--field:#17150f;--lock:#2d2718;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Karla,system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+h1{font:500 clamp(30px,5vw,46px)/1.05 "Cormorant Garamond",Georgia,serif;margin:0 0 6px;letter-spacing:.01em}
+h2{font:600 24px/1.2 "Cormorant Garamond",Georgia,serif;margin:0 0 4px}
+.sub{color:var(--mute);max-width:640px;margin:0 0 22px}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+button,select,input,textarea{font:inherit;color:var(--ink)}
+button{cursor:pointer}
+.btn{background:transparent;border:1px solid var(--line);padding:7px 14px;border-radius:3px}
+.btn:hover{border-color:var(--gold)}
+.btn.pri{background:var(--gold);color:var(--bg);border-color:var(--gold);font-weight:600}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.modes,.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.chip{border:1px solid var(--line);background:transparent;padding:6px 13px;border-radius:20px}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 14px;font:600 20px "Cormorant Garamond",Georgia,serif;color:var(--mute)}
+.tabs button[aria-selected=true]{color:var(--ink);border-color:var(--gold)}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:28px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);padding:16px 18px;margin-bottom:14px;border-radius:3px}
+.card.locked{background:var(--lock)}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.ch b{font:600 19px "Cormorant Garamond",Georgia,serif}
+.lk{font-size:13px;padding:3px 10px;border:1px solid var(--line);background:none;border-radius:3px;color:var(--mute)}
+.lk[aria-pressed=true]{color:var(--gold);border-color:var(--gold)}
+textarea,input[type=text],select{width:100%;background:var(--field);border:1px solid var(--line);padding:8px 10px;border-radius:3px}
+textarea{min-height:84px;resize:vertical}
+label.f{display:block;margin-bottom:12px;font-size:13px;color:var(--mute)}
+label.f>*:last-child{margin-top:4px;color:var(--ink);font-size:15px}
+.sl{display:grid;grid-template-columns:90px 1fr 90px;gap:10px;align-items:center;font-size:13px;color:var(--mute);margin:6px 0}
+.sl span:last-child{text-align:right}
+input[type=range]{width:100%;accent-color:var(--gold)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+@media(max-width:560px){.two{grid-template-columns:1fr}.sl{grid-template-columns:70px 1fr 70px}}
+.side{position:sticky;top:12px}
+.out{white-space:pre-wrap;background:var(--field);border:1px solid var(--line);padding:14px;max-height:62vh;overflow:auto;font-size:13.5px;line-height:1.6;border-radius:3px}
+.meta{display:flex;justify-content:space-between;color:var(--mute);font-size:13px;margin:6px 0 10px;gap:8px;flex-wrap:wrap}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pre{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-bottom:16px}
+.pre button{text-align:left;background:var(--panel);border:1px solid var(--line);padding:10px 12px;border-radius:3px}
+.pre button:hover{border-color:var(--gold)}
+.pre b{display:block;font:600 17px "Cormorant Garamond",Georgia,serif}
+.pre small{color:var(--mute)}
+.note{font-size:13px;color:var(--mute);margin:0 0 14px}
+.sw{display:flex;gap:8px;align-items:center}
+.sw input[type=color]{width:42px;height:34px;padding:0;border:1px solid var(--line);background:none}
+.hide{display:none}
+.toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:3px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Architecture DNA Studio</h1>
+      <p class="sub">Keep the architectural identity. Change the building. Define your permanent rules once, then vary project, place, function and camera.</p>
+    </div>
+    <div class="row" style="margin-top:6px"><span class="meta" id="saved" style="margin:8px 8px 0 0">Saved locally</span><button class="btn" id="reset">Reset all</button></div>
+  </div>
+
+  <div class="modes" id="modes" role="group" aria-label="Output mode"></div>
+  <div class="tabs" id="tabs" role="tablist"></div>
+
+  <div class="grid">
+    <div>
+      <section id="L0"></section>
+      <section id="L1" class="hide"></section>
+      <section id="L2" class="hide"></section>
+    </div>
+    <aside class="side">
+      <div class="card">
+        <h2>Master prompt</h2>
+        <div class="meta"><span id="wc">0 words</span><span id="cov"></span></div>
+        <div class="out" id="out" aria-live="polite"></div>
+        <div class="row">
+          <button class="btn pri" id="copy">Copy prompt</button>
+          <button class="btn" id="dl">Download .txt</button>
+        </div>
+        <div class="row" style="margin-top:14px;font-size:13px;color:var(--mute)">
+          <label><input type="checkbox" id="hd" checked> Section headings</label>
+          <label><input type="checkbox" id="em"> Include unfilled fields</label>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast">Copied</div>
+
+<script>
+const MODES={ext:"Exterior",int:"Interior",full:"Complete project",det:"Architectural detail",study:"Concept study"};
+const SLIDERS=[["Organic","Geometric"],["Minimal","Expressive"],["Contemporary","Historical"],["Monumental","Intimate"],["Restrained","Dramatic"]];
+const DNA=[
+["phil","Architectural philosophy","Organic modernism with Mediterranean architectural sensibility, restrained brutalism, sculptural geometry and a subtle neo-baroque influence. Timeless rather than trend-driven; every element feels inevitable, not decorative."],
+["form","Forms and geometry","Low, horizontal proportions interrupted by one vertical gesture. Asymmetrical but balanced compositions; thick sculpted walls, soft-cornered volumes, arches and curved apertures cut as deep reveals. Massing that reads as carved from a single block."],
+["mat","Materials and finishes","Hand-troweled lime plaster, tadelakt, board-formed concrete, raw travertine, aged brass and bronze, dark oxidized steel, reclaimed oak and walnut, handmade terracotta and zellige. Honest patina; surfaces show touch and weathering."],
+["light","Light and atmosphere","Warm Mediterranean light, deep reveals and shadow gradients, sunlight modelled across rough surfaces, filtered light through screens and foliage. Quiet, contemplative, slightly theatrical."],
+["land","Landscape and context","Building grows from its terrain: terraces, retaining walls, olive and cypress, wild grasses, water as a still mirror. Thresholds between inside and outside are layered and ambiguous."],
+["orn","Ornament and neo-baroque detail","Restrained ornament only at moments of emphasis: sculpted niches, carved plaster friezes, curved stair balustrades, gilded or bronze inlays, subtle shell and scroll geometry abstracted into modern form."],
+["int","Interior and furniture language","Sculptural, low-slung furniture in bouclé, leather and travertine; monolithic stone surfaces, built-in curved banquettes, plastered niches, artisanal lighting, one historic or antique piece among contemporary ones."],
+["avoid","Avoid","Avoid generic luxury-villa gloss, glass-box minimalism, fake ornament, uniform detail, over-staged styling, plastic CGI sheen, clutter and any element that does not describe form or atmosphere."]
+];
+const PROJ=[
+["name","Concept name","text","",["ext","int","full","det","study"]],
+["type","Building or space type","text","Private villa",["ext","int","full","det","study"]],
+["loc","Location and site","text","Cliffside terrace above the sea, Ibiza",["ext","full","study","det"]],
+["climate","Climate, season and weather","text","Late summer, dry heat, clear sky",["ext","full","det"]],
+["func","Function and program","text","Family retreat with living, dining, five bedrooms, pool and courtyard",["ext","int","full","study"]],
+["scale","Scale and massing","text","Two storeys stepping down the slope, 600 m²",["ext","full","study"]],
+["room","Interior space in focus","text","Double-height living room with sunken lounge",["int","full"]],
+["furn","Furniture and objects","text","Curved travertine banquette, bronze floor lamp, handmade rug",["int","full","det"]],
+["mood","Mood and atmosphere","text","Calm, warm, monumental yet intimate",["ext","int","full","det","study"]],
+["det","Detail in focus","text","Junction of plaster arch, bronze threshold and stone step",["det"]],
+["study","Concept study content","text","Massing diagram with site section and material palette",["study"]],
+["story","Hidden story and human trace","text","A half-read book, a worn stair edge, signs of a long-lived house",["ext","int","full","det"]]
+];
+const CTRL=[
+["ratio","Aspect ratio","Landscape 16:9|Square 1:1|Portrait 4:5|Cinematic 21:9"],
+["view","Viewpoint","Eye-level human view|Elevated aerial view|Low heroic angle|One-point perspective|Axonometric|Section cut view"],
+["lens","Lens and distance","Wide-angle 24mm|Standard 35mm|Tele compression 85mm|Macro detail"],
+["time","Time of day","Golden hour|Blue hour|Midday sun|Overcast soft light|Night with interior glow|Dawn mist"],
+["frame","Framing","Frame within a frame|Symmetrical centered|Asymmetric with negative space|Layered foreground silhouette"],
+["people","Human presence","None, architecture only|Single distant figure|Small lived-in presence|Hands and traces only"],
+["style","Presentation style","Photorealistic architectural photography|Editorial magazine shoot|Hand-drawn concept render|Painterly visualization|Pencil and wash drawing|Clay model"],
+["finish","Final rendering format","Fine-art print|High-resolution render|Competition board|Portfolio spread"]
+];
+const PRESETS=[
+["Mediterranean villa","Sea, terraces, warm light","ext",{type:"Private villa",loc:"Cliffside terrace above the sea",climate:"Late summer, dry heat"},{view:1,time:0,lens:0,style:0,ratio:0}],
+["Brutalist retreat","Mass, shadow, restraint","ext",{type:"Mountain retreat",loc:"Rocky alpine slope",climate:"Early winter, low sun"},{view:2,time:4,lens:1,style:1,ratio:0}],
+["Baroque interior","Curves, niches, gold","int",{type:"Residence salon",room:"Oval salon with plaster niches and curved stair",mood:"Theatrical, hushed, warm"},{view:0,time:3,lens:0,style:1,ratio:2}],
+["Sculptural pavilion","Single gesture, garden","full",{type:"Garden pavilion",loc:"Walled olive grove",scale:"Single volume, 120 m²"},{view:0,time:0,lens:1,style:2,ratio:1}],
+["Material detail","Touch, patina, junction","det",{det:"Bronze handrail meeting a curved lime-plaster wall"},{view:0,time:3,lens:3,style:1,ratio:1}],
+["Massing study","Diagram and section","study",{study:"Massing diagram, site section and material palette"},{view:4,time:3,lens:1,style:4,ratio:0}]
+];
+const KEY="archDNA.v1";
+const blank=()=>({mode:"full",locks:{},dna:Object.fromEntries(DNA.map(d=>[d[0],d[2]])),sl:[30,40,35,40,45],proj:Object.fromEntries(PROJ.map(p=>[p[0],p[3]])),col:"#7a5c2e",ctl:Object.fromEntries(CTRL.map(c=>[c[0],0])),hd:true,em:false});
+let S;try{S=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){S=null}
+S=Object.assign(blank(),S||{});
+const $=id=>document.getElementById(id);
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}$("saved").textContent="Saved locally"}
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),1400)}
+
+// UI build
+$("modes").innerHTML=Object.entries(MODES).map(([k,v])=>`<button class="chip" data-m="${k}" aria-pressed="false">${v}</button>`).join("");
+$("tabs").innerHTML=[["Architecture DNA","Permanent identity"],["Project","What you design"],["Visualization","How it is presented"]].map((t,i)=>`<button role="tab" data-t="${i}" aria-selected="${i==0}">${t[0]}</button>`).join("");
+
+$("L0").innerHTML=`<p class="note">Permanent rules. Edit any category, lock it to protect it from presets and Reset all.</p>
+<div class="card" id="c-sl"><div class="ch"><b>Character balance</b><button class="lk" data-l="sl" aria-pressed="false">Lock</button></div>
+${SLIDERS.map((s,i)=>`<div class="sl"><span>${s[0]}</span><input type="range" min="0" max="100" data-s="${i}" aria-label="${s[0]} to ${s[1]}"><span>${s[1]}</span></div>`).join("")}</div>`+
+DNA.map(d=>`<div class="card" id="c-${d[0]}"><div class="ch"><b>${d[1]}</b><button class="lk" data-l="${d[0]}" aria-pressed="false">Lock</button></div><textarea data-d="${d[0]}" aria-label="${d[1]}"></textarea></div>`).join("");
+
+$("L1").innerHTML=`<p class="note">Fields shown depend on the output mode. Hidden fields stay out of the prompt.</p><div class="card"><div class="two">`+
+PROJ.map(p=>`<label class="f" data-modes="${p[4].join(" ")}">${p[1]}<input type="text" data-p="${p[0]}"></label>`).join("")+
+`</div><label class="f">Concept colour accent (optional)<span class="sw"><input type="color" id="col"><input type="text" id="colt" style="max-width:120px"></span></label></div>`;
+
+$("L2").innerHTML=`<p class="note">Presets set the mode, project hints and camera together. You can change any control afterwards.</p>
+<div class="pre">${PRESETS.map((p,i)=>`<button data-pr="${i}"><b>${p[0]}</b><small>${p[1]}</small></button>`).join("")}</div>
+<div class="card"><div class="two">${CTRL.map(c=>`<label class="f">${c[1]}<select data-c="${c[0]}">${c[2].split("|").map((o,i)=>`<option value="${i}">${o}</option>`).join("")}</select></label>`).join("")}</div></div>`;
+
+function sync(){
+  document.querySelectorAll("[data-m]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m==S.mode));
+  document.querySelectorAll("[data-d]").forEach(e=>{if(e!==document.activeElement)e.value=S.dna[e.dataset.d]});
+  document.querySelectorAll("[data-s]").forEach(e=>e.value=S.sl[e.dataset.s]);
+  document.querySelectorAll("[data-p]").forEach(e=>{if(e!==document.activeElement)e.value=S.proj[e.dataset.p]});
+  document.querySelectorAll("[data-c]").forEach(e=>e.value=S.ctl[e.dataset.c]);
+  document.querySelectorAll("[data-l]").forEach(b=>{const k=b.dataset.l,on=!!S.locks[k];b.setAttribute("aria-pressed",on);b.textContent=on?"Locked":"Lock";b.closest(".card").classList.toggle("locked",on)});
+  document.querySelectorAll("[data-modes]").forEach(l=>l.classList.toggle("hide",!l.dataset.modes.split(" ").includes(S.mode)));
+  $("col").value=/^#[0-9a-f]{6}$/i.test(S.col)?S.col:"#7a5c2e";$("colt").value=S.col;
+  $("hd").checked=S.hd;$("em").checked=S.em;
+  render();
+}
+function slText(i){const [a,b]=SLIDERS[i],v=S.sl[i];return `${a} ↔ ${b}: `+(v<35?`strongly ${a.toLowerCase()}`:v<45?`leaning ${a.toLowerCase()}`:v<=55?`balanced between ${a.toLowerCase()} and ${b.toLowerCase()}`:v<=65?`leaning ${b.toLowerCase()}`:`strongly ${b.toLowerCase()}`)}
+function opt(k){const c=CTRL.find(x=>x[0]==k);return c[2].split("|")[S.ctl[k]]}
+function render(){
+  const H=(t)=>S.hd?`${t}\n`:"";
+  const dnaKeys=S.mode=="int"?DNA.filter(d=>!["land"].includes(d[0])):S.mode=="ext"?DNA.filter(d=>d[0]!="int"):DNA;
+  let a=H("A. PERMANENT ARCHITECTURE DNA")+"Character balance: "+SLIDERS.map((_,i)=>slText(i).split(": ")[1]).join("; ")+".\n\n";
+  a+=dnaKeys.filter(d=>S.dna[d[0]].trim()).map(d=>`${d[1]}: ${S.dna[d[0]].trim()}`).join("\n\n");
+  let b=[],miss=0,tot=0;
+  PROJ.forEach(p=>{if(!p[4].includes(S.mode))return;tot++;const v=S.proj[p[0]].trim();if(v)b.push(`${p[1]}: ${v}`);else{miss++;if(S.em)b.push(`${p[1]}: [not defined]`)}});
+  if(S.col&&S.col!=="#7a5c2e")b.push(`Concept colour accent: ${S.col}`);
+  const modeLine={ext:"Exterior architecture, seen from outside.",int:"Interior design, seen from within.",full:"Complete project: exterior and interior as one coherent whole, sharing materials, light and proportion.",det:"Architectural detail study: a close, tactile view of one junction or surface.",study:"Concept study: analytic presentation of massing, section, plan or material logic."}[S.mode];
+  let c=H("C. VISUALIZATION")+CTRL.map(x=>`${x[1]}: ${opt(x[0])}`).join("\n");
+  const d=H("D. FINAL INTEGRATION")+"Preserve the permanent architectural identity while translating the project brief into one coherent visualization. Materials, light, proportion and atmosphere must reinforce the same emotional idea. Keep the main form legible and every supporting element subordinate.";
+  const txt=`${H("OUTPUT MODE")}${modeLine}\n\n${a}\n\n${H("B. PROJECT")}${b.join("\n")}\n\n${c}\n\n${d}`.replace(/\n{3,}/g,"\n\n");
+  $("out").textContent=txt;
+  $("wc").textContent=txt.trim().split(/\s+/).length+" words";
+  $("cov").textContent=`Project fields ${tot-miss} / ${tot}`;
+  window._txt=txt;
+}
+// events
+document.addEventListener("input",e=>{const t=e.target;
+  if(t.dataset.d){if(!S.locks[t.dataset.d]||true)S.dna[t.dataset.d]=t.value}
+  else if(t.dataset.s)S.sl[t.dataset.s]=+t.value;
+  else if(t.dataset.p)S.proj[t.dataset.p]=t.value;
+  else if(t.dataset.c)S.ctl[t.dataset.c]=+t.value;
+  else if(t.id=="col"){S.col=t.value;$("colt").value=t.value}
+  else if(t.id=="colt")S.col=t.value;
+  else if(t.id=="hd")S.hd=t.checked;else if(t.id=="em")S.em=t.checked;
+  save();render();
+});
+document.addEventListener("click",e=>{const t=e.target.closest("button");if(!t)return;
+  if(t.dataset.m){S.mode=t.dataset.m;save();sync()}
+  else if(t.dataset.t!==undefined){document.querySelectorAll("[data-t]").forEach(b=>b.setAttribute("aria-selected",b==t));[0,1,2].forEach(i=>$("L"+i).classList.toggle("hide",i!=t.dataset.t))}
+  else if(t.dataset.l){S.locks[t.dataset.l]=!S.locks[t.dataset.l];save();sync()}
+  else if(t.dataset.pr!==undefined){const p=PRESETS[t.dataset.pr];S.mode=p[2];Object.assign(S.proj,p[3]);Object.assign(S.ctl,p[4]);save();sync();toast("Preset applied")}
+});
+$("reset").onclick=()=>{const old=S,n=blank();DNA.forEach(d=>{if(old.locks[d[0]])n.dna[d[0]]=old.dna[d[0]]});if(old.locks.sl)n.sl=old.sl;n.locks=old.locks;S=n;save();sync();toast("Reset. Locked categories kept")};
+$("copy").onclick=async()=>{try{await navigator.clipboard.writeText(window._txt);toast("Copied")}catch(e){const r=document.createRange();r.selectNodeContents($("out"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Select and copy")}};
+$("dl").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([window._txt],{type:"text/plain"}));a.download=(S.proj.name||"architecture-prompt").replace(/\W+/g,"-")+".txt";a.click()};
+sync();
+</script>
+</body>
+</html>
