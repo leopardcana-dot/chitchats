@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Architecture DNA Studio · enhanced</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Karla:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#f1ece2;--panel:#faf6ee;--ink:#2a251d;--mute:#7a7060;--line:#d8cfbd;--gold:#9a7424;--teal:#1f7a78;--field:#fffdf8;--lock:#e7dcc2;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14120e;--panel:#1c1913;--ink:#ece3d0;--mute:#9b917c;--line:#3a3427;--gold:#c9a24a;--teal:#4fb8b2;--field:#17150f;--lock:#2d2718;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14120e;--panel:#1c1913;--ink:#ece3d0;--mute:#9b917c;--line:#3a3427;--gold:#c9a24a;--teal:#4fb8b2;--field:#17150f;--lock:#2d2718;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Karla,system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+h1{font:500 clamp(30px,5vw,46px)/1.05 "Cormorant Garamond",Georgia,serif;margin:0 0 6px;letter-spacing:.01em}
+h2{font:600 24px/1.2 "Cormorant Garamond",Georgia,serif;margin:0 0 4px}
+.sub{color:var(--mute);max-width:640px;margin:0 0 22px}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+button,select,input,textarea{font:inherit;color:var(--ink)}
+button{cursor:pointer}
+.btn{background:transparent;border:1px solid var(--line);padding:7px 14px;border-radius:3px}
+.btn:hover{border-color:var(--gold)}
+.btn.pri{background:var(--gold);color:var(--bg);border-color:var(--gold);font-weight:600}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.modes,.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.chip{border:1px solid var(--line);background:transparent;padding:6px 13px;border-radius:20px}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 14px;font:600 20px "Cormorant Garamond",Georgia,serif;color:var(--mute)}
+.tabs button[aria-selected=true]{color:var(--ink);border-color:var(--gold)}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:28px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);padding:16px 18px;margin-bottom:14px;border-radius:3px}
+.card.locked{background:var(--lock)}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.ch b{font:600 19px "Cormorant Garamond",Georgia,serif}
+.lk{font-size:13px;padding:3px 10px;border:1px solid var(--line);background:none;border-radius:3px;color:var(--mute)}
+.lk[aria-pressed=true]{color:var(--gold);border-color:var(--gold)}
+textarea,input[type=text],select{width:100%;background:var(--field);border:1px solid var(--line);padding:8px 10px;border-radius:3px}
+textarea{min-height:84px;resize:vertical}
+label.f{display:block;margin-bottom:12px;font-size:13px;color:var(--mute)}
+label.f>*:last-child{margin-top:4px;color:var(--ink);font-size:15px}
+.sl{display:grid;grid-template-columns:90px 1fr 90px;gap:10px;align-items:center;font-size:13px;color:var(--mute);margin:6px 0}
+.sl span:last-child{text-align:right}
+input[type=range]{width:100%;accent-color:var(--gold)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+@media(max-width:560px){.two{grid-template-columns:1fr}.sl{grid-template-columns:70px 1fr 70px}}
+.side{position:sticky;top:12px}
+.out{white-space:pre-wrap;background:var(--field);border:1px solid var(--line);padding:14px;max-height:62vh;overflow:auto;font-size:13.5px;line-height:1.6;border-radius:3px}
+.meta{display:flex;justify-content:space-between;color:var(--mute);font-size:13px;margin:6px 0 10px;gap:8px;flex-wrap:wrap}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pre{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-bottom:16px}
+.pre button{text-align:left;background:var(--panel);border:1px solid var(--line);padding:10px 12px;border-radius:3px}
+.pre button:hover{border-color:var(--gold)}
+.pre b{display:block;font:600 17px "Cormorant Garamond",Georgia,serif}
+.pre small{color:var(--mute)}
+.note{font-size:13px;color:var(--mute);margin:0 0 14px}
+.sw{display:flex;gap:8px;align-items:center}
+.sw input[type=color]{width:42px;height:34px;padding:0;border:1px solid var(--line);background:none}
+.pk{display:flex;gap:8px}.pk select{flex:1;min-width:0}
+.hide{display:none}
+.toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:3px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:1000}
+.toast.on{opacity:1}
+small.tag{display:inline-block;font-size:11px;background:var(--line);padding:1px 8px;border-radius:10px;color:var(--mute);margin-left:6px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Architecture DNA Studio <small class="tag">enhanced</small></h1>
+      <p class="sub">Define your permanent architectural identity once, then vary project, place, function, camera and output style. More fields, more curated options, full control.</p>
+    </div>
+    <div class="row" style="margin-top:6px"><span class="meta" id="saved" style="margin:8px 8px 0 0">Saved locally</span><button class="btn" id="reset">Reset all</button></div>
+  </div>
+
+  <div class="modes" id="modes" role="group" aria-label="Output mode"></div>
+  <div class="tabs" id="tabs" role="tablist"></div>
+
+  <div class="grid">
+    <div>
+      <section id="L0"></section>
+      <section id="L1" class="hide"></section>
+      <section id="L2" class="hide"></section>
+    </div>
+    <aside class="side">
+      <div class="card">
+        <h2>Master prompt</h2>
+        <div class="meta"><span id="wc">0 words</span><span id="cov"></span></div>
+        <div class="out" id="out" aria-live="polite"></div>
+        <div class="row">
+          <button class="btn pri" id="copy">Copy prompt</button>
+          <button class="btn" id="dl">Download .txt</button>
+        </div>
+        <div class="row" style="margin-top:14px;font-size:13px;color:var(--mute)">
+          <label><input type="checkbox" id="hd" checked> Section headings</label>
+          <label><input type="checkbox" id="em"> Include unfilled fields</label>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast">Copied</div>
+
+<script>
+/* -------------------------------------------------- DATA ------------------------------------------------ */
+const MODES = {
+  ext: "Exterior",
+  int: "Interior",
+  full: "Complete project",
+  det: "Architectural detail",
+  study: "Concept study",
+  land: "Landscape / site",
+  furn: "Furniture / object",
+  plan: "Plan / diagram"
+};
+
+const SLIDERS = [
+  ["Organic", "Geometric"],
+  ["Minimal", "Expressive"],
+  ["Contemporary", "Historical"],
+  ["Monumental", "Intimate"],
+  ["Restrained", "Dramatic"],
+  ["Light", "Heavy"],
+  ["Open", "Enclosed"]
+];
+
+/* DNA entries: [key, label, default] */
+const DNA = [
+["phil","Architectural philosophy","Organic modernism with Mediterranean architectural sensibility, restrained brutalism, sculptural geometry and a subtle neo-baroque influence. Timeless rather than trend-driven; every element feels inevitable, not decorative."],
+["form","Forms and geometry","Low, horizontal proportions interrupted by one vertical gesture. Asymmetrical but balanced compositions; thick sculpted walls, soft-cornered volumes, arches and curved apertures cut as deep reveals. Massing that reads as carved from a single block."],
+["mat","Materials and finishes","Hand-troweled lime plaster, tadelakt, board-formed concrete, raw travertine, aged brass and bronze, dark oxidized steel, reclaimed oak and walnut, handmade terracotta and zellige. Honest patina; surfaces show touch and weathering."],
+["light","Light and atmosphere","Warm Mediterranean light, deep reveals and shadow gradients, sunlight modelled across rough surfaces, filtered light through screens and foliage. Quiet, contemplative, slightly theatrical."],
+["land","Landscape and context","Building grows from its terrain: terraces, retaining walls, olive and cypress, wild grasses, water as a still mirror. Thresholds between inside and outside are layered and ambiguous."],
+["orn","Ornament and neo-baroque detail","Restrained ornament only at moments of emphasis: sculpted niches, carved plaster friezes, curved stair balustrades, gilded or bronze inlays, subtle shell and scroll geometry abstracted into modern form."],
+["int","Interior and furniture language","Sculptural, low-slung furniture in bouclé, leather and travertine; monolithic stone surfaces, built-in curved banquettes, plastered niches, artisanal lighting, one historic or antique piece among contemporary ones."],
+["avoid","Avoid","Avoid generic luxury-villa gloss, glass-box minimalism, fake ornament, uniform detail, over-staged styling, plastic CGI sheen, clutter and any element that does not describe form or atmosphere."],
+["struct","Structure and construction","Exposed concrete frames, timber post-and-beam, load-bearing stone walls, steel inserts. Honest expression of structural logic; junctions celebrated rather than hidden."],
+["colr","Colour palette","Warm neutrals, ochre, terracotta, olive, bone white, deep teal accents, aged gold. Muted, earthy, sun-faded tones that age gracefully."],
+["text","Texture and surface","Rough vs. smooth contrast, hand-worked plaster, raw stone, brushed wood, woven textiles, glazed ceramics, patinated metals. Tactile surfaces that invite touch."],
+["scale","Scale and proportion","Human-scaled intimacy within monumental volumes. Ceiling heights vary dramatically; doorways are tall and narrow or low and wide. Rhythm of compression and release."]
+];
+
+/* Project fields: [key, label, type, default, modes, optionsKey?] */
+const PROJ = [
+["name","Concept name","text","",["ext","int","full","det","study","land","furn","plan"]],
+["type","Building or space type","text","Private villa",["ext","int","full","det","study","land","furn","plan"],"type"],
+["loc","Location and site","text","Cliffside terrace above the sea, Ibiza",["ext","full","study","det","land","plan"],"loc"],
+["climate","Climate, season and weather","text","Late summer, dry heat, clear sky",["ext","full","det","land","furn"],"climate"],
+["func","Function and program","text","Family retreat with living, dining, five bedrooms, pool and courtyard",["ext","int","full","study","plan"],"func"],
+["scale","Scale and massing","text","Two storeys stepping down the slope, 600 m²",["ext","full","study","plan"]],
+["room","Interior space in focus","text","Double-height living room with sunken lounge",["int","full","furn"],"room"],
+["furn","Furniture and objects","text","Curved travertine banquette, bronze floor lamp, handmade rug",["int","full","det","furn"],"furn"],
+["mood","Mood and atmosphere","text","Calm, warm, monumental yet intimate",["ext","int","full","det","study","land","furn"],"mood"],
+["det","Detail in focus","text","Junction of plaster arch, bronze threshold and stone step",["det"],"det"],
+["study","Concept study content","text","Massing diagram with site section and material palette",["study","plan"],"study"],
+["story","Hidden story and human trace","text","A half-read book, a worn stair edge, signs of a long-lived house",["ext","int","full","det","furn"],"story"],
+["dir","Storytelling direction","text","",["ext","int","full","det","study","land","furn","plan"],"dir"],
+["material","Key material focus","text","",["det","furn","int"],"material"],
+["plant","Planting and vegetation","text","",["land","ext","full"],"plant"],
+["water","Water feature","text","",["land","ext","full"],"water"],
+["view2","View or vista","text","",["ext","land","full"],"view2"],
+["light2","Lighting design","text","",["int","furn","det"],"light2"],
+["art","Art and objects","text","",["int","furn"],"art"],
+["tech","Technology integration","text","",["full","int","plan"]]
+];
+
+/* Control groups: [key, label, options] */
+const CTRL = [
+["ratio","Aspect ratio","Landscape 16:9|Square 1:1|Portrait 4:5|Cinematic 21:9|Panoramic 3:1|Vertical 9:16"],
+["view","Viewpoint","Eye-level human view|Elevated aerial view|Low heroic angle|One-point perspective|Axonometric|Section cut view|Bird's-eye view|Worm's-eye view|Isometric|Two-point perspective"],
+["lens","Lens and distance","Wide-angle 24mm|Standard 35mm|Tele compression 85mm|Macro detail|Ultra-wide 14mm|Tilt-shift|Fisheye|Long lens 200mm"],
+["time","Time of day","Golden hour|Blue hour|Midday sun|Overcast soft light|Night with interior glow|Dawn mist|Sunset|Twilight|Harsh noon|Early morning"],
+["frame","Framing","Frame within a frame|Symmetrical centered|Asymmetric with negative space|Layered foreground silhouette|Tight crop|Wide establishing|Diagonal composition|Rule of thirds"],
+["people","Human presence","None, architecture only|Single distant figure|Small lived-in presence|Hands and traces only|Crowded space|Silhouetted figure|Family group|Worker or artisan"],
+["style","Presentation style","Photorealistic architectural photography|Editorial magazine shoot|Hand-drawn concept render|Painterly visualization|Pencil and wash drawing|Clay model|Watercolour|Collage|Digital painting|Blueprint style|Ink sketch"],
+["finish","Final rendering format","Fine-art print|High-resolution render|Competition board|Portfolio spread|Poster|Book spread|Website hero|Social media square|Presentation slide"],
+["mood2","Emotional tone","Serene and contemplative|Dramatic and theatrical|Warm and inviting|Cool and detached|Nostalgic and romantic|Raw and industrial|Luxurious and refined|Playful and whimsical|Mysterious and moody|Energetic and vibrant"],
+["weather","Weather condition","Clear sky|Partly cloudy|Overcast|Light rain|Heavy rain|Fog|Mist|Snow|Storm|Hazy|Dusty|Humid"],
+["season","Season","Late summer|Early autumn|Mid-summer|Spring|Winter|Late spring|Autumn|Early summer|Monsoon|Dry season"],
+["render","Render engine style","V-Ray|Corona|Octane|Lumion|Enscape|Twinmotion|Blender Cycles|Unreal Engine|Redshift|Arnold"],
+["post","Post-processing","Clean and neutral|Warm film grade|Moody teal and orange|Black and white|Sepia|High contrast|Soft pastel|Vintage|HDR|Minimal"]
+];
+
+/* Extended options for project fields (20+ each) */
+const OPTS = {
+type: "Private Mediterranean villa|Cliffside holiday residence|Restored rural farmhouse|Contemporary coastal retreat|Historic townhouse|Minimalist desert residence|Mountain chalet|Seaside guesthouse|Private artist's residence|Monastic retreat|Boutique hotel suite|Sculptural holiday home|Traditional stone courtyard house|Converted agricultural estate|Private wellness retreat|Mediterranean palazzo|Coastal restaurant|Private collector's residence|Rural vineyard estate|Contemporary pavilion|Urban rooftop apartment|Converted warehouse loft|Garden studio|Writer's cabin|Treehouse retreat|Floating home|Cave dwelling|Glass pavilion|Modular prefab|Earthship|Underground house|Lighthouse conversion|Water tower apartment|Church conversion|Barn conversion|School conversion|Factory conversion|Bunker conversion|Castle renovation|Palazzo restoration",
+loc: "Cliffside terrace overlooking the sea, Ibiza|Olive grove on a hillside, Puglia|Rocky coastline, Mallorca|Ancient village above the Mediterranean, Greece|Desert plateau, Morocco|Pine forest clearing, Corsica|Hillside vineyard, Tuscany|Remote beach, Menorca|Mountain ridge, Dolomites|Traditional fishing village, Portugal|Coastal landscape, Algarve|Rural countryside, Provence|Volcanic landscape, Lanzarote|Lakefront setting, Lake Como|Cypress-lined estate, Crete|Sandstone plateau, Jordan|Coastal farmland, Sicily|Forested hillside, Basque Country|Rocky island landscape, Cyclades|Historic urban courtyard, Marrakech|Lavender fields, Provence|Olive terraces, Andalusia|Dramatic fjord, Norway|Desert oasis, Tunisia|Rolling hills, Tuscany|Wild Atlantic coast, Ireland|Alpine meadow, Switzerland|Dry riverbed, Spain|Lava field, Iceland|Sand dunes, Namibia|Rice terraces, Bali|Tea plantation, Sri Lanka|Redwood forest, California|High desert, New Mexico|Bayou wetland, Louisiana|Prairie grassland, Kansas|Canyon edge, Arizona|Glacier lake, Patagonia|Tropical rainforest, Costa Rica|Savanna, Kenya",
+climate: "Late summer, dry heat, clear sky|Early autumn, warm breeze, golden afternoon|Mid-summer, intense sunlight, deep shadows|Spring, soft humidity, overcast sky|Winter, cold wind, pale sunlight|Late spring, warm air, scattered clouds|Autumn, dry atmosphere, amber light|Summer, coastal humidity, hazy horizon|Winter, gentle rain, wet stone|Early morning, cool air, soft mist|Late afternoon, warm wind, clear sky|Sunset, dry heat, orange horizon|Overcast summer, diffused natural light|Early autumn, fading heat, clear atmosphere|Winter, crisp air, low sunlight|Spring, fresh breeze, filtered sunshine|Summer storm approaching, dramatic clouds|Mediterranean winter, mild temperatures, bright sky|Late summer, dusty atmosphere, fading sunlight|Early summer, dry air, intense blue sky|Monsoon season, heavy rain, lush green|Dry season, parched earth, clear skies|Tropical heat, high humidity, sudden showers|Arctic cold, blue light, snow|Desert heat, extreme dry, blinding sun|Coastal fog, cool mist, soft light|Mountain air, crisp, thin light|Urban heat island, hazy, oppressive|Mediterranean spring, wildflowers, gentle breeze|Harvest season, golden light, dry|Rainy season, wet surfaces, reflections|Foggy morning, low visibility, moody|Windy day, moving clouds, dynamic|Snowfall, quiet, muffled sound|Thunderstorm, dark sky, dramatic|Heatwave, shimmering air, intense|Perfect day, clear, comfortable|Cold snap, frost, sharp light|Warm evening, soft breeze, romantic",
+furn: "Curved travertine banquette, bronze floor lamp, handmade rug|Low oak table, linen sofa, antique ceramic vessels|Sculptural stone bench, patinated brass lamp, woven wool rug|Vintage leather armchair, walnut side table, paper lantern|Built-in plaster sofa, carved wooden stool, textured linen cushions|Marble dining table, bentwood chairs, oversized pendant|Weathered teak daybed, woven jute rug, ceramic bowl|Bronze coffee table, curved bouclé sofa, antique floor lamp|Limestone console, handmade pottery, linen curtains|Vintage wooden bench, sculptural alabaster lamp, kilim rug|Modular sofa, blackened steel table, abstract artwork|Travertine dining table, woven chairs, suspended pendant|Antique writing desk, leather chair, brass reading lamp|Sculptural armchair, solid oak table, handmade wool textile|Built-in stone seating, bronze candleholders, natural linen|Low modular seating, smoked glass table, sculptural floor lamp|Carved wooden bench, antique mirror, ceramic sculptures|Limestone coffee table, vintage armchairs, oversized textile|Plaster side table, woven lounge chair, handmade pendant|Curved sofa, aged bronze lighting, antique Persian rug|Floating shelves, minimalist desk, ergonomic chair|Suspended fireplace, sheepskin rug, leather pouf|Iron bed frame, linen sheets, bedside stone table|Hand-carved wooden chest, woven baskets, copper bowls|Upholstered headboard, reading sconces, mohair throw|Round dining table, rattan chairs, linen runner|Glass coffee table, metal frame sofa, abstract rug|Concrete bench, steel side table, industrial pendant|Reclaimed wood counter, ceramic sink, brass tap|Woven hammock, side table, outdoor rug|Stone bathtub, wooden stool, candle cluster|Platform bed, paper lanterns, tatami mats|Bar counter, leather stools, brass shelving|Corner banquette, marble table, vintage poster|Murphy bed, fold-out desk, built-in storage|Rocking chair, side table, floor lamp|Chaise lounge, side table, parasol|Hanging chair, side table, lantern|Daybed, side table, rug|Sofa bed, coffee table, TV unit",
+mood: "Calm, warm, monumental yet intimate|Quiet, contemplative, understated|Raw, tactile, deeply grounded|Romantic, nostalgic, softly dramatic|Minimal, meditative, architectural|Warm, lived-in, quietly luxurious|Earthy, restrained, timeless|Sensual, sculptural, atmospheric|Intimate, shadowy, cinematic|Airy, serene, effortlessly elegant|Primitive, organic, elemental|Refined, austere, monumental|Soft, domestic, nostalgic|Mysterious, secluded, introspective|Sun-drenched, relaxed, Mediterranean|Quietly opulent, textured, timeless|Imperfect, authentic, deeply personal|Dramatic, sculptural, emotionally restrained|Gentle, poetic, contemplative|Monolithic, warm, human|Playful, colourful, energetic|Dark, moody, mysterious|Bright, optimistic, fresh|Rustic, charming, cosy|Industrial, raw, edgy|Futuristic, sleek, minimal|Bohemian, eclectic, layered|Formal, traditional, grand|Casual, beachy, relaxed|Zen, meditative, peaceful|Romantic, candlelit, soft|Dramatic, theatrical, bold|Nostalgic, vintage, worn|Elegant, refined, polished|Cozy, intimate, warm|Cool, detached, modern|Spiritual, sacred, quiet|Energetic, vibrant, lively|Serene, balanced, harmonious|Wild, natural, untamed",
+det: "Junction of plaster arch, bronze threshold and stone step|Meeting of curved limestone wall and timber ceiling|Transition between rough stone flooring and smooth plaster|Recessed window sill with a deep architectural shadow|Junction of timber door and weathered stone frame|Curved plaster wall meeting a monolithic stone bench|Bronze handle embedded into a handmade wooden door|Staircase edge worn smooth by years of use|Thin shadow gap between ceiling and textured wall|Stone fireplace meeting a sculptural plaster volume|Junction of glass, limestone and aged bronze|Deep window reveal framing the Mediterranean landscape|Rounded plaster corner meeting a travertine floor|Hand-carved stone basin and wall connection|Timber ceiling intersecting with a curved plaster arch|Threshold between indoor stone flooring and outdoor terrace|Bronze floor lamp casting light across a textured wall|Sculptural staircase meeting a curved architectural wall|Irregular stone joints around a recessed doorway|Handmade ceramic tile meeting a raw plaster surface|Steel beam exposed against white plaster ceiling|Concrete column meeting timber roof structure|Glass balustrade fixing detail|Timber cladding corner detail|Stone wall corner with quoin detail|Window head detail with lintel|Door threshold with weather seal|Roof edge detail with gutter|Stair tread and riser junction|Handrail fixing detail|Balcony edge detail|Column base detail|Beam connection detail|Expansion joint detail|Drainage channel detail|Lighting recess detail|Acoustic panel detail|Curtain pocket detail|Shadow gap at skirting|Ceiling rose detail",
+study: "Massing diagram with site section and material palette|Axonometric showing structural system|Exploded axonometric of building layers|Site plan with landscape strategy|Floor plan with furniture layout|Cross section showing spatial sequence|Elevation study with material notation|Roof plan with drainage strategy|Circulation diagram with arrows|Sun path diagram over massing|Wind flow diagram around building|Acoustic zone diagram|Thermal mass diagram|Daylight factor study|Structural load path diagram|Construction sequence diagram|Material sample board layout|Colour palette study|Proportion system diagram|Modular coordination study|Site analysis diagram|Context figure-ground study|Access and parking plan|Landscape planting plan|Water management diagram|Energy concept diagram|Passive design strategy|Ventilation strategy diagram|Shading device study|Glazing ratio study|Embodied carbon diagram|Lifecycle diagram|Flexibility diagram|Adaptation strategy|Phasing diagram|Cost breakdown chart|Programmatic bubble diagram|Adjacency matrix|Space syntax diagram|Ergonomic study",
+story: "A half-read book, a worn stair edge, signs of a long-lived house|A forgotten glass of water beside an open window|Faded photographs resting against an old plaster wall|A linen curtain gently moving in the afternoon breeze|A pair of sandals left beside the entrance|A handwritten note tucked beneath a ceramic bowl|Sun-faded upholstery revealing years of use|A candle with melted wax beside an unfinished letter|Dust gathered along the edge of an antique mirror|A folded blanket left casually on a stone bench|An old key resting on a weathered wooden console|A small crack in the plaster carefully left unrepaired|A glass bottle catching the last afternoon sunlight|Faint watermarks on an aged limestone floor|A chair slightly pulled away from the dining table|A collection of stones gathered from the nearby shore|A book with handwritten annotations on the margins|Worn leather handles on an old wooden cabinet|A vase containing dried branches from the garden|Footprints in the dust near an open terrace door|A child's toy forgotten under a chair|A half-finished cup of coffee on a windowsill|A dog basket in the corner|A pile of shoes by the door|A worn path across a rug|A mark on the wall where a picture hung|A stack of books by the bed|A plant reaching for light|A bowl of fruit on the table|A scarf draped over a chair|A pair of glasses on a book|A letter half-written on a desk|A jacket hung on a hook|A hat on a stand|A walking stick by the door|A pair of boots caked in mud|A basket of laundry|A tray with tea things|A chess game in progress|A record player with a record on",
+dir: "Architecture shaped by erosion and time|A dialogue between ancient construction and contemporary intervention|The relationship between heavy stone and soft textiles|The contrast between monumental geometry and domestic objects|A house that feels gradually absorbed by the landscape|Spaces defined by indirect sunlight|A residence built around a single ancient tree|Imperfect craftsmanship as a form of luxury|Architecture that reveals its construction rather than concealing it|The passage of time expressed through patinated materials|A continuous transition between interior and exterior|The house as a collection of intimate architectural moments|Sculptural geometry softened by everyday life|The relationship between silence, shadow and material|A contemporary interpretation of vernacular architecture|Spaces that frame fragments of the landscape|A house designed around rituals of everyday living|Architecture that becomes more beautiful through aging|The tension between permanence and fragility|A timeless interior with traces of previous generations|A building that breathes with the seasons|Architecture as a frame for the sky|The interplay of light and shadow across a day|A house that whispers rather than shouts|The beauty of imperfection and repair|Architecture that connects past and future|A sanctuary from the noise of the world|The poetry of everyday materials|A house that feels like a memory|Architecture that grows from the ground|The rhythm of repeated elements|A building that celebrates its site|The contrast of rough and refined|A house that invites contemplation|Architecture as a series of thresholds|The warmth of natural materials in cold light|A building that ages with dignity|The relationship between inside and outside|A house that tells a story|Architecture as a refuge",
+material: "Lime plaster|Tadelakt|Board-formed concrete|Travertine|Aged brass|Bronze|Oxidized steel|Reclaimed oak|Walnut|Terracotta|Zellige tile|Marble|Granite|Slate|Limestone|Sandstone|Copper|Corten steel|Glass|Timber|Plywood|OSB|Rammed earth|Cob|Straw bale|Bamboo|Cork|Linoleum|Concrete block|Brick|Stone rubble|Flint|Chalk|Adobe|Pisé|Wattle and daub|Thatch|Shingle|Zinc|Lead",
+plant: "Olive trees|Cypress|Lavender|Rosemary|Thyme|Wild grasses|Agave|Aloe|Cactus|Palm trees|Bougainvillea|Jasmine|Wisteria|Fig trees|Citrus trees|Pomegranate|Vines|Ivy|Ferns|Moss|Bamboo|Reeds|Water lilies|Lotus|Papyrus|Succulents|Herbs|Vegetable garden|Fruit orchard|Wildflower meadow|Native shrubs|Grasses|Climbing plants|Hanging plants|Potted plants|Bonsai|Topiary|Hedges|Trees in planters|Green wall",
+water: "Still reflecting pool|Infinity pool|Plunge pool|Natural swimming pond|Fountain|Water channel|Rill|Cascade|Waterfall|Rain curtain|Misting system|Hot tub|Spa pool|Lap pool|Children's pool|Fountain basin|Water wall|Stream|River|Lake|Sea view|Ocean|Wetland|Marsh|Dew pond|Well|Cistern|Rainwater chain|Gutter|Spout|Basin|Trough|Birdbath|Water bowl|Moat|Canal|Harbour|Jetty|Dock|Beach",
+view2: "Sea view|Mountain view|Valley view|Garden view|Courtyard view|Forest view|Lake view|River view|City view|Countryside view|Sunset view|Sunrise view|Sky view|Cloud view|Horizon view|Panoramic view|Distant view|Close view|Framed view|Filtered view|Oblique view|Direct view|Glimpse view|Revealed view|Hidden view|Layered view|Nested view|Sequential view|Terminated view|Axial view|Diagonal view|Peripheral view|Borrowed view|Reflected view|Silhouetted view|Backlit view|Frontlit view|Sidelit view|Dappled view|Shadowed view",
+light2: "Natural daylight|Diffused skylight|Direct sunlight|Filtered light|Reflected light|Bounced light|Artificial warm light|Cool white light|Accent lighting|Task lighting|Ambient lighting|Feature lighting|Cove lighting|Recessed lighting|Track lighting|Pendant lighting|Chandelier|Wall sconce|Floor lamp|Table lamp|Candlelight|Firelight|Lantern light|Neon|LED strip|Fairy lights|Spotlight|Uplight|Downlight|Cross light|Backlight|Rim light|Silhouette|Shadow play|Dappled light|Caustics|Glow|Halo|Beam|Pool of light",
+art: "Abstract painting|Landscape painting|Portrait|Photography|Sculpture|Ceramics|Textile art|Tapestry|Mural|Fresco|Mosaic|Stained glass|Installation art|Video art|Sound art|Performance art|Conceptual art|Minimal art|Pop art|Surrealist art|Impressionist art|Expressionist art|Cubist art|Folk art|Outsider art|Naive art|Decorative art|Applied art|Craft object|Antique|Vintage|Collectible|Curio|Objet trouvé|Found object|Natural specimen|Geode|Driftwood|Shell|Stone",
+tech: "Smart home automation|Integrated lighting control|Hidden AV system|Underfloor heating|Radiant cooling|Geothermal|Solar panels|Battery storage|Rainwater harvesting|Greywater recycling|Passive ventilation|Mechanical ventilation with heat recovery|Air conditioning|Ceiling fans|Automated blinds|Smart glass|Security system|Access control|EV charging|Home network|Wi-Fi mesh|Audio distribution|Home cinema|Central vacuum|Water softener|Filtration system|Pool automation|Irrigation control|Lighting scenes|Voice control|App control|Touch panels|Sensors|Occupancy detection|Daylight harvesting|Energy monitoring|Leak detection|Fire suppression|Sprinkler system|Backup generator"
+};
+
+/* Presets */
+const PRESETS = [
+["Mediterranean villa","Sea, terraces, warm light","ext",{type:"Private Mediterranean villa",loc:"Cliffside terrace overlooking the sea, Ibiza",climate:"Late summer, dry heat, clear sky"},{view:0,time:0,lens:0,style:0,ratio:0}],
+["Brutalist retreat","Mass, shadow, restraint","ext",{type:"Mountain chalet",loc:"Mountain ridge, Dolomites",climate:"Winter, cold wind, pale sunlight"},{view:2,time:4,lens:1,style:1,ratio:0}],
+["Baroque interior","Curves, niches, gold","int",{type:"Historic townhouse",room:"Oval salon with plaster niches and curved stair",mood:"Theatrical, hushed, warm"},{view:0,time:3,lens:0,style:1,ratio:2}],
+["Sculptural pavilion","Single gesture, garden","full",{type:"Contemporary pavilion",loc:"Walled olive grove",scale:"Single volume, 120 m²"},{view:0,time:0,lens:1,style:2,ratio:1}],
+["Material detail","Touch, patina, junction","det",{det:"Bronze handrail meeting a curved lime-plaster wall"},{view:0,time:3,lens:3,style:1,ratio:1}],
+["Massing study","Diagram and section","study",{study:"Massing diagram, site section and material palette"},{view:4,time:3,lens:1,style:4,ratio:0}],
+["Landscape integration","Building in nature","land",{type:"Private artist's residence",loc:"Olive grove on a hillside, Puglia",plant:"Olive trees, lavender, wild grasses"},{view:1,time:0,lens:0,style:0,ratio:0}],
+["Interior mood","Light and shadow","int",{type:"Boutique hotel suite",room:"Living room with deep window reveals",light2:"Filtered light, warm accents"},{view:0,time:2,lens:1,style:3,ratio:2}],
+["Furniture study","Object in space","furn",{furn:"Curved travertine banquette, bronze floor lamp",room:"Minimalist gallery space"},{view:0,time:3,lens:3,style:1,ratio:1}],
+["Plan analysis","Spatial organization","plan",{study:"Floor plan with furniture layout and circulation"},{view:4,time:3,lens:1,style:9,ratio:0}]
+];
+
+const KEY = "archDNA.v3";
+
+/* ----------------------------------------------- STATE -------------------------------------------------- */
+function blank(){
+  return {
+    mode:"full",
+    locks:{},
+    dna: Object.fromEntries(DNA.map(d=>[d[0], d[2]])),
+    sl: [30,40,35,40,45,50,50],
+    proj: Object.fromEntries(PROJ.map(p=>[p[0], p[3]])),
+    col: "#7a5c2e",
+    ctl: Object.fromEntries(CTRL.map(c=>[c[0], 0])),
+    hd: true,
+    em: false
+  };
+}
+let S;
+try {
+  const stored = JSON.parse(localStorage.getItem(KEY) || "null");
+  S = Object.assign(blank(), stored || {});
+  // ensure new DNA keys exist
+  DNA.forEach(d => { if (S.dna[d[0]] === undefined) S.dna[d[0]] = d[2]; });
+  // ensure new sliders length
+  while (S.sl.length < SLIDERS.length) S.sl.push(50);
+  // ensure new ctl keys
+  CTRL.forEach(c => { if (S.ctl[c[0]] === undefined) S.ctl[c[0]] = 0; });
+  // ensure new proj keys
+  PROJ.forEach(p => { if (S.proj[p[0]] === undefined) S.proj[p[0]] = p[3]; });
+} catch(e) { S = blank(); }
+
+const $ = id => document.getElementById(id);
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} $("saved").textContent = "Saved locally"; }
+function toast(t){ const e=$("toast"); e.textContent=t; e.classList.add("on"); setTimeout(()=>e.classList.remove("on"), 1600); }
+
+/* -------------------------------------------- BUILD UI --------------------------------------------------- */
+// modes
+$("modes").innerHTML = Object.entries(MODES).map(([k,v]) => `<button class="chip" data-m="${k}" aria-pressed="false">${v}</button>`).join("");
+// tabs
+$("tabs").innerHTML = [
+  ["Architecture DNA", "Permanent identity"],
+  ["Project", "What you design"],
+  ["Visualization", "How it is presented"]
+].map((t,i) => `<button role="tab" data-t="${i}" aria-selected="${i===0}">${t[0]}</button>`).join("");
+
+/* Layer 0 – DNA */
+$("L0").innerHTML = `
+<p class="note">Permanent rules. Edit any category, lock it to protect it from presets and Reset all. Sliders shape the character balance.</p>
+<div class="card" id="c-sl">
+  <div class="ch"><b>Character balance</b><button class="lk" data-l="sl" aria-pressed="false">Lock</button></div>
+  ${SLIDERS.map((s,i)=>`<div class="sl"><span>${s[0]}</span><input type="range" min="0" max="100" data-s="${i}" aria-label="${s[0]} to ${s[1]}"><span>${s[1]}</span></div>`).join("")}
+</div>
+${DNA.map(d=>`
+  <div class="card" id="c-${d[0]}">
+    <div class="ch"><b>${d[1]}</b><button class="lk" data-l="${d[0]}" aria-pressed="false">Lock</button></div>
+    <textarea data-d="${d[0]}" aria-label="${d[1]}"></textarea>
+  </div>`).join("")}
+`;
+
+/* Layer 1 – Project */
+$("L1").innerHTML = `
+<p class="note">Fields shown depend on the output mode. Type freely, pick from curated options, or shuffle.</p>
+<div class="row" style="margin:0 0 14px"><button class="btn pri" id="shuf">Shuffle whole project</button></div>
+<div class="card"><div class="two">
+${PROJ.map(p => {
+  const modes = p[4].join(" ");
+  const optKey = p[5];
+  return `<label class="f" data-modes="${modes}">${p[1]}
+    <input type="text" data-p="${p[0]}" placeholder="${p[3] ? 'e.g. '+p[3] : 'optional'}">
+    ${optKey && OPTS[optKey] ? `<span class="pk">
+      <select data-pk="${p[0]}" aria-label="${p[1]} options">
+        <option value="">Pick from ${OPTS[optKey].split("|").length} options</option>
+        ${OPTS[optKey].split("|").map((o,i)=>`<option value="${i}">${i+1}. ${o}</option>`).join("")}
+      </select>
+      <button type="button" class="btn" data-rnd="${p[0]}">Random</button>
+    </span>` : ""}
+  </label>`;
+}).join("")}
+</div>
+<label class="f">Concept colour accent (optional)
+  <span class="sw"><input type="color" id="col"><input type="text" id="colt" style="max-width:120px"></span>
+</label>
+</div>`;
+
+/* Layer 2 – Visualization */
+$("L2").innerHTML = `
+<p class="note">Presets set the mode, project hints and camera together. You can change any control afterwards.</p>
+<div class="pre">${PRESETS.map((p,i)=>`<button data-pr="${i}"><b>${p[0]}</b><small>${p[1]}</small></button>`).join("")}</div>
+<div class="card"><div class="two">
+${CTRL.map(c=>`<label class="f">${c[1]}
+  <select data-c="${c[0]}">${c[2].split("|").map((o,i)=>`<option value="${i}">${o}</option>`).join("")}</select>
+</label>`).join("")}
+</div></div>`;
+
+/* -------------------------------------------- SYNC / RENDER ---------------------------------------------- */
+function sync(){
+  // modes
+  document.querySelectorAll("[data-m]").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === S.mode));
+  // dna textareas
+  document.querySelectorAll("[data-d]").forEach(e => { if (e !== document.activeElement) e.value = S.dna[e.dataset.d] || ""; });
+  // sliders
+  document.querySelectorAll("[data-s]").forEach(e => e.value = S.sl[e.dataset.s] || 50);
+  // project inputs
+  document.querySelectorAll("[data-p]").forEach(e => { if (e !== document.activeElement) e.value = S.proj[e.dataset.p] || ""; });
+  // controls
+  document.querySelectorAll("[data-c]").forEach(e => e.value = S.ctl[e.dataset.c] || 0);
+  // locks
+  document.querySelectorAll("[data-l]").forEach(b => {
+    const k = b.dataset.l, on = !!S.locks[k];
+    b.setAttribute("aria-pressed", on);
+    b.textContent = on ? "Locked" : "Lock";
+    const card = b.closest(".card");
+    if (card) card.classList.toggle("locked", on);
+  });
+  // field visibility per mode
+  document.querySelectorAll("[data-modes]").forEach(l => {
+    const modes = l.dataset.modes.split(" ");
+    l.classList.toggle("hide", !modes.includes(S.mode));
+  });
+  // colour
+  $("col").value = /^#[0-9a-f]{6}$/i.test(S.col) ? S.col : "#7a5c2e";
+  $("colt").value = S.col || "";
+  // checkboxes
+  $("hd").checked = S.hd;
+  $("em").checked = S.em;
+  render();
+}
+
+function slText(i){
+  const [a,b] = SLIDERS[i], v = S.sl[i];
+  if (v < 25) return `strongly ${a.toLowerCase()}`;
+  if (v < 40) return `leaning ${a.toLowerCase()}`;
+  if (v <= 60) return `balanced between ${a.toLowerCase()} and ${b.toLowerCase()}`;
+  if (v <= 75) return `leaning ${b.toLowerCase()}`;
+  return `strongly ${b.toLowerCase()}`;
+}
+
+function opt(k){
+  const c = CTRL.find(x => x[0] === k);
+  return c ? c[2].split("|")[S.ctl[k] || 0] : "";
+}
+
+function render(){
+  const H = t => S.hd ? `${t}\n` : "";
+
+  // --- mode-specific DNA filtering
+  let dnaKeys = DNA.map(d=>d[0]);
+  if (S.mode === "int") dnaKeys = dnaKeys.filter(k => !["land","struct"].includes(k));
+  if (S.mode === "ext") dnaKeys = dnaKeys.filter(k => k !== "int");
+  if (S.mode === "land") dnaKeys = dnaKeys.filter(k => !["int","orn"].includes(k));
+  if (S.mode === "furn") dnaKeys = dnaKeys.filter(k => !["land","struct","orn"].includes(k));
+  if (S.mode === "det") dnaKeys = dnaKeys.filter(k => !["land","struct"].includes(k));
+  if (S.mode === "plan") dnaKeys = dnaKeys.filter(k => !["light","int"].includes(k));
+
+  const dnaCards = DNA.filter(d => dnaKeys.includes(d[0]) && (S.dna[d[0]]||"").trim());
+
+  let a = H("A. PERMANENT ARCHITECTURE DNA");
+  a += "Character balance: " + SLIDERS.map((_,i)=>slText(i)).join("; ") + ".\n\n";
+  a += dnaCards.map(d => `${d[1]}: ${(S.dna[d[0]]||"").trim()}`).join("\n\n");
+
+  // --- project fields
+  let b = [], miss = 0, tot = 0;
+  PROJ.forEach(p => {
+    if (!p[4].includes(S.mode)) return;
+    tot++;
+    const v = (S.proj[p[0]]||"").trim();
+    if (v) b.push(`${p[1]}: ${v}`);
+    else { miss++; if (S.em) b.push(`${p[1]}: [not defined]`); }
+  });
+  if (S.col && S.col !== "#7a5c2e") b.push(`Concept colour accent: ${S.col}`);
+
+  const modeLine = {
+    ext: "Exterior architecture, seen from outside.",
+    int: "Interior design, seen from within.",
+    full: "Complete project: exterior and interior as one coherent whole, sharing materials, light and proportion.",
+    det: "Architectural detail study: a close, tactile view of one junction or surface.",
+    study: "Concept study: analytic presentation of massing, section, plan or material logic.",
+    land: "Landscape and site integration: architecture as part of its terrain and vegetation.",
+    furn: "Furniture and object study: a designed or curated piece within its spatial context.",
+    plan: "Plan, section or diagram: analytical drawing of spatial organisation and structure."
+  }[S.mode] || "";
+
+  // --- visualization controls
+  let c = H("C. VISUALIZATION");
+  c += CTRL.map(x => `${x[1]}: ${opt(x[0])}`).join("\n");
+
+  // --- final integration
+  const d = H("D. FINAL INTEGRATION") + "Preserve the permanent architectural identity while translating the project brief into one coherent visualization. Materials, light, proportion and atmosphere must reinforce the same emotional idea. Keep the main form legible and every supporting element subordinate.";
+
+  const txt = `${H("OUTPUT MODE")}${modeLine}\n\n${a}\n\n${H("B. PROJECT")}${b.join("\n")}\n\n${c}\n\n${d}`.replace(/\n{3,}/g,"\n\n");
+
+  $("out").textContent = txt;
+  $("wc").textContent = txt.trim().split(/\s+/).length + " words";
+  $("cov").textContent = `Project fields ${tot-miss} / ${tot}`;
+  window._txt = txt;
+}
+
+/* --------------------------------------------- EVENTS ---------------------------------------------------- */
+document.addEventListener("input", e => {
+  const t = e.target;
+  if (t.dataset.d) {
+    S.dna[t.dataset.d] = t.value;
+  } else if (t.dataset.s) {
+    S.sl[t.dataset.s] = +t.value;
+  } else if (t.dataset.p) {
+    S.proj[t.dataset.p] = t.value;
+  } else if (t.dataset.pk) {
+    if (t.value !== "") {
+      const list = OPTS[t.dataset.pk].split("|");
+      S.proj[t.dataset.pk] = list[+t.value];
+      t.value = "";
+      sync();
+    }
+  } else if (t.dataset.c) {
+    S.ctl[t.dataset.c] = +t.value;
+  } else if (t.id === "col") {
+    S.col = t.value;
+    $("colt").value = t.value;
+  } else if (t.id === "colt") {
+    S.col = t.value;
+  } else if (t.id === "hd") {
+    S.hd = t.checked;
+  } else if (t.id === "em") {
+    S.em = t.checked;
+  }
+  save();
+  render();
+});
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("button");
+  if (!t) return;
+
+  if (t.dataset.m) {
+    S.mode = t.dataset.m;
+    save(); sync();
+  }
+  else if (t.dataset.t !== undefined) {
+    document.querySelectorAll("[data-t]").forEach(b => b.setAttribute("aria-selected", b === t));
+    [0,1,2].forEach(i => $("L"+i).classList.toggle("hide", i != t.dataset.t));
+  }
+  else if (t.dataset.l) {
+    S.locks[t.dataset.l] = !S.locks[t.dataset.l];
+    save(); sync();
+  }
+  else if (t.dataset.rnd) {
+    const a = OPTS[t.dataset.rnd].split("|");
+    S.proj[t.dataset.rnd] = a[Math.floor(Math.random()*a.length)];
+    save(); sync();
+  }
+  else if (t.id === "shuf") {
+    Object.keys(OPTS).forEach(k => {
+      if (S.proj.hasOwnProperty(k)) {
+        const a = OPTS[k].split("|");
+        S.proj[k] = a[Math.floor(Math.random()*a.length)];
+      }
+    });
+    save(); sync(); toast("Project shuffled");
+  }
+  else if (t.dataset.pr !== undefined) {
+    const p = PRESETS[t.dataset.pr];
+    S.mode = p[2];
+    Object.assign(S.proj, p[3]);
+    Object.assign(S.ctl, p[4]);
+    save(); sync(); toast("Preset applied: " + p[0]);
+  }
+});
+
+$("reset").onclick = () => {
+  const old = S, n = blank();
+  DNA.forEach(d => { if (old.locks[d[0]]) n.dna[d[0]] = old.dna[d[0]]; });
+  if (old.locks.sl) n.sl = old.sl;
+  n.locks = old.locks;
+  S = n;
+  save(); sync(); toast("Reset. Locked categories kept.");
+};
+
+$("copy").onclick = async () => {
+  try {
+    await navigator.clipboard.writeText(window._txt);
+    toast("Copied to clipboard");
+  } catch(e) {
+    const r = document.createRange();
+    r.selectNodeContents($("out"));
+    const s = getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+    toast("Select and copy (Ctrl+C / Cmd+C)");
+  }
+};
+
+$("dl").onclick = () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([window._txt], {type:"text/plain"}));
+  a.download = (S.proj.name || "architecture-prompt").replace(/\W+/g, "-") + ".txt";
+  a.click();
+};
+
+/* init */
+sync();
+</script>
+</body>
+</html>
