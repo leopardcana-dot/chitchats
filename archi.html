@@ -123,7 +123,7 @@ small.tag{display:inline-block;font-size:11px;background:var(--line);padding:1px
 <div class="toast" id="toast"></div>
 
 <script>
-/* -------------------------------------------------- DATA ------------------------------------------------ */
+"use strict";
 const MODES={
  exterior:"Exterior architecture",interior:"Interior architecture",complete:"Complete project",
  detail:"Architectural detail",concept:"Concept exploration",site:"Landscape & site",
@@ -212,306 +212,139 @@ const PRESETS=[
  {name:"Adaptive Reuse",desc:"Old and new · material contrast · careful intervention",mode:"complete",project:{title:"The Foundry Reimagined",building:"Adaptive reuse of an industrial workshop as a cultural space",place:"Former industrial district within a growing city",idea:"Retain the robust industrial shell and insert precise new volumes for gallery, workshop and gathering",story:"The building reveals its former working life while making room for new public use",materials:"Existing brick, repaired concrete, blackened steel, oak and translucent glass"},controls:{view:0,lens:2,composition:4,light:3,render:0}},
  {name:"Landscape Pavilion",desc:"Site first · light structure · strong spatial frame",mode:"site",project:{title:"The Contour Pavilion",building:"Small landscape and viewing pavilion",place:"Woodland slope overlooking a river bend",idea:"A low pavilion follows the contour and frames selected views without dominating the landscape",story:"A slow approach through vegetation ends at a sheltered viewing platform",materials:"Local stone, timber, weathering steel and glass",landscape:"Existing trees, native understory planting, permeable paths and minimal ground disturbance"},controls:{view:2,lens:2,composition:3,light:0,render:0}}
 ];
-
-const KEY = "archDNA.v3";
-
-/* ----------------------------------------------- STATE -------------------------------------------------- */
-function blank(){
-  return {
-    mode:"full",
-    locks:{},
-    dna: Object.fromEntries(DNA.map(d=>[d[0], d[2]])),
-    sl: [30,40,35,40,45,50,50],
-    proj: Object.fromEntries(PROJ.map(p=>[p[0], p[3]])),
-    col: "#7a5c2e",
-    ctl: Object.fromEntries(CTRL.map(c=>[c[0], 0])),
-    hd: true,
-    em: false
-  };
+const KEY="architectureDNA.personal.v2";
+function fresh(){return {mode:"complete",dna:Object.fromEntries(DNA.map(x=>[x[0],x[2]])),sliders:[30,65,55,55,65,55,45,45],project:Object.fromEntries(PROJECT.map(x=>[x[0],x[2]])),controls:Object.fromEntries(CONTROLS.map(x=>[x[0],0])),locks:{},accent:"#92703b",headings:true,empty:false,theme:"light"}}
+let S=fresh();
+try{
+ const saved=JSON.parse(localStorage.getItem(KEY)||"null");
+ if(saved&&typeof saved==="object") S={...S,...saved,dna:{...S.dna,...saved.dna},project:{...S.project,...saved.project},controls:{...S.controls,...saved.controls},locks:{...saved.locks}};
+}catch(e){}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(S));$("saveStatus").textContent="Saved in this browser";}catch(e){$("saveStatus").textContent="Browser storage unavailable";}}
+function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1700)}
+function locked(k){return !!S.locks[k]}
+function setProject(k,v){if(!locked("p:"+k))S.project[k]=v}
+function modeButtons(){$("modes").innerHTML=Object.entries(MODES).map(([k,v])=>`<button class="chip" data-mode="${k}" aria-pressed="${S.mode===k}">${v}</button>`).join("")}
+function buildDNA(){
+ $("layer0").innerHTML=`<p class="section-intro">Your permanent design principles. These settings define the architectural signature across projects. Lock categories to protect them when applying presets or shuffling.</p>
+ <div class="card" id="slCard"><div class="card-head"><h3>Character balance</h3><button class="lock" data-lock="sliders" aria-pressed="${locked("sliders")}">${locked("sliders")?"Locked":"Lock"}</button></div>
+ ${SLIDERS.map((s,i)=>`<div class="range-row"><span>${s[0]}</span><input type="range" min="0" max="100" value="${S.sliders[i]??50}" data-slider="${i}" aria-label="${s[0]} to ${s[1]}"><span>${s[1]}</span></div>`).join("")}</div>
+ ${DNA.map(d=>`<div class="card ${locked("d:"+d[0])?"locked":""}" id="dna-${d[0]}"><div class="card-head"><h3>${d[1]}</h3><button class="lock" data-lock="d:${d[0]}" aria-pressed="${locked("d:"+d[0])}">${locked("d:"+d[0])?"Locked":"Lock"}</button></div><textarea data-dna="${d[0]}" aria-label="${d[1]}">${esc(S.dna[d[0]])}</textarea></div>`).join("")}`;
 }
-let S;
-try {
-  const stored = JSON.parse(localStorage.getItem(KEY) || "null");
-  S = Object.assign(blank(), stored || {});
-  // ensure new DNA keys exist
-  DNA.forEach(d => { if (S.dna[d[0]] === undefined) S.dna[d[0]] = d[2]; });
-  // ensure new sliders length
-  while (S.sl.length < SLIDERS.length) S.sl.push(50);
-  // ensure new ctl keys
-  CTRL.forEach(c => { if (S.ctl[c[0]] === undefined) S.ctl[c[0]] = 0; });
-  // ensure new proj keys
-  PROJ.forEach(p => { if (S.proj[p[0]] === undefined) S.proj[p[0]] = p[3]; });
-} catch(e) { S = blank(); }
-
-const $ = id => document.getElementById(id);
-function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} $("saved").textContent = "Saved locally"; }
-function toast(t){ const e=$("toast"); e.textContent=t; e.classList.add("on"); setTimeout(()=>e.classList.remove("on"), 1600); }
-
-/* -------------------------------------------- BUILD UI --------------------------------------------------- */
-// modes
-$("modes").innerHTML = Object.entries(MODES).map(([k,v]) => `<button class="chip" data-m="${k}" aria-pressed="false">${v}</button>`).join("");
-// tabs
-$("tabs").innerHTML = [
-  ["Architecture DNA", "Permanent identity"],
-  ["Project", "What you design"],
-  ["Visualization", "How it is presented"]
-].map((t,i) => `<button role="tab" data-t="${i}" aria-selected="${i===0}">${t[0]}</button>`).join("");
-
-/* Layer 0 – DNA */
-$("L0").innerHTML = `
-<p class="note">Permanent rules. Edit any category, lock it to protect it from presets and Reset all. Sliders shape the character balance.</p>
-<div class="card" id="c-sl">
-  <div class="ch"><b>Character balance</b><button class="lk" data-l="sl" aria-pressed="false">Lock</button></div>
-  ${SLIDERS.map((s,i)=>`<div class="sl"><span>${s[0]}</span><input type="range" min="0" max="100" data-s="${i}" aria-label="${s[0]} to ${s[1]}"><span>${s[1]}</span></div>`).join("")}
-</div>
-${DNA.map(d=>`
-  <div class="card" id="c-${d[0]}">
-    <div class="ch"><b>${d[1]}</b><button class="lk" data-l="${d[0]}" aria-pressed="false">Lock</button></div>
-    <textarea data-d="${d[0]}" aria-label="${d[1]}"></textarea>
-  </div>`).join("")}
-`;
-
-/* Layer 1 – Project */
-$("L1").innerHTML = `
-<p class="note">Fields shown depend on the output mode. Type freely, pick from curated options, or shuffle.</p>
-<div class="row" style="margin:0 0 14px"><button class="btn pri" id="shuf">Shuffle whole project</button></div>
-<div class="card"><div class="two">
-${PROJ.map(p => {
-  const modes = p[4].join(" ");
-  const optKey = p[5];
-  return `<label class="f" data-modes="${modes}">${p[1]}
-    <input type="text" data-p="${p[0]}" placeholder="${p[3] ? 'e.g. '+p[3] : 'optional'}">
-    ${optKey && OPTS[optKey] ? `<span class="pk">
-      <select data-pk="${p[0]}" aria-label="${p[1]} options">
-        <option value="">Pick from ${OPTS[optKey].split("|").length} options</option>
-        ${OPTS[optKey].split("|").map((o,i)=>`<option value="${i}">${i+1}. ${o}</option>`).join("")}
-      </select>
-      <button type="button" class="btn" data-rnd="${p[0]}">Random</button>
-    </span>` : ""}
-  </label>`;
-}).join("")}
-</div>
-<label class="f">Concept colour accent (optional)
-  <span class="sw"><input type="color" id="col"><input type="text" id="colt" style="max-width:120px"></span>
-</label>
-</div>`;
-
-/* Layer 2 – Visualization */
-$("L2").innerHTML = `
-<p class="note">Presets set the mode, project hints and camera together. You can change any control afterwards.</p>
-<div class="pre">${PRESETS.map((p,i)=>`<button data-pr="${i}"><b>${p[0]}</b><small>${p[1]}</small></button>`).join("")}</div>
-<div class="card"><div class="two">
-${CTRL.map(c=>`<label class="f">${c[1]}
-  <select data-c="${c[0]}">${c[2].split("|").map((o,i)=>`<option value="${i}">${o}</option>`).join("")}</select>
-</label>`).join("")}
-</div></div>`;
-
-/* -------------------------------------------- SYNC / RENDER ---------------------------------------------- */
+function buildProject(){
+ $("layer1").innerHTML=`<p class="section-intro">Describe the actual project. The available fields in the master prompt adapt to the selected output mode. Use the curated suggestions as starting points, not fixed answers.</p>
+ <div class="actions" style="margin-bottom:13px"><button class="btn primary" id="shuffleProject">Shuffle relevant project ideas</button><button class="btn" id="clearProject">Clear unlocked project fields</button></div>
+ <div class="card"><div class="two">${PROJECT.map(p=>`<label class="field">${p[1]} <span class="tag">${MODES_FIELDS.complete.includes(p[0])?"brief":"optional"}</span><input type="text" data-project="${p[0]}" value="${esc(S.project[p[0]]??"")}" placeholder="Describe this part of the project">
+ ${OPTIONS[p[0]]?`<div class="inline"><select data-option="${p[0]}" aria-label="${p[1]} suggestions"><option value="">Choose a curated suggestion…</option>${OPTIONS[p[0]].map((o,i)=>`<option value="${i}">${esc(o)}</option>`).join("")}</select><button type="button" class="btn" data-random="${p[0]}">Random</button></div>`:""}
+ </label>`).join("")}</div>
+ <label class="field">Project accent colour <span class="tag">optional</span><div class="colorline"><input type="color" id="accent" value="${S.accent}"><input type="text" id="accentText" value="${esc(S.accent)}" maxlength="7"></div></label></div>`;
+}
+function buildVisual(){
+ $("layer2").innerHTML=`<p class="section-intro">Choose how the project is seen. These controls affect the image direction, not the underlying architecture. Presets combine a project idea and a camera approach; locked project fields remain protected.</p>
+ <div class="presets">${PRESETS.map((p,i)=>`<button class="preset" data-preset="${i}"><strong>${p.name}</strong><small>${p.desc}</small></button>`).join("")}</div>
+ <div class="card"><div class="two">${CONTROLS.map(c=>`<label class="field">${c[1]}<select data-control="${c[0]}">${c[2].split("|").map((o,i)=>`<option value="${i}" ${S.controls[c[0]]===i?"selected":""}>${o}</option>`).join("")}</select></label>`).join("")}</div></div>
+ <div class="card"><h3>Prompt behaviour</h3><p class="note">The master prompt includes explicit realism and architectural-coherence instructions. Use the output mode to decide which project fields are relevant.</p><label class="field">Additional instruction<textarea id="extraInstruction" placeholder="Optional: describe a special constraint, reference, or instruction…">${esc(S.extraInstruction||"")}</textarea></label></div>`;
+}
+function sliderText(i){let [a,b]=SLIDERS[i],v=S.sliders[i]??50;if(v<20)return `strongly ${a.toLowerCase()}`;if(v<40)return `leaning ${a.toLowerCase()}`;if(v<=60)return `balanced between ${a.toLowerCase()} and ${b.toLowerCase()}`;if(v<=80)return `leaning ${b.toLowerCase()}`;return `strongly ${b.toLowerCase()}`}
+function selected(k){let c=CONTROLS.find(x=>x[0]===k);return c?c[2].split("|")[S.controls[k]??0]:""}
+function makePrompt(){
+ const H=t=>S.headings?`${t}\n`:"";
+ const modeText={
+ exterior:"Exterior architectural visualization. Prioritise massing, facade depth, site relationship, roofline, openings, entry sequence and landscape integration.",
+ interior:"Interior architectural visualization. Prioritise spatial sequence, room proportions, ceiling and floor relationships, built-in elements, material transitions, daylight and human use.",
+ complete:"A coherent architectural project showing exterior and interior as one integrated design system. Maintain consistent structure, materials, proportions, light logic and spatial character.",
+ detail:"A focused architectural detail visualization. Show a credible junction, material transition, assembly logic, scale and tactile surface character.",
+ concept:"An exploratory architectural concept. Test a strong spatial or formal idea while preserving legibility, plausible structure and a clear relationship to human experience.",
+ site:"A landscape and site-integrated architectural visualization. Give priority to terrain, orientation, vegetation, water, climate, access and the relationship between built and unbuilt space.",
+ object:"A furniture or architectural object study. Show its form, construction, material, proportion, ergonomics and relationship to the surrounding space.",
+ drawing:"An analytical architectural drawing. Prioritise spatial organisation, dimensions and hierarchy, circulation, structure, openings and clear graphic communication."
+ }[S.mode];
+ let lines=[];
+ const dna=DNA.filter(d=>(S.dna[d[0]]||"").trim()).map(d=>`${d[1]}: ${S.dna[d[0]].trim()}`);
+ const fields=MODES_FIELDS[S.mode], total=fields.length, filled=fields.filter(k=>(S.project[k]||"").trim()).length;
+ const proj=PROJECT.filter(p=>fields.includes(p[0])).map(p=>{let v=(S.project[p[0]]||"").trim();return v?`${p[1]}: ${v}`:(S.empty?`${p[1]}: [not specified]`:null)}).filter(Boolean);
+ lines.push(H("OUTPUT MODE")+modeText);
+ lines.push(H("A. PERMANENT ARCHITECTURAL DNA")+"Character balance: "+SLIDERS.map((_,i)=>sliderText(i)).join("; ")+".\n\n"+dna.join("\n\n"));
+ lines.push(H("B. PROJECT BRIEF")+(proj.join("\n")||"Project-specific details to be developed."));
+ lines.push(H("C. VISUAL DIRECTION")+CONTROLS.map(c=>`${c[1]}: ${selected(c[0])}`).join("\n"));
+ if(S.accent&&S.accent!=="#92703b")lines.push(`Project accent colour: ${S.accent}`);
+ if((S.extraInstruction||"").trim())lines.push(H("ADDITIONAL INSTRUCTION")+S.extraInstruction.trim());
+ lines.push(H("D. REALISM AND DESIGN INTEGRITY")+
+ `Create a cinematic, atmospheric but photorealistic architectural image. It should feel like a carefully photographed real project, not a fantasy illustration or glossy generic CGI. Preserve credible construction, gravity, structure, dimensions, circulation, stairs, handrails, drainage, openings, material thickness and human scale. Make the architectural idea immediately readable. Use physically believable materials, natural imperfections, coherent light and controlled depth. Avoid distorted geometry, impossible connections, duplicated details, excessive post-processing and decorative elements that do not serve the design.\n\n${modeText} Keep the architecture, site and visual treatment coherent. Do not add unrequested floors, wings, ornament, people or landscape features. When a detail is not specified, make a restrained decision consistent with the design DNA rather than inventing a competing concept.`);
+ const text=lines.filter(Boolean).join("\n\n").replace(/\n{3,}/g,"\n\n");
+ $("output").textContent=text;$("wordCount").textContent=text.trim().split(/\s+/).filter(Boolean).length+" words";$("coverage").textContent=`Relevant project fields ${filled}/${total}`;
+ return text;
+}
 function sync(){
-  // modes
-  document.querySelectorAll("[data-m]").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === S.mode));
-  // dna textareas
-  document.querySelectorAll("[data-d]").forEach(e => { if (e !== document.activeElement) e.value = S.dna[e.dataset.d] || ""; });
-  // sliders
-  document.querySelectorAll("[data-s]").forEach(e => e.value = S.sl[e.dataset.s] || 50);
-  // project inputs
-  document.querySelectorAll("[data-p]").forEach(e => { if (e !== document.activeElement) e.value = S.proj[e.dataset.p] || ""; });
-  // controls
-  document.querySelectorAll("[data-c]").forEach(e => e.value = S.ctl[e.dataset.c] || 0);
-  // locks
-  document.querySelectorAll("[data-l]").forEach(b => {
-    const k = b.dataset.l, on = !!S.locks[k];
-    b.setAttribute("aria-pressed", on);
-    b.textContent = on ? "Locked" : "Lock";
-    const card = b.closest(".card");
-    if (card) card.classList.toggle("locked", on);
-  });
-  // field visibility per mode
-  document.querySelectorAll("[data-modes]").forEach(l => {
-    const modes = l.dataset.modes.split(" ");
-    l.classList.toggle("hide", !modes.includes(S.mode));
-  });
-  // colour
-  $("col").value = /^#[0-9a-f]{6}$/i.test(S.col) ? S.col : "#7a5c2e";
-  $("colt").value = S.col || "";
-  // checkboxes
-  $("hd").checked = S.hd;
-  $("em").checked = S.em;
-  render();
+ modeButtons();
+ document.querySelectorAll("[data-dna]").forEach(e=>{if(e!==document.activeElement)e.value=S.dna[e.dataset.dna]??""});
+ document.querySelectorAll("[data-slider]").forEach(e=>e.value=S.sliders[+e.dataset.slider]??50);
+ document.querySelectorAll("[data-project]").forEach(e=>{if(e!==document.activeElement)e.value=S.project[e.dataset.project]??""});
+ document.querySelectorAll("[data-control]").forEach(e=>e.value=S.controls[e.dataset.control]??0);
+ document.querySelectorAll("[data-lock]").forEach(b=>{let on=locked(b.dataset.lock);b.setAttribute("aria-pressed",String(on));b.textContent=on?"Locked":"Lock";let card=b.closest(".card");if(card)card.classList.toggle("locked",on)});
+ if($("accent")){$("accent").value=/^#[0-9a-f]{6}$/i.test(S.accent)?S.accent:"#92703b";$("accentText").value=S.accent}
+ $("headings").checked=S.headings;$("emptyFields").checked=S.empty;
+ if($("extraInstruction"))$("extraInstruction").value=S.extraInstruction||"";
+ $("themeBtn").textContent=S.theme==="dark"?"Use light theme":"Use dark theme";
+ document.documentElement.dataset.theme=S.theme;
+ makePrompt();
 }
-
-function slText(i){
-  const [a,b] = SLIDERS[i], v = S.sl[i];
-  if (v < 25) return `strongly ${a.toLowerCase()}`;
-  if (v < 40) return `leaning ${a.toLowerCase()}`;
-  if (v <= 60) return `balanced between ${a.toLowerCase()} and ${b.toLowerCase()}`;
-  if (v <= 75) return `leaning ${b.toLowerCase()}`;
-  return `strongly ${b.toLowerCase()}`;
+function renderAll(){buildDNA();buildProject();buildVisual();sync()}
+function switchTab(n){[0,1,2].forEach(i=>{$("layer"+i).classList.toggle("hide",i!==n);document.querySelector(`[data-tab="${i}"]`).setAttribute("aria-selected",String(i===n))})}
+function applyPreset(i){
+ const p=PRESETS[i];S.mode=p.mode;
+ Object.entries(p.project).forEach(([k,v])=>{if(!locked("p:"+k))S.project[k]=v});
+ Object.entries(p.controls).forEach(([k,v])=>{if(!locked("c:"+k))S.controls[k]=v});
+ persist();modeButtons();buildProject();buildVisual();sync();toast("Preset applied: "+p.name);
 }
-
-function opt(k){
-  const c = CTRL.find(x => x[0] === k);
-  return c ? c[2].split("|")[S.ctl[k] || 0] : "";
+function shuffleProject(){
+ Object.keys(OPTIONS).forEach(k=>{if(!locked("p:"+k)){let a=OPTIONS[k];S.project[k]=a[Math.floor(Math.random()*a.length)]}});
+ persist();buildProject();sync();toast("Relevant project ideas shuffled");
 }
-
-function render(){
-  const H = t => S.hd ? `${t}\n` : "";
-
-  // --- mode-specific DNA filtering
-  let dnaKeys = DNA.map(d=>d[0]);
-  if (S.mode === "int") dnaKeys = dnaKeys.filter(k => !["land","struct"].includes(k));
-  if (S.mode === "ext") dnaKeys = dnaKeys.filter(k => k !== "int");
-  if (S.mode === "land") dnaKeys = dnaKeys.filter(k => !["int","orn"].includes(k));
-  if (S.mode === "furn") dnaKeys = dnaKeys.filter(k => !["land","struct","orn"].includes(k));
-  if (S.mode === "det") dnaKeys = dnaKeys.filter(k => !["land","struct"].includes(k));
-  if (S.mode === "plan") dnaKeys = dnaKeys.filter(k => !["light","int"].includes(k));
-
-  const dnaCards = DNA.filter(d => dnaKeys.includes(d[0]) && (S.dna[d[0]]||"").trim());
-
-  let a = H("A. PERMANENT ARCHITECTURE DNA");
-  a += "Character balance: " + SLIDERS.map((_,i)=>slText(i)).join("; ") + ".\n\n";
-  a += dnaCards.map(d => `${d[1]}: ${(S.dna[d[0]]||"").trim()}`).join("\n\n");
-
-  // --- project fields
-  let b = [], miss = 0, tot = 0;
-  PROJ.forEach(p => {
-    if (!p[4].includes(S.mode)) return;
-    tot++;
-    const v = (S.proj[p[0]]||"").trim();
-    if (v) b.push(`${p[1]}: ${v}`);
-    else { miss++; if (S.em) b.push(`${p[1]}: [not defined]`); }
-  });
-  if (S.col && S.col !== "#7a5c2e") b.push(`Concept colour accent: ${S.col}`);
-
-  const modeLine = {
-    ext: "Exterior architecture, seen from outside.",
-    int: "Interior design, seen from within.",
-    full: "Complete project: exterior and interior as one coherent whole, sharing materials, light and proportion.",
-    det: "Architectural detail study: a close, tactile view of one junction or surface.",
-    study: "Concept study: analytic presentation of massing, section, plan or material logic.",
-    land: "Landscape and site integration: architecture as part of its terrain and vegetation.",
-    furn: "Furniture and object study: a designed or curated piece within its spatial context.",
-    plan: "Plan, section or diagram: analytical drawing of spatial organisation and structure."
-  }[S.mode] || "";
-
-  // --- visualization controls
-  let c = H("C. VISUALIZATION");
-  c += CTRL.map(x => `${x[1]}: ${opt(x[0])}`).join("\n");
-
-  // --- final integration
-  const d = H("D. FINAL INTEGRATION") + "Preserve the permanent architectural identity while translating the project brief into one coherent visualization. Materials, light, proportion and atmosphere must reinforce the same emotional idea. Keep the main form legible and every supporting element subordinate.";
-
-  const txt = `${H("OUTPUT MODE")}${modeLine}\n\n${a}\n\n${H("B. PROJECT")}${b.join("\n")}\n\n${c}\n\n${d}`.replace(/\n{3,}/g,"\n\n");
-
-  $("out").textContent = txt;
-  $("wc").textContent = txt.trim().split(/\s+/).length + " words";
-  $("cov").textContent = `Project fields ${tot-miss} / ${tot}`;
-  window._txt = txt;
-}
-
-/* --------------------------------------------- EVENTS ---------------------------------------------------- */
-document.addEventListener("input", e => {
-  const t = e.target;
-  if (t.dataset.d) {
-    S.dna[t.dataset.d] = t.value;
-  } else if (t.dataset.s) {
-    S.sl[t.dataset.s] = +t.value;
-  } else if (t.dataset.p) {
-    S.proj[t.dataset.p] = t.value;
-  } else if (t.dataset.pk) {
-    if (t.value !== "") {
-      const list = OPTS[t.dataset.pk].split("|");
-      S.proj[t.dataset.pk] = list[+t.value];
-      t.value = "";
-      sync();
-    }
-  } else if (t.dataset.c) {
-    S.ctl[t.dataset.c] = +t.value;
-  } else if (t.id === "col") {
-    S.col = t.value;
-    $("colt").value = t.value;
-  } else if (t.id === "colt") {
-    S.col = t.value;
-  } else if (t.id === "hd") {
-    S.hd = t.checked;
-  } else if (t.id === "em") {
-    S.em = t.checked;
-  }
-  save();
-  render();
+function download(name,content,type){let blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
+document.addEventListener("click",e=>{
+ const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.mode){S.mode=b.dataset.mode;persist();modeButtons();makePrompt()}
+ else if(b.dataset.tab!==undefined)switchTab(+b.dataset.tab);
+ else if(b.dataset.lock){let k=b.dataset.lock;S.locks[k]=!S.locks[k];persist();sync()}
+ else if(b.dataset.preset!==undefined)applyPreset(+b.dataset.preset);
+ else if(b.dataset.random){let a=OPTIONS[b.dataset.random];if(a&&!locked("p:"+b.dataset.random)){S.project[b.dataset.random]=a[Math.floor(Math.random()*a.length)];persist();buildProject();sync()}}
+ else if(b.id==="shuffleProject")shuffleProject();
+ else if(b.id==="clearProject"){PROJECT.forEach(p=>{if(!locked("p:"+p[0]))S.project[p[0]]=""});persist();buildProject();sync()}
+ else if(b.id==="copyBtn"){let t=makePrompt();if(navigator.clipboard?.writeText){navigator.clipboard.writeText(t).then(()=>toast("Prompt copied")).catch(()=>toast("Select the prompt and copy it manually"))}else toast("Select the prompt and copy it manually")}
+ else if(b.id==="downloadBtn")download((S.project.title||"architecture-prompt").toLowerCase().replace(/[^a-z0-9]+/g,"-")+".txt",makePrompt(),"text/plain");
+ else if(b.id==="exportBtn")download("architecture-dna-studio-backup.json",JSON.stringify(S,null,2),"application/json");
+ else if(b.id==="importBtn")$("importFile").click();
+ else if(b.id==="themeBtn"){S.theme=S.theme==="dark"?"light":"dark";persist();sync()}
+ else if(b.id==="resetBtn"){if(confirm("Reset all studio settings, including locks and project details?")){S=fresh();persist();renderAll();switchTab(0);toast("Studio reset")}}
 });
-
-document.addEventListener("click", e => {
-  const t = e.target.closest("button");
-  if (!t) return;
-
-  if (t.dataset.m) {
-    S.mode = t.dataset.m;
-    save(); sync();
-  }
-  else if (t.dataset.t !== undefined) {
-    document.querySelectorAll("[data-t]").forEach(b => b.setAttribute("aria-selected", b === t));
-    [0,1,2].forEach(i => $("L"+i).classList.toggle("hide", i != t.dataset.t));
-  }
-  else if (t.dataset.l) {
-    S.locks[t.dataset.l] = !S.locks[t.dataset.l];
-    save(); sync();
-  }
-  else if (t.dataset.rnd) {
-    const a = OPTS[t.dataset.rnd].split("|");
-    S.proj[t.dataset.rnd] = a[Math.floor(Math.random()*a.length)];
-    save(); sync();
-  }
-  else if (t.id === "shuf") {
-    Object.keys(OPTS).forEach(k => {
-      if (S.proj.hasOwnProperty(k)) {
-        const a = OPTS[k].split("|");
-        S.proj[k] = a[Math.floor(Math.random()*a.length)];
-      }
-    });
-    save(); sync(); toast("Project shuffled");
-  }
-  else if (t.dataset.pr !== undefined) {
-    const p = PRESETS[t.dataset.pr];
-    S.mode = p[2];
-    Object.assign(S.proj, p[3]);
-    Object.assign(S.ctl, p[4]);
-    save(); sync(); toast("Preset applied: " + p[0]);
-  }
+document.addEventListener("input",e=>{
+ const t=e.target;
+ if(t.dataset.dna){S.dna[t.dataset.dna]=t.value}
+ else if(t.dataset.slider!==undefined){S.sliders[+t.dataset.slider]=+t.value}
+ else if(t.dataset.project){setProject(t.dataset.project,t.value)}
+ else if(t.id==="accent"){S.accent=t.value;$("accentText").value=t.value}
+ else if(t.id==="accentText"){S.accent=t.value}
+ else if(t.id==="extraInstruction")S.extraInstruction=t.value;
+ else if(t.id==="headings")S.headings=t.checked;
+ else if(t.id==="emptyFields")S.empty=t.checked;
+ persist();makePrompt();
 });
-
-$("reset").onclick = () => {
-  const old = S, n = blank();
-  DNA.forEach(d => { if (old.locks[d[0]]) n.dna[d[0]] = old.dna[d[0]]; });
-  if (old.locks.sl) n.sl = old.sl;
-  n.locks = old.locks;
-  S = n;
-  save(); sync(); toast("Reset. Locked categories kept.");
-};
-
-$("copy").onclick = async () => {
-  try {
-    await navigator.clipboard.writeText(window._txt);
-    toast("Copied to clipboard");
-  } catch(e) {
-    const r = document.createRange();
-    r.selectNodeContents($("out"));
-    const s = getSelection();
-    s.removeAllRanges();
-    s.addRange(r);
-    toast("Select and copy (Ctrl+C / Cmd+C)");
-  }
-};
-
-$("dl").onclick = () => {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([window._txt], {type:"text/plain"}));
-  a.download = (S.proj.name || "architecture-prompt").replace(/\W+/g, "-") + ".txt";
-  a.click();
-};
-
-/* init */
-sync();
+document.addEventListener("change",e=>{
+ const t=e.target;
+ if(t.dataset.option){if(t.value!==""&&!locked("p:"+t.dataset.option)){S.project[t.dataset.option]=OPTIONS[t.dataset.option][+t.value];let input=document.querySelector(`[data-project="${t.dataset.option}"]`);if(input)input.value=S.project[t.dataset.option];t.value=""}}
+ else if(t.dataset.control){S.controls[t.dataset.control]=+t.value}
+ persist();makePrompt();
+});
+$("importFile").addEventListener("change",async e=>{
+ const f=e.target.files?.[0];if(!f)return;
+ try{let obj=JSON.parse(await f.text());if(!obj||typeof obj!=="object"||!obj.dna||!obj.project)throw new Error("Invalid backup");
+ const base=fresh();S={...base,...obj,dna:{...base.dna,...obj.dna},project:{...base.project,...obj.project},controls:{...base.controls,...obj.controls},locks:{...obj.locks}};
+ persist();renderAll();switchTab(0);toast("Settings imported");
+ }catch(err){alert("Could not import this file. Please choose a valid Architecture DNA Studio JSON backup.")}finally{e.target.value=""}
+});
+renderAll();switchTab(0);
 </script>
 </body>
 </html>
