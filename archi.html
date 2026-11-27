@@ -67,41 +67,60 @@ small.tag{display:inline-block;font-size:11px;background:var(--line);padding:1px
 </head>
 <body>
 <div class="wrap">
-  <div class="top">
-    <div>
-      <h1>Architecture DNA Studio <small class="tag">enhanced</small></h1>
-      <p class="sub">Define your permanent architectural identity once, then vary project, place, function, camera and output style. More fields, more curated options, full control.</p>
-    </div>
-    <div class="row" style="margin-top:6px"><span class="meta" id="saved" style="margin:8px 8px 0 0">Saved locally</span><button class="btn" id="reset">Reset all</button></div>
+<header>
+  <div>
+    <div class="kicker">PERSONAL ARCHITECTURAL SYSTEM · VERSION 2</div>
+    <h1>Architecture DNA Studio</h1>
+    <p class="sub">A coherent architectural signature for real projects with an experimental edge. Keep the design language consistent; let each project change the story, site, function and visual treatment.</p>
   </div>
-
-  <div class="modes" id="modes" role="group" aria-label="Output mode"></div>
-  <div class="tabs" id="tabs" role="tablist"></div>
-
-  <div class="grid">
-    <div>
-      <section id="L0"></section>
-      <section id="L1" class="hide"></section>
-      <section id="L2" class="hide"></section>
-    </div>
-    <aside class="side">
-      <div class="card">
-        <h2>Master prompt</h2>
-        <div class="meta"><span id="wc">0 words</span><span id="cov"></span></div>
-        <div class="out" id="out" aria-live="polite"></div>
-        <div class="row">
-          <button class="btn pri" id="copy">Copy prompt</button>
-          <button class="btn" id="dl">Download .txt</button>
-        </div>
-        <div class="row" style="margin-top:14px;font-size:13px;color:var(--mute)">
-          <label><input type="checkbox" id="hd" checked> Section headings</label>
-          <label><input type="checkbox" id="em"> Include unfilled fields</label>
-        </div>
-      </div>
-    </aside>
+  <div class="header-actions">
+    <span class="status" id="saveStatus">Saved in this browser</span>
+    <button class="btn" id="themeBtn">Toggle theme</button>
+    <button class="btn" id="resetBtn">Reset studio</button>
   </div>
+</header>
+
+<div class="chips" id="modes" role="group" aria-label="Project output"></div>
+<div class="tabs" role="tablist" aria-label="Studio layers">
+  <button role="tab" data-tab="0" aria-selected="true">01 · Architectural DNA</button>
+  <button role="tab" data-tab="1" aria-selected="false">02 · Project brief</button>
+  <button role="tab" data-tab="2" aria-selected="false">03 · Visual direction</button>
 </div>
-<div class="toast" id="toast">Copied</div>
+
+<div class="grid">
+<main>
+<section id="layer0"></section>
+<section id="layer1" class="hide"></section>
+<section id="layer2" class="hide"></section>
+</main>
+<aside class="side">
+  <div class="card">
+    <div class="card-head"><h2>Master prompt</h2><span class="tag">Live output</span></div>
+    <div class="meta"><span id="wordCount">0 words</span><span id="coverage"></span></div>
+    <div class="output" id="output" aria-live="polite"></div>
+    <div class="actions" style="margin-top:12px">
+      <button class="btn primary" id="copyBtn">Copy prompt</button>
+      <button class="btn" id="downloadBtn">Download .txt</button>
+    </div>
+    <div class="actions" style="margin-top:10px;font-size:12px;color:var(--muted)">
+      <label><input type="checkbox" id="headings" checked> Section headings</label>
+      <label><input type="checkbox" id="emptyFields"> Show undefined fields</label>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Studio backup</h3>
+    <p class="note">Export your DNA, project brief, presets and settings as a JSON backup. Import it later on this browser or another device.</p>
+    <div class="actions">
+      <button class="btn" id="exportBtn">Export settings</button>
+      <button class="btn" id="importBtn">Import settings</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+  </div>
+</aside>
+</div>
+<footer>Prompts are saved locally in this browser. Export a backup before clearing browser data or changing devices. The generated prompt is a creative brief, not a substitute for architectural, structural or code compliance.</footer>
+</div>
+<div class="toast" id="toast"></div>
 
 <script>
 /* -------------------------------------------------- DATA ------------------------------------------------ */
